@@ -40,6 +40,9 @@ To use mlmmj, do the following:
    /var/spool/mlmmj/mlmmj-test/subconf
    /var/spool/mlmmj/mlmmj-test/unsubconf
    /var/spool/mlmmj/mlmmj-test/bounce
+   /var/spool/mlmmj/mlmmj-test/control
+   /var/spool/mlmmj/mlmmj-test/moderation
+   /var/spool/mlmmj/mlmmj-test/moderation/queue
 
    And creates files similar to the ones in the listtexts/ directory of the
    source distribution in /var/spool/mlmmj/text/.
