@@ -599,8 +599,8 @@ int main(int argc, char **argv)
 		break;
 	}
 	
-	while(conncount)
-		sleep(1);
+	while(conncount > 0)
+		usleep(WAITSLEEP);
 
 	if(archive) {
 		rename(mailfilename, archivefilename);
