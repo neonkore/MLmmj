@@ -125,6 +125,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		free(dirname);
 		return 1;
 	}
+		
 	if((queuedir = opendir(dirname)) == NULL) {
 		log_error(LOG_ARGS, "Could not opendir(%s)", dirname);
 		free(dirname);
@@ -134,6 +135,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 	while((dp = readdir(queuedir)) != NULL) {
 		if(strchr(dp->d_name, '.'))
 			continue;
+
 		if(stat(dp->d_name, &st) < 0) {
 			log_error(LOG_ARGS, "Could not stat(%s)",dp->d_name);
 			continue;
@@ -219,10 +221,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		pid = fork();
 
 		if(pid == 0) {
-			if(repto) {
-				printf("%s -l %s -m %s -F %s -T %s -R %s -a\n",
-						mlmmjsend, "1", mailname, from,
-						to, repto);
+			if(repto)
 				execlp(mlmmjsend, mlmmjsend,
 						"-l", "1",
 						"-m", mailname,
@@ -230,16 +229,13 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 						"-T", to,
 						"-R", repto,
 						"-a", 0);
-			} else {
-				printf("%s -l %s -m %s -F %s -T %s -a\n",
-						mlmmjsend, "1", mailname, from, to);
+			else
 				execlp(mlmmjsend, mlmmjsend,
 						"-l", "1",
 						"-m", mailname,
 						"-F", from,
 						"-T", to,
 						"-a", 0);
-			}
 		}
 	}
 
