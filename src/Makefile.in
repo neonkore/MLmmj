@@ -17,7 +17,7 @@
 #
 
 
-SOURCES = $(mlmmj_process_SOURCES) $(mlmmj_recieve_SOURCES) $(mlmmj_send_SOURCES) $(mlmmj_sub_SOURCES) $(mlmmj_unsub_SOURCES)
+SOURCES = $(mlmmj_bounce_SOURCES) $(mlmmj_process_SOURCES) $(mlmmj_recieve_SOURCES) $(mlmmj_send_SOURCES) $(mlmmj_sub_SOURCES) $(mlmmj_unsub_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -40,7 +40,8 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 bin_PROGRAMS = mlmmj-send$(EXEEXT) mlmmj-recieve$(EXEEXT) \
-	mlmmj-process$(EXEEXT) mlmmj-sub$(EXEEXT) mlmmj-unsub$(EXEEXT)
+	mlmmj-process$(EXEEXT) mlmmj-sub$(EXEEXT) mlmmj-unsub$(EXEEXT) \
+	mlmmj-bounce$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -53,6 +54,12 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
+am_mlmmj_bounce_OBJECTS = mlmmj-bounce.$(OBJEXT) \
+	print-version.$(OBJEXT) log_error.$(OBJEXT) \
+	subscriberfuncs.$(OBJEXT) strgen.$(OBJEXT) \
+	random-int.$(OBJEXT) writen.$(OBJEXT)
+mlmmj_bounce_OBJECTS = $(am_mlmmj_bounce_OBJECTS)
+mlmmj_bounce_LDADD = $(LDADD)
 am_mlmmj_process_OBJECTS = mlmmj-process.$(OBJEXT) writen.$(OBJEXT) \
 	find_email_adr.$(OBJEXT) incindexfile.$(OBJEXT) itoa.$(OBJEXT) \
 	getlistaddr.$(OBJEXT) chomp.$(OBJEXT) mylocking.$(OBJEXT) \
@@ -108,6 +115,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/listcontrol.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/log_error.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/mail-functions.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/mlmmj-bounce.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/mlmmj-process.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/mlmmj-recieve.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/mlmmj-send.Po ./$(DEPDIR)/mlmmj-sub.Po \
@@ -122,12 +130,12 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(mlmmj_process_SOURCES) $(mlmmj_recieve_SOURCES) \
-	$(mlmmj_send_SOURCES) $(mlmmj_sub_SOURCES) \
-	$(mlmmj_unsub_SOURCES)
-DIST_SOURCES = $(mlmmj_process_SOURCES) $(mlmmj_recieve_SOURCES) \
-	$(mlmmj_send_SOURCES) $(mlmmj_sub_SOURCES) \
-	$(mlmmj_unsub_SOURCES)
+SOURCES = $(mlmmj_bounce_SOURCES) $(mlmmj_process_SOURCES) \
+	$(mlmmj_recieve_SOURCES) $(mlmmj_send_SOURCES) \
+	$(mlmmj_sub_SOURCES) $(mlmmj_unsub_SOURCES)
+DIST_SOURCES = $(mlmmj_bounce_SOURCES) $(mlmmj_process_SOURCES) \
+	$(mlmmj_recieve_SOURCES) $(mlmmj_send_SOURCES) \
+	$(mlmmj_sub_SOURCES) $(mlmmj_unsub_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -229,6 +237,9 @@ mlmmj_unsub_SOURCES = mlmmj-unsub.c writen.c mylocking.c \
 			getlistaddr.c chomp.c subscriberfuncs.c random-int.c \
 			strgen.c print-version.c log_error.c mygetline.c
 
+mlmmj_bounce_SOURCES = mlmmj-bounce.c print-version.c log_error.c subscriberfuncs.c \
+			strgen.c random-int.c writen.c
+
 all: all-am
 
 .SUFFIXES:
@@ -285,6 +296,9 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+mlmmj-bounce$(EXEEXT): $(mlmmj_bounce_OBJECTS) $(mlmmj_bounce_DEPENDENCIES) 
+	@rm -f mlmmj-bounce$(EXEEXT)
+	$(LINK) $(mlmmj_bounce_LDFLAGS) $(mlmmj_bounce_OBJECTS) $(mlmmj_bounce_LDADD) $(LIBS)
 mlmmj-process$(EXEEXT): $(mlmmj_process_OBJECTS) $(mlmmj_process_DEPENDENCIES) 
 	@rm -f mlmmj-process$(EXEEXT)
 	$(LINK) $(mlmmj_process_LDFLAGS) $(mlmmj_process_OBJECTS) $(mlmmj_process_LDADD) $(LIBS)
@@ -339,6 +353,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/listcontrol.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log_error.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mail-functions.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mlmmj-bounce.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mlmmj-process.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mlmmj-recieve.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mlmmj-send.Po@am__quote@

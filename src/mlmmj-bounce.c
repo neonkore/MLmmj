@@ -20,6 +20,7 @@
 #include "strgen.h"
 #include "wrappers.h"
 #include "log_error.h"
+#include "subscriberfuncs.h"
 
 static void print_help(const char *prg)
 {
@@ -37,6 +38,7 @@ int main(int argc, char **argv)
 	size_t len;
 	int fd;
 	time_t t;
+	off_t suboff;
 
 	log_set_name(argv[0]);
 
@@ -69,8 +71,21 @@ int main(int argc, char **argv)
 	}
 
 	log_error(LOG_ARGS, "[%s] [%s] [%s]", listdir, address, number);
+	
+	/* First make sure it's a subscribed address */
+	filename = concatstr(2, listdir, "/subscribers");
+	if ((fd = open(filename, O_RDONLY)) < 0) {
+		log_error(LOG_ARGS, "Could not open '%s'", filename);
+		exit(EXIT_FAILURE);
+	}
+	suboff = find_subscriber(fd, address);
+	if(suboff == -1)
+		exit(EXIT_SUCCESS); /* Not subbed, so exit silently */
+	free(filename);
 
 	filename = concatstr(3, listdir, "/bounce/", address);
+
+	/* TODO make sure the file we open below is not a symlink */
 	if ((fd = open(filename, O_WRONLY|O_APPEND|O_CREAT,
 			S_IRUSR|S_IWUSR)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", filename);
@@ -82,7 +97,6 @@ int main(int argc, char **argv)
 	if (!a) exit(EXIT_FAILURE);
 	*a = '@';
 
-	/* TODO check that the address is subscribed */
 	/* TODO check that the message is not already bounced */
 
 	/* XXX How long can the string representation of an integer be?
