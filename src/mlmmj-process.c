@@ -68,113 +68,70 @@ struct rule_list {
 void newmoderated(const char *listdir, const char *mailfilename,
 		  const char *mlmmjsend)
 {
-	char *from, *fqdn, *listname;
-	char *buf, *moderatorfilename, *listaddr = getlistaddr(listdir);
-	char *queuefilename = NULL, *moderatorsfilename, *randomstr = NULL;
-	char *mailbasename = mybasename(mailfilename), *s1;
-	int moderatorfd, queuefd, moderatorsfd, mailfd;
+	char *from, *listfqdn, *listname, *moderators = NULL;
+	char *buf, *replyto, *listaddr = getlistaddr(listdir);
+	char *queuefilename = NULL, *moderatorsfilename;
+	char *mailbasename = mybasename(mailfilename), *tmp, *to;
+	int queuefd, moderatorsfd, mailfd;
 	size_t count = 0;
+	char *maildata[4] = { "moderateaddr", NULL, "moderators", NULL };
 #if 0
 	printf("mailfilename = [%s], mailbasename = [%s]\n", mailfilename,
 			                                     mailbasename);
 #endif
-	fqdn = genlistfqdn(listaddr);
+	listfqdn = genlistfqdn(listaddr);
 	listname = genlistname(listaddr);
-	moderatorfilename = concatstr(2, listdir, "/text/moderation");
-	if((moderatorfd = open(moderatorfilename, O_RDONLY)) < 0) {
-		log_error(LOG_ARGS, "Could not open text/moderation");
-		myfree(moderatorfilename);
+
+	if((mailfd = open(mailfilename, O_RDONLY)) < 0) {
+		log_error(LOG_ARGS, "Could not open '%s'", mailfilename);
 		exit(EXIT_FAILURE);
 	}
-	myfree(moderatorfilename);
 
 	moderatorsfilename = concatstr(2, listdir, "/control/moderators");
 	if((moderatorsfd = open(moderatorsfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", moderatorsfilename);
 		myfree(moderatorsfilename);
-		close(moderatorfd);
 		exit(EXIT_FAILURE);
 	}
 	myfree(moderatorsfilename);
 
-	if((mailfd = open(mailfilename, O_RDONLY)) < 0) {
-		log_error(LOG_ARGS, "Could not open '%s'", mailfilename);
-		close(moderatorfd);
-		close(moderatorsfd);
-		exit(EXIT_FAILURE);
+	while((buf = mygetline(moderatorsfd))) {
+		tmp = moderators;
+		moderators = concatstr(2, moderators, buf);
+		myfree(buf);
+		myfree(tmp);
 	}
 
-        do {
-                randomstr = random_str();
-                myfree(queuefilename);
-                queuefilename = concatstr(3, listdir, "/queue/", randomstr);
-                myfree(randomstr);
+	close(moderatorsfd);
 
-                queuefd = open(queuefilename, O_RDWR|O_CREAT|O_EXCL,
-					      S_IRUSR|S_IWUSR);
+	replyto = concatstr(5, listname, "+moderate-", mailbasename, "@",
+			    listfqdn);
 
-        } while ((queuefd < 0) && (errno == EEXIST));
+	maildata[1] = replyto;
+	maildata[3] = moderators;
 
-	if(queuefd < 0) {
+	from = concatstr(3, listname, "+owner@", listfqdn);
+	to = concatstr(3, listname, "-moderators@", listfqdn);
+
+	myfree(listname);
+	myfree(listfqdn);
+
+	queuefilename = prepstdreply(listdir, "moderation", "$listowner$",
+				     to, replyto, 2, maildata);
+
+	if((queuefd = open(queuefilename, O_WRONLY|O_APPEND)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
 		myfree(queuefilename);
-		close(moderatorfd);
-		close(moderatorsfd);
-		close(mailfd);
 		exit(EXIT_FAILURE);
 	}
-
-	from = concatstr(3, listname, "+owner@", fqdn);
-	s1 = concatstr(15, "From: ", from, "\nTo: ", listname, "-moderators@",
-			fqdn, "\nReply-To: ", listname,	"+moderate-",
-			mailbasename, "@", fqdn,
-			"\nSubject: Moderation needed for ", listaddr, "\n\n");
-	if(writen(queuefd, s1, strlen(s1)) < 0) {
-		log_error(LOG_ARGS, "Could not write to %s", queuefilename);
-		exit(EXIT_FAILURE);
-	}
-	myfree(s1);
-	s1 = concatstr(5, listname, "+moderate-", mailbasename, "@", fqdn);
 	
-	while((buf = mygetline(moderatorfd))) {
-		if(strncmp(buf, "*LISTADDR*", 10) == 0) {
-			if(writen(queuefd, listaddr, strlen(listaddr)) < 0) {
-				log_error(LOG_ARGS, "Could not write to %s",
-						queuefilename);
-				exit(EXIT_FAILURE);
-			}
-		} else if(strncmp(buf, "*MODERATEADDR*", 14) == 0) {
-			if(writen(queuefd, s1, strlen(s1)) < 0) {
-				log_error(LOG_ARGS, "Could not write to %s",
-						queuefilename);
-				exit(EXIT_FAILURE);
-			}
-			myfree(s1);
-		} else if(strncmp(buf, "*MODERATORS*", 12) == 0) {
-			myfree(buf);
-			while((buf = mygetline(moderatorsfd))) {
-				if(writen(queuefd, buf, strlen(buf)) < 0)
-					log_error(LOG_ARGS,
-						"Could not write moderators");
-					
-				myfree(buf);
-				buf = NULL;
-			}
-		} else
-			if(writen(queuefd, buf, strlen(buf)) < 0) {
-				log_error(LOG_ARGS,
-					"Could not write moderatemail");
-				exit(EXIT_FAILURE);
-			}
+	while(count < 100 && (buf = mygetline(mailfd))) {
+		tmp = concatstr(2, " ", buf);
 		myfree(buf);
-	}
-	close(moderatorfd);
-	close(moderatorsfd);
-	while((buf = mygetline(mailfd)) && count < 100) {
-		s1 = concatstr(2, " ", buf);
-		myfree(buf);
-		writen(queuefd, s1, strlen(s1));
-		myfree(s1);
+		if(writen(queuefd, tmp, strlen(tmp)) < 0)
+			log_error(LOG_ARGS, "Could not write line for "
+					    "moderatemail");
+		myfree(tmp);
 		count++;
 	}
 	close(queuefd);

@@ -42,23 +42,49 @@
 char *substitute(const char *line, const char *listaddr, size_t datacount,
 		 char **data)
 {
+	char *s1, *s2;
+
+	s1 = substitute_one(line, listaddr, datacount, data);
+	while(s1) {
+		s2 = substitute_one(s1, listaddr, datacount, data);
+		if(s2) {
+			myfree(s1);
+			s1 = s2;
+		} else
+			return s1;
+	}
+		
+	return mystrdup(line);
+}
+
+char *substitute_one(const char *line, const char *listaddr, size_t datacount,
+		     char **data)
+{
 	char *fqdn, *listname, *d1, *d2, *token, *value = NULL;
-	char *retstr, *origline = mystrdup(line);
+	char *retstr, *origline;
 	size_t len, i;
-	
+
+	if(line == NULL)
+		return NULL;
+
+	origline = mystrdup(line);
+
 	d1 = strchr(origline, '$');
 
-	if(d1 == NULL)
-		return origline;
-	else
+	if(d1 == NULL) {
+		myfree(origline);
+		return NULL;
+	} else
 		d2 = strchr(d1 + 1, '$');
 	
 	if(d1 && d2) {
 		len = d2 - d1;
 		token = mymalloc(len + 1);
 		snprintf(token, len, "%s", d1 + 1);
-	} else
-		return origline;
+	} else {
+		myfree(origline);
+		return NULL;
+	}
 
 	*d1 = '\0';
 
@@ -100,9 +126,14 @@ char *substitute(const char *line, const char *listaddr, size_t datacount,
 		for(i = 0; i < datacount; i++) {
 			if(strcmp(token, data[i*2]) == 0) {
 				value = mystrdup(data[(i*2)+1]);
+				goto concatandreturn;
 			}
 		}
 	}
+
+	myfree(origline);
+	return NULL;
+
 concatandreturn:
 	retstr = concatstr(3, origline, value, d2 + 1);
 	myfree(origline);
@@ -145,9 +176,12 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	myfrom = substitute(from, listaddr, tokencount, data);
 	myto = substitute(to, listaddr, tokencount, data);
 
-	if(replyto)
+	if(replyto) {
 		myreplyto = substitute(replyto, listaddr, tokencount, data);
-	else
+		tmp = concatstr(3, "Reply-To: ", myreplyto, "\n");
+		free(myreplyto);
+		myreplyto = tmp;
+	} else
 		myreplyto = NULL;
 
 	do {
@@ -166,8 +200,8 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		return NULL;
 	}
 
-	str = concatstr(8, "From: ", myfrom, "\nTo: ", myto, "\nReply-To: ",
-			myreplyto, "\n", subject);
+	str = concatstr(7, "From: ", myfrom, "\nTo: ", myto, "\n", myreplyto,
+			subject);
 
 	if(writen(outfd, str, strlen(str)) < 0) {
 		log_error(LOG_ARGS, "Could not write std mail");
