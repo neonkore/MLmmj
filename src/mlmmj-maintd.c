@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <time.h>
+#include <fcntl.h>
 
 #include "mlmmj-maintd.h"
 #include "mlmmj.h"
@@ -115,10 +116,9 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 	char *mailname, *fromname, *toname, *reptoname, *from, *to, *repto;
 	char *discardedname = NULL, *ch;
 	char *dirname = concatstr(2, listdir, "/queue/");
-	FILE *ffrom, *fto, *f;
 	pid_t pid;
 	struct stat st;
-	int discarded = 0;
+	int fromfd, tofd, fd, discarded = 0;
 
 	if(chdir(dirname) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
@@ -186,10 +186,10 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		
 		reptoname = concatstr(2, mailname, ".reply-to");
 
-		ffrom = fopen(fromname, "r");
-		fto = fopen(toname, "r");
+		fromfd = open(fromname, O_RDONLY);
+		tofd = open(toname, O_RDONLY);
 
-		if(ffrom == NULL || fto == NULL) {
+		if(fromfd < 0 || tofd < 0) {
 			if(discarded) {
 				unlink(fromname);
 				unlink(toname);
@@ -199,29 +199,29 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 			free(fromname);
 			free(toname);
 			free(reptoname);
-			if(ffrom)
-				fclose(ffrom);
+			if(fromfd >= 0)
+				close(fromfd);
 			continue;
 		}
 
-		from = myfgetline(ffrom);
+		from = mygetline(fromfd);
 		chomp(from);
-		fclose(ffrom);
+		close(fromfd);
 		unlink(fromname);
 		free(fromname);
-		to = myfgetline(fto);
+		to = mygetline(tofd);
 		chomp(to);
-		fclose(fto);
+		close(tofd);
 		unlink(toname);
 		free(toname);
-		f = fopen(reptoname, "r");
-		if(f == NULL) {
+		fd = open(reptoname, O_RDONLY);
+		if(fd < 0) {
 			free(reptoname);
 			repto = NULL;
 		} else {
-			repto = myfgetline(f);
+			repto = mygetline(fd);
 			chomp(repto);
-			fclose(f);
+			close(fd);
 			unlink(reptoname);
 			free(reptoname);
 		}
