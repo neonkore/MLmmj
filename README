@@ -1,4 +1,4 @@
-README mlmmj-0.3.1					April 21st 2004
+README mlmmj-0.3.2					April 23st 2004
 
 This is my attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
@@ -83,4 +83,5 @@ maildelivery you have to change it in include/mlmmj.h before compiling.
 
 Have a fun!
 
-	Mads Martin Jørgensen <mmj at mmj dot dk>
+	Mads Martin Joergensen <mmj at mmj dot dk>
+	Morten K. Poulsen <morten at afdelingp dot dk>
