@@ -1,3 +1,4 @@
+ o mlmmj-maint now handles resends and cleanup
  o Fixed interrupted fgets() in write_mailbody_from_file()
  o Fixed leak of subfile in mlmmj-send
 0.5.2
