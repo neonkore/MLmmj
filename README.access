@@ -1,0 +1,52 @@
+README.access mlmmj-0.7.3				Jun 17th 2004
+
+Access control in mlmmj
+=======================
+
+If the file listdir/control/access is present, access control is enabled.
+
+NOTE: the default action is to deny access (reject the mail), so an empty
+access control file will cause mlmmj to reject all posts!
+
+Each header in the mail is tested against each rule, rule by rule. That is,
+all headers are first tested against the first rule, then all headers are
+tested against the second rule, and so on.
+
+The first rule to match a header decides which action to take - allow or
+deny the post.
+
+The syntax is quite simple: action[ [!]regexp]
+- "Action" can be "allow" or "deny".
+- The optional "!" makes the rule a match, if NO header matches the regular
+  expression.
+- "Regexp" is a POSIX.2 extended regular expression. Matching is done case
+  insensitive.
+
+
+First a simple example. This rule set will reject any mail that is NOT plain
+text, or has a subject that contains "BayStar", and allow anything else:
+
+deny !^Content-Type: text/plain
+deny ^Subject:.*BayStar
+allow
+
+
+Now on to a more advanced example. Morten can post anything, Mads Martin can
+post if the subject does not contain "SCO". Everything else is denied:
+
+allow ^From: Morten
+deny ^Subject:.*SCO
+allow ^From: Mads Martin
+deny
+
+The last rule (deny) can be left out, as deny is the default action.
+
+
+A third example. Deny any mails with "discount", "weightloss", or "bonus" in
+the subject. Allow PGP signed and plain text mails. Anything else is denied:
+
+deny ^Subject:.*discount
+deny ^Subject:.*weightloss
+deny ^Subject:.*bonus
+allow ^Content-Type: multipart/signed
+allow ^Content-Type: text/plain
