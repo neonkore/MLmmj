@@ -34,6 +34,7 @@
 #include "do_all_the_voodo_here.h"
 #include "log_error.h"
 #include "wrappers.h"
+#include "memory.h"
 
 int findit(const char *line, const char **headers)
 {
@@ -62,10 +63,10 @@ void getinfo(const char *line, struct mailhdr *readhdrs)
 			readhdrs[i].valuecount++;
 			valuelen = linelen - tokenlen + 1;
 			readhdrs[i].values =
-				(char **)realloc(readhdrs[i].values,
+				(char **)myrealloc(readhdrs[i].values,
 				  readhdrs[i].valuecount * sizeof(char *));
 			readhdrs[i].values[readhdrs[i].valuecount - 1] =
-					(char *)malloc(valuelen + 1);
+					(char *)mymalloc(valuelen + 1);
 			strncpy(readhdrs[i].values[readhdrs[i].valuecount - 1],
 						line+tokenlen-1, valuelen);
 			chomp(readhdrs[i].values[readhdrs[i].valuecount - 1]);
@@ -87,13 +88,13 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 				if(dumpfd2fd(hdrfd, outfd) < 0) {
 					log_error(LOG_ARGS, "Could not "
 						"add extra headers");
-					free(hdrline);
+					myfree(hdrline);
 					return -1;
 				}
 			}
 			write(outfd, hdrline, strlen(hdrline));
 			fsync(outfd);
-			free(hdrline);
+			myfree(hdrline);
 			break;
 		}
 		/* Do we want info from hdrs? Get it before it's gone */
@@ -109,8 +110,8 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 							" ", hdrline + 9);
 					writen(outfd, subject,
 							strlen(subject));
-					free(subject);
-					free(hdrline);
+					myfree(subject);
+					myfree(hdrline);
 					continue;
 				}
 			}
@@ -124,7 +125,7 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 			writen(outfd, hdrline, strlen(hdrline));
 
 
-		free(hdrline);
+		myfree(hdrline);
 	}
 
 	/* Just print the rest of the mail */

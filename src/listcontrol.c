@@ -39,6 +39,7 @@
 #include "statctrl.h"
 #include "mygetline.h"
 #include "chomp.h"
+#include "memory.h"
 
 enum ctrl_e {
 	CTRL_SUBSCRIBE,
@@ -92,7 +93,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	MY_ASSERT(atsign);
 	len = atsign - recipdelimsign;
 
-	controlstr = malloc(len);
+	controlstr = mymalloc(len);
 	MY_ASSERT(controlstr);
 	snprintf(controlstr, len, "%s", recipdelimsign + 1);
 
@@ -108,7 +109,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 			if (ctrl_commands[ctrl].accepts_parameter &&
 					(controlstr[cmdlen] == '-')) {
-				param = strdup(controlstr + cmdlen + 1);
+				param = mystrdup(controlstr + cmdlen + 1);
 				MY_ASSERT(param);
 				if (strchr(param, '/')) {
 					errno = 0;
@@ -117,17 +118,17 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 						" discarding mail");
 					exit(EXIT_SUCCESS);
 				}
-				free(controlstr);
+				myfree(controlstr);
 				break;
 			} else if (!ctrl_commands[ctrl].accepts_parameter &&
 					(controlstr[cmdlen] == '\0')) {
 				param = NULL;
-				free(controlstr);
+				myfree(controlstr);
 				break;
 			} else {
 				log_error(LOG_ARGS, "Received a malformed"
 					" list control request");
-				free(controlstr);
+				myfree(controlstr);
 				return -1;
 			}
 
@@ -154,7 +155,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		unlink(mailname);
 		if (closedlist) exit(EXIT_SUCCESS);
 		conffilename = concatstr(3, listdir, "/subconf/", param);
-		free(param);
+		myfree(param);
 		if((tmpfd = open(conffilename, O_RDONLY)) > 0) {
 			tmpstr = mygetline(tmpfd);
 			chomp(tmpstr);
@@ -170,7 +171,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				exit(EXIT_FAILURE);
 			} else {
 				/* Not proper confirm */
-				free(tmpstr);
+				myfree(tmpstr);
 				exit(EXIT_SUCCESS);
 			}
 		} else /* Not a confirm so silently ignore */
@@ -196,7 +197,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		unlink(mailname);
 		if (closedlist) exit(EXIT_SUCCESS);
 		conffilename = concatstr(3, listdir, "/unsubconf/", param);
-		free(param);
+		myfree(param);
 		if((tmpfd = open(conffilename, O_RDONLY))) {
 			tmpstr = mygetline(tmpfd);
 			close(tmpfd);
@@ -211,7 +212,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 						    mlmmjunsub);
 				exit(EXIT_FAILURE);
 			} else {
-				free(tmpstr);
+				myfree(tmpstr);
 				exit(EXIT_SUCCESS);
 			}
 		} else /* Not a confirm so silently ignore */
@@ -235,9 +236,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		/* TODO Add accept/reject parameter to moderate */
 		unlink(mailname);
 		moderatefilename = concatstr(3, listdir, "/moderation/", param);
-		free(param);
+		myfree(param);
 		if(stat(moderatefilename, &stbuf) < 0) {
-			free(moderatefilename);
+			myfree(moderatefilename);
 			exit(EXIT_SUCCESS); /* just exit, no mail to moderate */
 		} else {
 			execlp(mlmmjsend, mlmmjsend,

@@ -39,6 +39,7 @@
 #include "log_error.h"
 #include "mygetline.h"
 #include "wrappers.h"
+#include "memory.h"
 
 static int maintdlogfd = -1;
 
@@ -91,7 +92,7 @@ int clean_moderation(const char *listdir)
 	char *moddirname = concatstr(2, listdir, "/moderation");
 	int ret = delolder(moddirname, MODREQLIFE);	
 		
-	free(moddirname);
+	myfree(moddirname);
 
 	return ret;
 }
@@ -101,7 +102,7 @@ int clean_discarded(const char *listdir)
 	char *discardeddirname = concatstr(2, listdir, "/queue/discarded");
 	int ret = delolder(discardeddirname, DISCARDEDLIFE);
 
-	free(discardeddirname);
+	myfree(discardeddirname);
 
 	return ret;
 }
@@ -135,16 +136,16 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 
 	if(chdir(dirname) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
-		free(dirname);
+		myfree(dirname);
 		return 1;
 	}
 		
 	if((queuedir = opendir(dirname)) == NULL) {
 		log_error(LOG_ARGS, "Could not opendir(%s)", dirname);
-		free(dirname);
+		myfree(dirname);
 		return 1;
 	}
-	free(dirname);
+	myfree(dirname);
 
 	while((dp = readdir(queuedir)) != NULL) {
 		if(stat(dp->d_name, &st) < 0) {
@@ -156,13 +157,13 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 			continue;
 
 		if(strchr(dp->d_name, '.')) {
-			mailname = strdup(dp->d_name);
+			mailname = mystrdup(dp->d_name);
 			ch = strchr(mailname, '.');
 			*ch = '\0';
 			if(stat(mailname, &st) < 0)
 				if(errno == ENOENT)
 					unlink(dp->d_name);
-			free(mailname);
+			myfree(mailname);
 			continue;
 		}
 
@@ -177,7 +178,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 				discarded = discardmail(mailname,
 							discardedname,
 							3600);
-				free(discardedname);
+				myfree(discardedname);
 			} else {
 				log_error(LOG_ARGS, "Could not stat(%s)",
 						dp->d_name);
@@ -194,7 +195,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 				discarded = discardmail(mailname,
 							discardedname,
 							3600);
-				free(discardedname);
+				myfree(discardedname);
 			} else {
 				log_error(LOG_ARGS, "Could not stat(%s)",
 						dp->d_name);
@@ -212,10 +213,10 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 				unlink(toname);
 				unlink(reptoname);
 			}
-			free(mailname);
-			free(fromname);
-			free(toname);
-			free(reptoname);
+			myfree(mailname);
+			myfree(fromname);
+			myfree(toname);
+			myfree(reptoname);
 			if(fromfd >= 0)
 				close(fromfd);
 			continue;
@@ -225,40 +226,40 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		chomp(from);
 		close(fromfd);
 		unlink(fromname);
-		free(fromname);
+		myfree(fromname);
 		to = mygetline(tofd);
 		chomp(to);
 		close(tofd);
 		unlink(toname);
-		free(toname);
+		myfree(toname);
 		fd = open(reptoname, O_RDONLY);
 		if(fd < 0) {
-			free(reptoname);
+			myfree(reptoname);
 			repto = NULL;
 		} else {
 			repto = mygetline(fd);
 			chomp(repto);
 			close(fd);
 			unlink(reptoname);
-			free(reptoname);
+			myfree(reptoname);
 		}
 
 		childpid = fork();
 
 		if(childpid < 0) {
-			free(mailname);
-			free(from);
-			free(to);
-			free(repto);
+			myfree(mailname);
+			myfree(from);
+			myfree(to);
+			myfree(repto);
 			log_error(LOG_ARGS, "Could not fork");
 			continue;
 		}
 
 		if(childpid > 0) {
-			free(mailname);
-			free(from);
-			free(to);
-			free(repto);
+			myfree(mailname);
+			myfree(from);
+			myfree(to);
+			myfree(repto);
 			do /* Parent waits for the child */
 			      pid = waitpid(childpid, &status, 0);
 			while(pid == -1 && errno == EINTR);
@@ -301,17 +302,17 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 
 	if(chdir(dirname) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
-		free(dirname);
+		myfree(dirname);
 		return 1;
 	}
 		
 	if((queuedir = opendir(dirname)) == NULL) {
 		log_error(LOG_ARGS, "Could not opendir(%s)", dirname);
-		free(dirname);
+		myfree(dirname);
 		return 1;
 	}
 
-	free(dirname);
+	myfree(dirname);
 	
 	while((dp = readdir(queuedir)) != NULL) {
 		if((strcmp(dp->d_name, "..") == 0) ||
@@ -339,14 +340,14 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 			 * yet because it's still getting sent, so just
 			 * continue
 			 */
-			free(archivefilename);
+			myfree(archivefilename);
 			continue;
 		}
 		subfilename = concatstr(3, dirname, dp->d_name, "/subscribers");
 		if(stat(subfilename, &st) < 0) {
 			log_error(LOG_ARGS, "Could not stat(%s)", subfilename);
-			free(archivefilename);
-			free(subfilename);
+			myfree(archivefilename);
+			myfree(subfilename);
 			continue;
 		}
 
@@ -355,25 +356,25 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 		if(rename(subfilename, subnewname) < 0) {
 			log_error(LOG_ARGS, "Could not rename(%s, %s)",
 						subfilename, subnewname);
-			free(archivefilename);
-			free(subfilename);
-			free(subnewname);
+			myfree(archivefilename);
+			myfree(subfilename);
+			myfree(subnewname);
 			continue;
 		}
-		free(subfilename);
+		myfree(subfilename);
 		
 		childpid = fork();
 
 		if(childpid < 0) {
-			free(archivefilename);
-			free(subnewname);
+			myfree(archivefilename);
+			myfree(subnewname);
 			log_error(LOG_ARGS, "Could not fork");
 			continue;
 		}
 
 		if(childpid > 0) {
-			free(archivefilename);
-			free(subnewname);
+			myfree(archivefilename);
+			myfree(subnewname);
 			do /* Parent waits for the child */
 			      pid = waitpid(childpid, &status, 0);
 			while(pid == -1 && errno == EINTR);
@@ -406,17 +407,17 @@ int clean_nolongerbouncing(const char *listdir)
 	
 	if(chdir(dirname) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
-		free(dirname);
+		myfree(dirname);
 		return 1;
 	}
 		
 	if((bouncedir = opendir(dirname)) == NULL) {
 		log_error(LOG_ARGS, "Could not opendir(%s)", dirname);
-		free(dirname);
+		myfree(dirname);
 		return 1;
 	}
 
-	free(dirname);
+	myfree(dirname);
 
 	while((dp = readdir(bouncedir)) != NULL) {
 		if((strcmp(dp->d_name, "..") == 0) ||
@@ -428,7 +429,7 @@ int clean_nolongerbouncing(const char *listdir)
 			continue;
 		}
 
-		filename = strdup(dp->d_name);
+		filename = mystrdup(dp->d_name);
 
 		if((s = strstr(filename, "-probe"))) {
 			probefd = open(filename, O_RDONLY);
@@ -440,7 +441,7 @@ int clean_nolongerbouncing(const char *listdir)
 			close(probefd);
 			chomp(probetimestr);
 			probetime = (time_t)strtol(probetimestr, NULL, 10);
-			free(probetimestr);
+			myfree(probetimestr);
 			t = time(NULL);
 			if(t - probetime > WAITPROBE) {
 				unlink(filename);
@@ -448,7 +449,7 @@ int clean_nolongerbouncing(const char *listdir)
 				unlink(filename);
 			}
 		}
-		free(filename);
+		myfree(filename);
 	}
 
 	closedir(bouncedir);
@@ -468,17 +469,17 @@ int probe_bouncers(const char *listdir, const char *mlmmjbounce)
 	
 	if(chdir(dirname) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
-		free(dirname);
+		myfree(dirname);
 		return 1;
 	}
 		
 	if((bouncedir = opendir(dirname)) == NULL) {
 		log_error(LOG_ARGS, "Could not opendir(%s)", dirname);
-		free(dirname);
+		myfree(dirname);
 		return 1;
 	}
 
-	free(dirname);
+	myfree(dirname);
 
 	while((dp = readdir(bouncedir)) != NULL) {
 		if((strcmp(dp->d_name, "..") == 0) ||
@@ -497,10 +498,10 @@ int probe_bouncers(const char *listdir, const char *mlmmjbounce)
 		
 		/* Skip files which already have a probe out */
 		if(stat(probefile, &st) == 0) {
-			free(probefile);
+			myfree(probefile);
 			continue;
 		}
-		free(probefile);
+		myfree(probefile);
 
 		childpid = fork();
 		
@@ -514,7 +515,7 @@ int probe_bouncers(const char *listdir, const char *mlmmjbounce)
 				pid = waitpid(childpid, &status, 0);
 			while(pid == -1 && errno == EINTR);
 		} else {
-			probefile = strdup(dp->d_name);
+			probefile = mystrdup(dp->d_name);
 			execlp(mlmmjbounce, mlmmjbounce,
 					"-L", listdir,
 					"-a", probefile,
@@ -543,17 +544,17 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 	
 	if(chdir(dirname) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
-		free(dirname);
+		myfree(dirname);
 		return 1;
 	}
 		
 	if((bouncedir = opendir(dirname)) == NULL) {
 		log_error(LOG_ARGS, "Could not opendir(%s)", dirname);
-		free(dirname);
+		myfree(dirname);
 		return 1;
 	}
 
-	free(dirname);
+	myfree(dirname);
 
 	while((dp = readdir(bouncedir)) != NULL) {
 		if((strcmp(dp->d_name, "..") == 0) ||
@@ -572,10 +573,10 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		
 		/* Skip files which already have a probe out */
 		if(stat(probefile, &st) == 0) {
-			free(probefile);
+			myfree(probefile);
 			continue;
 		}
-		free(probefile);
+		myfree(probefile);
 
 		/* Get the first line of the bounce file to check if it's
 		 * been bouncing for long enough
@@ -593,30 +594,30 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		/* End the string at the comment */
 		a = strchr(firstbounce, '#');
 		if(a == NULL) {
-			free(firstbounce);
+			myfree(firstbounce);
 			continue;
 		}
 		*a = '\0';
-		bouncedata = strdup(a+1); /* Save for the log */
+		bouncedata = mystrdup(a+1); /* Save for the log */
 		chomp(bouncedata);
 		a = strchr(firstbounce, ':');
 		if(a == NULL) {
-			free(firstbounce);
+			myfree(firstbounce);
 			continue;
 		}
 
 		a++; /* Increase to first digit */
 		bouncetime = (time_t)strtol(a, NULL, 10);
-		free(firstbounce);
+		myfree(firstbounce);
 		t = time(NULL);
 		if(t - bouncetime < BOUNCELIFE + WAITPROBE)
 			continue; /* ok, don't unsub this one */
 		
 		/* Ok, go ahead and unsubscribe the address */
-		address = strdup(dp->d_name);
+		address = mystrdup(dp->d_name);
 		a = strchr(address, '=');
 		if(a == NULL) { /* skip malformed */
-			free(address);
+			myfree(address);
 			continue;
 		}
 		*a = '@';
@@ -631,8 +632,8 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		if(childpid > 0) {
 			WRITEMAINTLOG6(5, "UNSUB: ", address, ". Bounced since",
 					bouncedata, ".\n");
-			free(address);
-			free(bouncedata);
+			myfree(address);
+			myfree(bouncedata);
 			do /* Parent waits for the child */
 				pid = waitpid(childpid, &status, 0);
 			while(pid == -1 && errno == EINTR);
@@ -709,7 +710,7 @@ int main(int argc, char **argv)
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	mlmmjbounce = concatstr(2, bindir, "/mlmmj-bounce");
 	mlmmjunsub = concatstr(2, bindir, "/mlmmj-unsub");
-	free(bindir);
+	myfree(bindir);
 
 	if(daemonize && daemon(1,0) < 0) {
 		log_error(LOG_ARGS, "Could not daemonize. Only one "
@@ -720,11 +721,11 @@ int main(int argc, char **argv)
 	for(;;) {
 		random = random_str();
 		logname = concatstr(3, listdir, "maintdlog-", random);
-		free(random);
+		myfree(random);
 		maintdlogfd = open(logname, O_WRONLY|O_EXCL|O_CREAT,
 					S_IRUSR|S_IWUSR);
 		if(maintdlogfd < 0) {
-			free(logname);
+			myfree(logname);
 			log_error(LOG_ARGS, "Could not open maintenance logfile");
 			exit(EXIT_FAILURE);
 		}
@@ -760,8 +761,8 @@ int main(int argc, char **argv)
 			log_error(LOG_ARGS, "Could not rename(%s,%s)",
 						logname, logstr);
 
-		free(logname);
-		free(logstr);
+		myfree(logname);
+		myfree(logstr);
 
 		if(daemonize == 0)
 			break;
@@ -769,9 +770,9 @@ int main(int argc, char **argv)
 			sleep(MAINTD_SLEEP);
 	}
 
-	free(mlmmjbounce);
-	free(mlmmjsend);
-	free(mlmmjunsub);
+	myfree(mlmmjbounce);
+	myfree(mlmmjsend);
+	myfree(mlmmjunsub);
 
 	log_free_name();
 		

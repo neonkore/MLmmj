@@ -47,6 +47,7 @@
 #include "getlistaddr.h"
 #include "prepstdreply.h"
 #include "subscriberfuncs.h"
+#include "memory.h"
 
 void newmoderated(const char *listdir, const char *mailfilename,
 		  const char *mlmmjsend)
@@ -66,25 +67,25 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	moderatorfilename = concatstr(2, listdir, "/text/moderation");
 	if((moderatorfd = open(moderatorfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open text/moderation");
-		free(moderatorfilename);
+		myfree(moderatorfilename);
 		exit(EXIT_FAILURE);
 	}
-	free(moderatorfilename);
+	myfree(moderatorfilename);
 
 	moderatorsfilename = concatstr(2, listdir, "/control/moderators");
 	if((moderatorsfd = open(moderatorsfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", moderatorsfilename);
-		free(queuefilename);
-		free(moderatorsfilename);
+		myfree(queuefilename);
+		myfree(moderatorsfilename);
 		close(queuefd);
 		exit(EXIT_FAILURE);
 	}
-	free(moderatorsfilename);
+	myfree(moderatorsfilename);
 
 	if((mailfd = open(mailfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", mailfilename);
-		free(queuefilename);
-		free(moderatorsfilename);
+		myfree(queuefilename);
+		myfree(moderatorsfilename);
 		close(queuefd);
 		exit(EXIT_FAILURE);
 	}
@@ -94,11 +95,11 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	if((queuefd = open(queuefilename, O_WRONLY|O_CREAT|O_EXCL,
 					S_IRUSR|S_IWUSR)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
-		free(queuefilename);
-		free(randomstr);
+		myfree(queuefilename);
+		myfree(randomstr);
 		exit(EXIT_FAILURE);
 	}
-	free(randomstr);
+	myfree(randomstr);
 
 	from = concatstr(3, listname, "+owner@", fqdn);
 	s1 = concatstr(15, "From: ", from, "\nTo: ", listname, "-moderators@",
@@ -109,7 +110,7 @@ void newmoderated(const char *listdir, const char *mailfilename,
 		log_error(LOG_ARGS, "Could not write to %s", queuefilename);
 		exit(EXIT_FAILURE);
 	}
-	free(s1);
+	myfree(s1);
 	s1 = concatstr(5, listname, "+moderate-", mailbasename, "@", fqdn);
 	
 	while((buf = mygetline(moderatorfd))) {
@@ -125,15 +126,15 @@ void newmoderated(const char *listdir, const char *mailfilename,
 						queuefilename);
 				exit(EXIT_FAILURE);
 			}
-			free(s1);
+			myfree(s1);
 		} else if(strncmp(buf, "*MODERATORS*", 12) == 0) {
-			free(buf);
+			myfree(buf);
 			while((buf = mygetline(moderatorsfd))) {
 				if(writen(queuefd, buf, strlen(buf)) < 0)
 					log_error(LOG_ARGS,
 						"Could not write moderators");
 					
-				free(buf);
+				myfree(buf);
 				buf = NULL;
 			}
 		} else
@@ -142,15 +143,15 @@ void newmoderated(const char *listdir, const char *mailfilename,
 					"Could not write moderatemail");
 				exit(EXIT_FAILURE);
 			}
-		free(buf);
+		myfree(buf);
 	}
 	close(moderatorfd);
 	close(moderatorsfd);
 	while((buf = mygetline(mailfd)) && count < 100) {
 		s1 = concatstr(2, " ", buf);
-		free(buf);
+		myfree(buf);
 		writen(queuefd, s1, strlen(s1));
-		free(s1);
+		myfree(s1);
 		count++;
 	}
 	close(queuefd);
@@ -214,7 +215,7 @@ int main(int argc, char **argv)
 	mlmmjsub = concatstr(2, bindir, "/mlmmj-sub");
 	mlmmjunsub = concatstr(2, bindir, "/mlmmj-unsub");
 	mlmmjbounce = concatstr(2, bindir, "/mlmmj-bounce");
-	free(bindir);
+	myfree(bindir);
 	
 	while ((opt = getopt(argc, argv, "hVPm:L:")) != -1) {
 		switch(opt) {
@@ -245,7 +246,7 @@ int main(int argc, char **argv)
 	donemailfd = open(donemailname, O_RDWR|O_CREAT|O_EXCL,
 					S_IRUSR|S_IWUSR);
 	while(donemailfd < 0 && errno == EEXIST) {
-		free(donemailname);
+		myfree(donemailname);
 		randomstr = random_str();
 		donemailname = concatstr(3, listdir, "/queue/", randomstr);
 		fd = open(donemailname, O_RDWR|O_CREAT|O_EXCL,
@@ -253,7 +254,7 @@ int main(int argc, char **argv)
 	}
 	
 	if(donemailfd < 0) {
-		free(donemailname);
+		myfree(donemailname);
 		log_error(LOG_ARGS, "could not create mail file in queue"
 				    "directory");
 		exit(EXIT_FAILURE);
@@ -262,30 +263,30 @@ int main(int argc, char **argv)
 	log_error(LOG_ARGS, "donemailname = [%s]\n", donemailname);
 #endif
 	if((rawmailfd = open(mailfile, O_RDONLY)) < 0) {
-		free(donemailname);
+		myfree(donemailname);
 		log_error(LOG_ARGS, "could not open() input mail file");
 		exit(EXIT_FAILURE);
 	}
 
 	headerfilename = concatstr(2, listdir, "/control/customheaders");
 	hdrfd = open(headerfilename, O_RDONLY);
-	free(headerfilename);
+	myfree(headerfilename);
 	
 	footerfilename = concatstr(2, listdir, "/control/footer");
 	footfd = open(footerfilename, O_RDONLY);
-	free(footerfilename);
+	myfree(footerfilename);
 
 	delheaders = ctrlvalues(listdir, "delheaders");
 	if(delheaders == NULL) {
-		delheaders = malloc(sizeof(struct strlist));
+		delheaders = mymalloc(sizeof(struct strlist));
 		delheaders->count = 0;
 		delheaders->strs = NULL;
 	}
 
-	delheaders->strs = realloc(delheaders->strs,
+	delheaders->strs = myrealloc(delheaders->strs,
 			(delheaders->count+3) * sizeof(char *));
-	delheaders->strs[delheaders->count++] = strdup("From ");
-	delheaders->strs[delheaders->count++] = strdup("Return-Path:");
+	delheaders->strs[delheaders->count++] = mystrdup("From ");
+	delheaders->strs[delheaders->count++] = mystrdup("Return-Path:");
 	delheaders->strs[delheaders->count++] = NULL;
 	
 	subjectprefix = ctrlvalue(listdir, "prefix");	
@@ -298,9 +299,9 @@ int main(int argc, char **argv)
 	}
 
 	for(i = 0; i < delheaders->count; i++)
-		free(delheaders->strs[i]);
-	free(delheaders->strs);
-	free(delheaders);
+		myfree(delheaders->strs[i]);
+	myfree(delheaders->strs);
+	myfree(delheaders);
 
 	close(rawmailfd);
 	close(donemailfd);
@@ -319,8 +320,8 @@ int main(int argc, char **argv)
 						"/queue/discarded/",
 						randomstr);
 			rename(donemailname, discardname);
-			free(donemailname);
-			free(discardname);
+			myfree(donemailname);
+			myfree(discardname);
 			/* TODO: free emailstructs */
 			exit(EXIT_SUCCESS);
 		}
@@ -395,11 +396,11 @@ int main(int argc, char **argv)
 		queuefilename = prepstdreply(listdir, "notintocc", fromstr,
 					     fromemails.emaillist[0], NULL,
 					     subject, 1, maildata);
-		free(listaddr);
-		free(listname);
-		free(listfqdn);
-		free(fromstr);
-		free(subject);
+		myfree(listaddr);
+		myfree(listname);
+		myfree(listfqdn);
+		myfree(fromstr);
+		myfree(subject);
 		execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
 				"-T", fromemails.emaillist[0],
@@ -427,11 +428,11 @@ int main(int argc, char **argv)
 			queuefilename = prepstdreply(listdir, "subonlypost",
 					fromstr, fromemails.emaillist[0], NULL,
 					     subject, 2, maildata);
-			free(listaddr);
-			free(listname);
-			free(listfqdn);
-			free(fromstr);
-			free(subject);
+			myfree(listaddr);
+			myfree(listname);
+			myfree(listfqdn);
+			myfree(fromstr);
+			myfree(subject);
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "1",
 					"-T", fromemails.emaillist[0],
@@ -448,23 +449,23 @@ int main(int argc, char **argv)
 	if(moderated) {
 		mqueuename = concatstr(3, listdir, "/moderation/",
 				       randomstr);
-		free(randomstr);
+		myfree(randomstr);
 		if(rename(donemailname, mqueuename) < 0) {
 			log_error(LOG_ARGS, "could not rename(%s,%s)",
 					    donemailname, mqueuename);
-			free(donemailname);
-			free(mqueuename);
+			myfree(donemailname);
+			myfree(mqueuename);
 			exit(EXIT_FAILURE);
 		}
-		free(donemailname);
+		myfree(donemailname);
 		newmoderated(listdir, mqueuename, mlmmjsend);
 		return EXIT_SUCCESS;
 	}
 
 
 	if(noprocess) {
-		free(donemailname);
-		/* XXX: toemails and ccemails etc. have to be free() */
+		myfree(donemailname);
+		/* XXX: toemails and ccemails etc. have to be myfree() */
 		exit(EXIT_SUCCESS);
 	}
 	

@@ -36,6 +36,7 @@
 #include "itoa.h"
 #include "log_error.h"
 #include "strgen.h"
+#include "memory.h"
 
 #define INTBUF_SIZE 32
 
@@ -51,7 +52,7 @@ int incindexfile(const char *listdir)
 	fd = open(indexfilename, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
 
 	if(fd == -1) {
-		free(indexfilename);
+		myfree(indexfilename);
 		log_error(LOG_ARGS, "Error opening index file");
 		return 0;
 	}
@@ -59,7 +60,7 @@ int incindexfile(const char *listdir)
 	lock = myexcllock(fd);
 	
 	if(lock) {
-		free(indexfilename);
+		myfree(indexfilename);
 		log_error(LOG_ARGS, "Error locking index file");
 		close(fd);
 		return 0;
@@ -80,7 +81,7 @@ int incindexfile(const char *listdir)
 
 	myunlock(fd);
 	close(fd);
-	free(indexfilename);
+	myfree(indexfilename);
 
 	return index;
 }

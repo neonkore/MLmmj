@@ -38,6 +38,7 @@
 #include "log_error.h"
 #include "wrappers.h"
 #include "strgen.h"
+#include "memory.h"
 
 off_t find_subscriber(int fd, const char *address)
 {
@@ -97,11 +98,11 @@ int is_subbed(const char *listdir, const char *address)
 	subddirname = concatstr(2, listdir, "/subscribers.d/");
 	if((subddir = opendir(subddirname)) == NULL) {
 		log_error(LOG_ARGS, "Could not opendir(%s)", subddirname);
-		free(subddirname);
+		myfree(subddirname);
 		exit(EXIT_FAILURE);
 	}
 
-	free(subddirname);
+	myfree(subddirname);
 
 	while((dp = readdir(subddir)) != NULL) {
 		if(!strcmp(dp->d_name, "."))
@@ -115,13 +116,13 @@ int is_subbed(const char *listdir, const char *address)
 		if(subread < 0) {
 			log_error(LOG_ARGS, "Could not open '%s'",
 					subreadname);
-			free(subreadname);
+			myfree(subreadname);
 			continue;
 		}
 
 		suboff = find_subscriber(subread, address);
 		close(subread);
-		free(subreadname);
+		myfree(subreadname);
 
 		if(suboff == -1) {
 			continue;

@@ -24,8 +24,10 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+
 #include "checkwait_smtpreply.h"
 #include "config.h"
+#include "memory.h"
 
 #define USEC_WAIT 1
 #define LOOP_WAIT 10000
@@ -66,27 +68,27 @@ char *checkwait_smtpreply(int sockfd, int replytype)
 	switch(replytype) {
 	case MLMMJ_CONNECT:
 		if(smtpreply[0] != '2' || smtpreply[1] != '2')
-			return strdup(smtpreply);
+			return mystrdup(smtpreply);
 		break;
 	case MLMMJ_HELO:
 		if(smtpreply[0] != '2' || smtpreply[1] != '5')
-			return strdup(smtpreply);
+			return mystrdup(smtpreply);
 		break;
 	case MLMMJ_FROM:
 		if(smtpreply[0] != '2' || smtpreply[1] != '5')
-			return strdup(smtpreply);
+			return mystrdup(smtpreply);
 		break;
 	case MLMMJ_RCPTTO:
 		if(smtpreply[0] != '2' || smtpreply[1] != '5')
-			return strdup(smtpreply);
+			return mystrdup(smtpreply);
 		break;
 	case MLMMJ_DATA:
 		if(smtpreply[0] != '3' || smtpreply[1] != '5')
-			return strdup(smtpreply);
+			return mystrdup(smtpreply);
 		break;
 	case MLMMJ_DOT:
 		if(smtpreply[0] != '2' || smtpreply[1] != '5')
-			return strdup(smtpreply);
+			return mystrdup(smtpreply);
 		break;
 	case MLMMJ_QUIT:
 		if(smtpreply[0] != '2' || smtpreply[1] != '2')

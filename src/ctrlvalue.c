@@ -31,6 +31,7 @@
 #include "ctrlvalue.h"
 #include "mygetline.h"
 #include "chomp.h"
+#include "memory.h"
 
 char *ctrlvalue(const char *listdir, const char *ctrlstr)
 {
@@ -39,7 +40,7 @@ char *ctrlvalue(const char *listdir, const char *ctrlstr)
 	int ctrlfd;
 
 	ctrlfd = open(filename, O_RDONLY);
-	free(filename);
+	myfree(filename);
 
 	if(ctrlfd < 0)
 		return NULL;

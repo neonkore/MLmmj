@@ -30,6 +30,7 @@
 
 #include "strgen.h"
 #include "wrappers.h"
+#include "memory.h"
 
 int openrandexclrw(const char *dir, const char *prefix, mode_t mode)
 {
@@ -38,14 +39,16 @@ int openrandexclrw(const char *dir, const char *prefix, mode_t mode)
 
 	do {
                 randomstr = random_str();
-		free(filename);  /* It is OK to free() NULL, as this
-				    will in the first iteration. */
+		myfree(filename);  /* It is OK to free NULL, as this
+				    will do in the first iteration. */
 		filename = concatstr(4, dir, "/", prefix, randomstr);
-		free(randomstr);
+		myfree(randomstr);
 
                 fd = open(filename, O_RDWR|O_CREAT|O_EXCL, mode);
 
 	} while ((fd < 0) && (errno == EEXIST));
+
+	/* TODO error checking, bail out */
 
 	return fd;
 }

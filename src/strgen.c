@@ -31,11 +31,12 @@
 
 #include "strgen.h"
 #include "wrappers.h"
+#include "memory.h"
 
 char *random_str()
 {
 	size_t len = 32;
-	char *dest = malloc(len);
+	char *dest = mymalloc(len);
 
 	snprintf(dest, len, "%X%X", random_int(), random_int());
 
@@ -45,11 +46,11 @@ char *random_str()
 char *random_plus_addr(const char *addr)
 {
 	size_t len = strlen(addr) + 16;
-	char *dest = malloc(len);
+	char *dest = mymalloc(len);
 	char *atsign;
 	char *tmpstr;
 
-	tmpstr = malloc(len);
+	tmpstr = mymalloc(len);
 	snprintf(tmpstr, len, "%s", addr);
 
 	atsign = index(tmpstr, '@');
@@ -57,7 +58,7 @@ char *random_plus_addr(const char *addr)
 
 	snprintf(dest, len, "%d-%s", random_int(), tmpstr);
 
-	free(tmpstr);
+	myfree(tmpstr);
 	
 	return dest;
 }
@@ -65,7 +66,7 @@ char *random_plus_addr(const char *addr)
 char *headerstr(const char *headertoken, const char *str)
 {
 	size_t len = strlen(headertoken) + strlen(str) + 2;
-	char *dest = malloc(len);
+	char *dest = mymalloc(len);
 
 	snprintf(dest, len, "%s%s\n", headertoken, str);
 
@@ -79,7 +80,7 @@ char *genlistname(const char *listaddr)
 
 	atsign = index(listaddr, '@');
 	len = atsign - listaddr + 1;
-	dest = malloc(len);
+	dest = mymalloc(len);
 	
 	snprintf(dest, len, "%s", listaddr);
 
@@ -93,7 +94,7 @@ char *genlistfqdn(const char *listaddr)
 
 	atsign = index(listaddr, '@');
 	len = strlen(listaddr) - (atsign - listaddr);
-	dest = malloc(len);
+	dest = mymalloc(len);
 	snprintf(dest, len, "%s", atsign + 1);
 
 	return dest;
@@ -115,7 +116,7 @@ char *concatstr(int count, ...)
                         len += strlen(str);
         }
 
-        retstr = malloc(len + 1);
+        retstr = mymalloc(len + 1);
         retstr[0] = retstr[len] = 0;
 
         va_start(arg, count);
@@ -142,20 +143,20 @@ char *hostnamestr()
         hostname[sizeof(hostname)-1] = '\0';
         hostlookup = gethostbyname(hostname);
 
-        return strdup(hostlookup->h_name);
+        return mystrdup(hostlookup->h_name);
 }
 
 char *mydirname(const char *path)
 {
 	char *mypath, *dname, *ret;
 
-	mypath = strdup(path);
+	mypath = mystrdup(path);
 	dname = dirname(mypath);
-	ret = strdup(dname);
+	ret = mystrdup(dname);
 
 	/* We don't free mypath until we have strdup()'ed dname, because
 	 * dirname() returns a pointer into mypath  -- mortenp 20040527 */
-	free(mypath);
+	myfree(mypath);
 
 	return ret;
 }
@@ -164,13 +165,13 @@ char *mybasename(const char *path)
 {
 	char *mypath, *bname, *ret;
 
-	mypath = strdup(path);
+	mypath = mystrdup(path);
 	bname = basename(mypath);
-	ret = strdup(bname);
+	ret = mystrdup(bname);
 
 	/* We don't free mypath until we have strdup()'ed bname, because
 	 * basename() returns a pointer into mypath  -- mortenp 20040527 */
-	free(mypath);
+	myfree(mypath);
 	
 	return ret;
 }

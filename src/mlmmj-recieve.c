@@ -36,6 +36,7 @@
 #include "mygetline.h"
 #include "strgen.h"
 #include "log_error.h"
+#include "memory.h"
 
 extern char *optarg;
 
@@ -64,7 +65,7 @@ int main(int argc, char **argv)
 
 	bindir = mydirname(argv[0]);
 	mlmmjprocess = concatstr(2, bindir, "/mlmmj-process");
-	free(bindir);
+	myfree(bindir);
 	
 	while ((opt = getopt(argc, argv, "hPVL:F")) != -1) {
 		switch(opt) {
@@ -92,20 +93,20 @@ int main(int argc, char **argv)
 	}
 	
 	infilename = concatstr(3, listdir, "/incoming/", randomstr);
-	free(randomstr);
+	myfree(randomstr);
 	fd = open(infilename, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
 	while(fd < 0 && errno == EEXIST) {
-		free(infilename);
+		myfree(infilename);
 		randomstr = random_str();
 		infilename = concatstr(3, listdir, "/incoming/", randomstr);
-		free(randomstr);
+		myfree(randomstr);
 		fd = open(infilename, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
 	}
 
 	if(fd < 0) {
 		log_error(LOG_ARGS, "could not create mail file in "
 				    "%s/incoming directory", listdir);
-		free(infilename);
+		myfree(infilename);
 		exit(EXIT_FAILURE);
 	}
 	
@@ -122,7 +123,7 @@ int main(int argc, char **argv)
 	close(fd);
 
 	if(noprocess) {
-		free(infilename);
+		myfree(infilename);
 		exit(EXIT_SUCCESS);
 	}
 

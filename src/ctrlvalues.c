@@ -32,6 +32,7 @@
 #include "mygetline.h"
 #include "chomp.h"
 #include "mlmmj.h"
+#include "memory.h"
 
 struct strlist *ctrlvalues(const char *listdir, const char *ctrlstr)
 {
@@ -41,18 +42,18 @@ struct strlist *ctrlvalues(const char *listdir, const char *ctrlstr)
 	int ctrlfd;
 
 	ctrlfd = open(filename, O_RDONLY);
-	free(filename);
+	myfree(filename);
 
 	if(ctrlfd < 0)
 		return NULL;
 		
-	ret = malloc(sizeof(struct strlist));
+	ret = mymalloc(sizeof(struct strlist));
 	ret->count = 0;
 	ret->strs = NULL;
 	while((value = mygetline(ctrlfd)) != NULL) {
 		chomp(value);
 		ret->count++;
-		ret->strs = (char **) realloc(ret->strs, sizeof(char *) *
+		ret->strs = (char **) myrealloc(ret->strs, sizeof(char *) *
 					(ret->count + 1));
 		ret->strs[ret->count-1] = value;
 		ret->strs[ret->count] = NULL;

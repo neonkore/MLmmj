@@ -27,6 +27,7 @@
 
 #include "strgen.h"
 #include "statctrl.h"
+#include "memory.h"
 
 int statctrl(const char *listdir, const char *ctrlstr)
 {
@@ -35,7 +36,7 @@ int statctrl(const char *listdir, const char *ctrlstr)
 	int res;
 	
 	res = stat(filename, &st);
-	free(filename);
+	myfree(filename);
 	
 	if(res == 0)
 		return 1;

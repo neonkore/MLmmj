@@ -35,6 +35,7 @@
 #include "mail-functions.h"
 #include "wrappers.h"
 #include "log_error.h"
+#include "memory.h"
 
 /* "HELO \r\n " has length 7 */
 #define EXTRA_HELO_LEN 8
@@ -44,7 +45,7 @@ int write_helo(int sockfd, const char *hostname)
 	char *helo;
 	size_t bytes_written;
 	
-	if((helo = malloc(len)) == 0)
+	if((helo = mymalloc(len)) == 0)
 		return errno;
 	snprintf(helo, len, "HELO %s\r\n", hostname);
 	len = strlen(helo);
@@ -54,10 +55,10 @@ int write_helo(int sockfd, const char *hostname)
 	bytes_written = writen(sockfd, helo, len);
 	if(bytes_written < 0) {
 		log_error(LOG_ARGS, "Could not write HELO");
-		free(helo);
+		myfree(helo);
 		return errno;
 	}
-	free(helo);
+	myfree(helo);
 	return 0;
 }
 /* "MAIL FROM: <>\r\n" has length 15 */
@@ -68,7 +69,7 @@ int write_mail_from(int sockfd, const char *from_addr)
 	char *mail_from;
 	size_t bytes_written;
 
-	if((mail_from = malloc(len)) == NULL)
+	if((mail_from = mymalloc(len)) == NULL)
 		return errno;
 	snprintf(mail_from, len, "MAIL FROM: <%s>\r\n", from_addr);
 	len = strlen(mail_from);
@@ -79,10 +80,10 @@ int write_mail_from(int sockfd, const char *from_addr)
 	bytes_written = writen(sockfd, mail_from, len);
 	if(bytes_written < 0) {
 		log_error(LOG_ARGS, "Could not write FROM");
-		free(mail_from);
+		myfree(mail_from);
 		return errno;
 	}
-	free(mail_from);
+	myfree(mail_from);
 	return 0;
 }
 
@@ -95,7 +96,7 @@ int write_rcpt_to(int sockfd, const char *rcpt_addr)
 	char *rcpt_to;
 	size_t bytes_written;
 	
-	if((rcpt_to = malloc(len)) == 0)
+	if((rcpt_to = mymalloc(len)) == 0)
 		return errno;
 
 	snprintf(rcpt_to, len, "RCPT TO: <%s>\r\n", rcpt_addr);
@@ -107,10 +108,10 @@ int write_rcpt_to(int sockfd, const char *rcpt_addr)
 	bytes_written = writen(sockfd, rcpt_to, len);
 	if(bytes_written < 0) {
 		log_error(LOG_ARGS, "Could not write TO");
-		free(rcpt_to);
+		myfree(rcpt_to);
 		return errno;
 	}
-	free(rcpt_to);
+	myfree(rcpt_to);
 	return 0;
 }
 
@@ -165,7 +166,7 @@ int write_custom_line(int sockfd, const char *line)
 	size_t bytes_written;
 	char *customline;
 	
-	if((customline = malloc(len)) == 0)
+	if((customline = mymalloc(len)) == 0)
 		return errno;
 	
 	snprintf(customline, len, "%s\r\n", line);
@@ -177,10 +178,10 @@ int write_custom_line(int sockfd, const char *line)
 	bytes_written = writen(sockfd, customline, len);
 	if(bytes_written < 0) {
 		log_error(LOG_ARGS, "Could not write customline");
-		free(customline);
+		myfree(customline);
 		return errno;
 	}
-	free(customline);
+	myfree(customline);
 	return 0;
 }
 
@@ -193,7 +194,7 @@ int write_replyto(int sockfd, const char *replyaddr)
 	char *replyto;
 	size_t bytes_written;
 	
-	if((replyto = malloc(len)) == 0)
+	if((replyto = mymalloc(len)) == 0)
 		return errno;
 
 	snprintf(replyto, len, "Reply-To: %s\r\n", replyaddr);
@@ -205,10 +206,10 @@ int write_replyto(int sockfd, const char *replyaddr)
 	bytes_written = writen(sockfd, replyto, len);
 	if(bytes_written < 0) {
 		log_error(LOG_ARGS, "Could not write Reply-To header");
-		free(replyto);
+		myfree(replyto);
 		return errno;
 	}
-	free(replyto);
+	myfree(replyto);
 	return 0;
 }
 

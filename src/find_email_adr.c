@@ -21,18 +21,20 @@
  * IN THE SOFTWARE.
  */
 
-#include "find_email_adr.h"
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "find_email_adr.h"
+#include "memory.h"
 
 struct email_container *find_email_adr(const char *str,
 		struct email_container *retstruct)
 {
 	size_t len;
 	char *index_atsign;
-	char *tempstr = strdup(str);
+	char *tempstr = mystrdup(str);
 	char *c, *first_char = NULL, *last_char = NULL;
 	
 	index_atsign = strchr(tempstr, '@');
@@ -58,7 +60,7 @@ struct email_container *find_email_adr(const char *str,
 		retstruct->emaillist = (char **)realloc(retstruct->emaillist,
 				sizeof(char *) * retstruct->emailcount);
 		retstruct->emaillist[retstruct->emailcount-1] =
-				(char *)malloc(len + 1);
+				(char *)mymalloc(len + 1);
 		snprintf(retstruct->emaillist[retstruct->emailcount-1], len,
 			 "%s", first_char);
 #if 0
@@ -68,6 +70,6 @@ struct email_container *find_email_adr(const char *str,
 		*index_atsign = 'A'; /* Clear it so we don't find it again */
 		index_atsign = strchr(tempstr, '@');
 	}
-	free(tempstr);
+	myfree(tempstr);
 	return retstruct;
 }

@@ -26,12 +26,14 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+
 #include "mygetline.h"
+#include "memory.h"
 
 char *mygetline(int fd)
 {
 	size_t i = 0, res, buf_size = BUFSIZE;  /* initial buffer size */
-	char *buf = malloc(buf_size);
+	char *buf = mymalloc(buf_size);
 	char ch;
 
 	buf[0] = '\0';
@@ -41,7 +43,7 @@ char *mygetline(int fd)
 			if(errno == EINTR)
 				continue;
 			else {
-				free(buf);
+				myfree(buf);
 				return NULL;
 			}
 		}
@@ -50,14 +52,14 @@ char *mygetline(int fd)
 				buf[i] = '\0';
 				return buf;
 			} else {
-				free(buf);
+				myfree(buf);
 				return NULL;
 			}
 		}
 
 		if(i == buf_size - 1) {
 			buf_size *= 2;
-			buf = realloc(buf, buf_size);
+			buf = myrealloc(buf, buf_size);
 		}
 		buf[i++] = ch;
 		if(ch == '\n') {

@@ -39,6 +39,7 @@
 #include "wrappers.h"
 #include "mygetline.h"
 #include "prepstdreply.h"
+#include "memory.h"
 
 void send_help(const char *listdir, const char *emailaddr,
 	       const char *mlmmjsend)
@@ -69,14 +70,14 @@ void send_help(const char *listdir, const char *emailaddr,
 		exit(EXIT_FAILURE);
 	}
 	
-	free(fromstr);
-	free(listaddr);
-	free(listname);
-	free(listfqdn);
-	free(maildata[1]);
-	free(maildata[3]);
-	free(maildata[5]);
-	free(subject);
+	myfree(fromstr);
+	myfree(listaddr);
+	myfree(listname);
+	myfree(listfqdn);
+	myfree(maildata[1]);
+	myfree(maildata[3]);
+	myfree(maildata[5]);
+	myfree(subject);
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",

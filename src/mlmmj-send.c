@@ -50,6 +50,7 @@
 #include "log_error.h"
 #include "mygetline.h"
 #include "wrappers.h"
+#include "memory.h"
 
 char *bounce_from_adr(const char *recipient, const char *listadr,
 		      const char *mailfilename)
@@ -58,7 +59,7 @@ char *bounce_from_adr(const char *recipient, const char *listadr,
 	char *indexstr, *listdomain, *a, *mymailfilename;
 	size_t len;
 
-	mymailfilename = strdup(mailfilename);
+	mymailfilename = mystrdup(mailfilename);
 	if (!mymailfilename) {
 		return NULL;
 	}
@@ -70,26 +71,26 @@ char *bounce_from_adr(const char *recipient, const char *listadr,
 		indexstr = mymailfilename;
 	}
 
-	myrecipient = strdup(recipient);
+	myrecipient = mystrdup(recipient);
 	if (!myrecipient) {
-		free(mymailfilename);
+		myfree(mymailfilename);
 		return NULL;
 	}
 	a = strchr(myrecipient, '@');
 	if (a) *a = '=';
 
-	mylistadr = strdup(listadr);
+	mylistadr = mystrdup(listadr);
 	if (!mylistadr) {
-		free(mymailfilename);
-		free(myrecipient);
+		myfree(mymailfilename);
+		myfree(myrecipient);
 		return NULL;
 	}
 
 	listdomain = strchr(mylistadr, '@');
 	if (!listdomain) {
-		free(mymailfilename);
-		free(myrecipient);
-		free(mylistadr);
+		myfree(mymailfilename);
+		myfree(myrecipient);
+		myfree(mylistadr);
 		return NULL;
 	}
 	*listdomain++ = '\0';
@@ -97,31 +98,31 @@ char *bounce_from_adr(const char *recipient, const char *listadr,
 	/* 12 = RECIPDELIM + "bounces-" + "-" + "@" + NUL */
 	len = strlen(mylistadr) + strlen(myrecipient) + strlen(indexstr)
 		 + strlen(listdomain) + 12;
-	bounceaddr = malloc(len);
+	bounceaddr = mymalloc(len);
 	if (!bounceaddr) {
-		free(myrecipient);
-		free(mylistadr);
+		myfree(myrecipient);
+		myfree(mylistadr);
 		return NULL;
 	}
 	snprintf(bounceaddr, len, "%s%cbounces-%s-%s@%s", mylistadr, RECIPDELIM,
 		 myrecipient, indexstr, listdomain);
 
-	free(myrecipient);
-	free(mylistadr);
-	free(mymailfilename);
+	myfree(myrecipient);
+	myfree(mylistadr);
+	myfree(mymailfilename);
 
 	return bounceaddr;
 }
 
 int bouncemail(const char *listdir, const char *mlmmjbounce, const char *from)
 {
-	char *myfrom = strdup(from);
+	char *myfrom = mystrdup(from);
 	char *addr, *num, *c;
 	size_t len;
 	pid_t pid = 0;
 
 	if((c = strchr(myfrom, '@')) == NULL) {
-		free(myfrom);
+		myfree(myfrom);
 		return 0; /* Success when malformed 'from' */
 	}
 	*c = '\0';
@@ -131,7 +132,7 @@ int bouncemail(const char *listdir, const char *mlmmjbounce, const char *from)
 	myfrom = strchr(c, '-');
 	myfrom++;
 	len = num - myfrom - 1;
-	addr = malloc(len + 1);
+	addr = mymalloc(len + 1);
 	addr[len] = '\0';
 	strncpy(addr, myfrom, len);
 
@@ -171,7 +172,7 @@ int send_mail(int sockfd, const char *from, const char *to,
 	if(reply) {
 		log_error(LOG_ARGS, "Error in MAIL FROM. Reply = [%s]",
 				reply);
-		free(reply);
+		myfree(reply);
 		write_rset(sockfd);
 		checkwait_smtpreply(sockfd, MLMMJ_RSET);
 		return MLMMJ_FROM;
@@ -188,12 +189,12 @@ int send_mail(int sockfd, const char *from, const char *to,
 		checkwait_smtpreply(sockfd, MLMMJ_RSET);
 		if(mlmmjbounce && ((reply[0] == '4') || (reply[0] == '5'))
 				&& (reply[1] == '5')) {
-			free(reply);
+			myfree(reply);
 			return bouncemail(listdir, mlmmjbounce, from);
 		} else {
 			log_error(LOG_ARGS, "Error in RCPT TO. Reply = [%s]",
 					reply);
-			free(reply);
+			myfree(reply);
 			return MLMMJ_RCPTTO;
 		}
 	}
@@ -207,7 +208,7 @@ int send_mail(int sockfd, const char *from, const char *to,
 	reply = checkwait_smtpreply(sockfd, MLMMJ_DATA);
 	if(reply) {
 		log_error(LOG_ARGS, "Error with DATA. Reply = [%s]", reply);
-		free(reply);
+		myfree(reply);
 		write_rset(sockfd);
 		checkwait_smtpreply(sockfd, MLMMJ_RSET);
 		return MLMMJ_DATA;
@@ -238,7 +239,7 @@ int send_mail(int sockfd, const char *from, const char *to,
 		log_error(LOG_ARGS, "Mailserver did not ack end of mail.\n"
 				"<CR><LF>.<CR><LF> was written, to no"
 				"avail. Reply = [%s]", reply);
-		free(reply);
+		myfree(reply);
 		write_rset(sockfd);
 		checkwait_smtpreply(sockfd, MLMMJ_RSET);
 		return MLMMJ_DOT;
@@ -258,16 +259,16 @@ int initsmtp(int *sockfd, const char *relayhost)
 	if((reply = checkwait_smtpreply(*sockfd, MLMMJ_CONNECT)) != NULL) {
 		log_error(LOG_ARGS, "No proper greeting to our connect"
 			  "Reply: [%s]", reply);
-		free(reply);
+		myfree(reply);
 		retval = MLMMJ_CONNECT;
 		/* FIXME: Queue etc. */
 	}	
 	write_helo(*sockfd, myhostname);
-	free(myhostname);
+	myfree(myhostname);
 	if((reply = checkwait_smtpreply(*sockfd, MLMMJ_HELO)) != NULL) {
 		log_error(LOG_ARGS, "Error with HELO. Reply: [%s]", reply);
 		/* FIXME: quit and tell admin to configure correctly */
-		free(reply);
+		myfree(reply);
 		retval = MLMMJ_HELO;
 	}
 
@@ -284,7 +285,7 @@ int endsmtp(int *sockfd)
 	if((reply = checkwait_smtpreply(*sockfd, MLMMJ_QUIT)) != 0) {
 		log_error(LOG_ARGS, "Mailserver would not let us QUIT. "
 			  "We close the socket anyway though.");
-		free(reply);
+		myfree(reply);
 		retval = MLMMJ_QUIT;
 	}
 
@@ -320,7 +321,7 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 			len = next - cur;
 			if(next == start + st.st_size - 1 && *next != '\n')
 				len++;
-			addr = malloc(len + 1);
+			addr = mymalloc(len + 1);
 			strncpy(addr, cur, len);
 			addr[len] = '\0';
 			cur = next + 1;
@@ -335,30 +336,30 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 						     archivefilename);
 			sendres = send_mail(sockfd, bounceaddr, addr, replyto,
 				  mailmap, mailsize, listdir, mlmmjbounce);
-			free(bounceaddr);
+			myfree(bounceaddr);
 		}
 		if(sendres && listaddr && archivefilename) {
 			/* we failed, so save the addresses and bail */
 			index = mybasename(archivefilename);	
 			dirname = concatstr(3, listdir, "/requeue/", index);
-			free(index);
+			myfree(index);
 			if(mkdir(dirname, 0750) < 0) {
 				log_error(LOG_ARGS, "Could not mkdir(%s) for "
 						    "requeueing. Mail cannot "
 						    "be requeued.", dirname);
-				free(dirname);
-				free(addr);
+				myfree(dirname);
+				myfree(addr);
 				return -1;
 			}
 			addrfilename = concatstr(2, dirname, "/subscribers");
-			free(dirname);
+			myfree(dirname);
 			addrfd = open(addrfilename, O_WRONLY|O_CREAT|O_APPEND,
 							S_IRUSR|S_IWUSR);
 			if(addrfd < 0) {
 				log_error(LOG_ARGS, "Could not write to %s",
 						    addrfilename);
-				free(addrfilename);
-				free(addr);
+				myfree(addrfilename);
+				myfree(addr);
 				return -1;
 			} else { /* dump the remaining addresses */
 				do {
@@ -369,18 +370,18 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 							"Could not add [%s] "
 							"to requeue address "
 							"file.", addr);
-					free(addr);
+					myfree(addr);
 					addr = mygetline(subfd);
 				} while(addr);
 			}
 			
-			free(addr);
-			free(addrfilename);
+			myfree(addr);
+			myfree(addrfilename);
 			close(addrfd);
 
 			return -1;
 		}
-		free(addr);
+		myfree(addr);
 	}
 	return 0;
 }	
@@ -428,7 +429,7 @@ int main(int argc, char **argv)
 
 	bindir = mydirname(argv[0]);
 	mlmmjbounce = concatstr(2, bindir, "/mlmmj-bounce");
-	free(bindir);
+	myfree(bindir);
 	
 	while ((opt = getopt(argc, argv, "aVDhm:l:L:R:F:T:r:s:")) != -1){
 		switch(opt) {
@@ -478,7 +479,7 @@ int main(int argc, char **argv)
 	}
 
 	if(!listctrl)
-		listctrl = strdup("0");
+		listctrl = mystrdup("0");
 
 	
 	/* get the list address */
@@ -524,7 +525,7 @@ int main(int argc, char **argv)
 		if((subfd = open(subfilename, O_RDONLY)) < 0) {
 			log_error(LOG_ARGS, "Could not open '%s':",
 					    subfilename);
-			free(subfilename);
+			myfree(subfilename);
 			/* No moderators is no error. Could be the sysadmin
 			 * likes to do it manually.
 			 */
@@ -547,13 +548,13 @@ int main(int argc, char **argv)
 	if(archive) {
 		mindex = incindexfile((const char *)listdir);
 		len = strlen(listdir) + 9 + 20;
-		archivefilename = malloc(len);
+		archivefilename = mymalloc(len);
 		snprintf(archivefilename, len, "%s/archive/%d", listdir,
 			 mindex);
 	}
 
 	if(!relayhost)
-		relayhost = strdup(RELAYHOST);
+		relayhost = mystrdup(RELAYHOST);
 
 	switch(listctrl[0]) {
 	case '1': /* A single mail is to be sent */
@@ -568,7 +569,7 @@ int main(int argc, char **argv)
 			tmpstr = concatstr(2, mailfilename, ".mailfrom");
 			tmpfd = open(tmpstr, O_WRONLY|O_CREAT|O_TRUNC,
 						S_IRUSR|S_IWUSR);
-			free(tmpstr);
+			myfree(tmpstr);
 			if(tmpfd >= 0) {
 				writen(tmpfd, bounceaddr, strlen(to_addr));
 				fsync(tmpfd);
@@ -577,7 +578,7 @@ int main(int argc, char **argv)
 			tmpstr = concatstr(2, mailfilename, ".reciptto");
 			tmpfd = open(tmpstr, O_WRONLY|O_CREAT|O_TRUNC,
 						S_IRUSR|S_IWUSR);
-			free(tmpstr);
+			myfree(tmpstr);
 			if(tmpfd >= 0) {
 				writen(tmpfd, to_addr, strlen(bounceaddr));
 				fsync(tmpfd);
@@ -588,7 +589,7 @@ int main(int argc, char **argv)
 						      ".reply-to");
 				tmpfd = open(tmpstr, O_WRONLY|O_CREAT|O_TRUNC,
 							S_IRUSR|S_IWUSR);
-				free(tmpstr);
+				myfree(tmpstr);
 				if(tmpfd >= 0) {
 					writen(tmpfd, replyto,
 						strlen(replyto));
@@ -630,10 +631,10 @@ int main(int argc, char **argv)
 		if((subddir = opendir(subddirname)) == NULL) {
 			log_error(LOG_ARGS, "Could not opendir(%s)",
 					    subddirname);
-			free(subddirname);
+			myfree(subddirname);
 			exit(EXIT_FAILURE);
 		}
-		free(subddirname);
+		myfree(subddirname);
 
 		while((dp = readdir(subddir)) != NULL) {
 			if(!strcmp(dp->d_name, "."))
@@ -645,10 +646,10 @@ int main(int argc, char **argv)
 			if((subfd = open(subfilename, O_RDONLY)) < 0) {
 				log_error(LOG_ARGS, "Could not open '%s'",
 						    subfilename);
-				free(subfilename);
+				myfree(subfilename);
 				continue;
 			}
-			free(subfilename);
+			myfree(subfilename);
 
 			initsmtp(&sockfd, relayhost);
 			sendres = send_mail_many(sockfd, NULL, NULL, mailmap,
@@ -674,7 +675,7 @@ int main(int argc, char **argv)
 	
 	if(archive) {
 		rename(mailfilename, archivefilename);
-		free(archivefilename);
+		myfree(archivefilename);
 	} else if(deletewhensent)
 		unlink(mailfilename);
 

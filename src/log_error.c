@@ -28,6 +28,7 @@
 
 #include "log_error.h"
 #include "../config.h"
+#include "memory.h"
 
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
@@ -37,13 +38,13 @@ char *log_name = NULL;
 
 void log_set_name(const char* name)
 {
-	if (log_name) free(log_name);
-	log_name = strdup(name);
+	if (log_name) myfree(log_name);
+	log_name = mystrdup(name);
 }
 
 void log_free_name()
 {
-	free(log_name);
+	myfree(log_name);
 }
 
 void log_error(const char *file, int line, const char *errstr,

@@ -41,6 +41,7 @@
 #include "subscriberfuncs.h"
 #include "strgen.h"
 #include "log_error.h"
+#include "memory.h"
 
 void confirm_unsub(const char *listdir, const char *listaddr,
 		   const char *subaddr, const char *mlmmjsend)
@@ -53,10 +54,10 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 
 	if((subtextfd = open(subtextfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", subtextfilename);
-		free(subtextfilename);
+		myfree(subtextfilename);
 		exit(EXIT_FAILURE);
 	}
-	free(subtextfilename);
+	myfree(subtextfilename);
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
@@ -67,11 +68,11 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 	if((queuefd = open(queuefilename, O_WRONLY|O_CREAT|O_EXCL,
 					S_IRUSR|S_IWUSR)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
-		free(queuefilename);
-		free(randomstr);
+		myfree(queuefilename);
+		myfree(randomstr);
 		exit(EXIT_FAILURE);
 	}
-	free(randomstr);
+	myfree(randomstr);
 
 	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
 
@@ -84,7 +85,7 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 		exit(EXIT_FAILURE);
 	}
 
-	free(s1);
+	myfree(s1);
 
 	while((buf = mygetline(subtextfd))) {
 		if(strncmp(buf, "*LSTADDR*", 9) == 0) {
@@ -102,8 +103,8 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 		}
 	}
 
-	free(listname);
-	free(listfqdn);
+	myfree(listname);
+	myfree(listfqdn);
 	close(subtextfd);
 	close(queuefd);
 
@@ -131,12 +132,12 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 	if((subconffd = open(confirmfilename, O_WRONLY|O_CREAT|O_EXCL,
 					S_IRUSR|S_IWUSR)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", confirmfilename);
-		free(confirmfilename);
-		free(randomstr);
+		myfree(confirmfilename);
+		myfree(randomstr);
 		exit(EXIT_FAILURE);
 	}
 
-	free(confirmfilename);
+	myfree(confirmfilename);
 
 	if(writen(subconffd, subaddr, strlen(subaddr)) < 0) {
 		log_error(LOG_ARGS, "Could not write unsubconffile");
@@ -153,22 +154,22 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 
 	if((subtextfd = open(subtextfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", subtextfilename);
-		free(randomstr);
-		free(subtextfilename);
+		myfree(randomstr);
+		myfree(subtextfilename);
 		exit(EXIT_FAILURE);
 	}
-	free(subtextfilename);
+	myfree(subtextfilename);
 
 	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
 
 	if((queuefd = open(queuefilename, O_WRONLY|O_CREAT|O_EXCL,
 					S_IRUSR|S_IWUSR)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
-		free(queuefilename);
-		free(randomstr);
+		myfree(queuefilename);
+		myfree(randomstr);
 		exit(EXIT_FAILURE);
 	}
-	free(randomstr);
+	myfree(randomstr);
 
 	s1 = concatstr(9, "From: ", listname, "+help@", listfqdn, "\nTo: ",
 			subaddr, "\nSubject: Confirm unsubscribe from ",
@@ -179,7 +180,7 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 		exit(EXIT_FAILURE);
 	}
 
-	free(s1);
+	myfree(s1);
 
 	while((buf = mygetline(subtextfd))) {
 		if(strncmp(buf, "*LSTADDR*", 9) == 0) {
@@ -210,8 +211,8 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 		}
 	}
 
-	free(listname);
-	free(listfqdn);
+	myfree(listname);
+	myfree(listfqdn);
 	close(subtextfd);
 	close(queuefd);
 
@@ -293,7 +294,7 @@ int main(int argc, char **argv)
 
 	bindir = mydirname(argv[0]);
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
-	free(bindir);
+	myfree(bindir);
 
 	while ((opt = getopt(argc, argv, "hcCVL:a:")) != -1) {
 		switch(opt) {
@@ -339,10 +340,10 @@ int main(int argc, char **argv)
 	if((subddir = opendir(subddirname)) == NULL) {
 		log_error(LOG_ARGS, "Could not opendir(%s)",
 				    subddirname);
-		free(subddirname);
+		myfree(subddirname);
 		exit(EXIT_FAILURE);
 	}
-	free(subddirname);
+	myfree(subddirname);
 	while((dp = readdir(subddir)) != NULL) {
 		if(!strcmp(dp->d_name, "."))
 			continue;
@@ -354,14 +355,14 @@ int main(int argc, char **argv)
 		subread = open(subreadname, O_RDWR);
 		if(subread == -1) {
 			log_error(LOG_ARGS, "Could not open '%s'", subreadname);
-			free(subreadname);
+			myfree(subreadname);
 			continue;
 		}
 
 		suboff = find_subscriber(subread, address);
 		if(suboff == -1) {
 			close(subread);
-			free(subreadname);
+			myfree(subreadname);
 			continue;
 		}
 
@@ -370,7 +371,7 @@ int main(int argc, char **argv)
 			log_error(LOG_ARGS, "Error locking '%s' file",
 					subreadname);
 			close(subread);
-			free(subreadname);
+			myfree(subreadname);
 			continue;
 		}
 
@@ -383,8 +384,8 @@ int main(int argc, char **argv)
 					subwritename);
 			myunlock(subread);
 			close(subread);
-			free(subreadname);
-			free(subwritename);
+			myfree(subreadname);
+			myfree(subwritename);
 			continue;
 		}
 
@@ -395,8 +396,8 @@ int main(int argc, char **argv)
 			myunlock(subread);
 			close(subread);
 			close(subwrite);
-			free(subreadname);
-			free(subwritename);
+			myfree(subreadname);
+			myfree(subwritename);
 			continue;
 		}
 
@@ -407,8 +408,8 @@ int main(int argc, char **argv)
 			close(subread);
 			close(subwrite);
 			unlink(subwritename);
-			free(subreadname);
-			free(subwritename);
+			myfree(subreadname);
+			myfree(subwritename);
 			continue;
 		}
 
@@ -423,8 +424,8 @@ int main(int argc, char **argv)
 				myunlock(subwrite);
 				close(subread);
 				close(subwrite);
-				free(subreadname);
-				free(subwritename);
+				myfree(subreadname);
+				myfree(subwritename);
 				continue;
 			}
 		} else /* unsubres == 0, no subscribers left */
@@ -434,14 +435,14 @@ int main(int argc, char **argv)
 		myunlock(subwrite);
 		close(subread);
 		close(subwrite);
-		free(subreadname);
-		free(subwritename);
+		myfree(subreadname);
+		myfree(subwritename);
 
 		if(confirmunsub)
 			confirm_unsub(listdir, listaddr, address, mlmmjsend);
 	}
 	closedir(subddir);
-	free(listaddr);
+	myfree(listaddr);
 
 	return EXIT_SUCCESS;
 }

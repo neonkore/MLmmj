@@ -42,6 +42,7 @@
 #include "mygetline.h"
 #include "chomp.h"
 #include "prepstdreply.h"
+#include "memory.h"
 
 char *fetchindexes(const char *bouncefile)
 {
@@ -72,7 +73,7 @@ char *fetchindexes(const char *bouncefile)
 	for(next = cur = start; next < start + st.st_size; next++) {
 		if(*next == '\n') {
 			len = next - cur;
-			line = malloc(len + 1);
+			line = mymalloc(len + 1);
 			strncpy(line, cur, len);
 			line[len] = '\0';
 			cur = next + 1;
@@ -83,8 +84,8 @@ char *fetchindexes(const char *bouncefile)
 		*colon = '\0';
 		s = indexstr;
 		indexstr = concatstr(4, s, "        ", line, "\n");
-		free(s);
-		free(line);
+		myfree(s);
+		myfree(line);
 	}
 		
 	munmap(start, st.st_size);
@@ -101,8 +102,7 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 	int fd;
 	time_t t;
 
-	myaddr = strdup(addr);
-	MY_ASSERT(myaddr);
+	myaddr = mystrdup(addr);
 
 	listaddr = getlistaddr(listdir);
 	chomp(listaddr);
@@ -114,8 +114,8 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 
 	a = strchr(myaddr, '=');
 	if (!a) {
-		free(myaddr);
-		free(from);
+		myfree(myaddr);
+		myfree(from);
 		log_error(LOG_ARGS, "do_probe(): malformed address");
 		exit(EXIT_FAILURE);
 	}
@@ -137,17 +137,17 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 	queuefilename = prepstdreply(listdir, "bounce-probe", fromstr,
 					myaddr, NULL, subjectstr, 2, maildata);
 	MY_ASSERT(queuefilename);
-	free(fromstr);
-	free(subjectstr);
-	free(listaddr);
-	free(listfqdn);
-	free(listname);
-	free(indexstr);
+	myfree(fromstr);
+	myfree(subjectstr);
+	myfree(listaddr);
+	myfree(listfqdn);
+	myfree(listname);
+	myfree(indexstr);
 
 	probefile = concatstr(4, listdir, "/bounce/", addr, "-probe");
 	MY_ASSERT(probefile);
 	t = time(NULL);
-	a = malloc(32);
+	a = mymalloc(32);
 	snprintf(a, 31, "%ld", (long int)t);
 	a[31] = '\0';
 	unlink(probefile);
@@ -158,7 +158,7 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 		if(writen(fd, a, strlen(a)) < 0)
 			log_error(LOG_ARGS, "Could not write time in probe");
 
-	free(probefile);
+	myfree(probefile);
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
@@ -201,7 +201,7 @@ int main(int argc, char **argv)
 
 	bindir = mydirname(argv[0]);
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
-	free(bindir);
+	myfree(bindir);
 
 	while ((opt = getopt(argc, argv, "hVL:a:n:m:p")) != -1) {
 		switch(opt) {
@@ -259,14 +259,14 @@ int main(int argc, char **argv)
 		a = concatstr(5, listdir, "/subconf/", address + 8, "-",
 				number);
 		unlink(a);
-		free(a);
+		myfree(a);
 		exit(EXIT_SUCCESS);
 	}
 	if(strncmp(address, "confunsub-", 10) == 0) {
 		a = concatstr(5, listdir, "/unsubconf/", address + 10, "-",
 				number);
 		unlink(a);
-		free(a);
+		myfree(a);
 		exit(EXIT_SUCCESS);
 	}
 	/* Below checks for bounce probes bouncing. If they do, simply remove
@@ -276,7 +276,7 @@ int main(int argc, char **argv)
 		a = concatstr(4, listdir, "/bounce/", address, "-probe");
 		unlink(a);
 		unlink(mailname);
-		free(a);
+		myfree(a);
 		exit(EXIT_SUCCESS);
 	}
 	
@@ -290,7 +290,7 @@ int main(int argc, char **argv)
 
 	/* make sure it's a subscribed address */
 	if(is_subbed(listdir, address)) {
-		free(bfilename);
+		myfree(bfilename);
 		exit(EXIT_SUCCESS); /* Not subbed, so exit silently */
 	}
 
@@ -305,7 +305,7 @@ int main(int argc, char **argv)
 	if ((fd = open(bfilename, O_WRONLY|O_APPEND|O_CREAT,
 			S_IRUSR|S_IWUSR)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", bfilename);
-		free(bfilename);
+		myfree(bfilename);
 		exit(EXIT_FAILURE);
 	}
 
@@ -318,7 +318,7 @@ int main(int argc, char **argv)
 	/* int + ":" + int + " # Wed Jun 30 21:49:08 1993\n" + NUL */
 	len = 20 + 1 + 20 + 28 + 1;
 
-	buf = malloc(len);
+	buf = mymalloc(len);
 	if (!buf) exit(EXIT_FAILURE);
 
 	t = time(NULL);
@@ -330,7 +330,7 @@ int main(int argc, char **argv)
 	if(mailname)
 		unlink(mailname);
 		
-	free(bfilename);
+	myfree(bfilename);
 
 	return EXIT_SUCCESS;
 }

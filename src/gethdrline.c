@@ -27,6 +27,7 @@
 #include "mygetline.h"
 #include "gethdrline.h"
 #include "strgen.h"
+#include "memory.h"
 
 char *gethdrline(int fd)
 {
@@ -43,9 +44,9 @@ char *gethdrline(int fd)
 			nextline = mygetline(fd);
 			tmp = retstr;
 			retstr = concatstr(3, retstr, line, nextline);
-			free(tmp);
-			free(line);
-			free(nextline);
+			myfree(tmp);
+			myfree(line);
+			myfree(nextline);
 			tmp = line = nextline = NULL;
 			if(read(fd, &ch, 1) == (size_t)1)
 				lseek(fd, -1, SEEK_CUR);
@@ -54,7 +55,7 @@ char *gethdrline(int fd)
 		} else {
 			tmp = retstr;
 			retstr = concatstr(3, retstr, line, nextline);
-			free(tmp);
+			myfree(tmp);
 
 			return retstr;
 		}
