@@ -102,7 +102,8 @@ int main(int argc, char **argv)
 			if(uid && uid != st.st_uid) {
 				log_error(LOG_ARGS,
 					"Have to invoke either as root "
-					"or as the user owning listdir");
+					"or as the user owning listdir "
+					"Invoked with uid = [%d]", (int)uid);
 				writen(STDERR_FILENO,
 					"Have to invoke either as root "
 					"or as the user owning listdir\n", 60);

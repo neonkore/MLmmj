@@ -1,4 +1,6 @@
 1.1.0
+ o If mlmmj-recieve was invoked with a uid not root or not the owner of listdir
+   inform about the uid actually invoked with
  o Add German listtexts (Hendrik Norman Vogelsang)
  o Add hooks for installing listtexts into $(pkgdatadir) (Drake Wyrm)
  o Add mlmmj-list manual page
