@@ -132,9 +132,9 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	listfqdn = genlistfqdn(listaddr);
 
         do {
-		randomstr = random_plus_addr(subaddr);
                 myfree(confirmfilename);
                 myfree(randomstr);
+		randomstr = random_plus_addr(subaddr);
                 confirmfilename = concatstr(3, listdir, "/subconf/",
 					    randomstr);
 
@@ -146,6 +146,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	if(subconffd < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", confirmfilename);
 		myfree(confirmfilename);
+                myfree(randomstr);
 		exit(EXIT_FAILURE);
 	}
 
@@ -153,6 +154,8 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 
 	if(writen(subconffd, subaddr, strlen(subaddr)) < 0) {
 		log_error(LOG_ARGS, "Could not write to subconffd");
+		myfree(confirmfilename);
+                myfree(randomstr);
 		exit(EXIT_FAILURE);
 	}
 

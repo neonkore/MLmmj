@@ -47,7 +47,7 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 		   const char *subaddr, const char *mlmmjsend)
 {
 	int subtextfd, queuefd;
-	char *buf, *subtextfilename, *randomstr, *queuefilename;
+	char *buf, *subtextfilename, *randomstr, *queuefilename = NULL;
 	char *fromaddr, *listname, *listfqdn, *s1;
 
 	subtextfilename = concatstr(2, listdir, "/text/unsub-ok");
@@ -61,18 +61,23 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
-	randomstr = random_str();
 
-	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
+	do {
+		randomstr = random_str();
+		myfree(queuefilename);
+		queuefilename = concatstr(3, listdir, "/queue/", randomstr);
+		myfree(randomstr);
 
-	if((queuefd = open(queuefilename, O_WRONLY|O_CREAT|O_EXCL,
-					S_IRUSR|S_IWUSR)) < 0) {
+		queuefd = open(queuefilename, O_RDWR|O_CREAT|O_EXCL,
+					      S_IRUSR|S_IWUSR);
+
+	} while ((queuefd < 0) && (errno == EEXIST));
+
+	if(queuefd < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
 		myfree(queuefilename);
-		myfree(randomstr);
 		exit(EXIT_FAILURE);
 	}
-	myfree(randomstr);
 
 	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
 
@@ -120,20 +125,30 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 void generate_unsubconfirm(const char *listdir, const char *listaddr,
 			   const char *subaddr, const char *mlmmjsend)
 {
-	char *confirmaddr, *buf, *listname, *listfqdn, *confirmfilename;
-	char *subtextfilename, *queuefilename, *fromaddr, *randomstr, *s1;
+	char *confirmaddr, *buf, *listname, *listfqdn;
+	char *subtextfilename, *queuefilename = NULL, *fromaddr, *s1;
+	char *randomstr = NULL, *confirmfilename = NULL;
 	int subconffd, subtextfd, queuefd;
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
-	randomstr = random_plus_addr(subaddr);
-	confirmfilename = concatstr(3, listdir, "/unsubconf/", randomstr);
 
-	if((subconffd = open(confirmfilename, O_WRONLY|O_CREAT|O_EXCL,
-					S_IRUSR|S_IWUSR)) < 0) {
+        do {
+                myfree(confirmfilename);
+                myfree(randomstr);
+		randomstr = random_plus_addr(subaddr);
+                confirmfilename = concatstr(3, listdir, "/unsubconf/",
+					    randomstr);
+
+                subconffd = open(confirmfilename, O_RDWR|O_CREAT|O_EXCL,
+						  S_IRUSR|S_IWUSR);
+
+        } while ((subconffd < 0) && (errno == EEXIST));
+
+	if(subconffd < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", confirmfilename);
+                myfree(randomstr);
 		myfree(confirmfilename);
-		myfree(randomstr);
 		exit(EXIT_FAILURE);
 	}
 
@@ -141,6 +156,8 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 
 	if(writen(subconffd, subaddr, strlen(subaddr)) < 0) {
 		log_error(LOG_ARGS, "Could not write unsubconffile");
+                myfree(randomstr);
+		myfree(confirmfilename);
 		exit(EXIT_FAILURE);
 	}
 
@@ -150,26 +167,33 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 			           listfqdn);
 	fromaddr = concatstr(5, listname, "+bounces-confunsub-", randomstr,
 				"@", listfqdn);
+	myfree(randomstr);
+
 	subtextfilename = concatstr(2, listdir, "/text/unsub-confirm");
 
 	if((subtextfd = open(subtextfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", subtextfilename);
-		myfree(randomstr);
 		myfree(subtextfilename);
 		exit(EXIT_FAILURE);
 	}
 	myfree(subtextfilename);
 
-	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
+	do {
+		randomstr = random_str();
+		myfree(queuefilename);
+		queuefilename = concatstr(3, listdir, "/queue/", randomstr);
+		myfree(randomstr);
 
-	if((queuefd = open(queuefilename, O_WRONLY|O_CREAT|O_EXCL,
-					S_IRUSR|S_IWUSR)) < 0) {
+		queuefd = open(queuefilename, O_RDWR|O_CREAT|O_EXCL,
+					      S_IRUSR|S_IWUSR);
+
+	} while ((queuefd < 0) && (errno == EEXIST));
+
+	if(queuefd < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
 		myfree(queuefilename);
-		myfree(randomstr);
 		exit(EXIT_FAILURE);
 	}
-	myfree(randomstr);
 
 	s1 = concatstr(9, "From: ", listname, "+help@", listfqdn, "\nTo: ",
 			subaddr, "\nSubject: Confirm unsubscribe from ",
