@@ -195,6 +195,7 @@ int main(int argc, char **argv)
 	time_t t;
 	int probe = 0;
 	struct stat st;
+	uid_t uid;
 
 	log_set_name(argv[0]);
 
@@ -229,11 +230,32 @@ int main(int argc, char **argv)
 			exit(0);
 		}
 	}
+
 	if(listdir == NULL || address == NULL || (number == NULL && probe == 0)) {
 		fprintf(stderr, "You have to specify -L, -a and -n or -p\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
+
+	/* Lets make sure no random user tries to do bouncehandling */
+	if(listdir) {
+		if(stat(listdir, &st) == 0) {
+			uid = getuid();
+			if(uid && uid != st.st_uid) {
+				log_error(LOG_ARGS,
+					"Have to invoke either as root "
+					"or as the user owning listdir");
+				writen(STDERR_FILENO,
+					"Have to invoke either as root "
+					"or as the user owning listdir\n", 60);
+				exit(EXIT_FAILURE);
+			}
+		} else {
+			log_error(LOG_ARGS, "Could not stat %s", listdir);
+			exit(EXIT_FAILURE);
+		}
+	}
+	
 	if(number != NULL && probe != 0) {
 		fprintf(stderr, "You can only specify one of -n or -p\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
