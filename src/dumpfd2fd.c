@@ -26,10 +26,10 @@ int dumpfd2fd(int infd, int outfd)
 			if(errno == EINTR)
 				continue;
 			else
-				return errno;
+				return -1; /* Caller can check errno */
 		}
 		if(writen(outfd, &buf, n) < 0)
-			return errno;
+			return -1; /* Caller can check errno */
 	}
 	
 	return 0;

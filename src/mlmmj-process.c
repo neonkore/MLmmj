@@ -32,11 +32,11 @@
 void newmoderated(const char *listdir, const char *mailfilename,
 		  const char *mlmmjsend)
 {
-	char *to, *from, *subject, *fqdn, *listname, *replyto;
+	char *from, *fqdn, *listname;
 	char *buf, *moderatorfilename, *listaddr = getlistaddr(listdir);
 	char *queuefilename, *moderatorsfilename, *randomstr = random_str();
-	char *mailbasename = mybasename(mailfilename);
-	FILE *moderatorfile, *queuefile, *moderatorsfile, *mailfile;
+	char *mailbasename = mybasename(mailfilename), *s1, *s2;
+	int moderatorfd, queuefd, moderatorsfd, mailfd;
 	size_t count = 0;
 	
 	printf("mailfilename = [%s], mailbasename = [%s]\n", mailfilename,
@@ -45,15 +45,17 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	fqdn = genlistfqdn(listaddr);
 	listname = genlistname(listaddr);
 	moderatorfilename = concatstr(2, listdir, "/text/moderation");
-	if((moderatorfile = fopen(moderatorfilename, "r")) == NULL) {
+	if((moderatorfd = open(moderatorfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open text/moderation");
 		free(moderatorfilename);
 		exit(EXIT_FAILURE);
 	}
-	queuefilename = concatstr(3, listdir, "/moderation/queue", randomstr);
+	free(moderatorfilename);
+	queuefilename = concatstr(3, listdir, "/moderation/queue/", randomstr);
 	printf("%s\n", queuefilename);
 	
-	if((queuefile = fopen(queuefilename, "w")) == NULL) {
+	if((queuefd = open(queuefilename, O_WRONLY|O_CREAT|O_EXCL,
+					S_IRUSR|S_IWUSR)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
 		free(queuefilename);
 		free(randomstr);
@@ -62,67 +64,69 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	free(randomstr);
 
 	moderatorsfilename = concatstr(2, listdir, "/moderators");
-	if((moderatorsfile = fopen(moderatorsfilename, "r")) == NULL) {
+	if((moderatorsfd = open(moderatorsfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", moderatorsfilename);
 		free(queuefilename);
 		free(moderatorsfilename);
-		fclose(queuefile);
+		close(queuefd);
 		exit(EXIT_FAILURE);
 	}
-	free(moderatorfilename);
+	free(moderatorsfilename);
 
-	if((mailfile = fopen(mailfilename, "r")) == NULL) {
+	if((mailfd = open(mailfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", mailfilename);
 		free(queuefilename);
 		free(moderatorsfilename);
-		fclose(queuefile);
+		close(queuefd);
 		exit(EXIT_FAILURE);
 	}
 
-	fputs("From: ", queuefile);
 	from = concatstr(3, listname, "+owner@", fqdn);
-	fputs(from, queuefile);
-	fputc('\n', queuefile);
-	to = concatstr(5, "To: ", listname, "-moderators@", fqdn, "\n");
-	fputs(to, queuefile);
-	free(to);
-	replyto = concatstr(7, "Reply-To: ", listname, "+moderate-",
+	s1 = concatstr(3, "From: ", from, "\n");
+	s2 = concatstr(6, s1, "To: ", listname, "-moderators@", fqdn, "\n");
+	free(s1);
+	s1 = concatstr(8, s2, "Reply-To: ", listname, "+moderate-",
 			       mailbasename, "@", fqdn, "\n");
-	fputs(replyto, queuefile);
-	free(replyto);
-	subject = concatstr(3, "Subject: Moderation needed for ", listaddr,
+	free(s2);
+	s2 = concatstr(4, s1, "Subject: Moderation needed for ", listaddr,
 			       "\n\n");
-	fputs(subject, queuefile);
-	free(subject);
+	free(s1);
+	if(writen(queuefd, s2, strlen(s2)) < 0) {
+		log_error(LOG_ARGS, "Could not write to %s", queuefilename);
+		exit(EXIT_FAILURE);
+	}
+	free(s2);
 	
-	while((buf = myfgetline(moderatorfile))) {
+	while((buf = mygetline(moderatorfd))) {
 		if(strncmp(buf, "*LISTADDR*", 10) == 0) {
-			fputs(listaddr, queuefile);
+			writen(queuefd, listaddr, strlen(listaddr));
 		} else if(strncmp(buf, "*MODERATEADDR*", 14) == 0) {
-			fputs(listname, queuefile);
-			fputs("+moderate-", queuefile);
-			fputs(mailbasename, queuefile);
-			fputc('@', queuefile);
-			fputs(fqdn, queuefile);
+			s1 = concatstr(5, listname, "+moderate-",
+					mailbasename, "@", fqdn);
+			writen(queuefd, s1, strlen(s1));
+			free(s1);
 		} else if(strncmp(buf, "*MODERATORS*", 12) == 0) {
 			free(buf);
-			while((buf = myfgetline(moderatorsfile))) {
-				fputs(buf, queuefile);
+			while((buf = mygetline(moderatorsfd))) {
+				writen(queuefd, buf, strlen(buf));
 				free(buf);
 				buf = NULL;
 			}
 		} else
-			fputs(buf, queuefile);
+			writen(queuefd, buf, strlen(buf));
 		free(buf);
 	}
-	fclose(moderatorfile);
-	while((buf = myfgetline(mailfile)) && count < 100) {
-		fputc(' ', queuefile);
-		fputs(buf, queuefile);
+	close(moderatorfd);
+	close(moderatorsfd);
+	while((buf = mygetline(mailfd)) && count < 100) {
+		s1 = concatstr(2, " ", buf);
 		free(buf);
+		writen(queuefd, s1, strlen(s1));
+		free(s1);
 		count++;
 	}
-	fclose(queuefile);
+	close(queuefd);
+	close(mailfd);
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "2",
@@ -150,12 +154,12 @@ static void print_help(const char *prg)
 int main(int argc, char **argv)
 {
 	int i, fd, opt, noprocess = 0, moderated = 0;
+	int hdrfd, footfd, rawmailfd, donemailfd;
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
 	char *randomstr = random_str(), *mqueuename;
 	char *mlmmjsend, *mlmmjsub, *mlmmjunsub, *mlmmjbounce;
 	char *bindir, *subjectprefix, *discardname;
-	FILE *headerfile, *footerfile, *rawmailfile, *donemailfile;
 	struct email_container fromemails = { 0, NULL };
 	struct email_container toemails = { 0, NULL };
 	struct email_container ccemails = { 0, NULL };
@@ -202,59 +206,55 @@ int main(int argc, char **argv)
 	}
 
 	donemailname = concatstr(3, listdir, "/queue/", randomstr);
-	fd = open(donemailname, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
-	while(fd == -1 && errno == EEXIST) {
+	donemailfd = open(donemailname, O_RDWR|O_CREAT|O_EXCL,
+					S_IRUSR|S_IWUSR);
+	while(donemailfd < 0 && errno == EEXIST) {
 		free(donemailname);
 		randomstr = random_str();
 		donemailname = concatstr(3, listdir, "/queue/", randomstr);
-		fd = open(donemailname, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
+		fd = open(donemailname, O_RDWR|O_CREAT|O_EXCL,
+					S_IRUSR|S_IWUSR);
 	}
 	
-	if(fd == -1) {
+	if(donemailfd < 0) {
 		free(donemailname);
 		log_error(LOG_ARGS, "could not create mail file in queue"
 				    "directory");
 		exit(EXIT_FAILURE);
 	}
-
-	if((donemailfile = fdopen(fd, "w")) == NULL) {
-		free(donemailname);
-		log_error(LOG_ARGS, "could not fdopen() output mail file");
-		exit(EXIT_FAILURE);
-	}
-
 #if 0
-	log_error(LOG_ARGS, "[%s]\n", donemailname);
+	log_error(LOG_ARGS, "donemailname = [%s]\n", donemailname);
 #endif
-	if((rawmailfile = fopen(mailfile, "r")) == NULL) {
+	if((rawmailfd = open(mailfile, O_RDONLY)) < 0) {
 		free(donemailname);
-		log_error(LOG_ARGS, "could not fopen() input mail file");
+		log_error(LOG_ARGS, "could not open() input mail file");
 		exit(EXIT_FAILURE);
 	}
 
 	headerfilename = concatstr(2, listdir, "/control/customheaders");
-	headerfile = fopen(headerfilename, "r");
+	hdrfd = open(headerfilename, O_RDONLY);
 	free(headerfilename);
 	
 	footerfilename = concatstr(2, listdir, "/control/footer");
-	footerfile = fopen(footerfilename, "r");
+	footfd = open(footerfilename, O_RDONLY);
 	free(footerfilename);
 	
 	subjectprefix = ctrlvalue(listdir, "prefix");	
 	
-	do_all_the_voodo_here(rawmailfile, donemailfile, headerfile,
-				footerfile, badheaders, readhdrs,
-				subjectprefix);
+	if(do_all_the_voodo_here(rawmailfd, donemailfd, hdrfd, footfd,
+				badheaders, readhdrs, subjectprefix) < 0) {
+		log_error(LOG_ARGS, "Error in do_all_the_voodo_here.");
+		exit(EXIT_FAILURE);
+	}
 
-	fclose(rawmailfile);
+	close(rawmailfd);
 	unlink(mailfile);
-	close(fd);
-	fclose(donemailfile);
+	close(donemailfd);
 
-	if(headerfile)
-		fclose(headerfile);
-	if(footerfile)
-		fclose(footerfile);
+	if(hdrfd)
+		close(hdrfd);
+	if(footfd)
+		close(footfd);
 
 	if(readhdrs[0].token) { /* From: addresses */
 		for(i = 0; i < readhdrs[0].valuecount; i++) {
@@ -288,7 +288,8 @@ int main(int argc, char **argv)
 		log_error(LOG_ARGS, "listcontrol(from, %s, %s, %s, %s, %s, %s)\n", listdir, toemails.emaillist[0], mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
 #endif
 		listcontrol(&fromemails, listdir, toemails.emaillist[0],
-			    mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
+			    mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce,
+			    donemailname);
 		return EXIT_SUCCESS;
 	}
 #if 0
@@ -306,10 +307,7 @@ int main(int argc, char **argv)
 				mqueuename);
 		free(randomstr);
 		if(rename(donemailname, mqueuename) < 0) {
-			printf("could not rename(%s,%s)\n", 
-					    donemailname, mqueuename);
-			perror("rename");
-			log_error(LOG_ARGS, "could not rename(%s,%s)", 
+			log_error(LOG_ARGS, "could not rename(%s,%s)",
 					    donemailname, mqueuename);
 			free(donemailname);
 			free(mqueuename);
