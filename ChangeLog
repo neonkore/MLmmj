@@ -1,4 +1,9 @@
- o Do a mmap of the mail to send once, instead of reading the mail for
+ o Don't use moderation/queue for outgoing, just use queue/
+ o Christoph Thiel pointed out that listaddress and moderators belong in
+   control/ so move them there
+ o Get rid of all FILE * instances and replace them with fd's
+ o Also mmap the subscribers file when reading subcribers
+ o Do an mmap of the mail to send once, instead of reading the mail for
    each mail to send
  o Rip out the ability to fork to make more than one connection to relayhost.
    It turned out to not make any performance gain (tested with lists with

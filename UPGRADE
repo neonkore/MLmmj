@@ -1,3 +1,15 @@
+This applies to everyone using mlmmj > 0.5.2:
+
+ Following directories have moved into the control/ directory since that
+ is where they rightfully belong:
+
+  · listaddress
+  · moderators
+
+ The following directory can be deleted:
+
+  · moderation/queue
+
 This applies to everyone using mlmmj > 0.5.1:
 ---------------------------------------------
 
