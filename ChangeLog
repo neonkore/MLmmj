@@ -1,3 +1,5 @@
+0.6.0
+ o Add several unlinks. No need to litter queue/ with useless files
  o Don't use moderation/queue for outgoing, just use queue/
  o Christoph Thiel pointed out that listaddress and moderators belong in
    control/ so move them there

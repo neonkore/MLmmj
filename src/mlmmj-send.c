@@ -303,7 +303,7 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 	for(next = cur = start; next < start + st.st_size; next++) {
 		if(*next == '\n' || next == start + st.st_size - 1) {
 			len = next - cur;
-			if(next == start + st.st_size - 1)
+			if(next == start + st.st_size - 1 && *next != '\n')
 				len++;
 			addr = malloc(len + 1);
 			strncpy(addr, cur, len);
@@ -349,8 +349,7 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 				do {
 					/* Dirty hack to add newline. */
 					len = strlen(addr);
-					addr[len] = '\n';
-					if(writen(addrfd, addr, len+1) < 0)
+					if(writen(addrfd, addr, len) < 0)
 						log_error(LOG_ARGS,
 							"Could not add [%s] "
 							"to requeue address "

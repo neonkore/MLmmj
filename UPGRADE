@@ -10,6 +10,8 @@ This applies to everyone using mlmmj > 0.5.2:
 
   · moderation/queue
 
+ Start mlmmj-maintd
+
 This applies to everyone using mlmmj > 0.5.1:
 ---------------------------------------------
 

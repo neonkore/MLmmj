@@ -7,4 +7,4 @@
  o mlmmj-maintenance (in progress)
 
 An ever ongoing TODO is we need someone to run it all through valgrind or
-similar and plug all memory leaks etc.
+similar and plug all memory and fd leaks etc.
