@@ -233,8 +233,11 @@ static enum action do_access(struct strlist *rule_strs, struct strlist *hdrs)
 		}
 
 		if (*rule_ptr == ' ') {
-			*rule_ptr++;
-		} else if (*rule_ptr) {
+			rule_ptr++;
+		} else if (*rule_ptr == '\0') {
+			rule_ptr--;
+			*rule_ptr = '.';
+		} else {
 			/* we must have space or end of string */
 			errno = 0;
 			log_error(LOG_ARGS, "Unable to parse rule #%d!"
