@@ -23,99 +23,52 @@
 #include "chomp.h"
 #include "wrappers.h"
 #include "mygetline.h"
+#include "prepstdreply.h"
 
 void send_help(const char *listdir, const char *emailaddr,
 	       const char *mlmmjsend)
 {
-	int helpfd, queuefd;
-	char *listaddr, *buf, *fromaddr;
-	char *helpfilename, *queuefilename, *listname;
-	char *randomstr, *listfqdn, *s1;
+	char *queuefilename, *listaddr, *listname, *listfqdn, *fromaddr;
+	char *fromstr, *subject;
+	char *maildata[] = { "*UNSUBADDR*", NULL, "*SUBADDR*", NULL,
+			     "*HLPADDR*", NULL };
 
         listaddr = getlistaddr(listdir);
 	chomp(listaddr);
 
-	helpfilename = concatstr(2, listdir, "/text/listhelp");
-
-	if((helpfd = open(helpfilename, O_RDONLY)) < 0) {
-		log_error(LOG_ARGS, "Could not open text/help");
-		free(helpfilename);
-		exit(EXIT_FAILURE);
-	}
-
-	free(helpfilename);
-
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
-	randomstr = random_str();
-
-	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
-	
-	queuefd = open(queuefilename, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
-	if(queuefd < 0) {
-		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
-		free(queuefilename);
-		free(randomstr);
-		exit(EXIT_FAILURE);
-	}
-	free(randomstr);
 
 	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
 
-	s1 = concatstr(9, "From: ", listname, "+owner@", listfqdn,
-			"\nTo: ", emailaddr, "\nSubject: Help for ",
-			listaddr, "\n\n");
+        maildata[1] = concatstr(3, listname, "+unsubscribe@", listfqdn);
+	maildata[3] = concatstr(3, listname, "+subscribe@", listfqdn);
+	maildata[5] = concatstr(3, listname, "+help@", listfqdn);
+	fromstr = concatstr(3, listname, "+owner@", listfqdn);
+	subject = concatstr(2, "Help for ", listaddr);
 
-	if(writen(queuefd, s1, strlen(s1)) < 0) {
-		log_error(LOG_ARGS, "Could not write help mail");
+	queuefilename = prepstdreply(listdir, "listhelp", fromstr, emailaddr,
+				NULL, subject, 3, maildata);
+	if(queuefilename == NULL) {
+		log_error(LOG_ARGS, "Could not prepare help mail");
 		exit(EXIT_FAILURE);
 	}
-
-	free(s1);
-
-	while((buf = mygetline(helpfd)) != NULL) {
-		if(strncmp(buf, "*UNSUBADDR*", 11) == 0) {
-			s1 = concatstr(3, listname, "+unsubscribe@", listfqdn);
-			if(writen(queuefd, s1, strlen(s1)) < 0) {
-				log_error(LOG_ARGS,
-						"Could not write help mail");
-				exit(EXIT_FAILURE);
-			}
-			free(s1);
-		} else if(strncmp(buf, "*SUBADDR*", 9) == 0) {
-			s1 = concatstr(3, listname, "+subscribe@", listfqdn);
-			if(writen(queuefd, s1, strlen(s1)) < 0) {
-				log_error(LOG_ARGS,
-						"Could not write help mail");
-				exit(EXIT_FAILURE);
-			}
-			free(s1);
-		} else if(strncmp(buf, "*HLPADDR*", 9) == 0) {
-			s1 = concatstr(3, listname, "+help@", listfqdn);
-			if(writen(queuefd, s1, strlen(s1)) < 0) {
-				log_error(LOG_ARGS,
-						"Could not write help mail");
-				exit(EXIT_FAILURE);
-			}
-			free(s1);
-		} else if(writen(queuefd, buf, strlen(buf)) < 0) {
-				log_error(LOG_ARGS,
-						"Could not write help mail");
-				exit(EXIT_FAILURE);
-		}
-		free(buf);
-	}
 	
+	free(fromstr);
+	free(listaddr);
 	free(listname);
 	free(listfqdn);
-	close(helpfd);
-	close(queuefd);
+	free(maildata[1]);
+	free(maildata[3]);
+	free(maildata[5]);
+	free(subject);
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
 				"-T", emailaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, 0);
+
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 	exit(EXIT_FAILURE);
 }

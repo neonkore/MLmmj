@@ -23,21 +23,23 @@ mlmmj_recieve_SOURCES = mlmmj-recieve.c writen.c random-int.c strgen.c \
 mlmmj_process_SOURCES = mlmmj-process.c writen.c find_email_adr.c \
 			incindexfile.c itoa.c getlistaddr.c chomp.c \
 			mylocking.c listcontrol.c random-int.c strgen.c \
-			print-version.c send_help.c \
+			print-version.c send_help.c prepstdreply.c \
 			do_all_the_voodo_here.c mygetline.c gethdrline.c \
 			log_error.c statctrl.c ctrlvalue.c dumpfd2fd.c
 
 mlmmj_sub_SOURCES = mlmmj-sub.c writen.c mylocking.c \
 			getlistaddr.c chomp.c random-int.c strgen.c \
 			subscriberfuncs.c print-version.c \
-			log_error.c mygetline.c
+			log_error.c mygetline.c prepstdreply.c
 
 mlmmj_unsub_SOURCES = mlmmj-unsub.c writen.c mylocking.c \
 			getlistaddr.c chomp.c subscriberfuncs.c random-int.c \
-			strgen.c print-version.c log_error.c mygetline.c
-
+			strgen.c print-version.c log_error.c mygetline.c \
+			prepstdreply.c
+			
 mlmmj_bounce_SOURCES = mlmmj-bounce.c print-version.c log_error.c \
-		       subscriberfuncs.c strgen.c random-int.c writen.c
+		       subscriberfuncs.c strgen.c random-int.c writen.c \
+		       prepstdreply.c mygetline.c
 
 mlmmj_maintd_SOURCES = mlmmj-maintd.c print-version.c log_error.c mygetline.c \
 		       strgen.c random-int.c chomp.c
