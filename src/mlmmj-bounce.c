@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 {
 	int opt, noprocess = 0;
 	char *listdir = NULL, *address = NULL, *number = NULL;
-	char *filename, *a, *buf;
+	char *filename, *bfilename, *a, *buf;
 	size_t len;
 	int fd;
 	time_t t;
@@ -71,8 +71,15 @@ int main(int argc, char **argv)
 	}
 
 	log_error(LOG_ARGS, "[%s] [%s] [%s]", listdir, address, number);
-	
-	/* First make sure it's a subscribed address */
+
+	/* save the filename with '=' before replacing it with '@' */
+	bfilename = concatstr(3, listdir, "/bounce/", address);
+
+	a = strchr(address, '=');
+	if (!a) exit(EXIT_SUCCESS);  /* ignore malformed address */
+	*a = '@';
+
+	/* make sure it's a subscribed address */
 	filename = concatstr(2, listdir, "/subscribers");
 	if ((fd = open(filename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", filename);
@@ -83,19 +90,14 @@ int main(int argc, char **argv)
 		exit(EXIT_SUCCESS); /* Not subbed, so exit silently */
 	free(filename);
 
-	filename = concatstr(3, listdir, "/bounce/", address);
 
 	/* TODO make sure the file we open below is not a symlink */
-	if ((fd = open(filename, O_WRONLY|O_APPEND|O_CREAT,
+	if ((fd = open(bfilename, O_WRONLY|O_APPEND|O_CREAT,
 			S_IRUSR|S_IWUSR)) < 0) {
-		log_error(LOG_ARGS, "Could not open '%s'", filename);
+		log_error(LOG_ARGS, "Could not open '%s'", bfilename);
 		exit(EXIT_FAILURE);
 	}
-
-	a = strchr(address, '=');
-	/* ignore malformed address */
-	if (!a) exit(EXIT_FAILURE);
-	*a = '@';
+	free(bfilename);
 
 	/* TODO check that the message is not already bounced */
 
