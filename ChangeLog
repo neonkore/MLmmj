@@ -1,3 +1,5 @@
+ o Fix off-by-one error in the function cleaning quoted printable chars
+ o Close the correct fd's in mlmmj-process
  o Be consistent when using To: or Delivered-To:
  o mlmmj-unsub should also change user id to the listdir owner
  o Add support for not archiving the list by touching listdir/control/noarchive
