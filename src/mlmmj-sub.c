@@ -359,13 +359,13 @@ int main(int argc, char **argv)
 	switch(typesub) {
 		default:
 		case SUB_NORMAL:
-			subdir = mystrdup("/subscribers.d/");
+			subdir = "/subscribers.d/";
 			break;
 		case SUB_DIGEST:
-			subdir = mystrdup("/digesters.d/");
+			subdir = "/digesters.d/";
 			break;
 		case SUB_NOMAIL:
-			subdir = mystrdup("/nomailsubs.d/");
+			subdir = "/nomailsubs.d/";
 			break;
 	}
 		
@@ -379,8 +379,6 @@ int main(int argc, char **argv)
 		myfree(sublockname);
 		exit(EXIT_FAILURE);
 	}
-
-	myfree(subdir);
 
 	sublock = myexcllock(sublockfd);
 	if(sublock < 0) {

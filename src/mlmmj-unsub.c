@@ -381,13 +381,13 @@ int main(int argc, char **argv)
 	switch(typesub) {
 		default:
 		case SUB_NORMAL:
-			subdir = mystrdup("/subscribers.d/");
+			subdir = "/subscribers.d/";
 			break;
 		case SUB_DIGEST:
-			subdir = mystrdup("/digesters.d/");
+			subdir = "/digesters.d/";
 			break;
 		case SUB_NOMAIL:
-			subdir = mystrdup("/nomailsubs.d/");
+			subdir = "/nomailsubs.d/";
 			break;
 	}
 		
@@ -402,7 +402,6 @@ int main(int argc, char **argv)
 	if(is_subbed_in(subddirname, address)) {
 		/* Address is not subscribed, so exit silently */
 		myfree(subddirname);
-		myfree(subdir);
 		myfree(listaddr);
 		exit(EXIT_SUCCESS);
 	}
@@ -415,7 +414,6 @@ int main(int argc, char **argv)
 		log_error(LOG_ARGS, "Could not opendir(%s)",
 				    subddirname);
 		myfree(subddirname);
-		myfree(subdir);
 		myfree(listaddr);
 		exit(EXIT_FAILURE);
 	}
@@ -563,7 +561,6 @@ int main(int argc, char **argv)
         }
 
 	closedir(subddir);
-	myfree(subdir);
 
         notifysub = statctrl(listdir, "notifysub");
 
