@@ -30,14 +30,13 @@ static void print_help(const char *prg)
 
 int clean_moderation(const char *listdir)
 {
-#if 0
 	DIR *moddir;
 	struct dirent *dp;
-#endif
 
 	/* TODO: Go through the moderation/ directory and delete mails
 	 * older than MODREQLIFE (control/modreqlife later on)
 	 */
+
 		
 	return 0;
 }

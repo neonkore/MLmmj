@@ -359,8 +359,9 @@ void sig_child(int sig)
 static void print_help(const char *prg)
 {
         printf("Usage: %s [-L /path/to/list || -l listctrl] -m /path/to/mail "
-	       "[-D] [-F] [-h]\n"
-	       "       [-r] [-R] [-T] [-V]\n"
+	       "[-a] [-D] [-F]\n"
+	       "       [-h] [-r] [-R] [-T] [-V]\n"
+	       " -a: Don't archive the mail\n"
 	       " -D: Don't delete the mail after it's sent\n"
 	       " -F: What to use as MAIL FROM:\n"
 	       " -h: This help\n"
@@ -380,7 +381,7 @@ int main(int argc, char **argv)
 {
 	size_t len = 0;
 	int sockfd = 0, opt, mindex;
-	int deletewhensent = 1, *newsockfd, sendres;
+	int deletewhensent = 1, *newsockfd, sendres, archive = 1;
 	char *listaddr, *mailfilename = NULL, *subfilename = NULL;
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
 	char *relayhost = NULL, *archivefilename = NULL, *tmpstr;
@@ -397,8 +398,11 @@ int main(int argc, char **argv)
 	mlmmjbounce = concatstr(2, dirname(argv0), "/mlmmj-bounce");
 	free(argv0);
 	
-	while ((opt = getopt(argc, argv, "VDhm:l:L:R:F:T:r:")) != -1){
+	while ((opt = getopt(argc, argv, "aVDhm:l:L:R:F:T:r:")) != -1){
 		switch(opt) {
+		case 'a':
+			archive = 0;
+			break
 		case 'D':
 			deletewhensent = 0;
 			break;
@@ -458,6 +462,8 @@ int main(int argc, char **argv)
 
 	if(listctrl[0] != '1' && listctrl[0] != '2')
 		listaddr = getlistaddr(listdir);
+	else
+		archive = 0;
 	
 	/* initialize file with mail to send */
 
@@ -486,7 +492,7 @@ int main(int argc, char **argv)
 	}
 
 	/* initialize the archive filename */
-	if(listctrl[0] != '1' && listctrl[0] != '2') {
+	if(archive) {
 		mindex = incindexfile((const char *)listdir);
 		len = strlen(listdir) + 9 + 20;
 		archivefilename = malloc(len);
@@ -593,7 +599,7 @@ int main(int argc, char **argv)
 		break;
 	}
 	
-	if(listctrl[0] != '1' && listctrl[0] != '2') {
+	if(archive) {
 		/* It is safe to rename() the mail file at this point, because
 		   the child processes (who might still be running) inherit a
 		   handle to the open file, so they don't care if it is moved
