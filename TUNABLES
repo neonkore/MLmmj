@@ -17,8 +17,8 @@ to specify several entries (one pr. line), it's marked "list".
 
  · moderated			(boolean)
 
-   If this file is present, the emailaddresses in the file listdir/moderators
-   will act as moderators for the list.
+   If this file is present, the emailaddresses in the file
+   listdir/control/moderators will act as moderators for the list.
 
  · tocc				(boolean)
 

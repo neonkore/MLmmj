@@ -1,3 +1,5 @@
+ o Fix bug with prepstdreply not opening correct file. Thanks Christian Laursen
+   for spotting.
 0.8.1
  o Go through all open() calls and retry in case we (allthough it's extremely
    unlikely) did get EEXIST

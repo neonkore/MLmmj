@@ -64,18 +64,17 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	myfree(tmp);
 
 	do {
-                tmp = random_str();
+		tmp = random_str();
 		myfree(retstr);
 		retstr = concatstr(3, listdir, "/queue/", tmp);
 		myfree(tmp);
 
-                outfd = open(filename, O_RDWR|O_CREAT|O_EXCL,
-				       S_IRUSR|S_IWUSR);
+		outfd = open(retstr, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
 
 	} while ((outfd < 0) && (errno == EEXIST));
 	
 	if(outfd < 0) {
-		log_error(LOG_ARGS, "Could not open std mail %s", tmp);
+		log_error(LOG_ARGS, "Could not open std mail %s", retstr);
 		myfree(str);
 		return NULL;
 	}

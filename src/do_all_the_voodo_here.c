@@ -95,7 +95,7 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 					return -1;
 				}
 			}
-			write(outfd, hdrline, strlen(hdrline));
+			writen(outfd, hdrline, strlen(hdrline));
 			fsync(outfd);
 			myfree(hdrline);
 			break;
