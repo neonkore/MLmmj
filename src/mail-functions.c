@@ -103,12 +103,13 @@ int write_rcpt_to(int sockfd, const char *rcpt_addr)
 
 int write_mailbody_from_file(int sockfd, FILE *infile)
 {
-	char buf[WRITE_BUFSIZE+2];
+	char buf[WRITE_BUFSIZE+3];
 	size_t len, bytes_written;
-	char *bufres;
+	char *bufp;
+	int full_line = 1;  /* true, if last write included a newline */
 	
 	/* Zero the buffer */
-	memset(buf, 0, WRITE_BUFSIZE+2);
+	memset(buf, 0, sizeof(buf));
 	
 	/* Read from beginning of the file */
 
@@ -118,18 +119,32 @@ int write_mailbody_from_file(int sockfd, FILE *infile)
 	}
 	
 	/* keep writing chunks of line (max WRITE_BUFSIZE) */
-	while((bufres = fgets(buf, WRITE_BUFSIZE, infile))) {
-		len = strlen(buf);
-		if(buf[len-1] == '\n') {
-			buf[len-1] = '\r';
-			buf[len] = '\n';
-			buf[len+1] = 0;
+	for(;;) {
+		bufp = buf+1;
+		if(!fgets(bufp, WRITE_BUFSIZE, infile)) break;
+
+		/* fix "dot lines" */
+		if(full_line && (bufp[0] == '.')) {
+			*(--bufp) = '.';
 			len++;
 		}
+
+		/* fix newlines */
+		len = strlen(bufp);
+		if((len > 0) && (bufp[len-1] == '\n')) {
+			bufp[len-1] = '\r';
+			bufp[len] = '\n';
+			bufp[len+1] = 0;
+			len++;
+			full_line = 1;
+		} else {
+			full_line = 0;
+		}
+
 #ifdef MLMMJ_DEBUG
-		fprintf(stderr, "write_mailbody_from_file = [%s]\n", buf);
+		fprintf(stderr, "write_mailbody_from_file = [%s]\n", bufp);
 #endif
-		bytes_written = writen(sockfd, buf, len);	
+		bytes_written = writen(sockfd, bufp, len);
 		if(bytes_written < 0 )
 			return errno;
 	}
