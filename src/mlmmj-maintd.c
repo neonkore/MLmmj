@@ -905,7 +905,7 @@ int main(int argc, char **argv)
 		if(listdir) {
 			do_maintenance(listdir, mlmmjsend, mlmmjbounce,
 					mlmmjunsub);
-			continue;
+			goto mainsleep;
 		}
 
 		if(chdir(dirlists) < 0) {
@@ -959,6 +959,7 @@ int main(int argc, char **argv)
 
 		closedir(dirp);
 
+mainsleep:
 		if(!daemonize)
 			break;
 		else
