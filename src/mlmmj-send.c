@@ -246,7 +246,7 @@ int main(int argc, char **argv)
 		init_sockfd(&sockfd, relayhost);
 	else
 		init_sockfd(&sockfd, RELAYHOST);
-	
+
 	switch(listctrl[0]) {
 	case '1': /* A single mail is to be sent, do nothing */
 		break;

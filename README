@@ -1,19 +1,16 @@
-README mlmmj-0.3.4					April 28th 2004
+README mlmmj-0.4.0					May 3rd 2004
 
-This is my attempt at implementing a mailing list manager with the same
+This is an attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
 independency.
 
-The functionality is still quite limited:
+The functionality is still a bit limited, but getting there:
 
  · Subscribe / unsubscribe functionality (email, commandline).
  · Archive
  · Custom headers / footer
  · Primitive bouncehandling
-
-Next feature in the works is bouncehandling--it's now getting there slowly,
-and now bouncing mails will be processed in the bounce/ directory below
-listdir.
+ · Moderation functionality
 
 To use mlmmj, do the following:
 
@@ -82,6 +79,9 @@ That's it! You might want to go through the next steps too.
    Just add what you want to a file named "footer" in the same dir as
    "customheader".
 
+7) For having a moderated list, simply create a file called 'moderated' in the
+   control/ directory. Moderators are added to a file called 'moderators' in
+   the listdir, just like subscribers are in the subscribers file.
 
 Ah, I almost forgot; If you want to use something else than localhost for your
 maildelivery you have to change it in include/mlmmj.h before compiling.

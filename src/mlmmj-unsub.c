@@ -91,7 +91,7 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 	fclose(queuefile);
 
 	execlp(mlmmjsend, mlmmjsend,
-				"-L", "1",
+				"-l", "1",
 				"-T", subaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, 0);
@@ -279,6 +279,9 @@ int main(int argc, char **argv)
 	/* get the list address */
 	listaddr = getlistaddr(listdir);
 
+	if(unsubconfirm)
+		generate_unsubconfirm(listdir, listaddr, address, mlmmjsend);
+
 	subreadname = concatstr(2, listdir, "/subscribers");
 	subwritename = concatstr(2, listdir, "/subscribers.new");
 
@@ -324,10 +327,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	if(unsubconfirm)
-		generate_unsubconfirm(listdir, listaddr, address, mlmmjsend);
-	else
-		unsubres = unsubscribe(subread, subwrite, address);
+	unsubres = unsubscribe(subread, subwrite, address);
 
 	if(unsubres == 0)
 		unlink(subreadname);

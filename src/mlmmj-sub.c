@@ -89,7 +89,7 @@ void confirm_sub(const char *listdir, const char *listaddr,
 	fclose(queuefile);
 
 	execlp(mlmmjsend, mlmmjsend,
-				"-L", "1",
+				"-l", "1",
 				"-T", subaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, 0);

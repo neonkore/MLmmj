@@ -33,16 +33,18 @@ int listcontrol(const char *mailfilename, const char *listdir,
 	char *controlstr, *conffilename, *moderatefilename;
 	FILE *mailfile, *tempfile;
 	struct email_container fromemails;
-	struct stat stbuf;
 	size_t len;
+	struct stat stbuf;
+#if 0
 	int closedlist;
+#endif
 	
 	if((mailfile = fopen(mailfilename, "r")) == NULL) {
 		log_error(LOG_ARGS, "listcontrol, could not open mail");
 		exit(EXIT_FAILURE);
 	}
-	/* Closed list only handling bounces? TODO: part of configfile instead?*/
-	closedlist = statctrl(listdir, "closedlist");
+	/* Closed list only handling bounces?
+	closedlist = statctrl(listdir, "closedlist"); */
 	
 	recipdelimsign = index(controladdr, RECIPDELIM);
 	atsign = index(controladdr, '@');
