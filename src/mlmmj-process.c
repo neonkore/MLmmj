@@ -543,6 +543,8 @@ int main(int argc, char **argv)
 		myfree(listfqdn);
 		myfree(fromstr);
 		myfree(subject);
+		unlink(donemailname);
+		myfree(donemailname);
 		execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
 				"-T", fromemails.emaillist[0],
@@ -576,6 +578,8 @@ int main(int argc, char **argv)
 			myfree(listfqdn);
 			myfree(fromstr);
 			myfree(subject);
+			unlink(donemailname);
+			myfree(donemailname);
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "1",
 					"-T", fromemails.emaillist[0],
@@ -610,6 +614,8 @@ int main(int argc, char **argv)
 			myfree(listfqdn);
 			myfree(fromstr);
 			myfree(subject);
+			unlink(donemailname);
+			myfree(donemailname);
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "1",
 					"-T", fromemails.emaillist[0],
