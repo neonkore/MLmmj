@@ -1,3 +1,6 @@
+ o Make mlmmj-send a lot more robust with SMTP and handle
+   bounces from the relayhost.
+ o Fix BUG in mlmmj-bounce still using listdir/subscribers
  o Begin work on mlmmj-maintd--the mlmmj maintenance daemon
  o Make help consistent and up to date with all options
  o Make mlmmj-send print the replies from the mailserver
