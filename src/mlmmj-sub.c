@@ -62,13 +62,13 @@ void confirm_sub(const char *listdir, const char *listaddr,
 
 	switch(typesub) {
 		case SUB_NORMAL:
-			listtext = mystrdup("/text/sub-ok");
+			listtext = mystrdup("sub-ok");
 			break;
 		case SUB_DIGEST:
-			listtext = mystrdup("/text/sub-ok-digest");
+			listtext = mystrdup("sub-ok-digest");
 			break;
 		case SUB_NOMAIL:
-			listtext = mystrdup("/text/sub-ok-nomail");
+			listtext = mystrdup("sub-ok-nomail");
 			break;
 	}
 
@@ -118,7 +118,7 @@ void notify_sub(const char *listdir, const char *listaddr,
 	}
 
 	queuefilename = prepstdreply(listdir, listtext, "$listowner$",
-				"$listowner", NULL, 1, maildata);
+				"$listowner$", NULL, 1, maildata);
 	MY_ASSERT(queuefilename)
 	myfree(listtext);
 	myfree(maildata[1]);

@@ -62,13 +62,13 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 
 	switch(typesub) {
 		case SUB_NORMAL:
-			listtext = mystrdup("/text/unsub-ok");
+			listtext = mystrdup("unsub-ok");
 			break;
 		case SUB_DIGEST:
-			listtext = mystrdup("/text/unsub-ok-digest");
+			listtext = mystrdup("unsub-ok-digest");
 			break;
 		case SUB_NOMAIL:
-			listtext = mystrdup("/text/unsub-ok-nomail");
+			listtext = mystrdup("unsub-ok-nomail");
 			break;
 	}
 
