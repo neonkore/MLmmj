@@ -170,7 +170,7 @@ int main(int argc, char **argv)
 		/* XXX: toemails and ccemails etc. have to be free() */
 		exit(EXIT_SUCCESS);
 	}
-
+	
 	execlp(mlmmjsend, mlmmjsend,
 				"-L", listdir,
 				"-m", donemailname, 0);

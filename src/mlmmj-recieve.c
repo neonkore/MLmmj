@@ -34,8 +34,9 @@ int main(int argc, char **argv)
 {
 	char *infilename = NULL, *listdir = NULL, *line = NULL;
 	char *randomstr = random_str();
-	int fd, opt, noprocess = 0;
 	char *mlmmjprocess, *argv0 = strdup(argv[0]);
+	int fd, opt, noprocess = 0;
+	pid_t childpid;
 	
 	log_set_name(argv[0]);
 
@@ -95,6 +96,19 @@ int main(int argc, char **argv)
 		free(infilename);
 		exit(EXIT_SUCCESS);
 	}
+
+	/*
+	 * Now we fork so we can exit with success since it could potentially
+	 * take a long time for mlmmj-send to finish delivering the mails and
+	 * returning, making it susceptible to getting a SIGKILL from the
+	 * mailserver invoking mlmmj-recieve.
+	 */
+	childpid = fork();
+	if(childpid < 0)
+		log_error(LOG_ARGS, "fork() failed! Proceeding anyway");
+	
+	if(childpid)
+		exit(EXIT_SUCCESS); /* Parent says: "bye bye kids!"*/
 
 	execlp(mlmmjprocess, mlmmjprocess,
 				"-L", listdir,
