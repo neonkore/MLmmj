@@ -470,7 +470,7 @@ int main(int argc, char **argv)
 	}
 
 	mailmap = mmap(0, st.st_size, PROT_READ, MAP_SHARED, mailfd, 0);
-	if(mailmap == (void *)-1) {
+	if(mailmap == MAP_FAILED) {
 		log_error(LOG_ARGS, "Could not mmap mailfd");
 		exit(EXIT_FAILURE);
 	}

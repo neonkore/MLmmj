@@ -206,7 +206,7 @@ ssize_t unsubscribe(int subreadfd, int subwritefd, const char *address)
 	}
 
 	if((inmap = mmap(0, st.st_size, PROT_READ, MAP_SHARED,
-		       subreadfd, 0)) == (void *)-1) {
+		       subreadfd, 0)) == MAP_FAILED) {
 		log_error(LOG_ARGS, "Could not mmap fd");
 		return 1;
 	}

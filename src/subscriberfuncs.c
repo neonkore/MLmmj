@@ -41,7 +41,7 @@ off_t find_subscriber(int fd, const char *address)
 	}
 
 	if((start = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0)) ==
-			(void *)-1) {
+			MAP_FAILED) {
 		log_error(LOG_ARGS, "Could not mmap fd");
 		return (off_t)-1;
 	}
