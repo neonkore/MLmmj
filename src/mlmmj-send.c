@@ -809,6 +809,7 @@ int main(int argc, char **argv)
 		break;
 	case '7':
 		digest = 1;
+		addtohdr = 1;
 		archivefilename = "digest";
 		/* fall through */
 	default: /* normal list mail */
