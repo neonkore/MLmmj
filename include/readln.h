@@ -9,7 +9,7 @@
 #ifndef READLN_H
 #define READLN_H
 
-#include <unistd.h>
+#include <sys/types.h>
 
 ssize_t readln(int fd, char *buf, size_t bufsize);
 
