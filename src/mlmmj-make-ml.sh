@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # mlmmj-make-ml.sh - henne@hennevogel.de
 #
@@ -58,7 +58,12 @@ fi
 
 LISTDIR="$SPOOLDIR/$LISTNAME"
 
-mkdir -p "$LISTDIR"/{incoming,queue,archive,text,subconf,unsubconf} &&
+mkdir -p $LISTDIR
+
+for DIR in incoming queue archive text subconf unsubconf
+do
+	mkdir "$LISTDIR"/"$DIR"
+done
 
 touch "$LISTDIR"/index
 touch "$LISTDIR"/subscribers
@@ -78,7 +83,7 @@ if [ -z "$POSTMASTER" ]; then
 	POSTMASTER="postmaster"
 fi
 
-MLMMJRECIEVE=`type -p mlmmj-recieve`
+MLMMJRECIEVE=`which mlmmj-recieve`
 if [ -z "$MLMMJRECIEVE" ]; then
 	MLMMJRECIEVE="/path/to/mlmmj-recieve"
 fi
