@@ -40,5 +40,11 @@ to specify several entries pr. line, it's marked "list".
    The emailaddresses in this file (1 pr. line) will get mails to
    listname+owner@listdomain.tld
 
+ · delheaders			(list)
 
-... more to follow. (relayhost, owner etc.)
+   In this file is specified *ONE* headertoken to match pr. line. If the file
+   consists of:
+                   Received:
+                   Message-ID:
+   Then all occurences of these headers in incoming list mail will be deleted.
+

@@ -1,3 +1,6 @@
+0.7.3
+ o Implement control/delheaders in where one can specify all the headers
+   to delete in incoming mail to the list.
  o Add +owner functionality (control/owner). Several addresses possible.
  o Relicense the whole thing to be MIT instead of GPL
 0.7.2

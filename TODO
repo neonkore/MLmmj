@@ -1,9 +1,13 @@
- o Convert mlmmj-sub, mlmmj-unsub and mlmmj-process (moderation) to use
-   the new prepstdreply() function.
+Code cleanup:
+ o Add malloc and realloc macros that will exit(EXIT_FAILURE) if malloc or
+   realloc fails
+ o Convert opening of write files to openrandexclrw
  o Add some more logging to mlmmj-maintd
 
 Functionality items:
- o owner functionality
  o listname+get functionality
  o web interface
 
+Nice to do:
+ o Convert mlmmj-sub, mlmmj-unsub and mlmmj-process (moderation) to use
+   the new prepstdreply() function.
