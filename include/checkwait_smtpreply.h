@@ -20,6 +20,6 @@
 
 #include "mlmmj.h"
 
-int checkwait_smtpreply(int sockfd, int replytype);
+char *checkwait_smtpreply(int sockfd, int replytype);
 
 #endif /* CHECK_REPLY_H */
