@@ -9,6 +9,6 @@
 #ifndef INCINDEXFILE_H
 #define INCINDEXFILE_H
 
-int incindexfile(const char *listdir, int incflag);
+int incindexfile(const char *listdir);
 
 #endif /* INCINDEXFILE_H */

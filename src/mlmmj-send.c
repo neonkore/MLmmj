@@ -275,7 +275,7 @@ int main(int argc, char **argv)
 
 	/* initialize the archive filename */
 	if(listctrl[0] != '1' && listctrl[0] != '2') {
-		mindex = incindexfile((const char *)listdir, 1);
+		mindex = incindexfile((const char *)listdir);
 		len = strlen(listdir) + 9 + 20;
 		archivefilename = malloc(len);
 		snprintf(archivefilename, len, "%s/archive/%d", listdir,

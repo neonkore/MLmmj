@@ -14,56 +14,58 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+
 #include "wrappers.h"
 #include "mylocking.h"
 #include "incindexfile.h"
 #include "itoa.h"
 #include "log_error.h"
+#include "strgen.h"
 
 #define INTBUF_SIZE 32
 
-int incindexfile(const char *listdir, int incflag)
+int incindexfile(const char *listdir)
 {
-	size_t len;
 	int fd, lock;
-	long int mindex = 0, oldindex = 0;
+	long int index = 0;
 	char intbuf[INTBUF_SIZE] = "uninitialized";
-	int s;
+	size_t i;
 	char *indexfilename;
 
-	len = strlen(listdir) + strlen("/index") + 1;
-	indexfilename = malloc(len);
-	snprintf(indexfilename, len, "%s%s", listdir, "/index");
+	indexfilename = concatstr(2, listdir, "/index");
 	fd = open(indexfilename, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
 
 	if(fd == -1) {
+		free(indexfilename);
 		log_error(LOG_ARGS, "Error opening index file");
-		return -1;
+		return 0;
 	}
 
 	lock = myexcllock(fd);
 	
 	if(lock) {
+		free(indexfilename);
 		log_error(LOG_ARGS, "Error locking index file");
 		close(fd);
-		return -1;
+		return 0;
 	}
 
 	read(fd, intbuf, INTBUF_SIZE);
-	for(s = INTBUF_SIZE - 1; s >= 0; s--)
-		if(intbuf[s] < '0' || intbuf[s] > '9')
-			intbuf[s] = 0;
-	oldindex = atol(intbuf);
-	if(incflag) {
-		mindex = oldindex;
-		mindex++;
-		itoa(mindex, intbuf);
-		lseek(fd, 0, SEEK_SET);
-		writen(fd, intbuf, strlen(intbuf));
+	for(i=0; i<sizeof(intbuf); i++) {
+		if(intbuf[i] < '0' || intbuf[i] > '9') {
+			intbuf[i] = '\0';
+			break;
+		}
 	}
+	index = atol(intbuf);
+	index++;
+	itoa(index, intbuf);
+	lseek(fd, 0, SEEK_SET);
+	writen(fd, intbuf, strlen(intbuf));
+
 	myunlock(fd);
 	close(fd);
 	free(indexfilename);
 
-	return oldindex;
-}	
+	return index;
+}
