@@ -62,8 +62,6 @@ enum ctrl_e {
 	CTRL_END  /* end marker, must be last */
 };
 
-/* MMJ says that function pointers are just for show off, so I will
- * switch an enum :-)  -- mortenp 20040511 */
 struct ctrl_command {
 	char *command;
 	unsigned int accepts_parameter;
