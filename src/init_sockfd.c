@@ -59,6 +59,6 @@ void init_sockfd(int *sockfd, const char *relayhost, unsigned short port)
 
 	on = 1;
 	if(setsockopt(*sockfd, SOL_SOCKET, SO_KEEPALIVE, (void *)&on,
-				sizeof(on) < 0))
+				sizeof(on)) < 0)
 		log_error(LOG_ARGS, "Could not set SO_KEEPALIVE");
 }
