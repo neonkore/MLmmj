@@ -55,6 +55,7 @@ char *gethdrline(int fd)
 		} else {
 			tmp = retstr;
 			retstr = concatstr(3, retstr, line, nextline);
+			myfree(line);
 			myfree(tmp);
 
 			return retstr;

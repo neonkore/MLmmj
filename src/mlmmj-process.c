@@ -92,14 +92,15 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	if((moderatorsfd = open(moderatorsfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", moderatorsfilename);
 		myfree(moderatorsfilename);
-		close(queuefd);
+		close(moderatorfd);
 		exit(EXIT_FAILURE);
 	}
 	myfree(moderatorsfilename);
 
 	if((mailfd = open(mailfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", mailfilename);
-		close(queuefd);
+		close(moderatorfd);
+		close(moderatorsfd);
 		exit(EXIT_FAILURE);
 	}
 
@@ -117,6 +118,9 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	if(queuefd < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
 		myfree(queuefilename);
+		close(moderatorfd);
+		close(moderatorsfd);
+		close(mailfd);
 		exit(EXIT_FAILURE);
 	}
 
@@ -484,9 +488,9 @@ int main(int argc, char **argv)
 	close(rawmailfd);
 	close(donemailfd);
 
-	if(hdrfd)
+	if(hdrfd >= 0)
 		close(hdrfd);
-	if(footfd)
+	if(footfd >= 0)
 		close(footfd);
 
 	if(readhdrs[0].token) { /* From: addresses */
