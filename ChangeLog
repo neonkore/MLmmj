@@ -1,4 +1,12 @@
- o Major cleanup of listcontrol()
+0.5.0
+ o Use a subscribers.d/ directory for several subscribers files. mlmmj-send
+   will now fork for each file (up to MAX_CONNECTIONS) for faster delivery.
+   mlmmj-unsub will search for subscribers in all of these files.
+   mlmmj-sub will now add emailaddresses to the file in subscribers.d/ with
+   the name of the first character in the emailaddress (foo@bar.com will be
+   in subscribers.d/f).
+ o Major cleanup of listcontrol() and in the process add closed list
+   functionality (touch listdir/control/closedlist and it's closed)
 0.4.0
  o Add moderation functionality
 0.3.4
