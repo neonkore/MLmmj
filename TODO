@@ -1,8 +1,7 @@
 Code cleanup:
- o Add malloc and realloc macros that will exit(EXIT_FAILURE) if malloc or
-   realloc fails
  o Convert opening of write files to openrandexclrw
- o Add some more logging to mlmmj-maintd
+ o Add some more logging to mlmmj-maintd--actually we have to rethink logging a
+   bit. Do we want to use our own /var/log/mlmmj
 
 Functionality items:
  o listname+get functionality
