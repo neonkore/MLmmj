@@ -261,7 +261,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-#if 1
+#if 0
 	log_error(LOG_ARGS, "listdir = [%s] address = [%s] number = [%s]", listdir, address, number);
 #endif
 
