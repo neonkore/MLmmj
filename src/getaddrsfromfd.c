@@ -30,13 +30,15 @@ off_t getaddrsfromfd(struct strlist *slist, int fd, int max)
 	
 	for(next = cur = (start + offset); next < start + st.st_size; next++) {
 		if(*next == '\n' || next == start + st.st_size - 1) {
+			slist->count++;
 			len = next - cur;
 			if(next == start + st.st_size - 1 && *next != '\n')
 				len++;
-			slist->strs[slist->count] = mymalloc(len + 1);
-			strncpy(slist->strs[slist->count], cur, len);
-			slist->strs[slist->count][len] = '\0';
-			slist->count++;
+			slist->strs = (char **)myrealloc(slist->strs,
+					sizeof(char *) * slist->count);
+			slist->strs[slist->count - 1] = mymalloc(len + 1);
+			strncpy(slist->strs[slist->count - 1], cur, len);
+			slist->strs[slist->count - 1][len] = '\0';
 			cur = next + 1;
 		} else {
 			continue;

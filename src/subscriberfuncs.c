@@ -109,8 +109,6 @@ int is_subbed_in(const char *subddirname, const char *address)
 		subreadname = concatstr(2, subddirname, dp->d_name);
 		subread = open(subreadname, O_RDONLY);
 		if(subread < 0) {
-			log_error(LOG_ARGS, "Could not open '%s'",
-					subreadname);
 			myfree(subreadname);
 			continue;
 		}

@@ -69,7 +69,7 @@ char *bounce_from_adr(const char *recipient, const char *listadr,
 		      const char *mailfilename)
 {
 	char *bounceaddr, *myrecipient, *mylistadr;
-	char *indexstr, *listdomain, *a, *mymailfilename;
+	char *indexstr, *listdomain, *a = NULL, *mymailfilename;
 	size_t len;
 
 	mymailfilename = mystrdup(mailfilename);
@@ -90,7 +90,8 @@ char *bounce_from_adr(const char *recipient, const char *listadr,
 		return NULL;
 	}
 	a = strchr(myrecipient, '@');
-	if (a) *a = '=';
+	if (a)
+		*a = '=';
 
 	mylistadr = mystrdup(listadr);
 	if (!mylistadr) {
@@ -338,6 +339,8 @@ int endsmtp(int *sockfd)
 
 	close(*sockfd);
 
+	*sockfd = -1;
+
 	return retval;
 }
 
@@ -444,7 +447,7 @@ int send_mail_many_fd(int sockfd, const char *from, const char *replyto,
 	int res, ret, i;
 	struct strlist stl;
 
-	stl.strs = (char **)mymalloc(1 + maxverprecips * sizeof(char *));
+	stl.strs = NULL;
 	stl.count = 0;
 
 	do {
@@ -704,24 +707,23 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	stl.strs = (char **)mymalloc(1 + maxverprecips * sizeof(char *));
-	stl.count = 0;
-
-	maxverprecipsstr = ctrlvalue(listdir, "maxverprecips");
-	if(maxverprecipsstr) {
-		maxverprecips = atol(maxverprecipsstr);
-		log_error(LOG_ARGS, "maxverprecipsstr = [%s] maxverprecips = [%d]",
-				maxverprecipsstr, maxverprecips);
-		myfree(maxverprecipsstr);
-	}
-	if(maxverprecips <= 0)
-		maxverprecips = MAXVERPRECIPS;
-
 	verp = ctrlvalue(listdir, "verp");
 	chomp(verp);
 	if(verp == NULL)
 		if(statctrl(listdir, "verp") == 1)
 			verp = mystrdup("");
+
+	maxverprecipsstr = ctrlvalue(listdir, "maxverprecips");
+	if(verp && maxverprecipsstr) {
+		maxverprecips = atol(maxverprecipsstr);
+		myfree(maxverprecipsstr);
+	}
+
+	if(maxverprecips <= 0)
+		maxverprecips = MAXVERPRECIPS;
+
+	stl.strs = NULL;
+	stl.count = 0;
 
 	switch(listctrl[0]) {
 		case '1':

@@ -1,4 +1,5 @@
 1.2.4
+ o Spend some time making valgrind completely happy
  o Unlink totally harmless .lock files in subscribers dir.
  o Make it possible to specify more than one listaddress in
    LISTDIR/control/listaddress. The first one is the "real" one.

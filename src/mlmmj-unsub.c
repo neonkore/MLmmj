@@ -430,7 +430,6 @@ int main(int argc, char **argv)
 
 		subread = open(subreadname, O_RDWR);
 		if(subread == -1) {
-			log_error(LOG_ARGS, "Could not open '%s'", subreadname);
 			myfree(subreadname);
 			continue;
 		}

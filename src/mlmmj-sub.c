@@ -393,6 +393,7 @@ int main(int argc, char **argv)
 				S_IRUSR|S_IWUSR|groupwritable);
 	if(subfilefd == -1) {
 		log_error(LOG_ARGS, "Could not open '%s'", subfilename);
+		myfree(sublockname);
 		exit(EXIT_FAILURE);
 	}
 
@@ -400,13 +401,17 @@ int main(int argc, char **argv)
 	if(lock) {
 		log_error(LOG_ARGS, "Error locking subscriber file");
 		close(subfilefd);
+		close(sublockfd);
+		myfree(sublockname);
 		exit(EXIT_FAILURE);
 	}
 	suboff = find_subscriber(subfilefd, address);
 	if(suboff == -1) {
 		if(subconfirm) {
 			close(subfilefd);
+			close(sublockfd);
 			unlink(sublockname);
+			myfree(sublockname);
 			generate_subconfirm(listdir, listaddr, address,
 					    mlmmjsend, typesub);
 		} else {
@@ -416,14 +421,22 @@ int main(int argc, char **argv)
 			writen(subfilefd, address, len + 1);
 			address[len] = 0;
 			close(subfilefd);
+			close(sublockfd);
 			unlink(sublockname);
 		}
 	} else {
 		close(subfilefd);
 		myfree(subfilename);
+		close(sublockfd);
+		unlink(sublockname);
+		myfree(sublockname);
 		
 		return EXIT_SUCCESS;
 	}
+
+	close(sublockfd);
+	unlink(sublockname);
+	myfree(sublockname);
 
 	if(confirmsub) {
 		childpid = fork();
