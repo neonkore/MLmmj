@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	
-	while((line = mygetline(stdin))) {
+	while((line = myfgetline(stdin))) {
 		writen(fd, line, strlen(line));
 		fsync(fd);
 		free(line);

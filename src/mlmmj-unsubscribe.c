@@ -244,7 +244,7 @@ void unsubscribe(int subreadfd, int subwritefd, const char *address)
 		exit(EXIT_FAILURE);
 	}
 
-	while((buf = mygetline(subfile))) {
+	while((buf = myfgetline(subfile))) {
 		if(strncasecmp(buf, address, strlen(address)) != 0)
 			writen(subwritefd, buf, strlen(buf));
 		free(buf);

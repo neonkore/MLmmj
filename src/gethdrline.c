@@ -19,12 +19,12 @@ char *gethdrline(FILE *infile)
 	int ch;
 	
 	for(;;) {
-		line = mygetline(infile);
+		line = myfgetline(infile);
 		if(line == NULL)
 			return NULL;
 		ch = getc(infile); ungetc(ch, infile);
 		if(ch == '\t' || ch == ' ') {
-			nextline = mygetline(infile);
+			nextline = myfgetline(infile);
 			tmp = retstr;
 			retstr = concatstr(3, retstr, line, nextline);
 			free(tmp); free(line); free(nextline);

@@ -1,4 +1,5 @@
 /* Copyright (C) 2004 Morten K. Poulsen <morten at afdelingp.dk>
+ * Copyright (C) 2004 Mads Martin Joergensen <mmj at mmj.dk>
  *
  * $Id$
  *
@@ -9,9 +10,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "mygetline.h"
 
-char *mygetline(FILE *infile)
+char *myfgetline(FILE *infile)
 {
 	size_t buf_size = BUFSIZE;  /* initial buffer size */
 	size_t buf_used;
@@ -39,12 +41,38 @@ char *mygetline(FILE *infile)
 
 	}
 }
+char *mygetline(int fd)
+{
+	size_t i = 0, buf_size = BUFSIZE;  /* initial buffer size */
+	char *buf = malloc(buf_size);
+	int ch;
+
+	buf[0] = '\0';
+	while(read(fd, &ch, 1) > 0) {	
+		if(i == buf_size - 1) {
+			buf_size *= 2;
+			buf = realloc(buf, buf_size);
+		}
+		buf[i++] = ch;
+		if(ch == '\n') {
+			buf[i] = '\0';
+			return buf;
+		}
+	}
+
+	if(buf[0]) {
+		buf[i] = '\0';
+		return buf;
+	}
+
+	return NULL;
+}
 #if 0
 int main(int argc, char **argv)
 {
 	char *str;
 	
-	while((str = mygetline(stdin))) {
+	while((str = mygetline(fileno(stdin)))) {
 		printf("%s", str);
 		free(str);
 	}

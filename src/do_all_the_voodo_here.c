@@ -63,7 +63,7 @@ void do_all_the_voodo_here(FILE *in, FILE *out, FILE *hdradd, FILE *footers,
 		if((strlen(hdrline) == 1) && (hdrline[0] == '\n')){
 			if(hdradd) {
 				fflush(out);
-				while((line = mygetline(hdradd))) {
+				while((line = myfgetline(hdradd))) {
 					fputs(line, out);
 					free(line);
 				}
@@ -87,7 +87,7 @@ void do_all_the_voodo_here(FILE *in, FILE *out, FILE *hdradd, FILE *footers,
 	}
 
 	/* Just print the rest of the mail */
-	while((line = mygetline(in))) {
+	while((line = myfgetline(in))) {
 		fputs(line, out);
 		free(line);
 	}
@@ -96,7 +96,7 @@ void do_all_the_voodo_here(FILE *in, FILE *out, FILE *hdradd, FILE *footers,
 
 	/* No more, lets add the footer if one*/
 	if(footers) {
-		while((line = mygetline(footers))) {
+		while((line = myfgetline(footers))) {
 			fputs(line, out);
 			free(line);
 		}

@@ -26,7 +26,7 @@ int find_subscriber(int subfilefd, const char *address)
 		exit(EXIT_FAILURE);
 	}
 	
-	while ((buf = mygetline(subfile))) {
+	while ((buf = myfgetline(subfile))) {
 		while (buf[0] && isspace(buf[strlen(buf)-1]))
 			buf[strlen(buf)-1] = '\0';
 		if (strcasecmp(buf, address) == 0) {
