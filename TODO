@@ -7,6 +7,7 @@ Code cleanup:
 Functionality items:
  o listname+get functionality
  o web interface
+ o listdir/control/{deny,allow} for regexp denial of mail to the list
 
 Nice to do:
  o Convert mlmmj-sub, mlmmj-unsub and mlmmj-process (moderation) to use
