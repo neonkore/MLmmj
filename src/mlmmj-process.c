@@ -158,12 +158,12 @@ int main(int argc, char **argv)
 	FILE *headerfile, *footerfile, *rawmailfile, *donemailfile;
 	struct email_container fromemails = { 0, NULL };
 	struct email_container toemails = { 0, NULL };
-/*	struct email_container ccemails = { 0, NULL };*/
+	struct email_container ccemails = { 0, NULL };
 	const char *badheaders[] = { "From ", "Return-Path:", NULL };
 	struct mailhdr readhdrs[] = {
 		{ "From:", 0, NULL },
 		{ "To:", 0, NULL },
-/*		{ "Cc:", 0, NULL },*/
+		{ "Cc:", 0, NULL },
 		{ NULL, 0, NULL }
 	};
 
@@ -277,13 +277,12 @@ int main(int argc, char **argv)
 			find_email_adr(readhdrs[1].values[i], &toemails);
 		}
 	}
-#if 0
+
 	if(readhdrs[2].token) { /* Cc: addresses */
-		for(j = 0; j < readhdrs[1].valuecount; j++) {
-			find_email_adr(readhdrs[1].values[j], &ccemails);
+		for(i = 0; i < readhdrs[1].valuecount; i++) {
+			find_email_adr(readhdrs[1].values[i], &ccemails);
 		}
 	}
-#endif
 	if(strchr(toemails.emaillist[0], RECIPDELIM)) {
 #if 0
 		log_error(LOG_ARGS, "listcontrol(from, %s, %s, %s, %s, %s, %s)\n", listdir, toemails.emaillist[0], mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
@@ -292,6 +291,11 @@ int main(int argc, char **argv)
 			    mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
 		return EXIT_SUCCESS;
 	}
+#if 0
+	for(i = 0; i < toemails.emailcount; i++) {
+		if(strncmp(listaddr, toemails.emaillist[i],
+					strlen(toemails.emaillist[i]))
+#endif
 
 	moderated = statctrl(listdir, "moderated");
 
