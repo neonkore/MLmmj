@@ -370,7 +370,6 @@ int main(int argc, char **argv)
 	}
 		
 	subfilename = concatstr(3, listdir, subdir, chstr);
-	myfree(subdir);
 
 	sublockname = concatstr(5, listdir, subdir, ".", chstr, ".lock");
 	sublockfd = open(sublockname, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
@@ -380,6 +379,8 @@ int main(int argc, char **argv)
 		myfree(sublockname);
 		exit(EXIT_FAILURE);
 	}
+
+	myfree(subdir);
 
 	sublock = myexcllock(sublockfd);
 	if(sublock < 0) {

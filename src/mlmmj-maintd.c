@@ -390,7 +390,6 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 		}
 		subfilename = concatstr(3, dirname, dp->d_name, "/subscribers");
 		if(stat(subfilename, &st) < 0) {
-			log_error(LOG_ARGS, "Could not stat(%s)", subfilename);
 			myfree(archivefilename);
 			myfree(subfilename);
 			continue;
