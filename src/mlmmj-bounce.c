@@ -188,7 +188,7 @@ int main(int argc, char **argv)
 {
 	int opt, fd;
 	char *listdir = NULL, *address = NULL, *number = NULL;
-	char *bindir, *mlmmjsend;
+	char *bindir, *mlmmjsend, *savename;
 	char *mailname = NULL, *bfilename, *a, *buf;
 	size_t len;
 	time_t t;
@@ -330,7 +330,7 @@ int main(int argc, char **argv)
 	if(mailname) {
 		savename = concatstr(2, bfilename, ".lastmsg");
 		rename(mailname, savename);
-		free(savename);
+		myfree(savename);
 	}
 		
 	myfree(bfilename);

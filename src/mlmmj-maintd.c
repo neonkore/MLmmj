@@ -497,7 +497,7 @@ int probe_bouncers(const char *listdir, const char *mlmmjbounce)
 		if(strstr(dp->d_name, "-probe"))
 			continue;
 
-		s = strrchr(dp->d_name, ".");
+		s = strrchr(dp->d_name, '.');
 		if(s && (strcmp(s, ".lastmsg") == 0))
 			continue;
 			
@@ -576,13 +576,13 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		if(strstr(dp->d_name, "-probe"))
 			continue;
 
-		a = strrchr(dp->d_name, ".");
+		a = strrchr(dp->d_name, '.');
 		if(a && (strcmp(a, ".lastmsg") == 0)) {
-			free(a);
+			myfree(a);
 			continue;
 		}
 
-		free(a);
+		myfree(a);
 		
 		probefile = concatstr(2, dp->d_name, "-probe");
 		
@@ -655,7 +655,7 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 			unlink(dp->d_name);
 			a = concatstr(2, dp->d_name, ".lastmsg");
 			unlink(a);
-			free(a);
+			myfree(a);
 		} else {
 			execlp(mlmmjunsub, mlmmjunsub,
 					"-L", listdir,
