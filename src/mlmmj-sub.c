@@ -408,7 +408,7 @@ int main(int argc, char **argv)
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	myfree(bindir);
 
-	while ((opt = getopt(argc, argv, "hcCdnVL:a:")) != -1) {
+	while ((opt = getopt(argc, argv, "hcCdnVUL:a:")) != -1) {
 		switch(opt) {
 		case 'a':
 			address = optarg;

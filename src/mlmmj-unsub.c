@@ -416,6 +416,7 @@ static void print_help(const char *prg)
 	       " -h: This help\n"
 	       " -L: Full path to list directory\n"
 	       " -n: Subscribe to no mail version of list\n"
+	       " -U: Don't switch to the user id of the listdir owner\n"
 	       " -V: Print version\n"
 	       "When no options are specified, unsubscription silently "
 	       "happens\n", prg);
@@ -426,6 +427,7 @@ int main(int argc, char **argv)
 {
 	int subread, subwrite, rlock, wlock, opt, unsubres, status, nomail = 0;
 	int confirmunsub = 0, unsubconfirm = 0, notifysub = 0, digest = 0;
+	int changeuid = 1;
 	char *listaddr, *listdir = NULL, *address = NULL, *subreadname = NULL;
 	char *subwritename, *mlmmjsend, *bindir, *subdir;
 	char *subddirname;
@@ -443,7 +445,7 @@ int main(int argc, char **argv)
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	myfree(bindir);
 
-	while ((opt = getopt(argc, argv, "hcCdnVL:a:")) != -1) {
+	while ((opt = getopt(argc, argv, "hcCdnVUL:a:")) != -1) {
 		switch(opt) {
 		case 'L':
 			listdir = optarg;
@@ -465,6 +467,9 @@ int main(int argc, char **argv)
 			break;
 		case 'h':
 			print_help(argv[0]);
+			break;
+		case 'U':
+			changeuid = 0;
 			break;
 		case 'V':
 			print_version(argv[0]);
@@ -496,6 +501,19 @@ int main(int argc, char **argv)
 
 	/* get the list address */
 	listaddr = getlistaddr(listdir);
+
+	if(changeuid) {
+		uid = getuid();
+		if(!uid && stat(listdir, &st) == 0) {
+			printf("Changing to uid %d, owner of %s.\n",
+					(int)st.st_uid, listdir);
+			if(setuid(st.st_uid) < 0) {
+				perror("setuid");
+				fprintf(stderr, "Continuing as uid %d\n",
+						(int)uid);
+			}
+		}
+	}
 
 	switch(typesub) {
 		case SUB_NORMAL:
