@@ -1,3 +1,5 @@
+1.2.0
+ o Remove debug info printing
 1.2.0-RC2
  o Fix uninitialized strlist
  o Add logging regular operation to mlmmj.operation.log
