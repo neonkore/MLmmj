@@ -54,7 +54,7 @@ char *random_plus_addr(const char *addr)
 	tmpstr = mymalloc(len);
 	snprintf(tmpstr, len, "%s", addr);
 
-	atsign = index(tmpstr, '@');
+	atsign = strchr(tmpstr, '@');
 	*atsign = '=';
 
 	snprintf(dest, len, "%x%x-%s", random_int(), random_int(), tmpstr);
@@ -79,7 +79,7 @@ char *genlistname(const char *listaddr)
 	size_t len;
 	char *dest, *atsign;
 
-	atsign = index(listaddr, '@');
+	atsign = strchr(listaddr, '@');
 	len = atsign - listaddr + 1;
 	dest = mymalloc(len);
 	
@@ -93,7 +93,7 @@ char *genlistfqdn(const char *listaddr)
 	size_t len;
 	char *dest, *atsign;
 
-	atsign = index(listaddr, '@');
+	atsign = strchr(listaddr, '@');
 	len = strlen(listaddr) - (atsign - listaddr);
 	dest = mymalloc(len);
 	snprintf(dest, len, "%s", atsign + 1);
