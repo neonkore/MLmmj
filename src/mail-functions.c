@@ -6,8 +6,6 @@
  * Public License as described at http://www.gnu.org/licenses/gpl.txt
  */
 
-#include "mail-functions.h"
-#include "wrappers.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,9 +15,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 
+#include "mail-functions.h"
+#include "wrappers.h"
 #include "log_error.h"
 
 /* "HELO \r\n " has length 7 */
@@ -101,63 +100,31 @@ int write_rcpt_to(int sockfd, const char *rcpt_addr)
 }
 
 
-int write_mailbody_from_fd(int sockfd, int fd)
+int write_mailbody_from_map(int sockfd, char *mapstart, size_t size)
 {
-	char buf[WRITE_BUFSIZE+3];
-	size_t len, bytes_written;
-	char *bufp;
-	int full_line = 1;  /* true, if last write included a newline */
-	
-	/* Zero the buffer */
-	memset(buf, 0, sizeof(buf));
-	
-	/* Read from beginning of the file */
+	char *cur, *next;
+	char newlinebuf[3];
+	size_t len;
 
-	if(lseek(fd, 0L, SEEK_SET) < 0) {
-		log_error(LOG_ARGS, "lseek() failed");
-		return errno;
-	}
-	
-	/* keep writing chunks of line (max WRITE_BUFSIZE) */
-	for(;;) {
-		bufp = buf+1;
-
-		len = read(fd, bufp, WRITE_BUFSIZE);
-
-		if(len == 0)
-			return 0;
-			
-		if(len < 0) {
-			if (errno == EINTR) {
-				continue;
-			} else {
-				return errno;
+	for(next = cur = mapstart; next < mapstart + size; next++) {
+		if(*next == '\n') {
+			if(writen(sockfd, cur, next - cur) < 0) {
+				log_error(LOG_ARGS, "Could not write mail");
+				return -1;
 			}
+			newlinebuf[0] = '\r';
+			newlinebuf[1] = '\n';
+			len = 2;
+			if(*(next+1) == '.') {
+				newlinebuf[2] = '.';
+				len = 3;
+			}
+			if(writen(sockfd, newlinebuf, len) < 0) {
+				log_error(LOG_ARGS, "Could not write mail");
+				return -1;
+			}
+			cur = next + 1;
 		}
-
-		/* fix "dot lines" */
-		if(full_line && (bufp[0] == '.')) {
-			*(--bufp) = '.';
-			len++;
-		}
-
-		/* fix newlines */
-		if((len > 0) && (bufp[len-1] == '\n')) {
-			bufp[len-1] = '\r';
-			bufp[len] = '\n';
-			bufp[len+1] = 0;
-			len++;
-			full_line = 1;
-		} else {
-			full_line = 0;
-		}
-
-#if 0
-		fprintf(stderr, "write_mailbody_from_file = [%s]\n", bufp);
-#endif
-		bytes_written = writen(sockfd, bufp, len);
-		if(bytes_written < 0 )
-			return errno;
 	}
 
 	return 0;

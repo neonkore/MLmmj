@@ -11,7 +11,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include <strings.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -21,6 +20,7 @@
 #include <libgen.h>
 #include <syslog.h>
 #include <stdarg.h>
+#include <sys/mman.h>
 
 #include "mlmmj-send.h"
 #include "mlmmj.h"
@@ -141,12 +141,12 @@ int bouncemail(const char *listdir, const char *mlmmjbounce, const char *from)
 }
 
 int send_mail(int sockfd, const char *from, const char *to,
-	      const char *replyto, int mailfd,
+	      const char *replyto, char *mailmap, size_t mailsize,
 	      const char *listdir, const char *mlmmjbounce)
 {
 	int retval = 0;
 	char *reply;
-
+	
 	retval = write_mail_from(sockfd, from);
 	if(retval) {
 		log_error(LOG_ARGS, "Could not write MAIL FROM\n");
@@ -206,7 +206,7 @@ int send_mail(int sockfd, const char *from, const char *to,
 		}
 	}
 
-	retval = write_mailbody_from_fd(sockfd, mailfd);
+	retval = write_mailbody_from_map(sockfd, mailmap, mailsize);
 	if(retval) {
 		log_error(LOG_ARGS, "Could not write mailbody\n");
 		return retval;
@@ -279,9 +279,9 @@ int endsmtp(int *sockfd)
 }
 
 int send_mail_many(int sockfd, const char *from, const char *replyto,
-		   int mailfd, int subfd, const char *listaddr,
-		   const char *archivefilename, const char *listdir,
-		   const char *mlmmjbounce)
+		   char *mailmap, size_t mailsize, int subfd,
+		   const char *listaddr, const char *archivefilename,
+		   const char *listdir, const char *mlmmjbounce)
 {
 	int sendres = 0, addrfd;
 	char *bounceaddr, *addr, *index, *dirname, *addrfilename;
@@ -291,12 +291,12 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 		chomp(addr);
 		if(from)
 			sendres = send_mail(sockfd, from, addr, replyto,
-					    mailfd, listdir, NULL);
+					    mailmap, mailsize, listdir, NULL);
 		else {
 			bounceaddr = bounce_from_adr(addr, listaddr,
 						     archivefilename);
 			sendres = send_mail(sockfd, bounceaddr, addr, replyto,
-				  mailfd, listdir, mlmmjbounce);
+				  mailmap, mailsize, listdir, mlmmjbounce);
 			free(bounceaddr);
 		}
 		if(sendres && listaddr && archivefilename) {
@@ -378,9 +378,10 @@ int main(int argc, char **argv)
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
 	char *relayhost = NULL, *archivefilename = NULL, *tmpstr;
 	char *listctrl = NULL, *subddirname = NULL, *listdir = NULL;
-	char *mlmmjbounce = NULL, *bindir;
+	char *mlmmjbounce = NULL, *bindir, *mailmap;
 	DIR *subddir;
 	struct dirent *dp;
+	struct stat st;
 	
 	log_set_name(argv[0]);
 
@@ -463,6 +464,17 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	if(fstat(mailfd, &st) < 0) {
+		log_error(LOG_ARGS, "Could not stat mailfd");
+		exit(EXIT_FAILURE);
+	}
+
+	mailmap = mmap(0, st.st_size, PROT_READ, MAP_SHARED, mailfd, 0);
+	if(mailmap == (void *)-1) {
+		log_error(LOG_ARGS, "Could not mmap mailfd");
+		exit(EXIT_FAILURE);
+	}
+
 	switch(listctrl[0]) {
 	case '1': /* A single mail is to be sent, do nothing */
 		break;
@@ -504,8 +516,8 @@ int main(int argc, char **argv)
 	switch(listctrl[0]) {
 	case '1': /* A single mail is to be sent */
 		initsmtp(&sockfd, relayhost);
-		sendres = send_mail(sockfd, bounceaddr, to_addr,
-				replyto, mailfd, listdir, NULL);
+		sendres = send_mail(sockfd, bounceaddr, to_addr, replyto,
+				mailmap, st.st_size, listdir, NULL);
 		endsmtp(&sockfd);
 		if(sendres) {
 			/* error, so keep it in the queue */
@@ -546,16 +558,17 @@ int main(int argc, char **argv)
 		break;
 	case '2': /* Moderators */
 		initsmtp(&sockfd, relayhost);
-		if(send_mail_many(sockfd, bounceaddr, NULL, mailfd, subfd,
-			       NULL, NULL, listdir, NULL))
+		if(send_mail_many(sockfd, bounceaddr, NULL, mailmap, st.st_size,
+				subfd, NULL, NULL, listdir, NULL))
 			close(sockfd);
 		else
 			endsmtp(&sockfd);
 		break;
 	case '3': /* resending earlier failed mails */
 		initsmtp(&sockfd, relayhost);
-		if(send_mail_many(sockfd, NULL, NULL, mailfd, subfd,
-				listaddr, mailfilename, listdir, mlmmjbounce))
+		if(send_mail_many(sockfd, NULL, NULL, mailmap, st.st_size,
+				subfd, listaddr, mailfilename, listdir,
+				mlmmjbounce))
 			close(sockfd);
 		else
 			endsmtp(&sockfd);
@@ -588,9 +601,9 @@ int main(int argc, char **argv)
 			free(subfilename);
 
 			initsmtp(&sockfd, relayhost);
-			sendres = send_mail_many(sockfd, NULL, NULL, mailfd,
-					subfd, listaddr, archivefilename,
-					listdir, mlmmjbounce);
+			sendres = send_mail_many(sockfd, NULL, NULL, mailmap,
+					st.st_size, subfd, listaddr,
+					archivefilename, listdir, mlmmjbounce);
 			if (sendres) {
 				/* If send_mail_many() failed we close the
 				 * connection to the mail server in a brutal
@@ -606,12 +619,14 @@ int main(int argc, char **argv)
 		break;
 	}
 	
+	munmap(mailmap, st.st_size);
+	close(mailfd);
+	
 	if(archive) {
 		rename(mailfilename, archivefilename);
 		free(archivefilename);
 	} else if(deletewhensent)
 		unlink(mailfilename);
 
-	close(mailfd);
 	return EXIT_SUCCESS;
 }
