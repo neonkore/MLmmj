@@ -67,4 +67,12 @@ void print_version(const char *prg);
 			exit(EXIT_FAILURE); \
 			};
 
+/* make sure we use the wrappers */
+#ifndef _MEMORY_C
+#define malloc	Bad_programmer__no_biscuit
+#define realloc	Bad_programmer__no_biscuit
+#define free	Bad_programmer__no_biscuit
+#define strdup	Bad_programmer__no_biscuit
+#endif  /* _MEMORY_C */
+
 #endif /* MLMMJ_GENERIC_INCLUDES */
