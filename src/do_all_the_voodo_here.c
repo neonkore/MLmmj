@@ -125,13 +125,13 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 
 		/* Add Subject: prefix if wanted */
 		if(prefix) {
-			if(strncasecmp(hdrline, "Subject: ", 9) == 0) {
-				unqp = cleanquotedp(hdrline + 9);
-				if(strstr(hdrline + 9, prefix) == NULL &&
+			if(strncasecmp(hdrline, "Subject:", 8) == 0) {
+				unqp = cleanquotedp(hdrline + 8);
+				if(strstr(hdrline + 8, prefix) == NULL &&
 				   strstr(unqp, prefix) == NULL) {
-					subject = concatstr(4,
+					subject = concatstr(3,
 							"Subject: ", prefix,
-							" ", hdrline + 9);
+							hdrline + 8);
 					writen(outfd, subject,
 							strlen(subject));
 					myfree(subject);
