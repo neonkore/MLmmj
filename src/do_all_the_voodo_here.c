@@ -42,13 +42,16 @@ void getinfo(const char *line, struct mailhdr *readhdrs)
 		tokenlen = strlen(readhdrs[i].token);
 		linelen = strlen(line);
 		if(strncmp(line, readhdrs[i].token, tokenlen) == 0) {
+			readhdrs[i].valuecount++;
 			valuelen = linelen - tokenlen + 1;
-			if(!readhdrs[i].value) {
-				readhdrs[i].value = malloc(valuelen + 1);
-				memcpy(readhdrs[i].value, line+tokenlen,
-						valuelen);
-			}
-			chomp(readhdrs[i].value);
+			readhdrs[i].values =
+				(char **)realloc(readhdrs[i].values,
+				  readhdrs[i].valuecount * sizeof(char *));
+			readhdrs[i].values[readhdrs[i].valuecount - 1] =
+					(char *)malloc(valuelen + 1);
+			strncpy(readhdrs[i].values[readhdrs[i].valuecount - 1],
+						line+tokenlen, valuelen);
+			chomp(readhdrs[i].values[readhdrs[i].valuecount - 1]);
 		}
 		i++;
 	}
