@@ -41,35 +41,35 @@ int checkwait_smtpreply(int sockfd, int replytype)
 
 	switch(replytype) {
 	case MLMMJ_CONNECT:
-		if(smtpreply[0] != '2' && smtpreply[1] != '2')
+		if(smtpreply[0] != '2' || smtpreply[1] != '2')
 			return MLMMJ_CONNECT;
 		break;
 	case MLMMJ_HELO:
-		if(smtpreply[0] != '2' && smtpreply[1] != '5')
+		if(smtpreply[0] != '2' || smtpreply[1] != '5')
 			return MLMMJ_HELO;
 		break;
 	case MLMMJ_FROM:
-		if(smtpreply[0] != '2' && smtpreply[1] != '5')
+		if(smtpreply[0] != '2' || smtpreply[1] != '5')
 			return MLMMJ_FROM;
 		break;
 	case MLMMJ_RCPTTO:
-		if(smtpreply[0] != '2' && smtpreply[1] != '5')
+		if(smtpreply[0] != '2' || smtpreply[1] != '5')
 			return MLMMJ_RCPTTO;
 		break;
 	case MLMMJ_DATA:
-		if(smtpreply[0] != '3' && smtpreply[1] != '5')
+		if(smtpreply[0] != '3' || smtpreply[1] != '5')
 			return MLMMJ_DATA;
 		break;
 	case MLMMJ_DOT:
-		if(smtpreply[0] != '2' && smtpreply[1] != '5')
+		if(smtpreply[0] != '2' || smtpreply[1] != '5')
 			return MLMMJ_DOT;
 		break;
 	case MLMMJ_QUIT:
-		if(smtpreply[0] != '2' && smtpreply[1] != '2')
+		if(smtpreply[0] != '2' || smtpreply[1] != '2')
 			return MLMMJ_QUIT;
 		break;
 	case MLMMJ_RSET:
-		if(smtpreply[0] != '2' && smtpreply[1] != '5')
+		if(smtpreply[0] != '2' || smtpreply[1] != '5')
 			return MLMMJ_RSET;
 		break;
 	default:
