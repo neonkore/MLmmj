@@ -5,3 +5,4 @@ missing
 mkinstalldirs
 Makefile.in
 configure
+Makefile

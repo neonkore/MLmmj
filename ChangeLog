@@ -1,3 +1,4 @@
+ o Make help consistent and up to date with all options
  o Make mlmmj-send print the replies from the mailserver
  o Send our hostname in the HELO instead of relayhost
  o Implement requeueing mechanism to be able to resend mail when relayhost
