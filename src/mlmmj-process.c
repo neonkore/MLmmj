@@ -346,7 +346,7 @@ int main(int argc, char **argv)
 		{ "From:", 0, NULL },
 		{ "To:", 0, NULL },
 		{ "Cc:", 0, NULL },
-		{ "From ", 0, NULL },
+		{ "Return-Path: ", 0, NULL },
 		{ NULL, 0, NULL }
 	};
 
@@ -483,7 +483,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if(readhdrs[3].token) { /* From  addresses */
+	if(readhdrs[3].token) { /* Return-Path: (envelope from) */
 		for(i = 0; i < readhdrs[3].valuecount; i++) {
 			find_email_adr(readhdrs[3].values[i], &efromemails);
 		}
