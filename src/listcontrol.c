@@ -105,6 +105,13 @@ int listcontrol(const char *mailfilename, const char *listdir,
 					(controlstr[cmdlen] == '-')) {
 				param = strdup(controlstr + cmdlen + 1);
 				MY_ASSERT(param);
+				if (strchr(param, '/')) {
+					errno = 0;
+					log_error(LOG_ARGS, "Slash (/) in"
+						" list control request,"
+						" discarding mail");
+					exit(EXIT_SUCCESS);
+				}
 				free(controlstr);
 				break;
 			} else if (!ctrl_commands[ctrl].accepts_parameter &&
