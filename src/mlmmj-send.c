@@ -315,9 +315,9 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 			}
 			addrfilename = concatstr(2, dirname, "/subscribers");
 			free(dirname);
-			addrfile = fopen(addrfilename, "w");
+			addrfile = fopen(addrfilename, "a");
 			if(addrfile == NULL) {
-				log_error(LOG_ARGS, "Could not create %s",
+				log_error(LOG_ARGS, "Could not write to %s",
 						    addrfilename);
 				free(addrfilename);
 				free(addr);
@@ -599,12 +599,10 @@ int main(int argc, char **argv)
 		break;
 	}
 	
-	if(archive) {
-		/* It is safe to rename() the mail file at this point, because
-		   the child processes (who might still be running) inherit a
-		   handle to the open file, so they don't care if it is moved
-		   or deleted. */
+	while(conncount)
+		sleep(1);
 
+	if(archive) {
 		rename(mailfilename, archivefilename);
 
 		free(archivefilename);
