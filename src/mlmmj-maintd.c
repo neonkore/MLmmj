@@ -744,9 +744,11 @@ void do_maintenance(const char *listdir, const char *mlmmjsend,
 		    const char *mlmmjbounce, const char *mlmmjunsub)
 {
 	char *random, *logname, *logstr;
+	char timenow[64];
 	struct stat st;
 	int maintdlogfd;
 	uid_t uid = getuid();
+	time_t t;
 
 	if(!listdir)
 		return;
@@ -785,6 +787,12 @@ void do_maintenance(const char *listdir, const char *mlmmjsend,
 		myfree(logname);
 		return;
 	}
+
+	t = time(NULL);
+	if(ctime_r(&t, timenow))
+		WRITEMAINTLOG4(3, "Starting maintenance run at ",
+				timenow, "\n");
+
 
 	WRITEMAINTLOG4(3, "clean_moderation(", listdir, ");\n");
 	clean_moderation(listdir);
@@ -833,7 +841,7 @@ int main(int argc, char **argv)
 {
 	int opt, daemonize = 1, ret;
 	char *bindir, *listdir = NULL, *mlmmjsend, *mlmmjbounce, *mlmmjunsub;
-	char *dirlists = NULL, *s;
+	char *dirlists = NULL, *s, *listiter;
 	struct stat st;
 	struct dirent *dp;
 	DIR *dirp;
@@ -881,10 +889,10 @@ int main(int argc, char **argv)
 	myfree(bindir);
 
 	if(daemonize) {
-		if(listdir)
-			ret = mydaemon(listdir);
-		else
+		if(dirlists)
 			ret = mydaemon(dirlists);
+		else
+			ret = mydaemon(listdir);
 	}
 
 	if(daemonize && ret < 0) {
@@ -898,6 +906,12 @@ int main(int argc, char **argv)
 			do_maintenance(listdir, mlmmjsend, mlmmjbounce,
 					mlmmjunsub);
 			continue;
+		}
+
+		if(chdir(dirlists) < 0) {
+			log_error(LOG_ARGS, "Could not chdir(%s).",
+					dirlists);
+			exit(EXIT_FAILURE);
 		}
 
 		if((dirp = opendir(dirlists)) == NULL) {
@@ -914,33 +928,33 @@ int main(int argc, char **argv)
 					(strcmp(dp->d_name, ".") == 0))
 				continue;
 			
-			listdir = concatstr(3, dirlists, "/", dp->d_name);
+			listiter = concatstr(3, dirlists, "/", dp->d_name);
 
-			if(stat(listdir, &st) < 0) {
+			if(stat(listiter, &st) < 0) {
 				log_error(LOG_ARGS, "Could not stat(%s)",
-						listdir);
-				myfree(listdir);
+						listiter);
+				myfree(listiter);
 				continue;
 			}
 
 			if(!S_ISDIR(st.st_mode)) {
-				myfree(listdir);
+				myfree(listiter);
 				continue;
 			}
 
-			s = concatstr(2, listdir, "/control/listaddress");
+			s = concatstr(2, listiter, "/control/listaddress");
 			ret = stat(s, &st);
 			myfree(s);
 
-			if(ret < 0) { /* If ret < 0 it's not a listdir */
-				myfree(listdir);
+			if(ret < 0) { /* If ret < 0 it's not a listiter */
+				myfree(listiter);
 				continue;
 			}
 
-			do_maintenance(listdir, mlmmjsend, mlmmjbounce,
+			do_maintenance(listiter, mlmmjsend, mlmmjbounce,
 					mlmmjunsub);
 
-			myfree(listdir);
+			myfree(listiter);
 		}
 
 		closedir(dirp);

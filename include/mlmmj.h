@@ -41,7 +41,7 @@
 #define WAITPROBE 43200   /* How long do we wait for a bounce of the probe
 			     mail before concluding the address is no longer
 			     bouncing? 43200 is 12 hours */
-#define MAINTD_SLEEP 7200 /* How long between maintenance runs when
+#define MAINTD_SLEEP 120 /* How long between maintenance runs when
 			     mlmmj-maintd runs daemonized? 7200s is 2 hours */
 #define MAINTD_LOGFILE "mlmmj-maintd.lastrun.log"
 
