@@ -27,6 +27,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "init_sockfd.h"
 #include "log_error.h"
