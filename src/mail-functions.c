@@ -101,7 +101,7 @@ int write_rcpt_to(int sockfd, const char *rcpt_addr)
 }
 
 
-int write_mailbody_from_file(int sockfd, FILE *infile)
+int write_mailbody_from_fd(int sockfd, int fd)
 {
 	char buf[WRITE_BUFSIZE+3];
 	size_t len, bytes_written;
@@ -113,8 +113,8 @@ int write_mailbody_from_file(int sockfd, FILE *infile)
 	
 	/* Read from beginning of the file */
 
-	if(fseek(infile, 0L, SEEK_SET) == -1) {
-		log_error(LOG_ARGS, "fseek() failed");
+	if(lseek(fd, 0L, SEEK_SET) < 0) {
+		log_error(LOG_ARGS, "lseek() failed");
 		return errno;
 	}
 	
@@ -124,7 +124,7 @@ int write_mailbody_from_file(int sockfd, FILE *infile)
 		errno = 0;  /* We must reset errno, otherwise we can't
 			     * determine if we hit EOF or an error
 			     * occurred */
-		if(!fgets(bufp, WRITE_BUFSIZE, infile)) {
+		if(read(fd, bufp, WRITE_BUFSIZE) < 0) {
 			if (errno == EINTR) {
 				errno = 0;
 				continue;

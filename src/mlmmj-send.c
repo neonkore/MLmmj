@@ -140,7 +140,7 @@ int bouncemail(const char *listdir, const char *mlmmjbounce, const char *from)
 }
 
 int send_mail(int sockfd, const char *from, const char *to,
-	      const char *replyto, FILE *mailfile,
+	      const char *replyto, int mailfd,
 	      const char *listdir, const char *mlmmjbounce)
 {
 	int retval = 0;
@@ -205,7 +205,7 @@ int send_mail(int sockfd, const char *from, const char *to,
 		}
 	}
 
-	retval = write_mailbody_from_file(sockfd, mailfile);
+	retval = write_mailbody_from_fd(sockfd, mailfd);
 	if(retval) {
 		log_error(LOG_ARGS, "Could not write mailbody\n");
 		return retval;
@@ -278,7 +278,7 @@ int endsmtp(int *sockfd)
 }
 
 int send_mail_many(int sockfd, const char *from, const char *replyto,
-		   FILE *mailfile, FILE *subfile, const char *listaddr,
+		   int mailfd, FILE *subfile, const char *listaddr,
 		   const char *archivefilename, const char *listdir,
 		   const char *mlmmjbounce)
 {
@@ -290,12 +290,12 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 		chomp(addr);
 		if(from)
 			sendres = send_mail(sockfd, from, addr, replyto,
-					    mailfile, listdir, NULL);
+					    mailfd, listdir, NULL);
 		else {
 			bounceaddr = bounce_from_adr(addr, listaddr,
 						     archivefilename);
 			sendres = send_mail(sockfd, bounceaddr, addr, replyto,
-				  mailfile, listdir, mlmmjbounce);
+				  mailfd, listdir, mlmmjbounce);
 			free(bounceaddr);
 		}
 		if(sendres && listaddr && archivefilename) {
@@ -368,7 +368,7 @@ static void print_help(const char *prg)
 int main(int argc, char **argv)
 {
 	size_t len = 0;
-	int sockfd = 0, opt, mindex;
+	int sockfd = 0, mailfd = 0, opt, mindex;
 	int deletewhensent = 1, sendres, archive = 1;
 	char *listaddr, *mailfilename = NULL, *subfilename = NULL;
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
@@ -376,7 +376,7 @@ int main(int argc, char **argv)
 	char *listctrl = NULL, *subddirname = NULL, *listdir = NULL;
 	char *mlmmjbounce = NULL, *bindir;
 	DIR *subddir;
-	FILE *subfile = NULL, *mailfile = NULL, *tmpfile;
+	FILE *subfile = NULL, *tmpfile;
 	struct dirent *dp;
 	
 	log_set_name(argv[0]);
@@ -455,7 +455,7 @@ int main(int argc, char **argv)
 	
 	/* initialize file with mail to send */
 
-	if((mailfile = fopen(mailfilename, "r")) == NULL) {
+	if((mailfd = open(mailfilename, O_RDONLY)) < 0) {
 	        log_error(LOG_ARGS, "Could not open '%s'", mailfilename);
 		exit(EXIT_FAILURE);
 	}
@@ -502,7 +502,7 @@ int main(int argc, char **argv)
 	case '1': /* A single mail is to be sent */
 		initsmtp(&sockfd, relayhost);
 		sendres = send_mail(sockfd, bounceaddr, to_addr,
-				replyto, mailfile, listdir, NULL);
+				replyto, mailfd, listdir, NULL);
 		endsmtp(&sockfd);
 		if(sendres) {
 			/* error, so keep it in the queue */
@@ -530,7 +530,7 @@ int main(int argc, char **argv)
 		break;
 	case '2': /* Moderators */
 		initsmtp(&sockfd, relayhost);
-		if(send_mail_many(sockfd, bounceaddr, NULL, mailfile, subfile,
+		if(send_mail_many(sockfd, bounceaddr, NULL, mailfd, subfile,
 			       NULL, NULL, listdir, NULL))
 			close(sockfd);
 		else
@@ -538,7 +538,7 @@ int main(int argc, char **argv)
 		break;
 	case '3': /* resending earlier failed mails */
 		initsmtp(&sockfd, relayhost);
-		if(send_mail_many(sockfd, NULL, NULL, mailfile, subfile,
+		if(send_mail_many(sockfd, NULL, NULL, mailfd, subfile,
 				listaddr, mailfilename, listdir, mlmmjbounce))
 			close(sockfd);
 		else
@@ -572,7 +572,7 @@ int main(int argc, char **argv)
 			free(subfilename);
 
 			initsmtp(&sockfd, relayhost);
-			sendres = send_mail_many(sockfd, NULL, NULL, mailfile,
+			sendres = send_mail_many(sockfd, NULL, NULL, mailfd,
 					subfile, listaddr, archivefilename,
 					listdir, mlmmjbounce);
 			if (sendres) {
@@ -596,6 +596,6 @@ int main(int argc, char **argv)
 	} else if(deletewhensent)
 		unlink(mailfilename);
 
-	fclose(mailfile);
+	close(mailfd);
 	return EXIT_SUCCESS;
 }
