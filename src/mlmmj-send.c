@@ -718,6 +718,9 @@ int main(int argc, char **argv)
 
 	verp = ctrlvalue(listdir, "verp");
 	chomp(verp);
+	if(verp == NULL)
+		if(statctrl(listdir, "verp") == 1)
+			verp = mystrdup("");
 
 	switch(listctrl[0]) {
 		case '1':
