@@ -10,8 +10,10 @@ value, leaving line 2 and forward ready for commentary etc.
 
  · closedlist			(boolean)
 
-   Is the list is open or closed. If it's closed the behaviour
-   is changed and mortenp will expand this section to describe it.
+   Is the list is open or closed. If it's closed subscribtion and
+   unsubscription via mail is disabled. Also note that confirmation is disabled
+   too, so the -C option to mlmmj-sub and mlmmj-unsub is of no use with a
+   closed list.
 
  · moderated			(boolean)
 
