@@ -42,6 +42,11 @@
 			     mlmmj-maintd runs daemonized? 7200s is 2 hours */
 #define MAINTD_LOGFILE "mlmmj-maintd.lastrun.log"
 
+struct strlist {
+	int count;
+	char **strs;
+};
+
 struct mailhdr {
 	const char *token;
 	int valuecount;
