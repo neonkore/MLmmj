@@ -13,9 +13,10 @@ USAGE="mlmmj-make-ml "$VERSION"
 -L	the name of the mailinglist
 -s	your spool directory if not "$DEFAULTDIR"
 -a	create the needed entrys in your /etc/aliases file
--z	nuffn for now"
+-z	nuffn for now
+-c	chown the spool dir"
 
-while getopts ":hL:s:az" Option
+while getopts ":hL:s:azc:" Option
 do
 case "$Option" in 
 	h )
@@ -34,6 +35,10 @@ case "$Option" in
 	;;
 	a )
 	A_CREATE="YES"
+	;;
+	c )
+	DO_CHOWN=1
+	CHOWN="$OPTARG"
 	;;
 	* )
 	echo -e "$0: invalid option\nTry $0 -h for more information."
@@ -101,7 +106,7 @@ if [ -z "$MLMMJRECIEVE" ]; then
 fi
 
 MLMMJMAINTD=`which mlmmj-maintd 2>/dev/null`
-if [ -z "$MLMMJRECIEVE" ]; then
+if [ -z "$MLMMJMAINTD" ]; then
 	MLMMJMAINTD="/path/to/mlmmj-maintd"
 fi
 
@@ -129,6 +134,24 @@ else
 	echo "Don't forget to add this to /etc/aliases:"
 	echo "$ALIAS"
 fi
+
+if [ "$DO_CHOWN" ] ; then
+	echo
+	echo -n "chown -R $CHOWN $SPOOLDIR/$LISTNAME? [y/n]: "
+	read OKIDOKI
+	case $OKIDOKI in
+		y|Y)
+			chown -R $CHOWN $SPOOLDIR/$LISTNAME
+		;;
+		n|N)
+			exit 0
+		;;
+		*)
+			echo "option is: y, Y, n, N"
+		;;
+	esac
+fi
+
 echo
 echo "If you're not starting mlmmj-maintd in daemon mode,"
 echo "don't forget to add this to your crontab:"
