@@ -43,6 +43,7 @@
 #include "mygetline.h"
 #include "statctrl.h"
 #include "ctrlvalue.h"
+#include "ctrlvalues.h"
 #include "getlistaddr.h"
 #include "prepstdreply.h"
 #include "subscriberfuncs.h"
@@ -195,7 +196,7 @@ int main(int argc, char **argv)
 	struct email_container toemails = { 0, NULL };
 	struct email_container ccemails = { 0, NULL };
 	struct email_container efromemails = { 0, NULL };
-	const char *badheaders[] = { "From ", "Return-Path:", NULL };
+	struct strlist *delheaders;
 	struct mailhdr readhdrs[] = {
 		{ "From:", 0, NULL },
 		{ "To:", 0, NULL },
@@ -273,14 +274,33 @@ int main(int argc, char **argv)
 	footerfilename = concatstr(2, listdir, "/control/footer");
 	footfd = open(footerfilename, O_RDONLY);
 	free(footerfilename);
+
+	delheaders = ctrlvalues(listdir, "delheaders");
+	if(delheaders == NULL) {
+		delheaders = malloc(sizeof(struct strlist));
+		delheaders->count = 0;
+		delheaders->strs = NULL;
+	}
+
+	delheaders->strs = realloc(delheaders->strs,
+			(delheaders->count+3) * sizeof(char *));
+	delheaders->strs[delheaders->count++] = strdup("From ");
+	delheaders->strs[delheaders->count++] = strdup("Return-Path:");
+	delheaders->strs[delheaders->count++] = NULL;
 	
 	subjectprefix = ctrlvalue(listdir, "prefix");	
 	
 	if(do_all_the_voodo_here(rawmailfd, donemailfd, hdrfd, footfd,
-				badheaders, readhdrs, subjectprefix) < 0) {
+				(const char**)delheaders->strs, readhdrs,
+				subjectprefix) < 0) {
 		log_error(LOG_ARGS, "Error in do_all_the_voodo_here");
 		exit(EXIT_FAILURE);
 	}
+
+	for(i = 0; i < delheaders->count; i++)
+		free(delheaders->strs[i]);
+	free(delheaders->strs);
+	free(delheaders);
 
 	close(rawmailfd);
 	close(donemailfd);
