@@ -41,9 +41,8 @@ mlmmj_unsub_SOURCES = mlmmj-unsub.c writen.c mylocking.c \
 			
 mlmmj_bounce_SOURCES = mlmmj-bounce.c print-version.c log_error.c \
 		       subscriberfuncs.c strgen.c random-int.c writen.c \
-		       prepstdreply.c mygetline.c openrandexclrw.c chomp.c \
-		       getlistaddr.c memory.c
+		       prepstdreply.c mygetline.c chomp.c getlistaddr.c \
+		       memory.c
 
 mlmmj_maintd_SOURCES = mlmmj-maintd.c print-version.c log_error.c mygetline.c \
-		       strgen.c random-int.c chomp.c writen.c \
-		       openrandexclrw.c memory.c
+		       strgen.c random-int.c chomp.c writen.c memory.c
