@@ -1,4 +1,4 @@
-README mlmmj-1.0.0					Sep 9th 2004
+README mlmmj-1.1.0-RC1					November 12th 2004
 
 This is an attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
@@ -56,6 +56,8 @@ To use mlmmj, do the following:
     /var/spool/mlmmj/mlmmj-test/control
     /var/spool/mlmmj/mlmmj-test/moderation
     /var/spool/mlmmj/mlmmj-test/subscribers.d
+    /var/spool/mlmmj/mlmmj-test/digesters.d
+    /var/spool/mlmmj/mlmmj-test/nomailsubs.d
     /var/spool/mlmmj/mlmmj-test/requeue
 
     NOTE: The mailinglist directory (/var/spool/mlmmj/mlmmj-test in our
@@ -79,7 +81,8 @@ To use mlmmj, do the following:
     the listdir (/var/spool/mlmmj/mlmmj-test), and log it's last maintenance
     run to listdir/mlmmj-maintd.lastrun.log.
 
-    You need one entry for each list or a wrapper script added once in crontab.
+    If you have several lists below /var/spool/mlmmj you can use -d:
+    /usr/bin/mlmmj-maintd -F -d /var/spool/mlmmj
 
 That's it! You probably want to go through the next steps too.
 

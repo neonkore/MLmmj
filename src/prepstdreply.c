@@ -150,8 +150,8 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		   char **data)
 {
 	int infd, outfd;
-	char *listaddr, *myfrom, *str, *tmp, *subject, *retstr = NULL;
-	char *myreplyto, *myto;
+	char *listaddr, *myfrom, *tmp, *subject, *retstr = NULL;
+	char *myreplyto, *myto, *str = NULL;
 
 	tmp = concatstr(3, listdir, "/text/", filename);
 	infd = open(tmp, O_RDONLY);

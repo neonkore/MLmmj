@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT(mlmmj, esyscmd([tr -d '\n' < VERSION]), mmj@mmj.dk)
 
-VERSION=$(cat VERSION)
+VERSION=$PACKAGE_VERSION
 AC_SUBST(VERSION)
 
 AM_INIT_AUTOMAKE(mlmmj, $VERSION)

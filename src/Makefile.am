@@ -2,8 +2,8 @@
 
 AUTOMAKE_OPTIONS = foreign
 
-CFLAGS = -g -Wall -pedantic -Wsign-compare
-INCLUDES = -I../include
+AM_CFLAGS = -g -Wall -pedantic -Wsign-compare
+INCLUDES = -I$(srcdir)/../include
 
 bin_PROGRAMS = mlmmj-send mlmmj-recieve mlmmj-process mlmmj-sub \
                mlmmj-unsub mlmmj-bounce mlmmj-maintd

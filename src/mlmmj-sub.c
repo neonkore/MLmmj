@@ -61,6 +61,7 @@ void confirm_sub(const char *listdir, const char *listaddr,
 	myfree(listfqdn);
 
 	switch(typesub) {
+		default:
 		case SUB_NORMAL:
 			listtext = mystrdup("sub-ok");
 			break;
@@ -106,6 +107,7 @@ void notify_sub(const char *listdir, const char *listaddr,
 	myfree(listfqdn);
 
 	switch(typesub) {
+		default:
 		case SUB_NORMAL:
 			listtext = mystrdup("notifysub");
 			break;
@@ -179,6 +181,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 				"@", listfqdn);
 	
 	switch(typesub) {
+		default:
 		case SUB_NORMAL:
 			listtext = mystrdup("sub-confirm");
 			tmpstr = mystrdup("+confsub-");
@@ -347,6 +350,7 @@ int main(int argc, char **argv)
 	chstr[1] = '\0';
 	
 	switch(typesub) {
+		default:
 		case SUB_NORMAL:
 			subdir = mystrdup("/subscribers.d/");
 			break;

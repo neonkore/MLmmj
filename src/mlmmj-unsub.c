@@ -61,6 +61,7 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 	myfree(listfqdn);
 
 	switch(typesub) {
+		default:
 		case SUB_NORMAL:
 			listtext = mystrdup("unsub-ok");
 			break;
@@ -107,6 +108,7 @@ void notify_unsub(const char *listdir, const char *listaddr,
 	myfree(listfqdn);
 
 	switch(typesub) {
+		default:
 		case SUB_NORMAL:
 			listtext = mystrdup("notifyunsub");
 			break;
@@ -182,6 +184,7 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 				"@", listfqdn);
 
 	switch(typesub) {
+		default:
 		case SUB_NORMAL:
 			listtext = mystrdup("unsub-confirm");
 			tmpstr = mystrdup("+confunsub-");
@@ -371,6 +374,7 @@ int main(int argc, char **argv)
 	}
 
 	switch(typesub) {
+		default:
 		case SUB_NORMAL:
 			subdir = mystrdup("/subscribers.d/");
 			break;

@@ -36,7 +36,7 @@ void init_sockfd(int *sockfd, const char *relayhost)
 {
 	int len;
 	struct sockaddr_in addr;
-	uint16_t port = 25;
+	u_short port = 25;
 
 	if (getenv("MLMMJ_TESTING")) {
 		relayhost = "127.0.0.1";

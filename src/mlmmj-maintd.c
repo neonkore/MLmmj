@@ -973,7 +973,7 @@ void do_maintenance(const char *listdir, const char *mlmmjsend,
 
 int main(int argc, char **argv)
 {
-	int opt, daemonize = 1, ret;
+	int opt, daemonize = 1, ret = 0;
 	char *bindir, *listdir = NULL, *mlmmjsend, *mlmmjbounce, *mlmmjunsub;
 	char *dirlists = NULL, *s, *listiter;
 	struct stat st;

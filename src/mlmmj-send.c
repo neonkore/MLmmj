@@ -470,10 +470,10 @@ static void print_help(const char *prg)
 int main(int argc, char **argv)
 {
 	size_t len = 0, hdrslen, bodylen;
-	int sockfd = 0, mailfd = 0, opt, mindex, subfd, tmpfd;
+	int sockfd = 0, mailfd = 0, opt, mindex, subfd = 0, tmpfd;
 	int deletewhensent = 1, sendres, archive = 1, digest = 0;
 	int ctrlarchive;
-	char *listaddr, *mailfilename = NULL, *subfilename = NULL;
+	char *listaddr = NULL, *mailfilename = NULL, *subfilename = NULL;
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
 	char *relayhost = NULL, *archivefilename = NULL, *tmpstr;
 	char *listctrl = NULL, *subddirname = NULL, *listdir = NULL;
