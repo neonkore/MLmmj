@@ -1,4 +1,4 @@
-README mlmmj-0.3.2					April 23st 2004
+README mlmmj-0.3.3					April 27th 2004
 
 This is my attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
@@ -9,11 +9,11 @@ The functionality is still quite limited:
  · Subscribe / unsubscribe functionality (email, commandline).
  · Archive
  · Custom headers / footer
+ · Primitive bouncehandling
 
-Next feature in the works is bouncehandling--it's not _as_ urgent as it seems,
-since the mailserver delivering the mails takes care of most of it. This
-feature missing should not keep you from using mlmmj on not that heavy
-trafficated list.
+Next feature in the works is bouncehandling--it's now getting there slowly,
+and now bouncing mails will be processed in the bounce/ directory below
+listdir.
 
 To use mlmmj, do the following:
 
@@ -33,7 +33,13 @@ To use mlmmj, do the following:
    In the case of a list called mlmmj-test below /var/spool/mlmmj it makes the
    following directories:
 
-   /var/spool/mlmmj/mlmmj-test/{incoming,queue,archive,text,subconf,unsubconf}
+   /var/spool/mlmmj/mlmmj-test/incoming
+   /var/spool/mlmmj/mlmmj-test/queue
+   /var/spool/mlmmj/mlmmj-test/archive
+   /var/spool/mlmmj/mlmmj-test/text
+   /var/spool/mlmmj/mlmmj-test/subconf
+   /var/spool/mlmmj/mlmmj-test/unsubconf
+   /var/spool/mlmmj/mlmmj-test/bounce
 
    And creates files similar to the ones in the listtexts/ directory of the
    source distribution in /var/spool/mlmmj/text/.
@@ -46,10 +52,6 @@ To use mlmmj, do the following:
    mlmmj-make-ml.sh. Following the example above they will look like this:
 
    mlmmj-test:     | "/usr/bin/mlmmj-recieve -L /var/spool/mlmmj/mlmmj-test"
-   mlmmj-test-bounces: postmaster
-
-   Assuming postmaster should get the list bounces (yes, bouncehandling is the 
-   next major feature that will be added to mlmmj).
 
    NOTE: Don't forget newaliases.
 
