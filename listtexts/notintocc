@@ -1,0 +1,16 @@
+
+Hi, this is the mlmmj program managing the mailinglist
+
+*LSTADDR*
+
+
+I'm sorry to inform you that your mail could not be delivered to the
+list.
+
+In order to post to this list, the listaddress have to be contained in
+To: or Cc:.
+
+This behaviour can be changed by touching the list control file 'tocc'.
+
+Thanks.
+
