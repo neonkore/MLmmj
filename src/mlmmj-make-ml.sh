@@ -81,7 +81,7 @@ if [ -z "$OWNER" ]; then
 fi
 echo "$OWNER" > "$LISTDIR"/"control/owner"
 
-echo -n "The path to the directory with the texts for the list? [] : "
+echo -n "The path to texts for the list? (listtexts/ dir in the src) [] : "
 read TEXTPATH
 if [ -z "$TEXTPATH" -o ! -d "$TEXTPATH" ]; then
 	echo "**NOTE** Could not copy the texts for the list"
