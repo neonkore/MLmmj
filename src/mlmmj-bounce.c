@@ -17,6 +17,7 @@
 #include <time.h>
 #include <dirent.h>
 
+#include "getlistaddr.h"
 #include "mlmmj.h"
 #include "strgen.h"
 #include "wrappers.h"
@@ -25,12 +26,46 @@
 #include "mygetline.h"
 
 
+char *fetchindexes(const char *bouncefile)
+{
+	int fd;
+	char *indexstr, *tmp, *start, *cur, *next;
+	struct stat st;
+	
+	fd = open(bouncefile, O_RDONLY);
+	if(fd < 0) {
+		log_error(LOG_ARGS, "Could not open bounceindexfile %s",
+				bouncefile);
+		return NULL;
+	}
+
+	if(fstat(fd, &st) < 0) {
+		log_error(LOG_ARGS, "Could not open bounceindexfile %s",
+					bouncefile);
+
+
+	start = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+	if(start == MAP_FAILED) {
+		log_error(LOG_ARGS, "Could not mmap bounceindexfile");
+		return NULL;
+	}
+	
+	for(next = cur = start; next < start + st.st_size; next++) {
+
+
+	
+	
+
+	
+
+}
+
 /* XXX this is not finished */
 void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 {
 	char *myaddr, *from, *randomstr, *a, *line, *textfilename;
 	char *queuefilename, *listaddr, *listfqdn, *listname;
-	char *fromstr, *tostr, *subjectstr;
+	char *fromstr, *tostr, *subjectstr, *tmp;
 	int textfd, queuefd;
 	ssize_t n;
 
@@ -54,48 +89,23 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 	}
 	*a = '@';
 
-	queuefilename = NULL;
-	do {
-		randomstr = random_str();
-		free(queuefilename);  /* It is OK to free() NULL, as this
-					 will in the first iteration. */
-		queuefilename = concatstr(3, listdir, "/queue/probe-",
-					randomstr);
-		free(randomstr);
-		printf("%s\n", queuefilename);
-
-		queuefd = open(queuefilename, O_RDWR|O_CREAT|O_EXCL,
-				S_IRUSR|S_IWUSR);
-
-	} while ((queuefd < 0) && (errno == EEXIST));
+	tmp = concatstr(2, listdir, "/queue/");
+	queuefd = openrandexclrw(tmp, "-probe", S_IRUSR|S_IWUSR);
+	free(tmp);
 
 	if(queuefd < 0) {
-		log_error(LOG_ARGS, "Could not create a queue file (%s)",
-				queuefilename);
+		log_error(LOG_ARGS, "Could not create a queue file (%s)");
 		free(myaddr);
 		exit(EXIT_FAILURE);
 	}
 
 	/* XXX */
-	line = concatstr(1, "From: LISTNAME+owner-probe@DOMAIN.TLD\n");
-	n = writen(queuefd, line, strlen(line));
-	MY_ASSERT(n >= 0);
-	free(line);
-
-	line = concatstr(3, "To: ", myaddr, "\n");
-	n = writen(queuefd, line, strlen(line));
-	MY_ASSERT(n >= 0);
-	free(line);
+	fromstr = concatstr(3, listname, "+owner@", listfqdn);
 
 	/* XXX Put subject in the text file? */
-	line = concatstr(1, "Subject: Mails to you from LISTADDR have "
-			"been bouncing\n");
-	n = writen(queuefd, line, strlen(line));
-	MY_ASSERT(n >= 0);
-	free(line);
+	subjectstr = concatstr(2, "Mails to you from ", listaddr,
+					" have been bouncing");
 
-	n = writen(queuefd, "\n", 1);
-	MY_ASSERT(n >= 0);
 
 	while((line = mygetline(textfd))) {
 		if (strncmp(line, "*LISTADDR*", 10) == 0) {
