@@ -77,19 +77,12 @@ fi
 LISTADDRESS="$LISTNAME@$FQDN"
 echo "$LISTADDRESS" > "$LISTDIR"/"listaddress"
 
-echo -n "Where should bounces go to? [postmaster] : "
-read POSTMASTER
-if [ -z "$POSTMASTER" ]; then
-	POSTMASTER="postmaster"
-fi
-
 MLMMJRECIEVE=`which mlmmj-recieve`
 if [ -z "$MLMMJRECIEVE" ]; then
 	MLMMJRECIEVE="/path/to/mlmmj-recieve"
 fi
 
-ALIAS="$LISTNAME:  | \"$MLMMJRECIEVE -L $SPOOLDIR/$LISTNAME/
-$LISTNAME-bounces: $POSTMASTER"
+ALIAS="$LISTNAME:  \"|$MLMMJRECIEVE -L $SPOOLDIR/$LISTNAME/\""
 
 if [ -n "$A_CREATE" ]; then
 	echo "I want to add the following to your /etc/aliases file:"
