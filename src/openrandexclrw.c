@@ -32,8 +32,7 @@
 #include "wrappers.h"
 #include "memory.h"
 
-int openrandexclrw(const char *dir, const char *prefix, mode_t mode,
-		   char *name)
+int openrandexclrw(const char *dir, const char *prefix, mode_t mode)
 {
 	int fd;
 	char *filename = NULL, *randomstr;
@@ -49,7 +48,5 @@ int openrandexclrw(const char *dir, const char *prefix, mode_t mode,
 
 	} while ((fd < 0) && (errno == EEXIST));
 
-	name = filename;
-	
 	return fd;
 }
