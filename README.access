@@ -6,7 +6,8 @@ Access control in mlmmj
 If the file listdir/control/access is present, access control is enabled.
 
 NOTE: the default action is to deny access (reject the mail), so an empty
-access control file will cause mlmmj to reject all posts!
+access control file will cause mlmmj to reject all posts, whereas a non-
+existant file will change nothing, and mlmmj will behave as usual.
 
 Each header in the mail is tested against each rule, rule by rule. That is,
 all headers are first tested against the first rule, then all headers are
