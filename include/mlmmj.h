@@ -14,7 +14,9 @@
 #define RELAYHOST "127.0.0.1"
 
 /* must end in a slash, if not empty! */
+#ifndef BINDIR
 #define BINDIR ""
+#endif
 
 
 #define READ_BUFSIZE 2048
