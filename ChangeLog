@@ -1,3 +1,5 @@
+ o Make mlmmj-sub change uid to the owner of listdir to avoid permission
+   problems. Disable with -U to mlmmj-sub.
  o More memory debugging
 0.7.1
  o Fix bug with .reciptto and .mailfrom getting swapped
