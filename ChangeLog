@@ -1,3 +1,5 @@
+ o Add logging to mlmmj-maintd. mlmmj-maintd.lastrun.log in the listdir
+   always has the log of the last run.
  o Make mlmmj-bounce capable of sending probes
  o Include a function for easy generation of standard mail replies
 0.6.0

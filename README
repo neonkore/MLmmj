@@ -60,8 +60,9 @@ To use mlmmj, do the following:
    NOTE: Don't forget newaliases.
 
 4) Start mlmmj-maintd (remember full path when starting it!) or add it to
-   crontab with -F switch. Note that mlmmj-maintd is still work in progress,
-   but except bouncehandling everything should be there.
+   crontab with -F switch. If using it in daemon mode, keep an eye on it to
+   check it's running, it's not completely bug free yet :-)
+   Bugreports are very welcome!
 
 That's it! You might want to go through the next steps too.
 
