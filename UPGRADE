@@ -1,3 +1,9 @@
+This applies to everyone using mlmmj > 0.7.2:
+---------------------------------------------
+
+ Don't forget to add the emailaddress of the list owner
+ in listdir/control/owner
+
 This applies to everyone using mlmmj > 0.7.1:
 ---------------------------------------------
 

@@ -74,6 +74,13 @@ if [ -z "$FQDN" ]; then
 	FQDN=`domainname`
 fi
 
+echo -n "The emailaddress of the list owner? [postmaster] : "
+read OWNER
+if [ -z "$OWNER" ]; then
+	OWNER="postmaster"
+fi
+echo "$OWNER" > "$LISTDIR"/"control/owner"
+
 echo -n "The path to the directory with the texts for the list? [] : "
 read TEXTPATH
 if [ -z "$TEXTPATH" -o ! -d "$TEXTPATH" ]; then

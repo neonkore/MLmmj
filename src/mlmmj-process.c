@@ -189,16 +189,18 @@ int main(int argc, char **argv)
 	char *mlmmjsend, *mlmmjsub, *mlmmjunsub, *mlmmjbounce;
 	char *bindir, *subjectprefix, *discardname, *listaddr;
 	char *listfqdn, *listname, *fromaddr, *fromstr, *subject;
-	char *queuefilename;
+	char *queuefilename, *recipdelim, *owner = NULL;
 	char *maildata[4];
 	struct email_container fromemails = { 0, NULL };
 	struct email_container toemails = { 0, NULL };
 	struct email_container ccemails = { 0, NULL };
+	struct email_container efromemails = { 0, NULL };
 	const char *badheaders[] = { "From ", "Return-Path:", NULL };
 	struct mailhdr readhdrs[] = {
 		{ "From:", 0, NULL },
 		{ "To:", 0, NULL },
 		{ "Cc:", 0, NULL },
+		{ "From ", 0, NULL },
 		{ NULL, 0, NULL }
 	};
 
@@ -281,7 +283,6 @@ int main(int argc, char **argv)
 	}
 
 	close(rawmailfd);
-	unlink(mailfile);
 	close(donemailfd);
 
 	if(hdrfd)
@@ -316,15 +317,40 @@ int main(int argc, char **argv)
 			find_email_adr(readhdrs[2].values[i], &ccemails);
 		}
 	}
-	if(strchr(toemails.emaillist[0], RECIPDELIM)) {
+
+	if(readhdrs[3].token) { /* From  addresses */
+		for(i = 0; i < readhdrs[3].valuecount; i++) {
+			find_email_adr(readhdrs[3].values[i], &efromemails);
+		}
+	}
+
+	recipdelim = strchr(toemails.emaillist[0], RECIPDELIM);
+
+	if(recipdelim) {
+		owner = ctrlvalue(listdir, "owner");
+		if(owner && strncmp(recipdelim, "+owner@", 7) == 0) {
+			unlink(donemailname);
+			execlp(mlmmjsend, mlmmjsend,
+					"-l", "1",
+					"-T", owner,
+					"-F", efromemails.emaillist[0],
+					"-a",
+					"-m", mailfile, 0);
+			log_error(LOG_ARGS, "execlp() of '%s' failed",
+					mlmmjsend);
+			exit(EXIT_FAILURE);
+		}
 #if 0
 		log_error(LOG_ARGS, "listcontrol(from, %s, %s, %s, %s, %s, %s)\n", listdir, toemails.emaillist[0], mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
 #endif
+		unlink(mailfile);
 		listcontrol(&fromemails, listdir, toemails.emaillist[0],
 			    mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce,
 			    donemailname);
 		return EXIT_SUCCESS;
 	}
+
+	unlink(mailfile);
 
 	listaddr = getlistaddr(listdir);
 
