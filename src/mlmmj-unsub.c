@@ -315,7 +315,6 @@ int main(int argc, char **argv)
 
 	suboff = find_subscriber(subread, address);
 	if(suboff == -1) {
-		printf("%s is not subscribed\n", address);
 		myunlock(subread);
 		free(subreadname); free(subwritename);
 		close(subread);
