@@ -56,6 +56,7 @@ struct mailhdr {
 void print_version(const char *prg);
 
 #define MY_ASSERT(expression) if (!(expression)) { \
+			errno = 0; \
 			log_error(LOG_ARGS, "assertion failed"); \
 			exit(EXIT_FAILURE); \
 		}
