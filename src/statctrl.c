@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 
 #include "strgen.h"
 #include "statctrl.h"
