@@ -98,3 +98,9 @@ to specify several entries (one pr. line), it's marked "list".
 
    If this file exists, the mail won't be saved in the archive but simply
    deleted.
+
+ · nosubconfirm			(boolean)
+
+   If this file exists, no mail confirmation is needed to subscribe to the
+   list. This should in principle never ever be used, but there is times
+   on local lists etc. where this is useful. HANDLE WITH CARE!

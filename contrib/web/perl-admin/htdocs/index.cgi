@@ -38,17 +38,18 @@ if (exists $ENV{CONFIG_PATH}) {
 
 my $tpl = new CGI::FastTemplate($templatedir);
 
-$tpl->define(main => "index.html");
+$tpl->define(main => "index.html",
+			 row => "index_row.html");
 
 my $lists = "";
 opendir(DIR, $topdir) or die "Couldn't open $topdir for reading: $!";
 while (my $list = readdir(DIR)) {
     next if $list =~ /^\./;
-    $lists .= "<a href=\"edit.cgi?list=".uri_escape($list)."\">".encode_entities($list)."</a><br />\n";
+	$tpl->assign(LIST => encode_entities($list));
+	$tpl->assign(ULIST => uri_escape($list));
+	$tpl->parse(LISTS => '.row');
 }
 closedir(DIR);
-
-$tpl->assign(LISTS => $lists);
 
 print "Content-type: text/html\n\n";
 

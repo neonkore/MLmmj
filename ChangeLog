@@ -1,3 +1,7 @@
+ o Enhance perl webinterface - including group writable patch
+ o Add option control/nosubconfirm which makes it possible to subscribe
+   without confirmation by just sending the mail. USE WITH CARE!
+ o Make files discarded by maintd end in .by-maintd to make them distinct
  o Fix off-by-one error in the function cleaning quoted printable chars
  o Close the correct fd's in mlmmj-process
  o Be consistent when using To: or Delivered-To:

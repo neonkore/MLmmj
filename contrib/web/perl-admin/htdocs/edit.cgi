@@ -41,6 +41,7 @@ my $tpl = new CGI::FastTemplate($templatedir);
 my $q = new CGI;
 $list = $q->param("list");
 
+die "no list specified" unless $list;
 die "non-existent list" unless -d("$topdir/$list");
 
 $tpl->define(main => "edit.html",

@@ -23,9 +23,16 @@ To use this web-interface you have to:
 
      # chown -R wwwrun /var/spool/mlmmj/mlmmj-test/control/
 
+4) If the web server does not run as the same user the mailserver writes as
+   you need to create a group (eg. mlmmj) and add both users to it. The
+   subscribers.d directory then needs to be writable by that group:
+
+     # chgrp -R mlmmj /var/spool/mlmmj/mlmmj-test/subscribers.d/
+     # chmod -R g+w /var/spool/mlmmj/mlmmj-test/subscribers.d/
+
 To enable access control on Apache you have to:
 
-4) Rename dot.htaccess to .htaccess and edit the path inside the file to point
+5) Rename dot.htaccess to .htaccess and edit the path inside the file to point
    to a htpasswd file somewhere outside the webscope.
 
    If you don't have one already, you can create one like this
@@ -34,7 +41,7 @@ To enable access control on Apache you have to:
 
    It will then ask you for a password for the given username.
 
-5) That is it, you are ready to use the interface.
+6) That is it, you are ready to use the interface.
 
 Further customization:
 

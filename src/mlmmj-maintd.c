@@ -239,9 +239,9 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		fromname = concatstr(2, mailname, ".mailfrom");
 		if(stat(fromname, &st) < 0) {
 			if(errno == ENOENT) {
-				discardedname = concatstr(3,
+				discardedname = concatstr(4,
 						listdir, "/queue/discarded/",
-						dp->d_name);
+						dp->d_name, ".by-maintd");
 				discarded = discardmail(mailname,
 							discardedname,
 							3600);
@@ -256,9 +256,9 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		toname = concatstr(2, mailname, ".reciptto");
 		if(!discarded && stat(toname, &st) < 0) {
 			if(errno == ENOENT) {
-				discardedname = concatstr(3,
+				discardedname = concatstr(4,
 						listdir, "/queue/discarded/",
-						dp->d_name);
+						dp->d_name, ".by-maintd");
 				discarded = discardmail(mailname,
 							discardedname,
 							3600);

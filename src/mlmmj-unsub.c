@@ -427,7 +427,7 @@ int main(int argc, char **argv)
 {
 	int subread, subwrite, rlock, wlock, opt, unsubres, status, nomail = 0;
 	int confirmunsub = 0, unsubconfirm = 0, notifysub = 0, digest = 0;
-	int changeuid = 1;
+	int changeuid = 1, groupwritable = 0;
 	char *listaddr, *listdir = NULL, *address = NULL, *subreadname = NULL;
 	char *subwritename, *mlmmjsend, *bindir, *subdir;
 	char *subddirname;
@@ -530,6 +530,12 @@ int main(int argc, char **argv)
 	}
 		
 	subddirname = concatstr(2, listdir, subdir);
+	if (stat(subddirname, &st) == 0) {
+		if(st.st_mode & S_IWGRP) {
+			groupwritable = S_IRGRP|S_IWGRP;
+			umask(S_IWOTH);
+		}
+	}
 
 	if(is_subbed_in(subddirname, address)) {
 		/* Address is not subscribed, so exit silently */
@@ -588,7 +594,7 @@ int main(int argc, char **argv)
 		subwritename = concatstr(2, subreadname, ".new");
 
 		subwrite = open(subwritename, O_RDWR | O_CREAT | O_EXCL,
-				S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+				S_IRUSR | S_IWUSR | groupwritable);
 		if(subwrite == -1){
 			log_error(LOG_ARGS, "Could not open '%s'",
 					subwritename);

@@ -390,9 +390,10 @@ static void print_help(const char *prg)
 int main(int argc, char **argv)
 {
 	char *listaddr, *listdir = NULL, *address = NULL, *subfilename = NULL;
-	char *mlmmjsend, *bindir, chstr[2], *subdir;
+	char *mlmmjsend, *bindir, chstr[2], *subdir, *subddirname = NULL;
 	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock, notifysub;
 	int changeuid = 1, status, digest = 0, nomail = 0;
+	int groupwritable = 0;
 	size_t len;
 	off_t suboff;
 	struct stat st;
@@ -470,6 +471,15 @@ int main(int argc, char **argv)
 		exit(EXIT_SUCCESS);  /* XXX is this success? */
 	}
 
+	subddirname = concatstr(2, listdir, "/subscribers.d");
+	if (stat(subddirname, &st) == 0) {
+		if(st.st_mode & S_IWGRP) {
+			groupwritable = S_IRGRP|S_IWGRP;
+			umask(S_IWOTH);
+			setgid(st.st_gid);
+		}
+	}
+
 	if(changeuid) {
 		uid = getuid();
 		if(!uid && stat(listdir, &st) == 0) {
@@ -501,7 +511,8 @@ int main(int argc, char **argv)
 	subfilename = concatstr(3, listdir, subdir, chstr);
 	myfree(subdir);
 
-	subfilefd = open(subfilename, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
+	subfilefd = open(subfilename, O_RDWR|O_CREAT,
+				S_IRUSR|S_IWUSR|groupwritable);
 	if(subfilefd == -1) {
 		log_error(LOG_ARGS, "Could not open '%s'", subfilename);
 		exit(EXIT_FAILURE);

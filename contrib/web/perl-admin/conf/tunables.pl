@@ -2,6 +2,10 @@ mlmmj_boolean("closedlist",
 			  "Closed list",
 			  "If this option is set, subscribtion and unsubscription via mail is disabled.");
 
+mlmmj_boolean("nosubconfirm",
+			  "No subscribe confirmation",
+			  "If this option is set, the user is not required to confirm when subscribing or unsubscribing.");
+
 mlmmj_boolean("moderated",
 			  "Moderated",
 			  "If this option is set, the emailaddresses in the file listdir/control/moderators will act as moderators for the list.");
