@@ -1,4 +1,4 @@
- o Add +owner functionality
+ o Add +owner functionality (control/owner). Several addresses possible.
  o Relicense the whole thing to be MIT instead of GPL
 0.7.2
  o Make it possible to only let subscribers post
