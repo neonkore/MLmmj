@@ -29,6 +29,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <stdlib.h>
+#include <stdarg.h>
 
 #include "mlmmj.h"
 #include "log_error.h"
@@ -38,12 +40,14 @@
 #include "wrappers.h"
 #include "memory.h"
 
-int log_oper(const char *prefix, const char *basename, const char *str)
+int log_oper(const char *prefix, const char *basename, const char *fmt, ...)
 {
 	int fd;
-	char ct[26], *logstr, *logfilename, *tmp;
+	char ct[26], *logstr, *logfilename, *tmp, log_msg[256];
 	struct stat st;
 	time_t t;
+	va_list ap;
+	size_t i;
 
 	logfilename = concatstr(2, prefix, basename);
 	if(lstat(logfilename, &st) < 0 && errno != ENOENT) {
@@ -84,7 +88,19 @@ int log_oper(const char *prefix, const char *basename, const char *str)
 		return -1;
 	}
 
-	logstr = concatstr(4, ct, ":", str, "\n");
+	va_start(ap, fmt);
+	i = vsnprintf(log_msg, sizeof(log_msg), fmt, ap);
+	if(i < 0) {
+		va_end(ap);
+		log_error(LOG_ARGS, "Failed to format log message: %s", fmt);
+		return -1;
+	}
+	if(i > sizeof(log_msg))
+		log_error(LOG_ARGS, "Log message truncated");
+
+	va_end(ap);
+
+	logstr = concatstr(4, ct, " ", log_msg, "\n");
 	if(writen(fd, logstr, strlen(logstr)) < 0)
 		log_error(LOG_ARGS, "Could not write to %s", logfilename);
 	

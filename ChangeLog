@@ -1,3 +1,4 @@
+ o Make log_oper() varargs capable, thanks Rob Holland
 1.1.1-RC1
  o Never discard anything from LISTDIR/queue/, let the admin be able to judge
  o Grab the lock when sending a mail to make sure noone does bad things
