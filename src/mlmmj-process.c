@@ -53,7 +53,8 @@
 
 enum action {
 	ALLOW,
-	DENY
+	DENY,
+	MODERATE
 };
 
 
@@ -191,6 +192,9 @@ static enum action do_access(struct strlist *rule_strs, struct strlist *hdrs)
 		} else if (strncmp(rule_ptr, "deny", 4) == 0) {
 			rule_ptr += 4;
 			new_rule->act = DENY;
+		} else if (strncmp(rule_ptr, "moderate", 8) == 0) {
+			rule_ptr += 8;
+			new_rule->act = MODERATE;
 		} else {
 			errno = 0;
 			log_error(LOG_ARGS, "Unable to parse rule #%d!"
@@ -260,11 +264,24 @@ static enum action do_access(struct strlist *rule_strs, struct strlist *hdrs)
 			}
 		}
 		if (match != rule->not) {
+			char *logstr;
+
 			errno = 0;
+			switch(rule->act) {
+				case ALLOW:
+					logstr = "allowed";
+					break;
+				case MODERATE:
+					logstr = "moderated";
+					break;
+				default:
+				case DENY:
+					logstr = "denied";
+					break;
+			}
+
 			log_error(LOG_ARGS, "A mail was %s by rule #%d",
-					(rule->act == ALLOW) ?
-					"allowed" : "denied",
-					rule_nr);
+					logstr, rule_nr);
 			ret = rule->act;
 			free_rules(head);
 			return ret;
@@ -659,6 +676,7 @@ int main(int argc, char **argv)
 
 	access_rules = ctrlvalues(listdir, "access");
 	if (access_rules) {
+		enum action accret;
 		/* Don't send a mail about denial to the list, but silently
 		 * discard and exit */
 		if (strcasecmp(listaddr, fromemails.emaillist[0]) == 0) {
@@ -667,7 +685,8 @@ int main(int argc, char **argv)
 			myfree(donemailname);
 			exit(EXIT_SUCCESS);
 		}
-		if (do_access(access_rules, &allheaders) == DENY) {
+		accret = do_access(access_rules, &allheaders);
+		if (accret == DENY) {
 			listname = genlistname(listaddr);
 			listfqdn = genlistfqdn(listaddr);
 			fromaddr = concatstr(3, listname, "+bounces-help@",
@@ -692,11 +711,13 @@ int main(int argc, char **argv)
 			log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsend);
 			exit(EXIT_FAILURE);
+		} else if (accret == MODERATE) {
+			moderated = 1;
 		}
 	}
 	
-
-	moderated = statctrl(listdir, "moderated");
+	if(!moderated)
+		moderated = statctrl(listdir, "moderated");
 	if(moderated) {
 		mqueuename = concatstr(3, listdir, "/moderation/",
 				       randomstr);
