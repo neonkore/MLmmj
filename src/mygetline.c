@@ -1,35 +1,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "mygetline.h"
 
 char *mygetline(FILE *infile)
 {
-	char *buf = malloc(BUFSIZE);
-	char *str = malloc(BUFSIZE);
-	size_t lenbuf, lenstr, i = 1;
+	size_t buf_size = BUFSIZE;  /* initial buffer size */
+	size_t buf_used;
+	char *buf = malloc(buf_size);
 	
-	buf[0] = str[0] = 0;
-	for(;;) {
-		if(fgets(buf, BUFSIZE, infile) != NULL) {
-			if(i == 1) {
-				free(buf);
-				free(str);
-				return NULL;
+	buf[0] = '\0';
+	for (;;) {
+		buf_used = strlen(buf);
+		if (fgets(buf+buf_used, buf_size-buf_used, infile) == NULL) {
+			if (buf[0]) {
+				 return buf;
 			} else {
 				free(buf);
-				return str;
+				return NULL;
 			}
 		}
-		lenbuf = strlen(buf);
-		lenstr = strlen(str);
-		realloc(str, lenbuf + lenstr + 1);
-		strcat(str, buf);
-		if(!((lenbuf == BUFSIZE - 1) && (buf[BUFSIZE - 1] != 'n'))) {
-			free(buf);
-			return str;
+
+		if ((strlen(buf) < buf_size-1) || (buf[buf_size-1] == '\n')) {
+			return buf;
 		}
+
+		/* grow buffer */
+		buf_size *= 2;
+		buf = realloc(buf, buf_size);
+
 	}
 }
 #if 0
@@ -42,7 +41,6 @@ int main(int argc, char **argv)
 		free(str);
 	}
 
-	free(str);
 	return 0;
 }
 #endif

@@ -3,7 +3,7 @@
 
 #include "mygetline.h"
 #include "gethdrline.h"
-#include "stringfuncs.h"
+#include "strgen.h"
 
 char *gethdrline(FILE *infile)
 {
@@ -14,16 +14,17 @@ char *gethdrline(FILE *infile)
 		line = mygetline(infile);
 		if(line == NULL)
 			return NULL;
-		ch = getc(infile);
-		if(ch == '\t') {
-			ungetc(ch, infile);
+		ch = getc(infile); ungetc(ch, infile);
+		if(ch == '\t' || ch == ' ') {
 			nextline = mygetline(infile);
 			tmp = retstr;
 			retstr = concatstr(3, retstr, line, nextline);
 			free(tmp); free(line); free(nextline);
 			tmp = line = nextline = NULL;
+			ch = getc(infile); ungetc(ch, infile);
+			if(!(ch == '\t' || ch == ' '))
+				return retstr;
 		} else {
-			ungetc(ch, infile);
 			tmp = retstr;
 			retstr = concatstr(3, retstr, line, nextline);
 			free(tmp);

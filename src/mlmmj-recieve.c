@@ -16,38 +16,25 @@
 #include <fcntl.h>
 
 #include "mlmmj.h"
-#include "mlmmj-recieve.h"
 #include "wrappers.h"
-#include "strip_file_to_fd.h"
-#include "header_token.h"
-#include "getlistaddr.h"
+#include "mygetline.h"
 #include "strgen.h"
 
-void free_str_array(char **to_free)
-{
-	int i = 0;
-
-	while(to_free[i])
-		free(to_free[i++]);
-	free(to_free);
-}
+extern char *optarg;
 
 static void print_help(const char *prg)
 {
-	        printf("Usage: %s -L /path/to/chat-list\n", prg);
-		exit(EXIT_SUCCESS);
+        printf("Usage: %s -L /path/to/chat-list [-V] [-P]\n", prg);
+	exit(EXIT_SUCCESS);
 }
-
 
 int main(int argc, char **argv)
 {
-	char *infilename;
-	int mailfd;
-	int opt, ch, process = 1;
-	char *listdir = 0;
-	char listadr[READ_BUFSIZE];
+	char *infilename = NULL, *listdir = NULL, *line = NULL;
+	char *randomstr = random_str();
+	int fd, opt, noprocess = 0;
 	
-	while ((opt = getopt(argc, argv, "hVPL:")) != -1) {
+	while ((opt = getopt(argc, argv, "hPVL:")) != -1) {
 		switch(opt) {
 		case 'h':
 			print_help(argv[0]);
@@ -56,52 +43,59 @@ int main(int argc, char **argv)
 			listdir = optarg;
 			break;
 		case 'P':
-			process = 0;
+			noprocess = 1;
 			break;
 		case 'V':
 			print_version(argv[0]);
 			exit(0);
 		}
 	}
-	if(listdir == 0) {
+	if(listdir == NULL) {
 		fprintf(stderr, "You have to specify -L\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
-	/* get the list address */
-	getlistaddr(listadr, listdir);
 	
-	infilename = concatstr(3, listdir, "/incoming/", random_str());
-	mailfd = open(infilename, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
-	while(mailfd == -1 && errno == EEXIST) {
+	infilename = concatstr(3, listdir, "/incoming/", randomstr);
+	free(randomstr);
+	fd = open(infilename, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
+	while(fd < 0 && errno == EEXIST) {
 		free(infilename);
-		infilename = concatstr(3, listdir, "/incoming/", random_str());
-		mailfd = open(infilename, O_RDWR|O_CREAT|O_EXCL,
-				S_IRUSR|S_IWUSR);
+		randomstr = random_str();
+		infilename = concatstr(3, listdir, "/incoming/", randomstr);
+		free(randomstr);
+		fd = open(infilename, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
 	}
 
-	if(mailfd == -1) {
+	if(fd < 0) {
+		fprintf(stderr, "%s:%d could not get fd in %s: ",
+				__FILE__, __LINE__, infilename);
 		free(infilename);
-		perror(infilename);
 		exit(EXIT_FAILURE);
 	}
-
-	printf("%s\n", infilename);
 	
-	while((ch = getc(stdin)) != EOF)
-		writen(mailfd, &ch, 1);
+	while((line = mygetline(stdin))) {
+		writen(fd, line, strlen(line));
+		fsync(fd);
+		free(line);
+	}
 
-	close(mailfd);
+	printf("mlmmj-recieve: wrote %s\n", infilename);
 
-	if(!process)
-		return EXIT_SUCCESS;
+	close(fd);
 
-	execlp(BINDIR"mlmmj-process", "mlmmj-process",
+	if(noprocess) {
+		free(infilename);
+		exit(EXIT_SUCCESS);
+	}
+
+	execlp("mlmmj-process", "mlmmj-process",
 				"-L", listdir,
 				"-m", infilename, 0);
 
-	fprintf(stderr, "%s:%d execlp() of "BINDIR"mlmmj-send failed: ",
+	fprintf(stderr, "%s:%d execlp() of mlmmj-process failed: ",
 			__FILE__, __LINE__);
 	perror(NULL);
+
 	return EXIT_FAILURE;
 }

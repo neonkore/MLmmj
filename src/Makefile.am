@@ -19,13 +19,14 @@ mlmmj_send_SOURCES = mlmmj-send.c writen.c mail-functions.c itoa.c chomp.c \
 
 mlmmj_recieve_SOURCES = mlmmj-recieve.c writen.c strip_file_to_fd.c \
                         random-int.c header_token.c getlistaddr.c chomp.c \
-			strgen.c print-version.c
+			strgen.c print-version.c mygetline.c
 
 mlmmj_process_SOURCES = mlmmj-process.c writen.c strip_file_to_fd.c \
                         find_email_adr.c incindexfile.c itoa.c \
 			getlistaddr.c chomp.c mylocking.c listcontrol.c \
 			random-int.c strgen.c header_token.c print-version.c \
-			send_help.c
+			send_help.c do_all_the_voodo_here.c mygetline.c \
+			gethdrline.c
 
 mlmmj_subscribe_SOURCES = mlmmj-subscribe.c writen.c mylocking.c \
 			getlistaddr.c chomp.c random-int.c strgen.c \
