@@ -209,12 +209,13 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 static void print_help(const char *prg)
 {
 	printf("Usage: %s -L /path/to/list -a john@doe.org "
-	       "[-c] [-C] [-h] [-L] [-V]\n"
+	       "[-c] [-C] [-h]\n       [-L] [-U] [-V]\n"
 	       " -a: Email address to subscribe \n"
 	       " -c: Send welcome mail\n"
 	       " -C: Request mail confirmation\n"
 	       " -h: This help\n"
 	       " -L: Full path to list directory\n"
+	       " -U: Don't switch to the user id of the listdir owner\n"
 	       " -V: Print version\n"
 	       "When no options are specified, subscription silently "
 	       "happens\n", prg);
@@ -226,8 +227,10 @@ int main(int argc, char **argv)
 	char *listaddr, *listdir = NULL, *address = NULL, *subfilename = NULL;
 	char *mlmmjsend, *bindir, chstr[2];
 	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock;
+	int changeuid = 1;
 	size_t len;
 	off_t suboff;
+	struct stat st;
 
 	CHECKFULLPATH(argv[0]);
 
@@ -254,6 +257,9 @@ int main(int argc, char **argv)
 		case 'L':
 			listdir = optarg;
 			break;
+		case 'U':
+			changeuid = 0;
+			break;
 		case 'V':
 			print_version(argv[0]);
 			exit(0);
@@ -276,6 +282,18 @@ int main(int argc, char **argv)
 	if(strncasecmp(listaddr, address, strlen(listaddr)) == 0) {
 		printf("Cannot subscribe the list address to the list\n");
 		exit(EXIT_SUCCESS);  /* XXX is this success? */
+	}
+
+	if(changeuid) {
+		if(stat(listdir, &st) == 0) {
+			printf("Changing to uid %d, owner of %s.\n",
+					(int)st.st_uid, listdir);
+			if(setuid(st.st_uid) < 0) {
+				perror("setuid");
+				fprintf(stderr, "Continuing as uid %d\n",
+						(int)getuid());
+			}
+		}
 	}
 
 	chstr[0] = address[0];
