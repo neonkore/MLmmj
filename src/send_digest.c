@@ -90,8 +90,8 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 		snprintf(buf, sizeof(buf), " (%d-%d)", firstindex, lastindex);
 	}
 
-	fromstr = concatstr(4, "From: ", listname, "+help@", listfqdn);
-	tmp = concatstr(6, "\nMIME-Version: 1.0"
+	fromstr = concatstr(5, "From: ", listname, "+help@", listfqdn, "\n");
+	tmp = concatstr(6, "MIME-Version: 1.0"
 			    "\nContent-Type: multipart/" DIGESTMIMETYPE "; "
 			    "boundary=", boundary,
 			    "\nSubject: Digest of ", listname, buf, "\n\n");
