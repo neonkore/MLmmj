@@ -58,6 +58,7 @@
 #include "memory.h"
 #include "statctrl.h"
 #include "ctrlvalue.h"
+#include "mylocking.h"
 
 static int addtohdr = 0;
 static int prepmailinmem = 0;
@@ -115,7 +116,7 @@ char *bounce_from_adr(const char *recipient, const char *listadr,
 		return NULL;
 	}
 	snprintf(bounceaddr, len, "%s%cbounces-%s-%s@%s", mylistadr, RECIPDELIM,
-		 myrecipient, indexstr, listdomain);
+		 indexstr, myrecipient, listdomain);
 
 	myfree(myrecipient);
 	myfree(mylistadr);
@@ -876,17 +877,14 @@ int main(int argc, char **argv)
 	close(mailfd);
 
 	if(archive) {
-		if(!ctrlarchive)
+		if(!ctrlarchive) {
 			rename(mailfilename, archivefilename);
-		else
+		} else {
 			unlink(mailfilename);
+		}
 		myfree(archivefilename);
 	} else if(deletewhensent)
 		unlink(mailfilename);
-
-	if(myunlock(mailfd) < 0)
-		log_error(LOG_ARGS, "Could not unlock '%s'", mailfilename);
-	
 
 	return EXIT_SUCCESS;
 }
