@@ -455,7 +455,6 @@ int main(int argc, char **argv)
 		if(subwrite == -1){
 			log_error(LOG_ARGS, "Could not open '%s'",
 					subwritename);
-			myunlock(subread);
 			close(subread);
 			myfree(subreadname);
 			myfree(subwritename);
@@ -466,7 +465,6 @@ int main(int argc, char **argv)
 		if(wlock < 0) {
 			log_error(LOG_ARGS, "Error locking '%s'",
 					subwritename);
-			myunlock(subread);
 			close(subread);
 			close(subwrite);
 			myfree(subreadname);
@@ -476,8 +474,6 @@ int main(int argc, char **argv)
 
 		unsubres = unsubscribe(subread, subwrite, address);
 		if(unsubres < 0) {
-			myunlock(subread);
-			myunlock(subwrite);
 			close(subread);
 			close(subwrite);
 			unlink(subwritename);
@@ -493,8 +489,6 @@ int main(int argc, char **argv)
 				log_error(LOG_ARGS,
 					"Could not rename '%s' to '%s'",
 					subwritename, subreadname);
-				myunlock(subread);
-				myunlock(subwrite);
 				close(subread);
 				close(subwrite);
 				myfree(subreadname);
@@ -504,8 +498,6 @@ int main(int argc, char **argv)
 		} else /* unsubres == 0, no subscribers left */
 			unlink(subwritename);
 
-		myunlock(subread);
-		myunlock(subwrite);
 		close(subread);
 		close(subwrite);
 		myfree(subreadname);

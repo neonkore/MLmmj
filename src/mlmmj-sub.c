@@ -391,9 +391,8 @@ int main(int argc, char **argv)
 			address[len] = 0;
 		}
 	} else {
-		myunlock(subfilefd);
-		myfree(subfilename);
 		close(subfilefd);
+		myfree(subfilename);
 		
 		return EXIT_SUCCESS;
 	}
