@@ -25,19 +25,18 @@
 #include "strgen.h"
 #include "subscriberfuncs.h"
 #include "log_error.h"
+#include "mygetline.h"
 
 void confirm_sub(const char *listdir, const char *listaddr,
 		const char *subaddr, const char *mlmmjsend)
 {
-	FILE *subtextfile, *queuefile;
-	char buf[READ_BUFSIZE];
-	char *bufres, *subtextfilename, *randomstr, *queuefilename;
-	char *fromstr, *tostr, *subjectstr, *fromaddr, *helpaddr;
-	char *listname, *listfqdn;
+	int subtextfd, queuefd;
+	char *buf, *subtextfilename, *randomstr, *queuefilename;
+	char *fromaddr, *listname, *listfqdn, *s1;
 
 	subtextfilename = concatstr(2, listdir, "/text/sub-ok");
 
-	if((subtextfile = fopen(subtextfilename, "r")) == NULL) {
+	if((subtextfd = open(subtextfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", subtextfilename);
 		free(subtextfilename);
 		exit(EXIT_FAILURE);
@@ -52,7 +51,8 @@ void confirm_sub(const char *listdir, const char *listaddr,
 
 	printf("%s\n", queuefilename);
 
-	if((queuefile = fopen(queuefilename, "w")) == NULL) {
+	if((queuefd = open(queuefilename, O_WRONLY|O_CREAT|O_EXCL,
+					S_IRUSR|S_IWUSR)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
 		free(queuefilename);
 		free(randomstr);
@@ -60,33 +60,35 @@ void confirm_sub(const char *listdir, const char *listaddr,
 	}
 	free(randomstr);
 
-	helpaddr = concatstr(3, listname, "+help@", listfqdn);
-
 	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
 
-	fromstr = headerstr("From: ", helpaddr);
-	fputs(fromstr, queuefile);
-	free(helpaddr);
+	s1 = concatstr(9, "From: ", listname, "+help@", listfqdn, "\nTo: ",
+			subaddr, "\nSubject: Welcome to ", listaddr, "\n\n");
+	if(writen(queuefd, s1, strlen(s1)) < 0) {
+		log_error(LOG_ARGS, "Could not write welcome mail");
+		exit(EXIT_FAILURE);
+	}
+	free(s1);
 
-	tostr = headerstr("To: ", subaddr);
-	fputs(tostr, queuefile);
+	while((buf = mygetline(subtextfd))) {
+		if(strncmp(buf, "*LSTADDR*", 9) == 0) {
+			if(writen(queuefd, listaddr, strlen(listaddr)) < 0) {
+				log_error(LOG_ARGS, "Could not write welcome mail");
+				exit(EXIT_FAILURE);
+			}
+		} else {
+			if(writen(queuefd, buf, strlen(buf)) < 0) {
+				log_error(LOG_ARGS, "Could not write welcome mail");
+				exit(EXIT_FAILURE);
+			}
+		}
+		free(buf);
+	}
 
-	subjectstr = headerstr("Subject: Welcome to ", listaddr);
-	fputs(subjectstr, queuefile);
-	fputc('\n', queuefile);
-
-	while((bufres = fgets(buf, READ_BUFSIZE, subtextfile)))
-		if(strncmp(buf, "*LSTADDR*", 9) == 0)
-			fputs(listaddr, queuefile);
-		else
-			fputs(buf, queuefile);
-
-	free(tostr);
-	free(subjectstr);
 	free(listname);
 	free(listfqdn);
-	fclose(subtextfile);
-	fclose(queuefile);
+	close(subtextfd);
+	close(queuefd);
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
@@ -100,28 +102,30 @@ void confirm_sub(const char *listdir, const char *listaddr,
 void generate_subconfirm(const char *listdir, const char *listaddr,
 			 const char *subaddr, const char *mlmmjsend)
 {
-	FILE *subconffile, *subtextfile, *queuefile;
-	char buf[READ_BUFSIZE];
-	char *confirmaddr, *bufres, *listname, *listfqdn, *confirmfilename;
+	int subconffd, subtextfd, queuefd;
+	char *confirmaddr, *listname, *listfqdn, *confirmfilename;
 	char *subtextfilename, *queuefilename, *fromaddr, *randomstr;
-	char *tostr, *fromstr, *helpaddr, *subjectstr;
+	char *buf, *s1;
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 	randomstr = random_plus_addr(subaddr);
 	confirmfilename = concatstr(3, listdir, "/subconf/", randomstr);
 
-	if((subconffile = fopen(confirmfilename, "w")) == NULL) {
+	if((subconffd = open(confirmfilename, O_RDWR|O_CREAT|O_EXCL,
+					S_IRUSR|S_IWUSR)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", confirmfilename);
 		free(confirmfilename);
 		free(randomstr);
 		exit(EXIT_FAILURE);
 	}
-	fputs(subaddr, subconffile);
-	fclose(subconffile);
-	free(confirmfilename);
 
-	helpaddr = concatstr(3, listname, "+help@", listfqdn);
+	if(writen(subconffd, subaddr, strlen(subaddr)) < 0) {
+		log_error(LOG_ARGS, "Could not write to subconffd");
+		exit(EXIT_FAILURE);
+	}
+	close(subconffd);
+	free(confirmfilename);
 
 	confirmaddr = concatstr(5, listname, "+confsub-", randomstr, "@",
 			           listfqdn);
@@ -131,7 +135,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 
 	subtextfilename = concatstr(2, listdir, "/text/sub-confirm");
 
-	if((subtextfile = fopen(subtextfilename, "r")) == NULL) {
+	if((subtextfd = open(subtextfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", subtextfilename);
 		free(randomstr);
 		free(subtextfilename);
@@ -141,9 +145,8 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 
 	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
 
-	printf("%s\n", queuefilename);
-
-	if((queuefile = fopen(queuefilename, "w")) == NULL) {
+	if((queuefd = open(queuefilename, O_RDWR|O_CREAT|O_EXCL,
+					S_IRUSR|S_IWUSR)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
 		free(queuefilename);
 		free(randomstr);
@@ -151,33 +154,49 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	}
 	free(randomstr);
 
-	fromstr = headerstr("From: ", helpaddr);
-	fputs(fromstr, queuefile);
-	free(fromstr);
+	s1 = concatstr(9, "From: ", listname, "+help@", listfqdn, "\nTo: ", 
+			subaddr, "\nSubject: Confirm subscribe to ", listaddr,
+			"\n\n");
+	if(writen(queuefd, s1, strlen(s1)) < 0) {
+		log_error(LOG_ARGS, "Could not write subconffile");
+		exit(EXIT_FAILURE);
+	}
 
-	tostr = headerstr("To: ", subaddr);
-	fputs(tostr, queuefile);
-	free(tostr);
+	free(s1);
 
-	subjectstr = headerstr("Subject: Confirm subscribe to ", listaddr);
-	fputs(subjectstr, queuefile);
-	fputc('\n', queuefile);
-	free(subjectstr);
-
-	while((bufres = fgets(buf, sizeof(buf), subtextfile)))
-		if(strncmp(buf, "*LSTADDR*", 9) == 0)
-			fputs(listaddr, queuefile);
-		else if(strncmp(buf, "*SUBADDR*", 9) == 0)
-			fputs(subaddr, queuefile);
-		else if(strncmp(buf, "*CNFADDR*", 9) == 0)
-			fputs(confirmaddr, queuefile);
-		else
-			fputs(buf, queuefile);
+	while((buf = mygetline(subtextfd))) {
+		if(strncmp(buf, "*LSTADDR*", 9) == 0) {
+			if(writen(queuefd, listaddr, strlen(listaddr)) < 0) {
+				log_error(LOG_ARGS,
+					"Could not write subconffile");
+				exit(EXIT_FAILURE);
+			}
+		} else if(strncmp(buf, "*SUBADDR*", 9) == 0) {
+			if(writen(queuefd, subaddr, strlen(subaddr)) < 0) {
+				log_error(LOG_ARGS,
+					"Could not write subconffile");
+				exit(EXIT_FAILURE);
+			}
+		} else if(strncmp(buf, "*CNFADDR*", 9) == 0) {
+			if(writen(queuefd, confirmaddr, strlen(confirmaddr))
+					< 0) {
+				log_error(LOG_ARGS,
+					"Could not write subconffile");
+				exit(EXIT_FAILURE);
+			}
+		} else {
+			if(writen(queuefd, buf, strlen(buf)) < 0) {
+				log_error(LOG_ARGS,
+					"Could not write subconffile");
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
 
 	free(listname);
 	free(listfqdn);
-	fclose(subtextfile);
-	fclose(queuefile);
+	close(subtextfd);
+	close(queuefd);
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
