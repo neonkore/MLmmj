@@ -1,17 +1,18 @@
-README mlmmj-0.6.0					Jun 6th 2004
+README mlmmj-0.7.0					Jun 9th 2004
 
 This is an attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
 independency.
 
-The functionality is still a bit limited, but getting there:
+The functionality is not vast, but slowly improving:
 
- · Subscribe / unsubscribe functionality (email, commandline).
  · Archive
  · Custom headers / footer
- · Primitive bouncehandling
+ · Fully automated bouncehandling (similar to ezmlm)
+ · Complete requeueing functionality
  · Moderation functionality
  · Subject prefix
+ · Subscribe / unsubscribe functionality (email, commandline).
 
 To use mlmmj, do the following:
 
@@ -41,7 +42,6 @@ To use mlmmj, do the following:
    /var/spool/mlmmj/mlmmj-test/bounce
    /var/spool/mlmmj/mlmmj-test/control
    /var/spool/mlmmj/mlmmj-test/moderation
-   /var/spool/mlmmj/mlmmj-test/moderation/queue
    /var/spool/mlmmj/mlmmj-test/subscribers.d
    /var/spool/mlmmj/mlmmj-test/requeue
 
@@ -60,15 +60,21 @@ To use mlmmj, do the following:
    NOTE: Don't forget newaliases.
 
 4) Start mlmmj-maintd (remember full path when starting it!) or add it to
-   crontab with -F switch. If using it in daemon mode, keep an eye on it to
-   check it's running, it's not completely bug free yet :-)
-   Bugreports are very welcome!
+   crontab with -F switch. If using it in daemon mode, keep an eye on it
+   everyonce in a while to check it's running, or to make sure it's not turning
+   into a memory hog. In the case it should happen, please tell us!
+   For now the recommended way is to run it via cron:
+
+   "0 */2 * * *  /usr/bin/mlmmj-maintd -F -L /var/spool/mlmmj/mlmmj-test"
+
+   mlmmj-maintd will become the user owning the listdir, and log it's
+   last maintenance run to listdir/mlmmj-maintd.lastrun.log.
 
 That's it! You might want to go through the next steps too.
 
 5) Subscribe some people
 
-   mlmmj-sub -L /var/spool/mlmmj/mlmmj-test/ -a joe@domain.tld
+   /usr/bin/mlmmj-sub -L /var/spool/mlmmj/mlmmj-test/ -a joe@domain.tld
 
    etc.
 
@@ -96,8 +102,8 @@ That's it! You might want to go through the next steps too.
 9) Have a look at the file TUNABLES for runtime configurable things.
 
 Tunables in include/mlmmj.h:
- · If you want to use something else than localhost for your maildelivery you have
-   to change RELAYHOST.
+ · If you want to use something else than localhost for your maildelivery you
+   have to change RELAYHOST.
  · There's some time intervals for how mlmmj-maintd operates. I've choosen
    non-strict defaults, so depending on your BOFH rate you might want to tweak.
 
