@@ -496,7 +496,8 @@ int main(int argc, char **argv)
 			discardname = concatstr(3, listdir,
 						"/queue/discarded/",
 						randomstr);
-			rename(donemailname, discardname);
+			rename(mailfile, discardname);
+			unlink(donemailname);
 			myfree(donemailname);
 			myfree(discardname);
 			myfree(randomstr);
@@ -565,20 +566,21 @@ int main(int argc, char **argv)
 		return EXIT_SUCCESS;
 	}
 
-	unlink(mailfile);
-
 	if(efromemails.emailcount != 1) { /* don't send mails with <> in From
 					     to the list */
 		discardname = concatstr(3, listdir,
 				"/queue/discarded/",
 				randomstr);
-		rename(donemailname, discardname);
+		rename(mailfile, discardname);
+		unlink(donemailname);
 		myfree(donemailname);
 		myfree(discardname);
 		myfree(randomstr);
 		/* TODO: free emailstructs */
 		exit(EXIT_SUCCESS);
 	}
+
+	unlink(mailfile);
 
 	listaddr = getlistaddr(listdir);
 
