@@ -18,10 +18,7 @@ struct email_container *find_email_adr(const char *str,
 	size_t len;
 	char *index_atsign;
 	char *tempstr = strdup(str);
-	char *c, *first_char = 0, *last_char = 0;
-	
-	retstruct->emailcount = 0;
-	retstruct->emaillist = NULL;
+	char *c, *first_char = NULL, *last_char = NULL;
 	
 	index_atsign = strchr(tempstr, '@');
 	while(index_atsign) {
@@ -44,7 +41,7 @@ struct email_container *find_email_adr(const char *str,
 		len = last_char - first_char + 2;
 		
 		retstruct->emaillist = (char **)realloc(retstruct->emaillist,
-				sizeof(char **) * retstruct->emailcount);
+				sizeof(char *) * retstruct->emailcount);
 		retstruct->emaillist[retstruct->emailcount-1] =
 				(char *)malloc(len + 1);
 		snprintf(retstruct->emaillist[retstruct->emailcount-1], len,
