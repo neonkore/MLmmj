@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+
+#include "config.h"
+
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
 #endif
