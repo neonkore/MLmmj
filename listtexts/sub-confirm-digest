@@ -1,21 +1,23 @@
+Subject: Confirm subscription to digest of $listaddr$
+
 Hi, this is the mlmmj program managing the mailinglist
 
-*LSTADDR*
-
+$listaddr$
 
 To confirm you want the address
 
-*SUBADDR*
-
+$subaddr$
 
 added to the digest of this list, please send a reply to
 
-*CNFADDR*
+$confaddr$
 
+This confirmation serves two purposes. It tests that mail can be sent to
+your address. Secondly it makes sure someone else did not try and
+subscribe your emailaddress without you wanting it.
 
-Your mailer probably automatically replies to this address, when you hit
-the reply button.
+Your mailer probably automatically replies to the confirmation address,
+when you hit the reply button.
 
-This confirmation serves two purposes. It tests that mail can be sent to your
-address. Second, it makes sure someone else did not try and subscribe your
-emailaddress.
+The subject and the body of the mail can be anything.
+

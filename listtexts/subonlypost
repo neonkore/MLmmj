@@ -1,16 +1,20 @@
+Subject: $listaddr$ is a subscribers only list
+
 Hi, this is the mlmmj program managing the mailinglist
 
-*LSTADDR*
-
+$listaddr$
 
 You have tried to post from this email address:
 
-*POSTERADDR*
+$posteraddr$
 
-
-But this is not subscribed, and only subscribers can post to
-this list.
+But this address is not subscribed, and only subscribers can post to
+the list.
 
 If You believe you are subscribed, please check the email address
 You subscribed with in the welcome mail, or check the headers of
 any mail to the mailinglist.
+
+If you want to be able to post from more than one email address, you
+can subscribe the other addresses to the nomail version of the list.
+

@@ -1,10 +1,11 @@
+Subject: $oldsub$ unsubscribed from nomail version of $listaddr$
+
 Hi, this is the mlmmj program managing the mailinglist
 
-*LSTADDR*
-
+$listaddr$
 
 The following address has just unsubscribed from the nomail version of
-mailinglist:
+the mailinglist:
 
-*SUBADDR*
+$oldsub$
 

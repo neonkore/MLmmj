@@ -1,7 +1,8 @@
+Subject: Posts to $listaddr$ denied
+
 Hi, this is the mlmmj program managing the mailinglist
 
-*LSTADDR*
-
+$listaddr$
 
 I'm sorry to inform you that Your mail could not be delivered to the
 list.
@@ -9,7 +10,8 @@ list.
 In order to post to this list, the list address have to be contained
 in either the To: or Cc: header.
 
-This behaviour can be changed by touching the list control file 'tocc'.
+If you are an admin of an mlmmj driven list, you should know that this
+behaviour can be changed by touching the list control file 'tocc'.
 
 Thanks.
 
