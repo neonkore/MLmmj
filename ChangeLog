@@ -1,3 +1,5 @@
+ o Clean up the subconf and unsubconf directories for stale requests as well
+0.8.1.1
  o Fix bug with prepstdreply not opening correct file. Thanks Christian Laursen
    for spotting.
 0.8.1
