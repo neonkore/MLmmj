@@ -39,9 +39,8 @@ int main(int argc, char **argv)
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
 	char *randomstr = random_str();
-	char *mlmmjsend = concatstr(2, dirname(argv[0]), "/mlmmj-send");
-	char *mlmmjsub = concatstr(2, dirname(argv[0]), "/mlmmj-sub");
-	char *mlmmjunsub = concatstr(2, dirname(argv[0]), "/mlmmj-unsub");
+	char *mlmmjsend, *mlmmjsub, *mlmmjunsub;
+	char *argv0 = strdup(argv[0]);
 	FILE *headerfile, *footerfile, *rawmailfile, *donemailfile;
 	struct email_container toemails = { 0, NULL };
 	const char *badheaders[] = { "From ", "Return-Path:", NULL };
@@ -50,6 +49,15 @@ int main(int argc, char **argv)
 		{ "Cc:", NULL },
 		{ NULL, NULL }
 	};
+
+	mlmmjsend = concatstr(2, dirname(argv0), "/mlmmj-send");
+	free(argv0);
+	argv0 = strdup(argv[0]);
+	mlmmjsub = concatstr(2, dirname(argv0), "/mlmmj-sub");
+	free(argv0);
+	argv0 = strdup(argv[0]);
+	mlmmjunsub = concatstr(2, dirname(argv0), "/mlmmj-unsub");
+	free(argv0);
 	
 	while ((opt = getopt(argc, argv, "hVPm:L:")) != -1) {
 		switch(opt) {

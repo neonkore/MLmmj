@@ -229,9 +229,12 @@ int main(int argc, char **argv)
 	int opt, subfilefd, lock;
 	char listaddr[READ_BUFSIZE];
 	char *listdir = NULL, *address = NULL, *subfilename = NULL;
-	char *mlmmjsend = concatstr(2, dirname(argv[0]), "/mlmmj-send");
+	char *mlmmjsend, *argv0 = strdup(argv[0]);
 	int subconfirm = 0, confirmsub = 0;
 
+	mlmmjsend = concatstr(2, dirname(argv0), "/mlmmj-send");
+	free(argv0);
+	
 	log_set_name(argv[0]);
 
 	while ((opt = getopt(argc, argv, "hcCVL:a:")) != -1) {

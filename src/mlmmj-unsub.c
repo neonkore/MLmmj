@@ -245,7 +245,10 @@ int main(int argc, char **argv)
 	int confirmunsub = 0, unsubconfirm = 0;
 	char listaddr[READ_BUFSIZE];
 	char *listdir = NULL, *address = NULL, *subreadname = NULL;
-	char *mlmmjsend = concatstr(2, dirname(argv[0]), "/mlmmj-send");
+	char *mlmmjsend, *argv0 = strdup(argv[0]);
+	
+	mlmmjsend = concatstr(2, dirname(argv0), "/mlmmj-send");
+	free(argv0);
 
         log_set_name(argv[0]);
 

@@ -35,7 +35,10 @@ int main(int argc, char **argv)
 	char *infilename = NULL, *listdir = NULL, *line = NULL;
 	char *randomstr = random_str();
 	int fd, opt, noprocess = 0;
-	char *mlmmjprocess = concatstr(2, dirname(argv[0]), "/mlmmj-process");
+	char *mlmmjprocess, *argv0 = strdup(argv[0]);
+	
+	mlmmjprocess = concatstr(2, dirname(argv0), "/mlmmj-process");
+	free(argv0);
 	
 	while ((opt = getopt(argc, argv, "hPVL:")) != -1) {
 		switch(opt) {
