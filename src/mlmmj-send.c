@@ -64,7 +64,7 @@ static char *bounce_from_adr(char *recipient, char *listadr, char *mailfilename)
 	}
 	*listdomain++ = '\0';
 
-	// 11 = "-bounces" + RECIPDELIM + "@" + NUL
+	/* 11 = "-bounces" + RECIPDELIM + "@" + NUL */
 	len = strlen(listadr) + strlen(recipient) + strlen(listdomain) + 11;
 	bounce_adr = malloc(len);
 	if (!bounce_adr) {
