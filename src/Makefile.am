@@ -6,7 +6,7 @@ AM_CFLAGS = -g -Wall -pedantic -Wsign-compare
 INCLUDES = -I$(srcdir)/../include
 
 bin_PROGRAMS = mlmmj-send mlmmj-recieve mlmmj-process mlmmj-sub \
-               mlmmj-unsub mlmmj-bounce mlmmj-maintd
+               mlmmj-unsub mlmmj-bounce mlmmj-maintd mlmmj-list
 
 bin_SCRIPTS = mlmmj-make-ml.sh
 
@@ -49,3 +49,6 @@ mlmmj_maintd_SOURCES = mlmmj-maintd.c print-version.c log_error.c mygetline.c \
 		       strgen.c random-int.c chomp.c writen.c memory.c \
 		       ctrlvalue.c send_digest.c getlistaddr.c dumpfd2fd.c \
 		       mylocking.c
+
+mlmmj_list_SOURCES = mlmmj-list.c strgen.c writen.c print-version.c memory.c \
+		     log_error.c random-int.c
