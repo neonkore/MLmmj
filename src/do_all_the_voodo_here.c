@@ -115,6 +115,7 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 		if(prefix) {
 			if(strncmp(hdrline, "Subject: ", 9) == 0) {
 				unqp = cleanquotedp(hdrline + 9);
+				log_error(LOG_ARGS, "unqp = [%s]", unqp);
 				if(strstr(hdrline + 9, prefix) == NULL &&
 				   strstr(unqp, prefix) == NULL) {
 					subject = concatstr(4,
