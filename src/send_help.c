@@ -60,9 +60,9 @@ void send_help(const char *listdir, const char *emailaddr,
 	helpaddr = malloc(len);
 	snprintf(helpaddr, len, "%s+help@%s", listname, listfqdn);
 
-	len += strlen("-bounces");
+	len += strlen("+bounces");
 	fromaddr = malloc(len);
-	snprintf(fromaddr, len, "%s-bounces+help@%s", listname, listfqdn);
+	snprintf(fromaddr, len, "%s+bounces-help@%s", listname, listfqdn);
 
 	fromstr = headerstr("From: ", helpaddr);
 	fputs(fromstr, queuefile);
