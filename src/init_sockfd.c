@@ -34,4 +34,3 @@ void init_sockfd(int *sockfd, const char *relayhost)
 		exit(EXIT_FAILURE);
 	}
 }
-

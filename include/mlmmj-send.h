@@ -9,4 +9,12 @@
 #ifndef MMJML_SEND_H
 #define MMJML_SEND_H
 
+int send_mail(int sockfd, const char *from, const char *to,
+	      const char *replyto, FILE *mailfile);
+int send_mail_many(int sockfd, const char *from, const char *replyto,
+		   FILE *mailfile, FILE *subfile, const char *listaddr,
+		   const char *archivefilename);
+int initsmtp(int *sockfd, const char *relayhost);
+int endsmtp(int *sockfd);
+
 #endif /* MMJML_SEND_H */
