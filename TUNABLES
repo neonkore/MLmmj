@@ -70,7 +70,7 @@ to specify several entries (one pr. line), it's marked "list".
 
  · relayhost			(normal)
 
-   The host specified (IP address og domainname, both works) in this file will
+   The host specified (IP address or hostname, both works) in this file will
    be used for relaying the mail sent to the list. Defaults to 127.0.0.1.
 
  · notifysub			(boolean)
