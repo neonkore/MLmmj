@@ -77,7 +77,8 @@ int main(int argc, char **argv)
 	}
 
 	if(fd < 0) {
-		log_error(LOG_ARGS, "could not create mail file in incoming directory");
+		log_error(LOG_ARGS, "could not create mail file in "
+				    "%s/incoming directory", listdir);
 		free(infilename);
 		exit(EXIT_FAILURE);
 	}
@@ -88,8 +89,9 @@ int main(int argc, char **argv)
 		free(line);
 	}
 
-	printf("mlmmj-recieve: wrote %s\n", infilename);
-
+#if 0
+	log_error(LOG_ARGS, "mlmmj-recieve: wrote %s\n", infilename);
+#endif
 	close(fd);
 
 	if(noprocess) {
@@ -115,5 +117,5 @@ int main(int argc, char **argv)
 				"-m", infilename, 0);
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjprocess);
 
-	return EXIT_FAILURE;
+	exit(EXIT_FAILURE);
 }

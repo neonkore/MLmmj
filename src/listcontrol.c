@@ -49,7 +49,9 @@ int listcontrol(const char *mailfilename, const char *listdir,
 
 	find_email_adr(tmpstr, &fromemails);
 
-	printf("controlstr = [%s]\n", controlstr);
+#if 0
+	log_error(LOG_ARGS, "controlstr = [%s]\n", controlstr);
+#endif
 
 	if(strncasecmp(controlstr, "subscribe", 9) == 0) {
 		free(controlstr);
@@ -120,12 +122,14 @@ int listcontrol(const char *mailfilename, const char *listdir,
 			}
 		} else /* Not a confirm so silently ignore */
 			exit(EXIT_SUCCESS);
-	} else if(strncasecmp(controlstr, "bounce-", 7) == 0) {
-		controlstr += 7;
+	} else if(strncasecmp(controlstr, "bounces-", 8) == 0) {
+		controlstr += 8;
 		bouncenr = strrchr(controlstr, '-');
 		if (!bouncenr) exit(EXIT_SUCCESS);  /* malformed bounce, ignore */
 		*bouncenr++ = '\0';
+#if 0
 		log_error(LOG_ARGS, "bounce, bounce, bounce email=[%s] nr=[%s]", controlstr, bouncenr);
+#endif
 		execlp(mlmmjbounce, mlmmjbounce,
 				"-L", listdir,
 				"-a", controlstr,

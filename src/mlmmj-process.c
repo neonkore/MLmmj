@@ -102,7 +102,8 @@ int main(int argc, char **argv)
 	
 	if(fd == -1) {
 		free(donemailname);
-		log_error(LOG_ARGS, "could not create mail file in queue directory");
+		log_error(LOG_ARGS, "could not create mail file in queue"
+				    "directory");
 		exit(EXIT_FAILURE);
 	}
 
@@ -112,8 +113,9 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	printf("[%s]\n", donemailname);
-
+#if 0
+	log_error(LOG_ARGS, "[%s]\n", donemailname);
+#endif
 	if((rawmailfile = fopen(mailfile, "r")) == NULL) {
 		free(donemailname);
 		log_error(LOG_ARGS, "could not fopen() input mail file");
@@ -157,9 +159,9 @@ int main(int argc, char **argv)
 	}
 
 	if(strchr(toemails.emaillist[0], RECIPDELIM)) {
-		printf("listcontrol(%s, %s, %s, %s, %s, %s, %s)\n", donemailname,
-				listdir, toemails.emaillist[0], mlmmjsub,
-				mlmmjunsub, mlmmjsend, mlmmjbounce);
+#if 0
+		log_error(LOG_ARGS, "listcontrol(%s, %s, %s, %s, %s, %s, %s)\n", donemailname, listdir, toemails.emaillist[0], mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
+#endif
 		listcontrol(donemailname, listdir, toemails.emaillist[0],
 			    mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
 		return EXIT_SUCCESS;
