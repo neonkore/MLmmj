@@ -207,13 +207,14 @@ static void print_help(const char *prg)
 int main(int argc, char **argv)
 {
 	char *listaddr, *listdir = NULL, *address = NULL, *subfilename = NULL;
-	char *mlmmjsend, *argv0 = strdup(argv[0]), chstr[2];
+	char *mlmmjsend, *bindir, chstr[2];
 	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock;
 	size_t len;
 	off_t suboff;
 
-	mlmmjsend = concatstr(2, dirname(argv0), "/mlmmj-send");
-	free(argv0);
+	bindir = mydirname(argv[0]);
+	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
+	free(bindir);
 	
 	log_set_name(argv[0]);
 

@@ -39,14 +39,15 @@ int main(int argc, char **argv)
 {
 	char *infilename = NULL, *listdir = NULL, *line = NULL;
 	char *randomstr = random_str();
-	char *mlmmjprocess, *argv0 = strdup(argv[0]);
+	char *mlmmjprocess, *bindir;
 	int fd, opt, noprocess = 0, nofork = 0;
 	pid_t childpid;
 	
 	log_set_name(argv[0]);
 
-	mlmmjprocess = concatstr(2, dirname(argv0), "/mlmmj-process");
-	free(argv0);
+	bindir = mydirname(argv[0]);
+	mlmmjprocess = concatstr(2, bindir, "/mlmmj-process");
+	free(bindir);
 	
 	while ((opt = getopt(argc, argv, "hPVL:F")) != -1) {
 		switch(opt) {

@@ -286,7 +286,6 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 {
 	int sendres = 0;
 	char *bounceaddr, *addr, *index, *dirname, *addrfilename;
-	char *myarchivefilename = strdup(archivefilename);
 	FILE *addrfile;
 
 	while((addr = myfgetline(subfile))) {
@@ -303,8 +302,7 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 		}
 		if(sendres && listaddr && archivefilename) {
 			/* we failed, so save the addresses and bail */
-			index = basename(myarchivefilename);	
-			free(myarchivefilename);
+			index = mybasename(archivefilename);	
 			dirname = concatstr(3, listdir, "/requeue/", index);
 			free(index);
 			if(mkdir(dirname, 0750) < 0) {
@@ -402,7 +400,7 @@ int main(int argc, char **argv)
 		switch(opt) {
 		case 'a':
 			archive = 0;
-			break
+			break;
 		case 'D':
 			deletewhensent = 0;
 			break;
@@ -545,6 +543,7 @@ int main(int argc, char **argv)
 			log_error(LOG_ARGS, "Could not opendir(%s)",
 					    subddirname);
 			free(subddirname);
+			exit(EXIT_FAILURE);
 		}
 		free(subddirname);
 

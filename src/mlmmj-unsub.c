@@ -245,14 +245,15 @@ int main(int argc, char **argv)
 	int subread, subwrite, rlock, wlock, opt, unsubres;
 	int confirmunsub = 0, unsubconfirm = 0;
 	char *listaddr, *listdir = NULL, *address = NULL, *subreadname = NULL;
-	char *subwritename, *mlmmjsend, *argv0 = strdup(argv[0]);
+	char *subwritename, *mlmmjsend, *bindir;
 	char *subddirname;
 	off_t suboff;
 	DIR *subddir;
 	struct dirent *dp;
 	
-	mlmmjsend = concatstr(2, dirname(argv0), "/mlmmj-send");
-	free(argv0);
+	bindir = mydirname(argv[0]);
+	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
+	free(bindir);
 
 	log_set_name(argv[0]);
 

@@ -35,7 +35,7 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	char *to, *from, *subject, *fqdn, *listname, *replyto;
 	char *buf, *moderatorfilename, *listaddr = getlistaddr(listdir);
 	char *queuefilename, *moderatorsfilename, *randomstr = random_str();
-	char *mailbasename = basename(strdup(mailfilename));
+	char *mailbasename = mybasename(mailfilename);
 	FILE *moderatorfile, *queuefile, *moderatorsfile, *mailfile;
 	size_t count = 0;
 	
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
 	char *footerfilename = NULL, *donemailname = NULL;
 	char *randomstr = random_str(), *basename, *mqueuename;
 	char *mlmmjsend, *mlmmjsub, *mlmmjunsub, *mlmmjbounce;
-	char *argv0 = strdup(argv[0]), *subjectprefix;
+	char *bindir, *subjectprefix;
 	FILE *headerfile, *footerfile, *rawmailfile, *donemailfile;
 	struct email_container toemails = { 0, NULL };
 	const char *badheaders[] = { "From ", "Return-Path:", NULL };
@@ -168,17 +168,12 @@ int main(int argc, char **argv)
 
 	log_set_name(argv[0]);
 
-	mlmmjsend = concatstr(2, dirname(argv0), "/mlmmj-send");
-	free(argv0);
-	argv0 = strdup(argv[0]);
-	mlmmjsub = concatstr(2, dirname(argv0), "/mlmmj-sub");
-	free(argv0);
-	argv0 = strdup(argv[0]);
-	mlmmjunsub = concatstr(2, dirname(argv0), "/mlmmj-unsub");
-	free(argv0);
-	argv0 = strdup(argv[0]);
-	mlmmjbounce = concatstr(2, dirname(argv0), "/mlmmj-bounce");
-	free(argv0);
+	bindir = mydirname(argv[0]);
+	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
+	mlmmjsub = concatstr(2, bindir, "/mlmmj-sub");
+	mlmmjunsub = concatstr(2, bindir, "/mlmmj-unsub");
+	mlmmjbounce = concatstr(2, bindir, "/mlmmj-bounce");
+	free(bindir);
 	
 	while ((opt = getopt(argc, argv, "hVPm:L:")) != -1) {
 		switch(opt) {

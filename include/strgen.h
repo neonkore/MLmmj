@@ -16,5 +16,7 @@ char *genlistname(const char *listaddr);
 char *genlistfqdn(const char *listaddr);
 char *concatstr(int count, ...);
 char *hostnamestr(void);
+char *mydirname(const char *path);
+char *mybasename(const char *path);
 
 #endif /* STRGEN_H */

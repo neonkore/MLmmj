@@ -12,6 +12,7 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <netdb.h>
+#include <libgen.h>
 
 #include "strgen.h"
 #include "wrappers.h"
@@ -129,3 +130,32 @@ char *hostnamestr()
         return strdup(hostlookup->h_name);
 }
 
+char *mydirname(const char *path)
+{
+	char *mypath, *dname, *ret;
+
+	mypath = strdup(path);
+	dname = dirname(mypath);
+	ret = strdup(dname);
+
+	/* We don't free mypath until we have strdup()'ed dname, because
+	 * dirname() returns a pointer into mypath  -- mortenp 20040527 */
+	free(mypath);
+
+	return ret;
+}
+
+char *mybasename(const char *path)
+{
+	char *mypath, *bname, *ret;
+
+	mypath = strdup(path);
+	bname = basename(mypath);
+	ret = strdup(bname);
+
+	/* We don't free mypath until we have strdup()'ed bname, because
+	 * basename() returns a pointer into mypath  -- mortenp 20040527 */
+	free(mypath);
+	
+	return ret;
+}
