@@ -60,20 +60,3 @@ char *gethdrline(int fd)
 		}
 	}
 }
-#if 0
-#include <stdio.h>
-
-int main(int argc, char **argv)
-{
-	char *str;
-
-	while((str = gethdrline(fileno(stdin)))) {
-		printf("[%s]", str);
-		free(str);
-	}
-
-	free(str);
-
-	return 0;
-}
-#endif
