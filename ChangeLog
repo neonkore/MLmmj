@@ -1,6 +1,6 @@
  o Make sure we check if the Subject: prefix might be present in the
    de-quoted printable version of the Subject. If so, don't add it.
- o Fix bug with queuefilename containing all kinds og chars when sending
+ o Fix bug with queuefilename not being correctly initialized when generating
    standard mails
  o Let mlmmj-send be capable of handling relayhost local users bounce probes
    bouncing.
