@@ -39,7 +39,7 @@ int write_helo(int sockfd, const char *hostname)
 #endif
 	bytes_written = writen(sockfd, helo, len);
 	if(bytes_written < 0) {
-		log_error("Could not write HELO");
+		log_error(LOG_ARGS, "Could not write HELO");
 		free(helo);
 		return errno;
 	}
@@ -64,7 +64,7 @@ int write_mail_from(int sockfd, const char *from_addr)
 #endif
 	bytes_written = writen(sockfd, mail_from, len);
 	if(bytes_written < 0) {
-		log_error("Could not write FROM");
+		log_error(LOG_ARGS, "Could not write FROM");
 		free(mail_from);
 		return errno;
 	}
@@ -92,7 +92,7 @@ int write_rcpt_to(int sockfd, const char *rcpt_addr)
 #endif
 	bytes_written = writen(sockfd, rcpt_to, len);
 	if(bytes_written < 0) {
-		log_error( "Could not write TO" );
+		log_error(LOG_ARGS, "Could not write TO");
 		free(rcpt_to);
 		return errno;
 	}
@@ -113,7 +113,7 @@ int write_mailbody_from_file(int sockfd, FILE *infile)
 	/* Read from beginning of the file */
 
 	if(fseek(infile, 0L, SEEK_SET) == -1) {
-		log_error("write_crlf,fseek");
+		log_error(LOG_ARGS, "fseek() failed");
 		return errno;
 	}
 	
@@ -168,7 +168,7 @@ int write_custom_line(int sockfd, const char *line)
 #endif
 	bytes_written = writen(sockfd, customline, len);
 	if(bytes_written < 0) {
-		log_error( "Could not write customline" );
+		log_error(LOG_ARGS, "Could not write customline");
 		free(customline);
 		return errno;
 	}
@@ -196,7 +196,7 @@ int write_replyto(int sockfd, const char *replyaddr)
 #endif
 	bytes_written = writen(sockfd, replyto, len);
 	if(bytes_written < 0) {
-		log_error( "Could not write Reply-To:" );
+		log_error(LOG_ARGS, "Could not write Reply-To header");
 		free(replyto);
 		return errno;
 	}
@@ -207,7 +207,7 @@ int write_replyto(int sockfd, const char *replyaddr)
 int write_data(int sockfd)
 {
 	if(write_custom_line(sockfd, "DATA")) {
-		log_error("mail-functions.c:write_data");
+		log_error(LOG_ARGS, "Could not write DATA");
 		return errno;
 	}
 
@@ -217,7 +217,7 @@ int write_data(int sockfd)
 int write_quit(int sockfd)
 {
 	if(write_custom_line(sockfd, "QUIT")) {
-		log_error("mail-functions.c:write_quit");
+		log_error(LOG_ARGS, "Could not write QUIT");
 		return errno;
 	}
 
@@ -227,7 +227,7 @@ int write_quit(int sockfd)
 int write_rset(int sockfd)
 {
 	if(write_custom_line(sockfd, "RSET")) {
-		log_error("mail-functions.c:write_rset");
+		log_error(LOG_ARGS, "Could not write RSET");
 		return errno;
 	}
 

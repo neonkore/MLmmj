@@ -9,9 +9,12 @@
 #ifndef LOG_ERROR_H
 #define LOG_ERROR_H
 
-#define log_error(msg) log_error_do(msg,__FILE__,__LINE__)
+#include <errno.h>
+
+#define LOG_ARGS __FILE__, __LINE__, strerror(errno)
 
 void log_set_name(const char *name);
-void log_error_do(const char *msg, const char *file, int line);
+void log_error(const char *file, int line, const char *errstr,
+		const char *fmt, ...);
 
 #endif /* LOG_ERROR_H */

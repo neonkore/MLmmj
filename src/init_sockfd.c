@@ -21,7 +21,7 @@ void init_sockfd(int *sockfd, const char *relayhost)
 
 	*sockfd = socket(PF_INET, SOCK_STREAM, 0);
 	if(*sockfd == -1) {
-		log_error( "Could not get socket");
+		log_error(LOG_ARGS, "Could not get socket");
 		exit(EXIT_FAILURE);
 	}
 	addr.sin_family = PF_INET;
@@ -29,7 +29,7 @@ void init_sockfd(int *sockfd, const char *relayhost)
 	addr.sin_port = htons(25);
 	len = sizeof(addr);
 	if(connect(*sockfd, (struct sockaddr *)&addr, len) == -1) {
-		log_error("Could not connect");
+		log_error(LOG_ARGS, "Could not connect");
 		exit(EXIT_FAILURE);
 	}
 }

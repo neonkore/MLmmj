@@ -34,7 +34,7 @@ void send_help(const char *listdir, const char *emailaddr,
 	helpfilename = concatstr(2, listdir, "/text/listhelp");
 
 	if((helpfile = fopen(helpfilename, "r")) == NULL) {
-		log_error("Could not open text/help\n");
+		log_error(LOG_ARGS, "Could not open text/help");
 		free(helpfilename);
 		exit(EXIT_FAILURE);
 	}
@@ -49,7 +49,7 @@ void send_help(const char *listdir, const char *emailaddr,
 	printf("%s\n", queuefilename);
 	
 	if((queuefile = fopen(queuefilename, "w")) == NULL) {
-		log_error(queuefilename);
+		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
 		free(queuefilename);
 		free(randomstr);
 		exit(EXIT_FAILURE);
@@ -106,6 +106,6 @@ void send_help(const char *listdir, const char *emailaddr,
 				"-T", emailaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, 0);
-	log_error("execlp() of mlmmjsend failed");
+	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 	exit(EXIT_FAILURE);
 }

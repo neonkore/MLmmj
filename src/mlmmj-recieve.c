@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 	}
 
 	if(fd < 0) {
-		log_error("could not create mail file in incoming directory");
+		log_error(LOG_ARGS, "could not create mail file in incoming directory");
 		free(infilename);
 		exit(EXIT_FAILURE);
 	}
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 	execlp(mlmmjprocess, mlmmjprocess,
 				"-L", listdir,
 				"-m", infilename, 0);
-	log_error("execlp() of mlmmj-process failed");
+	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjprocess);
 
 	return EXIT_FAILURE;
 }

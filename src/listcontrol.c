@@ -32,7 +32,7 @@ int listcontrol(const char *mailfilename, const char *listdir,
 	size_t len;
 	
 	if((mailfile = fopen(mailfilename, "r")) == NULL) {
-		log_error("listcontrol, could not open mail");
+		log_error(LOG_ARGS, "listcontrol, could not open mail");
 		exit(EXIT_FAILURE);
 	}
 	recipdelimsign = index(controladdr, RECIPDELIM);
@@ -57,7 +57,7 @@ int listcontrol(const char *mailfilename, const char *listdir,
 					"-L", listdir,
 					"-a", fromemails.emaillist[0],
 					"-C", 0);
-			log_error("execlp() of mlmmj-sub failed");
+			log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsub);
 			exit(EXIT_FAILURE);
 		} else /* Not a valid From: address, so we silently ignore */
 			exit(EXIT_SUCCESS);
@@ -77,7 +77,7 @@ int listcontrol(const char *mailfilename, const char *listdir,
 						"-L", listdir,
 						"-a", tmpstr,
 						"-c", 0);
-				log_error("execlp() of mlmmj-sub failed");
+				log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsub);
 				exit(EXIT_FAILURE);
 			} else {
 				/* Not proper confirm */
@@ -92,7 +92,7 @@ int listcontrol(const char *mailfilename, const char *listdir,
 					"-L", listdir,
 					"-a", fromemails.emaillist[0],
 					"-C", 0);
-			log_error("execlp() of mlmmj-unsub failed");
+			log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjunsub);
 			exit(EXIT_FAILURE);
 		} else /* Not a valid From: address, so we silently ignore */
 			exit(EXIT_SUCCESS);
@@ -112,7 +112,7 @@ int listcontrol(const char *mailfilename, const char *listdir,
 						"-L", listdir,
 						"-a", tmpstr,
 						"-c", 0);
-				log_error("execlp() of mlmmj-unsub failed");
+				log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjunsub);
 				exit(EXIT_FAILURE);
 			} else {
 				exit(EXIT_SUCCESS);

@@ -97,13 +97,13 @@ int main(int argc, char **argv)
 	
 	if(fd == -1) {
 		free(donemailname);
-		log_error("could not create mail file in queue directory");
+		log_error(LOG_ARGS, "could not create mail file in queue directory");
 		exit(EXIT_FAILURE);
 	}
 
 	if((donemailfile = fdopen(fd, "w")) == NULL) {
 		free(donemailname);
-		log_error("could not fdopen() output mail file");
+		log_error(LOG_ARGS, "could not fdopen() output mail file");
 		exit(EXIT_FAILURE);
 	}
 
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 
 	if((rawmailfile = fopen(mailfile, "r")) == NULL) {
 		free(donemailname);
-		log_error("could not fopen() input mail file");
+		log_error(LOG_ARGS, "could not fopen() input mail file");
 		exit(EXIT_FAILURE);
 	}
 
@@ -169,7 +169,7 @@ int main(int argc, char **argv)
 	execlp(mlmmjsend, mlmmjsend,
 				"-L", listdir,
 				"-m", donemailname, 0);
-	log_error("execlp() of mlmmj-send failed");
+	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 
 	return EXIT_FAILURE;
 }

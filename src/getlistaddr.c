@@ -27,7 +27,7 @@ char *getlistaddr(char *listaddrdeststr, const char *listdir)
 
 	snprintf(tmpstr, len, "%s/listaddress", listdir);
 	if((listnamefile = fopen(tmpstr, "r")) == NULL) {
-		log_error("Could not get listname:");
+		log_error(LOG_ARGS, "Could not open '%s'", tmpstr);
 		exit(EXIT_FAILURE);
 	}
 

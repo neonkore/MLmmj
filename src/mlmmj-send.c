@@ -85,65 +85,65 @@ int send_mail(int sockfd, const char *from, const char *to, const char *replyto,
 	int retval;
 
 	if((retval = write_mail_from(sockfd, from)) != 0) {
-		log_error("Could not write MAIL FROM\n");
+		log_error(LOG_ARGS, "Could not write MAIL FROM\n");
 		/* FIXME: Queue etc.*/
 		write_rset(sockfd);
 		return retval;
 	}
 	if((retval = checkwait_smtpreply(sockfd, MLMMJ_FROM)) != 0) {
-		log_error("Wrong MAIL FROM:\n");
+		log_error(LOG_ARGS, "Wrong MAIL FROM:\n");
 		write_rset(sockfd);
 		/* FIXME: Queue etc.*/
 		return retval;
 	}
 
 	if((retval = write_rcpt_to(sockfd, to)) != 0) {
-		log_error("Could not write RCPT TO:\n");
+		log_error(LOG_ARGS, "Could not write RCPT TO:\n");
 		/* FIXME: Queue etc.*/
 		write_rset(sockfd);
 		return retval;
 	}
 	if((retval = checkwait_smtpreply(sockfd, MLMMJ_RCPTTO)) != 0) {
-		log_error("Wrong RCPT TO:\n");
+		log_error(LOG_ARGS, "Wrong RCPT TO:\n");
 		write_rset(sockfd);
 		/* FIXME: Queue etc.*/
 		return retval;
 	}
 	if((retval = write_data(sockfd)) != 0) {
-		log_error("Could not write DATA\b");
+		log_error(LOG_ARGS, "Could not write DATA\b");
 		write_rset(sockfd);
 		/* FIXME: Queue etc.*/
 		return retval;
 	}
 	if((checkwait_smtpreply(sockfd, MLMMJ_DATA)) != 0) {
-		log_error("Mailserver not ready for DATA\n");
+		log_error(LOG_ARGS, "Mailserver not ready for DATA\n");
 		write_rset(sockfd);
 		/* FIXME: Queue etc.*/
 		return retval;
 	}
 	if(replyto)
 		if((retval = write_replyto(sockfd, replyto)) != 0) {
-			log_error("Could not write reply-to addr.\n");
+			log_error(LOG_ARGS, "Could not write reply-to addr.\n");
 			write_rset(sockfd);
 			/* FIXME: Queue etc.*/
 			return retval;
 		}
 	if((retval = write_mailbody_from_file(sockfd, mailfile)) != 0) {
-		log_error("Could not write mailbody\n");
+		log_error(LOG_ARGS, "Could not write mailbody\n");
 		write_rset(sockfd);
 		/* FIXME: Queue etc.*/
 		return retval;
 	}
 
 	if((retval = write_dot(sockfd)) != 0) {
-		log_error("Could not write <CR><LF>.<CR><LF>\n");
+		log_error(LOG_ARGS, "Could not write <CR><LF>.<CR><LF>\n");
 		write_rset(sockfd);
 		/* FIXME: Queue etc.*/
 		return retval;
 	}
 
 	if((checkwait_smtpreply(sockfd, MLMMJ_DOT)) != 0) {
-		log_error("Mailserver did not acknowledge end of mail\n"
+		log_error(LOG_ARGS, "Mailserver did not acknowledge end of mail\n"
 				"<CR><LF>.<CR><LF> was written, to no"
 				"avail\n");
 		write_rset(sockfd);
@@ -221,7 +221,7 @@ int main(int argc, char **argv)
 	/* initialize file with mail to send */
 
 	if((mailfile = fopen(mailfilename, "r")) == NULL) {
-	        log_error(mailfilename);
+	        log_error(LOG_ARGS, "Could not open '%s'", mailfilename);
 		exit(EXIT_FAILURE);
 	}
 
@@ -238,7 +238,7 @@ int main(int argc, char **argv)
 	if(listdir[0] != '1') {
 		subfilename = concatstr(2, listdir, "/subscribers");
 		if((subfile = fopen(subfilename, "r")) == NULL) {
-			log_error("Could not open subscriberfile:");
+			log_error(LOG_ARGS, "Could not open subscriberfile:");
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -252,13 +252,13 @@ int main(int argc, char **argv)
 	}
 
 	if((retval = checkwait_smtpreply(sockfd, MLMMJ_CONNECT)) != 0) {
-		log_error("No proper greeting to our connect\n"
+		log_error(LOG_ARGS, "No proper greeting to our connect\n"
 			  "We continue and hope for the best\n");
 		/* FIXME: Queue etc. */
 	}	
 	write_helo(sockfd, "localhost");
 	if((checkwait_smtpreply(sockfd, MLMMJ_HELO)) != 0) {
-		log_error("Error with HELO\n"
+		log_error(LOG_ARGS, "Error with HELO\n"
 			  "We continue and hope for the best\n");
 		/* FIXME: quit and tell admin to configure correctly */
 	}
@@ -277,7 +277,7 @@ int main(int argc, char **argv)
 
 	write_quit(sockfd);
 	if((checkwait_smtpreply(sockfd, MLMMJ_QUIT)) != 0) {
-		log_error("Mailserver would not let us QUIT\n"
+		log_error(LOG_ARGS, "Mailserver would not let us QUIT\n"
 			  "We close the socket anyway though\n");
 	}
 

@@ -41,7 +41,7 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 	subtextfilename = concatstr(2, listdir, "/text/unsub-ok");
 
 	if((subtextfile = fopen(subtextfilename, "r")) == NULL) {
-		log_error("Could not open text/unsub-ok\n");
+		log_error(LOG_ARGS, "Could not open '%s'", subtextfilename);
 		free(subtextfilename);
 		exit(EXIT_FAILURE);
 	}
@@ -56,7 +56,7 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 	printf("%s\n", queuefilename);
 
 	if((queuefile = fopen(queuefilename, "w")) == NULL) {
-		log_error(queuefilename);
+		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
 		free(queuefilename);
 		free(randomstr);
 		exit(EXIT_FAILURE);
@@ -105,7 +105,7 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 				"-T", subaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, 0);
-	log_error("execlp() of mlmmjsend failed");
+	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 	exit(EXIT_FAILURE);
 }
 
@@ -125,7 +125,7 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 	confirmfilename = concatstr(3, listdir, "/unsubconf/", randomstr);
 
 	if((subconffile = fopen(confirmfilename, "w")) == NULL) {
-		log_error(confirmfilename);
+		log_error(LOG_ARGS, "Could not open '%s'", confirmfilename);
 		free(confirmfilename);
 		free(randomstr);
 		exit(EXIT_FAILURE);
@@ -152,7 +152,7 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 	subtextfilename = concatstr(2, listdir, "/text/unsub-confirm");
 
 	if((subtextfile = fopen(subtextfilename, "r")) == NULL) {
-		log_error("Could not open text/unsub-confirm\n");
+		log_error(LOG_ARGS, "Could not open '%s'", subtextfilename);
 		free(randomstr);
 		free(subtextfilename);
 		exit(EXIT_FAILURE);
@@ -164,7 +164,7 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 	printf("%s\n", queuefilename);
 
 	if((queuefile = fopen(queuefilename, "w")) == NULL) {
-		log_error(queuefilename);
+		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
 		free(queuefilename);
 		free(randomstr);
 		exit(EXIT_FAILURE);
@@ -209,7 +209,7 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 				"-F", fromaddr,
 				"-R", confirmaddr,
 				"-m", queuefilename, 0);
-	log_error("execlp() of mlmmj-send failed");
+	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 	exit(EXIT_FAILURE);
 }
 
@@ -293,13 +293,13 @@ int main(int argc, char **argv)
 
 	subread = open(subreadname, O_RDWR);
 	if(subread == -1) {
-		log_error("Could not open subscriberfile:");
+		log_error(LOG_ARGS, "Could not open '%s'", subreadname);
 		exit(EXIT_FAILURE);
 	}
 
 	sublock = myexcllock(subread);
 	if(sublock) {
-		log_error("Error locking subscriber file:");
+		log_error(LOG_ARGS, "Error locking subscriber file");
 		close(subread);
 		exit(EXIT_FAILURE);
 	}
@@ -313,7 +313,7 @@ int main(int argc, char **argv)
 
 	subwrite = open(subreadname, O_RDWR);
 	if(subwrite == -1){
-		log_error("Could not open subfile:");
+		log_error(LOG_ARGS, "Could not open '%s'", subreadname);
 		exit(EXIT_FAILURE);
 	}
 	if(unsubconfirm)
