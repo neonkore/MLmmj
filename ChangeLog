@@ -1,3 +1,8 @@
+1.1.0
+ o Add hooks for installing listtexts into $(pkgdatadir) (Drake Wyrm)
+ o Add mlmmj-list manual page
+ o Make mlmmj-list be capable of listing owners, moderators too
+ o Perl interface updates
 1.1.0-RC3
  o Add 'moderate' tag for usage in control/access when one wants to have the
    moderators moderate posts hitting this regexp. See README.access
