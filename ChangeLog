@@ -1,4 +1,7 @@
  o Add a To: header with the recipient's address when sending digests
+1.1.0-RC2
+ o Strip envelope from before resending to +owner
+ o Make statctrl bail if it's not possible to stat()
  o Add mlmmj-list binary to list the subcribers (-count) of a list
 1.1.0-RC1
  o Rewrite the way listtexts are managed, and in the process move the Subject:
