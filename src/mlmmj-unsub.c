@@ -436,6 +436,8 @@ int main(int argc, char **argv)
 	struct dirent *dp;
 	pid_t pid, childpid;
 	enum subtype typesub = SUB_NORMAL;
+	uid_t uid;
+	struct stat st;
 
 	CHECKFULLPATH(argv[0]);
 	
