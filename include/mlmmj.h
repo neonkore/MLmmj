@@ -53,6 +53,7 @@
 			   * digest */
 #define DIGESTMIMETYPE "digest" /* Which sub-type of multipart to use when
 				 * sending digest mails */
+#define OPLOGFNAME "mlmmj.operation.log" /* logfile to log operations */
 
 struct strlist {
 	int count;

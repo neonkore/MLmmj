@@ -37,6 +37,7 @@
 #include "strgen.h"
 #include "log_error.h"
 #include "memory.h"
+#include "log_oper.h"
 
 extern char *optarg;
 
@@ -55,7 +56,7 @@ int main(int argc, char **argv)
 {
 	char *infilename = NULL, *listdir = NULL;
 	char *randomstr = random_str();
-	char *mlmmjprocess, *bindir;
+	char *mlmmjprocess, *bindir, *logstr;
 	int fd, opt, noprocess = 0, nofork = 0;
 	struct stat st;
 	uid_t uid;
@@ -140,9 +141,9 @@ int main(int argc, char **argv)
 
 	fsync(fd);
 
-#if 0
-	log_error(LOG_ARGS, "mlmmj-recieve: wrote %s\n", infilename);
-#endif
+	logstr = concatstr(2, "mlmmj-recieve: wrote ", infilename);
+	log_oper(OPLOGFNAME, logstr);
+	myfree(logstr);
 	close(fd);
 
 	if(noprocess) {

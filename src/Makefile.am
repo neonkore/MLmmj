@@ -19,7 +19,8 @@ mlmmj_send_SOURCES = mlmmj-send.c writen.c mail-functions.c itoa.c chomp.c \
 		     statctrl.c ctrlvalue.c
 
 mlmmj_recieve_SOURCES = mlmmj-recieve.c writen.c random-int.c strgen.c \
-			print-version.c log_error.c dumpfd2fd.c memory.c
+			print-version.c log_error.c dumpfd2fd.c memory.c \
+			log_oper.c mylocking.c
 
 mlmmj_process_SOURCES = mlmmj-process.c writen.c find_email_adr.c \
 			incindexfile.c itoa.c getlistaddr.c chomp.c \

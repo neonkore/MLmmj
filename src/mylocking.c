@@ -1,4 +1,4 @@
-/* Copyright (C) 2002, 2003 Mads Martin Joergensen <mmj at mmj.dk>
+/* Copyright (C) 2002, 2003, 2005 Mads Martin Joergensen <mmj at mmj.dk>
  *
  * $Id$
  *
@@ -23,6 +23,8 @@
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
+
 #include "mylocking.h"
 
 int myexcllock(int fd)
@@ -36,7 +38,7 @@ int myexcllock(int fd)
 	locktype.l_len = 0;
 	do {
 		mylock = fcntl(fd, F_SETLKW, &locktype);
-	while(mylock < 0 && errno == EINTR);
+	} while(mylock < 0 && errno == EINTR);
 
 	return mylock;
 }
@@ -49,7 +51,7 @@ int myunlock(int fd)
 	locktype.l_type = F_UNLCK;
 	do {
 		myunlock = fcntl(fd, F_SETLKW, &locktype);
-	while(myunlock < 0 && errno == EINTR)
+	} while(myunlock < 0 && errno == EINTR);
 
 	return myunlock;
 }

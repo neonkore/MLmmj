@@ -28,13 +28,19 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <string.h>
 
 #include "mlmmj.h"
 #include "log_error.h"
 #include "log_oper.h"
+#include "strgen.h"
+#include "mylocking.h"
+#include "wrappers.h"
+#include "memory.h"
 
 int log_oper(const char *logfilename, const char *str)
 {
+	int fd;
 	char ct[26], *logstr;
 	struct stat st;
 	time_t t;

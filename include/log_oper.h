@@ -24,6 +24,6 @@
 #ifndef LOG_OPER_H
 #define LOG_OPER_H
 
-void log_oper(const char *logfilename, const char *str);
+int log_oper(const char *logfilename, const char *str);
 
 #endif /* LOG_OPER_H */

@@ -192,11 +192,12 @@ int discardmail(const char *old, const char *new, time_t age)
 	stat(old, &st);
 	t = time(NULL);
 
-	if(t - st.st_mtime > age)
+	if(t - st.st_mtime > age) {
 		if(rename(old, new) < 0)
 			ret = 0;
 		else
 			ret = 1;
+	}
 
 	myunlock(fd);
 	close(fd);
