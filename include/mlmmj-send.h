@@ -13,7 +13,7 @@ int send_mail(int sockfd, const char *from, const char *to,
 	      const char *replyto, int mailfd,
 	      const char *listdir, const char *mlmmjbounce);
 int send_mail_many(int sockfd, const char *from, const char *replyto,
-		   int mailfd, FILE *subfile, const char *listaddr,
+		   int mailfd, int subfd, const char *listaddr,
 		   const char *archivefilename, const char *listdir,
 		   const char *mlmmjbounce);
 int initsmtp(int *sockfd, const char *relayhost);

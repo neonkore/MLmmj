@@ -14,7 +14,7 @@
 
 #include "wrappers.h"
 
-#define DUMPBUF 1024
+#define DUMPBUF 4096
 
 int dumpfd2fd(int infd, int outfd)
 {

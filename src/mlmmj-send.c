@@ -34,6 +34,7 @@
 #include "strgen.h"
 #include "log_error.h"
 #include "mygetline.h"
+#include "wrappers.h"
 
 char *bounce_from_adr(const char *recipient, const char *listadr,
 		      const char *mailfilename)
@@ -278,15 +279,15 @@ int endsmtp(int *sockfd)
 }
 
 int send_mail_many(int sockfd, const char *from, const char *replyto,
-		   int mailfd, FILE *subfile, const char *listaddr,
+		   int mailfd, int subfd, const char *listaddr,
 		   const char *archivefilename, const char *listdir,
 		   const char *mlmmjbounce)
 {
-	int sendres = 0;
+	int sendres = 0, addrfd;
 	char *bounceaddr, *addr, *index, *dirname, *addrfilename;
-	FILE *addrfile;
+	size_t len;
 
-	while((addr = myfgetline(subfile))) {
+	while((addr = mygetline(subfd))) {
 		chomp(addr);
 		if(from)
 			sendres = send_mail(sockfd, from, addr, replyto,
@@ -313,8 +314,9 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 			}
 			addrfilename = concatstr(2, dirname, "/subscribers");
 			free(dirname);
-			addrfile = fopen(addrfilename, "a");
-			if(addrfile == NULL) {
+			addrfd = open(addrfilename, O_WRONLY|O_CREAT|O_APPEND,
+							S_IRUSR|S_IWUSR);
+			if(addrfd < 0) {
 				log_error(LOG_ARGS, "Could not write to %s",
 						    addrfilename);
 				free(addrfilename);
@@ -322,20 +324,22 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 				return 1;
 			} else { /* dump the remaining addresses */
 				do {
-					if(fputs(addr, addrfile) < 0)
+					/* Dirty hack to add newline. */
+					len = strlen(addr);
+					addr[len] = '\n';
+					if(writen(addrfd, addr, len+1) < 0)
 						log_error(LOG_ARGS,
 							"Could not add [%s] "
 							"to requeue address "
 							"file.", addr);
-					fputc('\n', addrfile);
 					free(addr);
-					addr = myfgetline(subfile);
+					addr = mygetline(subfd);
 				} while(addr);
 			}
 			
 			free(addr);
 			free(addrfilename);
-			fclose(addrfile);
+			close(addrfd);
 
 			return 1;
 		}
@@ -368,7 +372,7 @@ static void print_help(const char *prg)
 int main(int argc, char **argv)
 {
 	size_t len = 0;
-	int sockfd = 0, mailfd = 0, opt, mindex;
+	int sockfd = 0, mailfd = 0, opt, mindex, subfd, tmpfd;
 	int deletewhensent = 1, sendres, archive = 1;
 	char *listaddr, *mailfilename = NULL, *subfilename = NULL;
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
@@ -376,7 +380,6 @@ int main(int argc, char **argv)
 	char *listctrl = NULL, *subddirname = NULL, *listdir = NULL;
 	char *mlmmjbounce = NULL, *bindir;
 	DIR *subddir;
-	FILE *subfile = NULL, *tmpfile;
 	struct dirent *dp;
 	
 	log_set_name(argv[0]);
@@ -465,7 +468,7 @@ int main(int argc, char **argv)
 		break;
 	case '2': /* Moderators */
 		subfilename = concatstr(2, listdir, "/moderators");
-		if((subfile = fopen(subfilename, "r")) == NULL) {
+		if((subfd = open(subfilename, O_RDONLY)) < 0) {
 			log_error(LOG_ARGS, "Could not open '%s':",
 					    subfilename);
 			free(subfilename);
@@ -476,7 +479,7 @@ int main(int argc, char **argv)
 		}
 		break;
 	case '3': /* resending earlier failed mails */
-		if((subfile = fopen(subfilename, "r")) == NULL) {
+		if((subfd = open(subfilename, O_RDONLY)) < 0) {
 			log_error(LOG_ARGS, "Could not open '%s':",
 					    subfilename);
 			exit(EXIT_FAILURE);
@@ -509,28 +512,41 @@ int main(int argc, char **argv)
 			deletewhensent = 0;
 			/* dump date we want when resending */
 			tmpstr = concatstr(2, mailfilename, ".mailfrom");
-			tmpfile = fopen(tmpstr, "w");
+			tmpfd = open(tmpstr, O_WRONLY|O_CREAT|O_TRUNC,
+						S_IRUSR|S_IWUSR);
 			free(tmpstr);
-			fputs(bounceaddr, tmpfile);
-			fclose(tmpfile);
+			if(tmpfd >= 0) {
+				writen(tmpfd, to_addr, strlen(to_addr));
+				fsync(tmpfd);
+			}
+			close(tmpfd);
 			tmpstr = concatstr(2, mailfilename, ".reciptto");
-			tmpfile = fopen(tmpstr, "w");
+			tmpfd = open(tmpstr, O_WRONLY|O_CREAT|O_TRUNC,
+						S_IRUSR|S_IWUSR);
 			free(tmpstr);
-			fputs(to_addr, tmpfile);
-			fclose(tmpfile);
+			if(tmpfd >= 0) {
+				writen(tmpfd, bounceaddr, strlen(bounceaddr));
+				fsync(tmpfd);
+			}
+			close(tmpfd);
 			if(replyto) {
 				tmpstr = concatstr(2, mailfilename,
 						      ".reply-to");
-				tmpfile = fopen(tmpstr, "w");
+				tmpfd = open(tmpstr, O_WRONLY|O_CREAT|O_TRUNC,
+							S_IRUSR|S_IWUSR);
 				free(tmpstr);
-				fputs(replyto, tmpfile);
-				fclose(tmpfile);
+				if(tmpfd >= 0) {
+					writen(tmpfd, replyto,
+						strlen(replyto));
+					fsync(tmpfd);
+				}
+				close(tmpfd);
 			}
 		}
 		break;
 	case '2': /* Moderators */
 		initsmtp(&sockfd, relayhost);
-		if(send_mail_many(sockfd, bounceaddr, NULL, mailfd, subfile,
+		if(send_mail_many(sockfd, bounceaddr, NULL, mailfd, subfd,
 			       NULL, NULL, listdir, NULL))
 			close(sockfd);
 		else
@@ -538,7 +554,7 @@ int main(int argc, char **argv)
 		break;
 	case '3': /* resending earlier failed mails */
 		initsmtp(&sockfd, relayhost);
-		if(send_mail_many(sockfd, NULL, NULL, mailfd, subfile,
+		if(send_mail_many(sockfd, NULL, NULL, mailfd, subfd,
 				listaddr, mailfilename, listdir, mlmmjbounce))
 			close(sockfd);
 		else
@@ -562,7 +578,7 @@ int main(int argc, char **argv)
 				continue;
 			subfilename = concatstr(3, listdir, "/subscribers.d/",
 						dp->d_name);
-			if((subfile = fopen(subfilename, "r")) == NULL) {
+			if((subfd = open(subfilename, O_RDONLY)) < 0) {
 				log_error(LOG_ARGS, "Could not open '%s'",
 						    subfilename);
 				free(subfilename);
@@ -573,7 +589,7 @@ int main(int argc, char **argv)
 
 			initsmtp(&sockfd, relayhost);
 			sendres = send_mail_many(sockfd, NULL, NULL, mailfd,
-					subfile, listaddr, archivefilename,
+					subfd, listaddr, archivefilename,
 					listdir, mlmmjbounce);
 			if (sendres) {
 				/* If send_mail_many() failed we close the
@@ -584,7 +600,7 @@ int main(int argc, char **argv)
 			} else {
 				endsmtp(&sockfd);
 			}
-			fclose(subfile);
+			close(subfd);
 		}
 		closedir(subddir);
 		break;

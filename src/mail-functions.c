@@ -59,7 +59,7 @@ int write_mail_from(int sockfd, const char *from_addr)
 	snprintf(mail_from, len, "MAIL FROM: <%s>\r\n", from_addr);
 	len = strlen(mail_from);
 
-#ifdef MLMMJ_DEBUG
+#if 0
 	fprintf(stderr, "\nwrite_mail_from, mail_from = [%s]\n", mail_from);
 #endif
 	bytes_written = writen(sockfd, mail_from, len);
@@ -87,7 +87,7 @@ int write_rcpt_to(int sockfd, const char *rcpt_addr)
 	snprintf(rcpt_to, len, "RCPT TO: <%s>\r\n", rcpt_addr);
 	len = strlen(rcpt_to);
 
-#ifdef MLMMJ_DEBUG
+#if 0
 	fprintf(stderr, "\nwrite_rcpt_to, rcpt_to = [%s]\n", rcpt_to);
 #endif
 	bytes_written = writen(sockfd, rcpt_to, len);
@@ -121,12 +121,14 @@ int write_mailbody_from_fd(int sockfd, int fd)
 	/* keep writing chunks of line (max WRITE_BUFSIZE) */
 	for(;;) {
 		bufp = buf+1;
-		errno = 0;  /* We must reset errno, otherwise we can't
-			     * determine if we hit EOF or an error
-			     * occurred */
-		if(read(fd, bufp, WRITE_BUFSIZE) < 0) {
+
+		len = read(fd, bufp, WRITE_BUFSIZE);
+
+		if(len == 0)
+			return 0;
+			
+		if(len < 0) {
 			if (errno == EINTR) {
-				errno = 0;
 				continue;
 			} else {
 				return errno;
@@ -140,7 +142,6 @@ int write_mailbody_from_fd(int sockfd, int fd)
 		}
 
 		/* fix newlines */
-		len = strlen(bufp);
 		if((len > 0) && (bufp[len-1] == '\n')) {
 			bufp[len-1] = '\r';
 			bufp[len] = '\n';
@@ -151,7 +152,7 @@ int write_mailbody_from_fd(int sockfd, int fd)
 			full_line = 0;
 		}
 
-#ifdef MLMMJ_DEBUG
+#if 0
 		fprintf(stderr, "write_mailbody_from_file = [%s]\n", bufp);
 #endif
 		bytes_written = writen(sockfd, bufp, len);
