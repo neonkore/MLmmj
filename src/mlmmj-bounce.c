@@ -127,6 +127,7 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 	free(listaddr);
 	free(listfqdn);
 	free(listname);
+	free(indexstr);
 
 	probefile = concatstr(4, listdir, "/bounce/", addr, "-probe");
 	MY_ASSERT(probefile);
@@ -292,7 +293,6 @@ int main(int argc, char **argv)
 		free(bfilename);
 		exit(EXIT_FAILURE);
 	}
-	free(bfilename);
 
 	/* TODO check that the message is not already bounced */
 
@@ -317,6 +317,7 @@ int main(int argc, char **argv)
 		rename(mailname, savename);
 		free(savename);
 	}
+	free(bfilename);
 
 	return EXIT_SUCCESS;
 }

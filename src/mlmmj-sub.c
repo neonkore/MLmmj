@@ -317,5 +317,7 @@ int main(int argc, char **argv)
 	if(confirmsub)
 		confirm_sub(listdir, listaddr, address, mlmmjsend);
 
+	free(listaddr);
+
 	return EXIT_SUCCESS;
 }

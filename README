@@ -1,4 +1,4 @@
-README mlmmj-0.7.0					Jun 9th 2004
+README mlmmj-0.7.1					Jun 10th 2004
 
 This is an attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
@@ -60,10 +60,7 @@ To use mlmmj, do the following:
     NOTE: Don't forget newaliases.
 
  4) Start mlmmj-maintd (remember full path when starting it!) or add it to
-    crontab with -F switch. If using it in daemon mode, keep an eye on it
-    everyonce in a while to check it's running, or to make sure it's not turning
-    into a memory hog. In the case it should happen, please tell us!
-    For now the recommended way is to run it via cron:
+    crontab with -F switch. The recommended way for now is to run it via cron:
 
     "0 */2 * * *  /usr/bin/mlmmj-maintd -F -L /var/spool/mlmmj/mlmmj-test"
 

@@ -1,3 +1,4 @@
+ o More memory debugging
 0.7.1
  o Fix bug with .reciptto and .mailfrom getting swapped
  o Plug a few small memory leaks in mlmmj-maintd

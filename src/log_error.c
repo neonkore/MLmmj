@@ -18,6 +18,11 @@ void log_set_name(const char* name)
 	log_name = strdup(name);
 }
 
+void log_free_name()
+{
+	free(log_name);
+}
+
 void log_error(const char *file, int line, const char *errstr,
 	const char *fmt, ...)
 {

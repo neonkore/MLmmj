@@ -7,5 +7,3 @@ Functionality items:
  o listname+get functionality
  o web interface
 
-An ever ongoing TODO is we need someone to run it all through valgrind or
-similar and plug all memory and fd leaks etc.

@@ -426,6 +426,7 @@ int main(int argc, char **argv)
 			confirm_unsub(listdir, listaddr, address, mlmmjsend);
 	}
 	closedir(subddir);
+	free(listaddr);
 
 	return EXIT_SUCCESS;
 }

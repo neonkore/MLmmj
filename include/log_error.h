@@ -14,6 +14,7 @@
 #define LOG_ARGS __FILE__, __LINE__, strerror(errno)
 
 void log_set_name(const char *name);
+void log_free_name(void);
 void log_error(const char *file, int line, const char *errstr,
 		const char *fmt, ...);
 
