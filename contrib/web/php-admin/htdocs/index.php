@@ -39,7 +39,8 @@ $dir = opendir($topdir);
 while ($file = readdir($dir)) {
     if (!ereg("^\.",$file))
     {
-	$lists .= "<a href=\"edit.php?list=".urlencode($file)."\">".htmlentities($file)."</a><br />\n";
+	$lists .= "<a href=\"edit.php?list=".urlencode($file)."\">".
+	    htmlentities($file)."</a><br />\n";
     }
 }
 closedir($dir); 

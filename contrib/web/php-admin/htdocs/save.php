@@ -72,6 +72,9 @@ $tpl = new FastTemplate($templatedir);
 
 $list = $HTTP_POST_VARS["list"];
 
+if(!isset($list))
+die("no list specified");
+
 if(!is_dir($topdir."/".$list))
 die("non-existent list");
 
