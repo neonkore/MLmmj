@@ -9,7 +9,9 @@
 #ifndef LISTCONTROL_H
 #define LISTCONTROL_H
 
-int listcontrol(const char *mailfilename, const char *listdir,
+#include "find_email_adr.h"
+
+int listcontrol(struct email_container *fromemails, const char *listdir,
 		const char *controladdr, const char *mlmmjsub,
 		const char *mlmmjunsub, const char *mlmmjsend,
 		const char *mlmmjbounce);

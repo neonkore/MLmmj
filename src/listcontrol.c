@@ -53,27 +53,21 @@ static struct ctrl_command ctrl_commands[] = {
 };
 
 
-int listcontrol(const char *mailfilename, const char *listdir,
+int listcontrol(struct email_container *fromemails, const char *listdir,
 		const char *controladdr, const char *mlmmjsub,
 		const char *mlmmjunsub, const char *mlmmjsend,
 		const char *mlmmjbounce)
 {
 	char tmpstr[READ_BUFSIZE];
-	char *atsign, *recipdelimsign, *tokenvalue, *bouncenr;
+	char *atsign, *recipdelimsign, *bouncenr;
 	char *controlstr, *param, *conffilename, *moderatefilename;
-	FILE *mailfile, *tempfile;
-	struct email_container fromemails;
+	FILE *tempfile;
 	size_t len;
 	struct stat stbuf;
 	int closedlist;
 	size_t cmdlen;
 	unsigned int ctrl;
 	
-	if((mailfile = fopen(mailfilename, "r")) == NULL) {
-		log_error(LOG_ARGS, "listcontrol, could not open mail");
-		exit(EXIT_FAILURE);
-	}
-
 	/* A closed list doesn't allow subscribtion and unsubscription */
 	closedlist = statctrl(listdir, "closedlist");
 
@@ -87,14 +81,10 @@ int listcontrol(const char *mailfilename, const char *listdir,
 	MY_ASSERT(controlstr);
 	snprintf(controlstr, len, "%s", recipdelimsign + 1);
 
-	tokenvalue = find_header_file(mailfile, tmpstr, "From:");
-	fclose(mailfile);
-	unlink(mailfilename);
-
-	find_email_adr(tmpstr, &fromemails);
-
 #if 0
 	log_error(LOG_ARGS, "controlstr = [%s]\n", controlstr);
+	log_error(LOG_ARGS, "fromemails->emaillist[0] = [%s]\n",
+			fromemails->emaillist[0]);
 #endif
 	for (ctrl=0; ctrl<CTRL_END; ctrl++) {
 		cmdlen = strlen(ctrl_commands[ctrl].command);
@@ -133,10 +123,10 @@ int listcontrol(const char *mailfilename, const char *listdir,
 
 	case CTRL_SUBSCRIBE:
 		if (closedlist) exit(EXIT_SUCCESS);
-		if(index(fromemails.emaillist[0], '@')) {
+		if(strchr(fromemails->emaillist[0], '@')) {
 			execlp(mlmmjsub, mlmmjsub,
 					"-L", listdir,
-					"-a", fromemails.emaillist[0],
+					"-a", fromemails->emaillist[0],
 					"-C", 0);
 			log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsub);
 			exit(EXIT_FAILURE);
@@ -151,14 +141,15 @@ int listcontrol(const char *mailfilename, const char *listdir,
 		if((tempfile = fopen(conffilename, "r"))) {
 			fgets(tmpstr, READ_BUFSIZE, tempfile);
 			fclose(tempfile);
-			if(strncasecmp(tmpstr, fromemails.emaillist[0],
+			if(strncasecmp(tmpstr, fromemails->emaillist[0],
 						strlen(tmpstr)) == 0) {
 				unlink(conffilename);
 				execlp(mlmmjsub, mlmmjsub,
 						"-L", listdir,
 						"-a", tmpstr,
 						"-c", 0);
-				log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsub);
+				log_error(LOG_ARGS, "execlp() of '%s' failed",
+						mlmmjsub);
 				exit(EXIT_FAILURE);
 			} else {
 				/* Not proper confirm */
@@ -170,12 +161,13 @@ int listcontrol(const char *mailfilename, const char *listdir,
 
 	case CTRL_UNSUBSCRIBE:
 		if (closedlist) exit(EXIT_SUCCESS);
-		if(index(fromemails.emaillist[0], '@')) {
+		if(strchr(fromemails->emaillist[0], '@')) {
 			execlp(mlmmjunsub, mlmmjunsub,
 					"-L", listdir,
-					"-a", fromemails.emaillist[0],
+					"-a", fromemails->emaillist[0],
 					"-C", 0);
-			log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjunsub);
+			log_error(LOG_ARGS, "execlp() of '%s' failed",
+					mlmmjunsub);
 			exit(EXIT_FAILURE);
 		} else /* Not a valid From: address, so we silently ignore */
 			exit(EXIT_SUCCESS);
@@ -188,7 +180,7 @@ int listcontrol(const char *mailfilename, const char *listdir,
 		if((tempfile = fopen(conffilename, "r"))) {
 			fgets(tmpstr, READ_BUFSIZE, tempfile);
 			fclose(tempfile);
-			if(strncasecmp(tmpstr, fromemails.emaillist[0],
+			if(strncasecmp(tmpstr, fromemails->emaillist[0],
 						strlen(tmpstr)) == 0) {
 				unlink(conffilename);
 				execlp(mlmmjunsub, mlmmjunsub,
@@ -236,8 +228,8 @@ int listcontrol(const char *mailfilename, const char *listdir,
 
 	case CTRL_HELP:
 		printf("Help wanted!\n");
-		if(index(fromemails.emaillist[0], '@'))
-			send_help(listdir, fromemails.emaillist[0],
+		if(strchr(fromemails->emaillist[0], '@'))
+			send_help(listdir, fromemails->emaillist[0],
 				  mlmmjsend);
 		break;
 
