@@ -257,6 +257,7 @@ int main(int argc, char **argv)
 	if(strncmp(number, "probe", 5) == 0) {
 		a = concatstr(4, listdir, "/bounce/", address, "-probe");
 		unlink(a);
+		unlink(mailname);
 		free(a);
 		exit(EXIT_SUCCESS);
 	}

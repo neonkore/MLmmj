@@ -245,6 +245,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 						"-a", 0);
 		}
 	}
+	closedir(queuedir);
 
 	return 0;
 }
@@ -332,6 +333,8 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 					"-D", 0);
 	}
 
+	closedir(queuedir);
+
 	return 0;
 }
 
@@ -356,6 +359,8 @@ int clean_nolongerbouncing(const char *listdir)
 		free(dirname);
 		return 1;
 	}
+
+	free(dirname);
 
 	while((dp = readdir(bouncedir)) != NULL) {
 		if((strcmp(dp->d_name, "..") == 0) ||
@@ -389,6 +394,8 @@ int clean_nolongerbouncing(const char *listdir)
 		free(filename);
 	}
 
+	closedir(bouncedir);
+
 	return 0;
 }
 
@@ -413,6 +420,8 @@ int probe_bouncers(const char *listdir, const char *mlmmjbounce)
 		free(dirname);
 		return 1;
 	}
+
+	free(dirname);
 
 	while((dp = readdir(bouncedir)) != NULL) {
 		if((strcmp(dp->d_name, "..") == 0) ||
@@ -476,8 +485,6 @@ int unsub_bouncers(const char *listdir)
 	return 0;
 }
 
-#define A_OK_LOG " ... ok\n"
-
 int main(int argc, char **argv)
 {
 	int opt, daemonize = 1;
@@ -518,34 +525,30 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	
-	logstr = concatstr(3, "chdir(", listdir, ");");
-	writen(maintdlogfd, logstr, strlen(logstr));
-	free(logstr);
+	WRITEMAINTLOG4(3, "chdir(", listdir, ");");
 	if(chdir(listdir) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s), exiting. "
 				    "No maintenance performed.", listdir);
 		exit(EXIT_FAILURE);
 	}
-	writen(maintdlogfd, A_OK_LOG, sizeof(A_OK_LOG));
+	WRITELOGOK;	
 
-	logstr = concatstr(3, "stat(", listdir, ", &st);");
-	writen(maintdlogfd, logstr, strlen(logstr));
-	free(logstr);
+	WRITEMAINTLOG4(3, "stat(", listdir, ", &st);");
 	if(stat(listdir, &st) < 0) {
 		log_error(LOG_ARGS, "Could not stat listdir '%s'", listdir);
 		exit(EXIT_FAILURE);
 	}
-	writen(maintdlogfd, A_OK_LOG, sizeof(A_OK_LOG));
+	WRITELOGOK;	
+
+	chown(logname, st.st_uid, st.st_gid);
 
 	snprintf(uidstr, sizeof(uidstr), "%d", (int)st.st_uid);
-	logstr = concatstr(3, "setuid(", uidstr, ");");
-	writen(maintdlogfd, logstr, strlen(logstr));
-	free(logstr);
+	WRITEMAINTLOG4(3, "setuid(", uidstr, ");");
 	if(setuid(st.st_uid) < 0) {
 		log_error(LOG_ARGS, "Could not setuid listdir owner");
 		exit(EXIT_FAILURE);
 	}
-	writen(maintdlogfd, A_OK_LOG, sizeof(A_OK_LOG));
+	WRITELOGOK;	
 	
 	bindir = mydirname(argv[0]);
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
@@ -559,45 +562,32 @@ int main(int argc, char **argv)
 	}
 
 	for(;;) {
-		logstr = concatstr(3, "clean_moderation(", listdir, ");");
-		writen(maintdlogfd, logstr, strlen(logstr));
-		free(logstr);
+		WRITEMAINTLOG4(3, "clean_moderation(", listdir, ");");
 		clean_moderation(listdir);
-		writen(maintdlogfd, A_OK_LOG, sizeof(A_OK_LOG));
+		WRITELOGOK;	
 
-		logstr = concatstr(3, "clean_discarded(", listdir, ");");
-		writen(maintdlogfd, logstr, strlen(logstr));
-		free(logstr);
+		WRITEMAINTLOG4(3, "clean_discarded(", listdir, ");");
 		clean_discarded(listdir);
-		writen(maintdlogfd, A_OK_LOG, sizeof(A_OK_LOG));
+		WRITELOGOK;	
 
-		logstr = concatstr(5, "resend_queue(", listdir,
-					", ", mlmmjsend, ");");
-		writen(maintdlogfd, logstr, strlen(logstr));
-		free(logstr);
+		WRITEMAINTLOG6(5, "resend_queue(", listdir, ", ", mlmmjsend,
+							");");
 		resend_queue(listdir, mlmmjsend);
-		writen(maintdlogfd, A_OK_LOG, sizeof(A_OK_LOG));
+		WRITELOGOK;	
 
-		logstr = concatstr(5, "resend_requeue(", listdir,
-					", ", mlmmjsend, ");");
-		writen(maintdlogfd, logstr, strlen(logstr));
-		free(logstr);
+		WRITEMAINTLOG6(5, "resend_requeue(", listdir, ", ", mlmmjsend,
+							");");
 		resend_requeue(listdir, mlmmjsend);
-		writen(maintdlogfd, A_OK_LOG, sizeof(A_OK_LOG));
+		WRITELOGOK;	
 
-		logstr = concatstr(3, "clean_nolongerbouncing(", listdir,
-					");");
-		writen(maintdlogfd, logstr, strlen(logstr));
-		free(logstr);
+		WRITEMAINTLOG4(3, "clean_nolongerbouncing(", listdir, ");");
 		clean_nolongerbouncing(listdir);
-		writen(maintdlogfd, A_OK_LOG, sizeof(A_OK_LOG));
+		WRITELOGOK;	
 
-		logstr = concatstr(5, "probe_bouncers(", listdir,
-					", ", mlmmjsend, ");");
-		writen(maintdlogfd, logstr, strlen(logstr));
-		free(logstr);
+		WRITEMAINTLOG6(5, "probe_bouncers(", listdir, ", ",
+							mlmmjbounce, ");");
 		probe_bouncers(listdir, mlmmjbounce);
-		writen(maintdlogfd, A_OK_LOG, sizeof(A_OK_LOG));
+		WRITELOGOK;	
 
 #if 0
 		unsub_bouncers(listdir);
@@ -606,7 +596,9 @@ int main(int argc, char **argv)
 		
 		close(maintdlogfd);
 		logstr = concatstr(3, listdir, "/", MAINTD_LOGFILE);
-		rename(logname, logstr);
+		if(rename(logname, logstr) < 0)
+			log_error(LOG_ARGS, "Could not rename logfile");
+
 		free(logname);
 		free(logstr);
 
