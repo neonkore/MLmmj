@@ -6,7 +6,8 @@
  * Public License as described at http://www.gnu.org/licenses/gpl.txt
  */
 
-#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -20,24 +21,25 @@
 char *getlistaddr(const char *listdir)
 {
 	char *tmpstr;
-	FILE *listnamefile;
+	int listnamefd;
 
 	tmpstr = concatstr(2, listdir, "/listaddress");;
-	if((listnamefile = fopen(tmpstr, "r")) == NULL) {
+	if((listnamefd = open(tmpstr, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", tmpstr);
 		exit(EXIT_FAILURE);
 	}
 	free(tmpstr);
 
-	tmpstr = myfgetline(listnamefile);
+	tmpstr = mygetline(listnamefd);
 
-	if(!tmpstr){
-		log_error(LOG_ARGS, "FATAL. Could not get listaddress");
+	if(tmpstr == NULL){
+		log_error(LOG_ARGS, "FATAL. Could not get listaddress in %s",
+					listdir);
 		exit(EXIT_FAILURE);
 	}
 
 	chomp(tmpstr);
-	fclose(listnamefile);
+	close(listnamefd);
 
 	return tmpstr;
 }
