@@ -232,11 +232,11 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	headerfilename = concatstr(2, listdir, "/customheaders");
+	headerfilename = concatstr(2, listdir, "/control/customheaders");
 	headerfile = fopen(headerfilename, "r");
 	free(headerfilename);
 	
-	footerfilename = concatstr(2, listdir, "/footer");
+	footerfilename = concatstr(2, listdir, "/control/footer");
 	footerfile = fopen(footerfilename, "r");
 	free(footerfilename);
 	
