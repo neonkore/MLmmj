@@ -26,7 +26,7 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([ftruncate memset socket strerror strncasecmp snprintf fcntl])
-AC_CHECK_FUNCS([nanosleep time strftime])
+AC_CHECK_FUNCS([nanosleep time strftime syslog])
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([src/Makefile])
