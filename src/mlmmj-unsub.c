@@ -297,6 +297,7 @@ int main(int argc, char **argv)
 		log_error(LOG_ARGS, "Could not opendir(%s)",
 				    subddirname);
 		free(subddirname);
+		exit(EXIT_FAILURE);
 	}
 	free(subddirname);
 	while((dp = readdir(subddir)) != NULL) {
