@@ -91,7 +91,6 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	}
 
 	fromstr = concatstr(4, "From: ", listname, "+help@", listfqdn);
-	fromstr[6] = RECIPDELIM;
 	tmp = concatstr(6, "\nMIME-Version: 1.0"
 			    "\nContent-Type: multipart/" DIGESTMIMETYPE "; "
 			    "boundary=", boundary,
