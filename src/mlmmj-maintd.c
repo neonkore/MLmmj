@@ -447,6 +447,9 @@ int clean_nolongerbouncing(const char *listdir)
 				unlink(filename);
 				*s = '\0';
 				unlink(filename);
+				s = concatstr(2, filename, ".lastmsg");
+				unlink(s);
+				myfree(s);
 			}
 		}
 		myfree(filename);
@@ -461,7 +464,7 @@ int probe_bouncers(const char *listdir, const char *mlmmjbounce)
 {
 	DIR *bouncedir;
 	char *dirname = concatstr(2, listdir, "/bounce/");
-	char *probefile;
+	char *probefile, *s;
 	struct dirent *dp;
 	struct stat st;
 	pid_t pid, childpid;
@@ -493,7 +496,11 @@ int probe_bouncers(const char *listdir, const char *mlmmjbounce)
 		
 		if(strstr(dp->d_name, "-probe"))
 			continue;
-		
+
+		s = strrchr(dp->d_name, ".");
+		if(s && (strcmp(s, ".lastmsg") == 0))
+			continue;
+			
 		probefile = concatstr(2, dp->d_name, "-probe");
 		
 		/* Skip files which already have a probe out */
@@ -568,6 +575,14 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		
 		if(strstr(dp->d_name, "-probe"))
 			continue;
+
+		a = strrchr(dp->d_name, ".");
+		if(a && (strcmp(a, ".lastmsg") == 0)) {
+			free(a);
+			continue;
+		}
+
+		free(a);
 		
 		probefile = concatstr(2, dp->d_name, "-probe");
 		
@@ -638,6 +653,9 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 				pid = waitpid(childpid, &status, 0);
 			while(pid == -1 && errno == EINTR);
 			unlink(dp->d_name);
+			a = concatstr(2, dp->d_name, ".lastmsg");
+			unlink(a);
+			free(a);
 		} else {
 			execlp(mlmmjunsub, mlmmjunsub,
 					"-L", listdir,
