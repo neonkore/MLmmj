@@ -1,4 +1,5 @@
 1.0.0
+ o Replace index() with strchr()
  o Add parenthesis around realloc call to make sure we alloc correctly
  o Make header matching case insensitive
  o Fix dumping of addresses to requeue
