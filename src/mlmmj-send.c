@@ -41,7 +41,11 @@ static char *bounce_from_adr(char *recipient, char *listadr, char *mailfilename)
 	size_t len;
 
 	indexstr = strrchr(mailfilename, '/');
-	if (!indexstr) indexstr = mailfilename;
+	if (indexstr) {
+		indexstr++;  /* skip the slash */
+	} else {
+		indexstr = mailfilename;
+	}
 
 	recipient = strdup(recipient);
 	if (!recipient) {
@@ -63,16 +67,17 @@ static char *bounce_from_adr(char *recipient, char *listadr, char *mailfilename)
 	}
 	*listdomain++ = '\0';
 
-	/* 11 = "-bounces" + RECIPDELIM + "@" + NUL */
-	len = strlen(listadr) + strlen(recipient) + strlen(listdomain) + 11;
+	/* 12 = RECIPDELIM + "bounces-" + "-" + "@" + NUL */
+	len = strlen(listadr) + strlen(recipient) + strlen(indexstr)
+		 + strlen(listdomain) + 12;
 	bounce_adr = malloc(len);
 	if (!bounce_adr) {
 		free(recipient);
 		free(listadr);
 		return NULL;
 	}
-	snprintf(bounce_adr, len, "%s-bounces%c%s@%s", listadr, RECIPDELIM,
-		 recipient, listdomain);
+	snprintf(bounce_adr, len, "%s%cbounces-%s-%s@%s", listadr, RECIPDELIM,
+		 recipient, indexstr, listdomain);
 
 	free(recipient);
 	free(listadr);
