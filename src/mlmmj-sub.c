@@ -47,7 +47,7 @@ void confirm_sub(const char *listdir, const char *listaddr,
 		const char *subaddr, const char *mlmmjsend)
 {
 	int subtextfd, queuefd;
-	char *buf, *subtextfilename, *randomstr, *queuefilename;
+	char *buf, *subtextfilename, *randomstr, *queuefilename = NULL;
 	char *fromaddr, *listname, *listfqdn, *s1;
 
 	subtextfilename = concatstr(2, listdir, "/text/sub-ok");
@@ -61,18 +61,23 @@ void confirm_sub(const char *listdir, const char *listaddr,
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
-	randomstr = random_str();
 
-	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
+	do {
+		randomstr = random_str();
+		myfree(queuefilename);
+		queuefilename = concatstr(3, listdir, "/queue/", randomstr);
+		myfree(randomstr);
 
-	if((queuefd = open(queuefilename, O_WRONLY|O_CREAT|O_EXCL,
-					S_IRUSR|S_IWUSR)) < 0) {
+		queuefd = open(queuefilename, O_RDWR|O_CREAT|O_EXCL,
+					      S_IRUSR|S_IWUSR);
+
+	} while ((queuefd < 0) && (errno == EEXIST));
+
+	if(queuefd < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
 		myfree(queuefilename);
-		myfree(randomstr);
 		exit(EXIT_FAILURE);
 	}
-	myfree(randomstr);
 
 	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
 
@@ -119,29 +124,39 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 			 const char *subaddr, const char *mlmmjsend)
 {
 	int subconffd, subtextfd, queuefd;
-	char *confirmaddr, *listname, *listfqdn, *confirmfilename;
-	char *subtextfilename, *queuefilename, *fromaddr, *randomstr;
-	char *buf, *s1;
+	char *confirmaddr, *listname, *listfqdn, *confirmfilename = NULL;
+	char *subtextfilename, *queuefilename = NULL, *fromaddr;
+	char *buf, *s1, *randomstr = NULL;
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
-	randomstr = random_plus_addr(subaddr);
-	confirmfilename = concatstr(3, listdir, "/subconf/", randomstr);
 
-	if((subconffd = open(confirmfilename, O_RDWR|O_CREAT|O_EXCL,
-					S_IRUSR|S_IWUSR)) < 0) {
+        do {
+		randomstr = random_plus_addr(subaddr);
+                myfree(confirmfilename);
+                myfree(randomstr);
+                confirmfilename = concatstr(3, listdir, "/subconf/",
+					    randomstr);
+
+                subconffd = open(confirmfilename, O_RDWR|O_CREAT|O_EXCL,
+						  S_IRUSR|S_IWUSR);
+
+        } while ((subconffd < 0) && (errno == EEXIST));
+
+	if(subconffd < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", confirmfilename);
 		myfree(confirmfilename);
-		myfree(randomstr);
 		exit(EXIT_FAILURE);
 	}
+
+	myfree(confirmfilename);
 
 	if(writen(subconffd, subaddr, strlen(subaddr)) < 0) {
 		log_error(LOG_ARGS, "Could not write to subconffd");
 		exit(EXIT_FAILURE);
 	}
+
 	close(subconffd);
-	myfree(confirmfilename);
 
 	confirmaddr = concatstr(5, listname, "+confsub-", randomstr, "@",
 			           listfqdn);
@@ -149,26 +164,34 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	fromaddr = concatstr(5, listname, "+bounces-confsub-", randomstr,
 				"@", listfqdn);
 
+	myfree(randomstr);
+
 	subtextfilename = concatstr(2, listdir, "/text/sub-confirm");
 
 	if((subtextfd = open(subtextfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", subtextfilename);
-		myfree(randomstr);
 		myfree(subtextfilename);
 		exit(EXIT_FAILURE);
 	}
+
 	myfree(subtextfilename);
 
-	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
+        do {
+                randomstr = random_str();
+                myfree(queuefilename);
+                queuefilename = concatstr(3, listdir, "/queue/", randomstr);
+                myfree(randomstr);
 
-	if((queuefd = open(queuefilename, O_RDWR|O_CREAT|O_EXCL,
-					S_IRUSR|S_IWUSR)) < 0) {
+                queuefd = open(queuefilename, O_RDWR|O_CREAT|O_EXCL,
+					      S_IRUSR|S_IWUSR);
+
+        } while ((queuefd < 0) && (errno == EEXIST));
+
+	if(queuefd < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
 		myfree(queuefilename);
-		myfree(randomstr);
 		exit(EXIT_FAILURE);
 	}
-	myfree(randomstr);
 
 	s1 = concatstr(9, "From: ", listname, "+help@", listfqdn, "\nTo: ", 
 			subaddr, "\nSubject: Confirm subscribe to ", listaddr,

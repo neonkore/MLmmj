@@ -91,7 +91,6 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	moderatorsfilename = concatstr(2, listdir, "/control/moderators");
 	if((moderatorsfd = open(moderatorsfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", moderatorsfilename);
-		myfree(queuefilename);
 		myfree(moderatorsfilename);
 		close(queuefd);
 		exit(EXIT_FAILURE);
@@ -100,8 +99,6 @@ void newmoderated(const char *listdir, const char *mailfilename,
 
 	if((mailfd = open(mailfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", mailfilename);
-		myfree(queuefilename);
-		myfree(moderatorsfilename);
 		close(queuefd);
 		exit(EXIT_FAILURE);
 	}
