@@ -50,6 +50,7 @@
 #include "subscriberfuncs.h"
 #include "memory.h"
 #include "log_oper.h"
+#include "chomp.h"
 
 enum action {
 	ALLOW,
@@ -309,7 +310,7 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	int i, opt, noprocess = 0, moderated = 0;
+	int i, j, opt, noprocess = 0, moderated = 0;
 	int hdrfd, footfd, rawmailfd, donemailfd;
 	int subonlypost = 0, addrtocc = 1, intocc = 0;
 	int notoccdenymails = 0, noaccessdenymails = 0, nosubonlydenymails = 0;
@@ -332,6 +333,7 @@ int main(int argc, char **argv)
 	struct strlist *access_rules = NULL;
 	struct strlist *delheaders = NULL;
 	struct strlist allheaders;
+	struct strlist *alternates = NULL;
 	struct mailhdr readhdrs[] = {
 		{ "From:", 0, NULL },
 		{ "To:", 0, NULL },
@@ -601,16 +603,30 @@ int main(int argc, char **argv)
 	unlink(mailfile);
 
 	listaddr = getlistaddr(listdir);
+	alternates = ctrlvalues(listdir, "listaddress");
 
 	addrtocc = !(statctrl(listdir, "tocc"));
 	if(addrtocc) {
-		for(i = 0; i < toemails.emailcount; i++)
-			if(strcmp(listaddr, toemails.emaillist[i]) == 0)
-				intocc = 1;
-		for(i = 0; i < ccemails.emailcount; i++)
-			if(strcmp(listaddr, ccemails.emaillist[i]) == 0)
-				intocc = 1;
+		for(i = 0; i < toemails.emailcount; i++) {
+			for(j = 0; j < alternates->count; j++) {
+				chomp(alternates->strs[j]);
+				if(strcmp(alternates->strs[j],
+					toemails.emaillist[i]) == 0)
+					intocc = 1;
+			}
+		}
+		for(i = 0; i < ccemails.emailcount; i++) {
+			for(j = 0; j < alternates->count; j++) {
+				chomp(alternates->strs[j]);
+				if(strcmp(alternates->strs[j],
+					ccemails.emaillist[i]) == 0)
+					intocc = 1;
+			}
+		}
 	}
+
+	for(i = 0; i < alternates->count; i++)
+		myfree(alternates->strs[i]);
 
 	notoccdenymails = statctrl(listdir, "notoccdenymails");
 	
