@@ -182,6 +182,8 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 						dp->d_name);
 			}
 		}
+		
+		free(discardedname);
 
 		toname = concatstr(2, mailname, ".reciptto");
 		if(!discarded && stat(toname, &st) < 0) {
@@ -197,6 +199,8 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 						dp->d_name);
 			}
 		}
+
+		free(discardedname);
 		
 		reptoname = concatstr(2, mailname, ".reply-to");
 
@@ -437,6 +441,7 @@ int clean_nolongerbouncing(const char *listdir)
 			close(probefd);
 			chomp(probetimestr);
 			probetime = (time_t)strtol(probetimestr, NULL, 10);
+			free(probetimestr);
 			t = time(NULL);
 			if(t - probetime > WAITPROBE) {
 				unlink(filename);
