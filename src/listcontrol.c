@@ -18,8 +18,7 @@
 #include "find_email_adr.h"
 #include "strgen.h"
 #include "send_help.h"
-
-#include "log_error.c"
+#include "log_error.h"
 
 int listcontrol(const char *mailfilename, const char *listdir,
 		const char *controladdr)

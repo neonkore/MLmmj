@@ -12,8 +12,7 @@
 #include <errno.h>
 #include "getlistaddr.h"
 #include "chomp.h"
-
-#include "log_error.c"
+#include "log_error.h"
 
 #define MAXLISTNAMELEN 1024
 

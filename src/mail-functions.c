@@ -20,7 +20,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "log_error.c"
+#include "log_error.h"
 
 /* "HELO \r\n " has length 7 */
 #define EXTRA_HELO_LEN 8

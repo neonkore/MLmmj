@@ -18,8 +18,7 @@
 #include "mylocking.h"
 #include "incindexfile.h"
 #include "itoa.h"
-
-#include "log_error.c"
+#include "log_error.h"
 
 #define INTBUF_SIZE 32
 

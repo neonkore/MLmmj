@@ -24,8 +24,7 @@
 #include "getlistaddr.h"
 #include "subscriberfuncs.h"
 #include "strgen.h"
-
-#include "log_error.c"
+#include "log_error.h"
 
 void confirm_unsub(const char *listdir, const char *listaddr, const char *subaddr)
 {

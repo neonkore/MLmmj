@@ -19,8 +19,7 @@
 #include "wrappers.h"
 #include "mygetline.h"
 #include "strgen.h"
-
-#include "log_error.c"
+#include "log_error.h"
 
 extern char *optarg;
 

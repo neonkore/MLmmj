@@ -23,8 +23,7 @@
 #include "listcontrol.h"
 #include "strgen.h"
 #include "do_all_the_voodo_here.h"
-
-#include "log_error.c"
+#include "log_error.h"
 
 static void print_help(const char *prg)
 {

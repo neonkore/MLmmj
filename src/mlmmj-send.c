@@ -25,8 +25,7 @@
 #include "getlistaddr.h"
 #include "init_sockfd.h"
 #include "strgen.h"
-
-#include "log_error.c"
+#include "log_error.h"
 
 
 static void print_help(const char *prg)

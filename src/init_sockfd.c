@@ -12,8 +12,7 @@
 #include <arpa/inet.h>
 
 #include "init_sockfd.h"
-
-#include "log_error.c"
+#include "log_error.h"
 
 void init_sockfd(int *sockfd, const char *relayhost)
 {

@@ -10,14 +10,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <unistd.h>
 
 #include "mlmmj.h"
 #include "send_help.h"
 #include "strgen.h"
 #include "find_email_adr.h"
 #include "getlistaddr.h"
-
-#include "log_error.c"
+#include "log_error.h"
 
 void send_help(const char *listdir, const char *emailaddr)
 {
