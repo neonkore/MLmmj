@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 		{ NULL, NULL }
 	};
 	
-	while ((opt = getopt(argc, argv, "hVm:L:")) != -1) {
+	while ((opt = getopt(argc, argv, "hVPm:L:")) != -1) {
 		switch(opt) {
 		case 'L':
 			listdir = optarg;
