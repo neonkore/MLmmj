@@ -20,6 +20,16 @@ value, leaving line 2 and forward ready for commentary etc.
    If this file is present, the emailaddresses in the file listdir/moderators
    will act as moderators for the list.
 
+ · tocc				(boolean)
+
+   If this file is present, the list address does not have to be in the To:
+   or Cc: header of the email to the list.
+
+ · subonlypost			(boolean)
+
+   When this file is present, only people who are subscribed to the list,
+   are allowed to post to it. The check is made against the "From:" header.
+
  · prefix			(normal)
 
    The prefix for the Subject: line of mails to the list. This will alter the
