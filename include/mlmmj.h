@@ -12,13 +12,6 @@
 #include "../config.h"
 
 #define RELAYHOST "127.0.0.1"
-
-/* must end in a slash, if not empty! */
-#ifndef BINDIR
-#define BINDIR ""
-#endif
-
-
 #define READ_BUFSIZE 2048
 #define RECIPDELIM '+'
 
@@ -28,5 +21,11 @@ struct mailhdr {
 };
 
 void print_version(const char *prg);
+
+#define MY_ASSERT(expression) if (!(expression)) { \
+			log_error(LOG_ARGS, "assertion failed"); \
+			exit(EXIT_FAILURE); \
+		}
+
 
 #endif /* MLMMJ_GENERIC_INCLUDES */
