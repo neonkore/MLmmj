@@ -1,0 +1,86 @@
+README mlmmj-0.3.1					April 21st 2004
+
+This is my attempt at implementing a mailing list manager with the same
+functionality as the brilliant ezmlm, but with a decent license and mail server
+independency.
+
+The functionality is still quite limited:
+
+ · Subscribe / unsubscribe functionality (email, commandline).
+ · Archive
+ · Custom headers / footer
+
+Next feature in the works is bouncehandling--it's not _as_ urgent as it seems,
+since the mailserver delivering the mails takes care of most of it. This
+feature missing should not keep you from using mlmmj on not that heavy
+trafficated list.
+
+To use mlmmj, do the following:
+
+1) Make sure your mailserver accepts '+' as a recipient delimiter. With Postfix
+   it's done by adding
+
+   	recipient_delimiter = +
+
+   to /etc/postfix/main.cf.
+
+   There is a nice FAQ explaining here: http://faqs.org/faqs/mail/addressing/
+
+2) Create the mailinglist.  There's a script, mlmmj-make-ml.sh, that will make
+   a mailinglist for mlmmj. It is highly recommended to use this script to make
+   the lists! What is does is described here:
+
+   In the case of a list called mlmmj-test below /var/spool/mlmmj it makes the
+   following directories:
+
+   /var/spool/mlmmj/mlmmj-test/{incoming,queue,archive,text,subconf,unsubconf}
+
+   And creates files similar to the ones in the listtexts/ directory of the
+   source distribution in /var/spool/mlmmj/text/.
+
+   NOTE: The mailinglist directory have to be owned by the user the mailserver
+   writes as. On some Postfix installations Postfix is run by the user postfix,
+   but still writes files as nobody:nogroup or nobody:nobody
+
+3) Make the changes to your mailserver aliases that came as output from
+   mlmmj-make-ml.sh. Following the example above they will look like this:
+
+   mlmmj-test:     | "/usr/bin/mlmmj-recieve -L /var/spool/mlmmj/mlmmj-test"
+   mlmmj-test-bounces: postmaster
+
+   Assuming postmaster should get the list bounces (yes, bouncehandling is the 
+   next major feature that will be added to mlmmj).
+
+   NOTE: Don't forget newaliases.
+
+That's it! You might want to go through the next steps too.
+
+4) Subscribe some people
+
+   mlmmj-subscribe -L /var/spool/mlmmj/mlmmj-test/ -a joe@domain.tld
+
+   etc.
+
+   NOTE: Don't forget to make correct permissions on the subscribers file
+   if you don't perform all list actions as the user that writes mail.
+
+5) If you want custom headers like X-Mailinglist, Reply-To: etc. just add a
+   file called 'customheaders' in the list directory like this:
+   $ cat /var/spool/mlmmj/mlmmj-test/customheaders
+   X-Mailinglist: mlmmj-test
+   Reply-To: mlmmj-test@domain.ltd
+
+6) If you want every mail to have something like:
+   -- 
+   To unsubscribe send a mail to coollist+unsubscribe@lists.domain.net
+
+   Just add what you want to a file named "footer" in the same dir as
+   "customheader".
+
+
+Ah, I almost forgot; If you want to use something else than localhost for your
+maildelivery you have to change it in include/mlmmj.h before compiling.
+
+Have a fun!
+
+	Mads Martin Jørgensen <mmj at mmj dot dk>

@@ -1,0 +1,21 @@
+This only applies if you used mlmmj before version 0.3.0
+---------------------------------------------------------
+If you don't have a help file in listdir/text/listhelp there is one in
+listtexts/listhelp, which can be installed by doing:
+$ install -m 644 listtexts/listhelp /path/to/mylist/text
+
+
+This only applies if you used mlmmj before version 0.2.0:
+---------------------------------------------------------
+
+Starting with mlmmj-0.2.0, it is no longer necessary to specify the listaddress
+on the commandline. See the README for how the aliases look, or simply just
+remove the -l <listaddr> switch.
+
+Also starting with mlmmj-0.2.0, there is a need to extend the mailinglist
+directory. Have a look in the README and in the mlmmj-make-ml.sh script, but
+basically this should do it:
+
+$ mkdir /path/to/mylist/{queue,text,subconf,unsubconf}
+$ install -m 644 listtexts/* /path/to/mylist/text
+

@@ -1,0 +1,5 @@
+Q: How does people subscribe/unsubscribe to mlmmj controlled mailinglists?
+A: They send a mail to listname+subscribe@domain.tld or
+   listname+unsubscribe@domain.tld. So if we had a list called jokes@humour.org
+   people would send a mail to jokes+subscribe@humour.org to subscribe and
+   jokes+unsubscribe@humour.org to unsubscribe

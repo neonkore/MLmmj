@@ -1,0 +1,55 @@
+0.3.1
+ o Add BINDIR (mortenp)
+ o Fix retstruct->emaillist initialize (mortenp)
+ o Log handling adjustments (mortenp)
+ o Touch subscribers and index (mortenp)
+0.3.0
+ o Footer addition. Make a file called /path/to/listname/footer and it will be
+   added to all mails.
+ o Implement the help function. Send a mail to listname+help to get help. Also
+   address used as From: address when sending sub/unsub mails
+ o Make find_subscriber more safe (mortenp)
+ o Completely use EXIT_macro (mortenp)
+0.2.2
+ o Add proper checks for the execpl (mortenp)
+ o Use EXIT_ macros for exit (mortenp)
+ o Try /dev/urandom before /dev/random
+ o Make the random_int() function work without /dev/random, which is not
+   present on DEC-Unix/Tru64 (mortenp)
+ o Make -V print the version
+0.2.1
+ o Make the From: header on sub/unsub mails be listname+help
+ o Double check the subscription address before adding.
+ o The From header should be generated according to archive in the list mails
+   for proper bounce handling
+ o Cannot specify both -c and -C to mlmmj-{unsub,sub}scribe
+ o Small bugfixes
+0.2.0
+ o Implement subscription and unsubscription by email
+ o Remove the need for the -l switch by introducing a listaddress file in the
+   mailinglist directory
+ o Make use of a queue directory, and not move mails to the archive before they
+   are processed by mlmmj-send.
+0.1.4
+ o Properly handle the replies from the mailserver on our requests. Still need
+   some kind of requeing mechanism though.
+ o Use automake and autoconf
+ o Use fcntl instead of flock
+ o Add a script to make the mailinglist directories - thanks hennebird
+0.1.3
+ o Make it write \r\n for each \n.
+ o Convert everything possible to snprintf
+ o Make valgrind (http://developer.kde.org/~sewardj/) find no error, leaks
+   anything
+0.1.2
+ o Made mlmmj-unsubscribe
+ o Made mlmmj-subscribe
+ o Fix the indexnumber in the From header. Was reversed.
+0.1.1
+ o Custom headers. Add a file called 'customheaders' in the listdir
+   and it will be added. Should be used for Reply-To: if God forbid someone
+   wants to use that.
+ o Cleanup a bit
+0.1.0
+ o Initial version working with archiving and not much else apart from the
+   same functionality as a list in /etc/aliases

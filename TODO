@@ -1,0 +1,6 @@
+ o Make the mlmmj-make-ml.sh script be generated with the listtext stuff
+
+ o bounce-handling
+
+ o add configure option for what relayhost to use.
+
