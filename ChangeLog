@@ -1,4 +1,5 @@
 0.3.2
+ o Logging enhancement
  o Send on the full path to the binaries around in the program since
    execlp needs it.
  o Make mlmmj-make-ml.sh use /bin/sh not /bin/bash
