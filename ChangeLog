@@ -1,3 +1,6 @@
+0.7.1
+ o Fix bug with .reciptto and .mailfrom getting swapped
+ o Plug a few small memory leaks in mlmmj-maintd
  o Fix bug with maintenance logfile not being opened at the right spot
 0.7.0
  o Add a macro to make sure mlmmj binaries are invoked with full path
