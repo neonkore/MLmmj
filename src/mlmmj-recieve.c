@@ -140,10 +140,6 @@ int main(int argc, char **argv)
 	}
 
 	fsync(fd);
-
-	logstr = concatstr(2, "mlmmj-recieve: wrote ", infilename);
-	log_oper(OPLOGFNAME, logstr);
-	myfree(logstr);
 	close(fd);
 
 	if(noprocess) {
