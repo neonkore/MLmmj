@@ -14,12 +14,15 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <dirent.h>
+#include <fcntl.h>
 
 #include "mlmmj.h"
 #include "subscriberfuncs.h"
 #include "mygetline.h"
 #include "log_error.h"
 #include "wrappers.h"
+#include "strgen.h"
 
 off_t find_subscriber(int fd, const char *address)
 {
@@ -66,4 +69,53 @@ off_t find_subscriber(int fd, const char *address)
 	
 	munmap(start, st.st_size);
 	return (off_t)-1;
+}
+
+int is_subbed(const char *listdir, const char *address)
+{
+	int retval = 1, subread;
+	char *subddirname, *subreadname;
+	off_t suboff;
+	DIR *subddir;
+	struct dirent *dp;
+
+	subddirname = concatstr(2, listdir, "/subscribers.d/");
+	if((subddir = opendir(subddirname)) == NULL) {
+		log_error(LOG_ARGS, "Could not opendir(%s)", subddirname);
+		free(subddirname);
+		exit(EXIT_FAILURE);
+	}
+
+	free(subddirname);
+
+	while((dp = readdir(subddir)) != NULL) {
+		if(!strcmp(dp->d_name, "."))
+			continue;
+		if(!strcmp(dp->d_name, ".."))
+			continue;
+
+		subreadname = concatstr(3, listdir, "/subscribers.d/",
+				dp->d_name);
+		subread = open(subreadname, O_RDONLY);
+		if(subread < 0) {
+			log_error(LOG_ARGS, "Could not open '%s'",
+					subreadname);
+			free(subreadname);
+			continue;
+		}
+
+		suboff = find_subscriber(subread, address);
+		close(subread);
+		free(subreadname);
+
+		if(suboff == -1) {
+			continue;
+		} else {
+			retval = 0;
+			break;
+		}
+	}
+	closedir(subddir);
+
+	return retval;
 }
