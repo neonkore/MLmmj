@@ -121,6 +121,9 @@ int write_mailbody_from_file(int sockfd, FILE *infile)
 	/* keep writing chunks of line (max WRITE_BUFSIZE) */
 	for(;;) {
 		bufp = buf+1;
+		errno = 0;  /* We must reset errno, otherwise we can't
+			     * determine if we hit EOF or an error
+			     * occurred */
 		if(!fgets(bufp, WRITE_BUFSIZE, infile)) {
 			if (errno == EINTR) {
 				continue;
