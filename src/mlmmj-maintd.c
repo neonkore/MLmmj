@@ -177,13 +177,13 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 				discarded = discardmail(mailname,
 							discardedname,
 							3600);
+				free(discardedname);
 			} else {
 				log_error(LOG_ARGS, "Could not stat(%s)",
 						dp->d_name);
 			}
 		}
 		
-		free(discardedname);
 
 		toname = concatstr(2, mailname, ".reciptto");
 		if(!discarded && stat(toname, &st) < 0) {
@@ -194,14 +194,13 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 				discarded = discardmail(mailname,
 							discardedname,
 							3600);
+				free(discardedname);
 			} else {
 				log_error(LOG_ARGS, "Could not stat(%s)",
 						dp->d_name);
 			}
 		}
 
-		free(discardedname);
-		
 		reptoname = concatstr(2, mailname, ".reply-to");
 
 		fromfd = open(fromname, O_RDONLY);

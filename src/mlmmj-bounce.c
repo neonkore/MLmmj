@@ -327,11 +327,9 @@ int main(int argc, char **argv)
 	writen(fd, buf, strlen(buf));
 	close(fd);
 
-	if(mailname) {
-		savename = concatstr(2, bfilename, ".lastmsg");
-		rename(mailname, savename);
-		free(savename);
-	}
+	if(mailname)
+		unlink(mailname);
+		
 	free(bfilename);
 
 	return EXIT_SUCCESS;
