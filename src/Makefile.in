@@ -17,7 +17,7 @@
 #
 
 
-SOURCES = $(mlmmj_process_SOURCES) $(mlmmj_recieve_SOURCES) $(mlmmj_send_SOURCES) $(mlmmj_subscribe_SOURCES) $(mlmmj_unsubscribe_SOURCES)
+SOURCES = $(mlmmj_process_SOURCES) $(mlmmj_recieve_SOURCES) $(mlmmj_send_SOURCES) $(mlmmj_sub_SOURCES) $(mlmmj_unsub_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -40,8 +40,7 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 bin_PROGRAMS = mlmmj-send$(EXEEXT) mlmmj-recieve$(EXEEXT) \
-	mlmmj-process$(EXEEXT) mlmmj-subscribe$(EXEEXT) \
-	mlmmj-unsubscribe$(EXEEXT)
+	mlmmj-process$(EXEEXT) mlmmj-sub$(EXEEXT) mlmmj-unsub$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -78,20 +77,20 @@ am_mlmmj_send_OBJECTS = mlmmj-send.$(OBJEXT) writen.$(OBJEXT) \
 	print-version.$(OBJEXT) log_error.$(OBJEXT)
 mlmmj_send_OBJECTS = $(am_mlmmj_send_OBJECTS)
 mlmmj_send_LDADD = $(LDADD)
-am_mlmmj_subscribe_OBJECTS = mlmmj-subscribe.$(OBJEXT) \
-	writen.$(OBJEXT) mylocking.$(OBJEXT) getlistaddr.$(OBJEXT) \
-	chomp.$(OBJEXT) random-int.$(OBJEXT) strgen.$(OBJEXT) \
+am_mlmmj_sub_OBJECTS = mlmmj-sub.$(OBJEXT) writen.$(OBJEXT) \
+	mylocking.$(OBJEXT) getlistaddr.$(OBJEXT) chomp.$(OBJEXT) \
+	random-int.$(OBJEXT) strgen.$(OBJEXT) \
 	subscriberfuncs.$(OBJEXT) print-version.$(OBJEXT) \
 	log_error.$(OBJEXT) mygetline.$(OBJEXT)
-mlmmj_subscribe_OBJECTS = $(am_mlmmj_subscribe_OBJECTS)
-mlmmj_subscribe_LDADD = $(LDADD)
-am_mlmmj_unsubscribe_OBJECTS = mlmmj-unsubscribe.$(OBJEXT) \
-	writen.$(OBJEXT) mylocking.$(OBJEXT) getlistaddr.$(OBJEXT) \
-	chomp.$(OBJEXT) subscriberfuncs.$(OBJEXT) random-int.$(OBJEXT) \
+mlmmj_sub_OBJECTS = $(am_mlmmj_sub_OBJECTS)
+mlmmj_sub_LDADD = $(LDADD)
+am_mlmmj_unsub_OBJECTS = mlmmj-unsub.$(OBJEXT) writen.$(OBJEXT) \
+	mylocking.$(OBJEXT) getlistaddr.$(OBJEXT) chomp.$(OBJEXT) \
+	subscriberfuncs.$(OBJEXT) random-int.$(OBJEXT) \
 	strgen.$(OBJEXT) print-version.$(OBJEXT) log_error.$(OBJEXT) \
 	mygetline.$(OBJEXT)
-mlmmj_unsubscribe_OBJECTS = $(am_mlmmj_unsubscribe_OBJECTS)
-mlmmj_unsubscribe_LDADD = $(LDADD)
+mlmmj_unsub_OBJECTS = $(am_mlmmj_unsub_OBJECTS)
+mlmmj_unsub_LDADD = $(LDADD)
 binSCRIPT_INSTALL = $(INSTALL_SCRIPT)
 SCRIPTS = $(bin_SCRIPTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -111,9 +110,8 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/mail-functions.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/mlmmj-process.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/mlmmj-recieve.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mlmmj-send.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mlmmj-subscribe.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mlmmj-unsubscribe.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/mlmmj-send.Po ./$(DEPDIR)/mlmmj-sub.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/mlmmj-unsub.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/mygetline.Po ./$(DEPDIR)/mylocking.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/print-version.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/random-int.Po ./$(DEPDIR)/send_help.Po \
@@ -125,11 +123,11 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(mlmmj_process_SOURCES) $(mlmmj_recieve_SOURCES) \
-	$(mlmmj_send_SOURCES) $(mlmmj_subscribe_SOURCES) \
-	$(mlmmj_unsubscribe_SOURCES)
+	$(mlmmj_send_SOURCES) $(mlmmj_sub_SOURCES) \
+	$(mlmmj_unsub_SOURCES)
 DIST_SOURCES = $(mlmmj_process_SOURCES) $(mlmmj_recieve_SOURCES) \
-	$(mlmmj_send_SOURCES) $(mlmmj_subscribe_SOURCES) \
-	$(mlmmj_unsubscribe_SOURCES)
+	$(mlmmj_send_SOURCES) $(mlmmj_sub_SOURCES) \
+	$(mlmmj_unsub_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -217,17 +215,17 @@ mlmmj_recieve_SOURCES = mlmmj-recieve.c writen.c random-int.c header_token.c \
 
 mlmmj_process_SOURCES = mlmmj-process.c writen.c find_email_adr.c \
 			incindexfile.c itoa.c getlistaddr.c chomp.c \
-			mylocking.c listcontrol.c random-int.c strgen.c i\
+			mylocking.c listcontrol.c random-int.c strgen.c \
 			header_token.c print-version.c send_help.c \
 			do_all_the_voodo_here.c mygetline.c gethdrline.c \
 			log_error.c
 
-mlmmj_subscribe_SOURCES = mlmmj-subscribe.c writen.c mylocking.c \
+mlmmj_sub_SOURCES = mlmmj-sub.c writen.c mylocking.c \
 			getlistaddr.c chomp.c random-int.c strgen.c \
 			subscriberfuncs.c print-version.c \
 			log_error.c mygetline.c
 
-mlmmj_unsubscribe_SOURCES = mlmmj-unsubscribe.c writen.c mylocking.c\
+mlmmj_unsub_SOURCES = mlmmj-unsub.c writen.c mylocking.c \
 			getlistaddr.c chomp.c subscriberfuncs.c random-int.c \
 			strgen.c print-version.c log_error.c mygetline.c
 
@@ -296,12 +294,12 @@ mlmmj-recieve$(EXEEXT): $(mlmmj_recieve_OBJECTS) $(mlmmj_recieve_DEPENDENCIES)
 mlmmj-send$(EXEEXT): $(mlmmj_send_OBJECTS) $(mlmmj_send_DEPENDENCIES) 
 	@rm -f mlmmj-send$(EXEEXT)
 	$(LINK) $(mlmmj_send_LDFLAGS) $(mlmmj_send_OBJECTS) $(mlmmj_send_LDADD) $(LIBS)
-mlmmj-subscribe$(EXEEXT): $(mlmmj_subscribe_OBJECTS) $(mlmmj_subscribe_DEPENDENCIES) 
-	@rm -f mlmmj-subscribe$(EXEEXT)
-	$(LINK) $(mlmmj_subscribe_LDFLAGS) $(mlmmj_subscribe_OBJECTS) $(mlmmj_subscribe_LDADD) $(LIBS)
-mlmmj-unsubscribe$(EXEEXT): $(mlmmj_unsubscribe_OBJECTS) $(mlmmj_unsubscribe_DEPENDENCIES) 
-	@rm -f mlmmj-unsubscribe$(EXEEXT)
-	$(LINK) $(mlmmj_unsubscribe_LDFLAGS) $(mlmmj_unsubscribe_OBJECTS) $(mlmmj_unsubscribe_LDADD) $(LIBS)
+mlmmj-sub$(EXEEXT): $(mlmmj_sub_OBJECTS) $(mlmmj_sub_DEPENDENCIES) 
+	@rm -f mlmmj-sub$(EXEEXT)
+	$(LINK) $(mlmmj_sub_LDFLAGS) $(mlmmj_sub_OBJECTS) $(mlmmj_sub_LDADD) $(LIBS)
+mlmmj-unsub$(EXEEXT): $(mlmmj_unsub_OBJECTS) $(mlmmj_unsub_DEPENDENCIES) 
+	@rm -f mlmmj-unsub$(EXEEXT)
+	$(LINK) $(mlmmj_unsub_LDFLAGS) $(mlmmj_unsub_OBJECTS) $(mlmmj_unsub_LDADD) $(LIBS)
 install-binSCRIPTS: $(bin_SCRIPTS)
 	@$(NORMAL_INSTALL)
 	test -z "$(bindir)" || $(mkdir_p) "$(DESTDIR)$(bindir)"
@@ -344,8 +342,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mlmmj-process.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mlmmj-recieve.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mlmmj-send.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mlmmj-subscribe.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mlmmj-unsubscribe.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mlmmj-sub.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mlmmj-unsub.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mygetline.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mylocking.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/print-version.Po@am__quote@
