@@ -18,6 +18,8 @@
 #define WAITSLEEP 1000
 #define MODREQLIFE 604800 /* How long time will moderation requests be kept?
 			   * 604800s is 7 days */
+#define DISCARDEDLIFE 604800 /* How long time will discarded mails be kept?
+			      * 604800s is 7 days */
 #define BOUNCELIFE 432000 /* How long time can addresses bounce before
 			     unsubscription happens? 432000s is 5 days */
 #define PROBEINTERVAL 43200 /* How often is an address probed if it still

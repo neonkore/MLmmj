@@ -30,14 +30,30 @@ static void print_help(const char *prg)
 
 int clean_moderation(const char *listdir)
 {
+#if 0
 	DIR *moddir;
 	struct dirent *dp;
-
+#endif
+	
 	/* TODO: Go through the moderation/ directory and delete mails
 	 * older than MODREQLIFE (control/modreqlife later on)
+	 * Also delete/resend from moderation/queue (probably delete)
+	 */
+		
+	return 0;
+}
+
+int clean_discarded(const char *listdir)
+{
+#if 0
+	DIR *queuedir;
+	struct dirent *dp;
+#endif
+
+	/* TODO: Go through all the mails sitting in queue/discarded/ and
+	 * delete those older than DISCARDEDLIFE (control/discardedlife)
 	 */
 
-		
 	return 0;
 }
 
@@ -50,6 +66,25 @@ int resend_queue(const char *listdir)
 
 	/* TODO: Go through all mails sitting in queue and send all that
 	 * has a .mailfrom, .reciptto suffix.
+	 * Move the ones without to discarded, since we cannot know what to
+	 * do with them.
+	 */
+
+	return 0;
+}
+
+int resend_requeue(const char *listdir)
+{
+#if 0
+	DIR *queuedir;
+	struct dirent *dp;
+#endif
+
+	/* TODO: Go through all mails sitting in requeue/ and send the mail in the
+	 * archive marked by the directory name in requeue/ to the people in
+	 * the file subscribers sitting in the same dir.
+	 * IMPORTANT: do not forget to *not* archive and *not* delete when
+	 * sent.
 	 */
 
 	return 0;
@@ -64,6 +99,7 @@ int probe_bouncers(const char *listdir)
 
 	/* TODO: invoke mlmmj-bounce -p address for all that haven't been
 	 * probed in PROBEINTERVAL (control/probeinterval) seconds
+	 * Note that mlmmj-bounce is still missing the -p option :-)
 	 */
 	
 	return 0;
@@ -129,7 +165,9 @@ int main(int argc, char **argv)
 
 	for(;;) {
 		clean_moderation(listdir);
+		clean_discarded(listdir);
 		resend_queue(listdir);
+		resend_requeue(listdir)
 		probe_bouncers(listdir);
 		unsub_bouncers(listdir);
 		
