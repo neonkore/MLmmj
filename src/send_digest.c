@@ -169,6 +169,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	close(fd);
 	myfree(boundary);
 	myfree(listname);
+	myfree(tmp);
 
 	childpid = fork();
 
