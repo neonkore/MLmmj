@@ -24,10 +24,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "strgen.h"
 #include "statctrl.h"
 #include "memory.h"
+#include "log_error.h"
 
 int statctrl(const char *listdir, const char *ctrlstr)
 {
@@ -38,8 +40,15 @@ int statctrl(const char *listdir, const char *ctrlstr)
 	res = stat(filename, &st);
 	myfree(filename);
 	
-	if(res == 0)
-		return 1;
+	if(res < 0) {
+		if(errno == ENOENT) {
+			return 0;
+		} else {
+			log_error(LOG_ARGS, "Could not stat %s/control/%s. "
+					    "Bailing out.", listdir, ctrlstr);
+			exit(EXIT_FAILURE);
+		}
+	}
 
-	return 0;
+	return 1;
 }

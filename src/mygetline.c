@@ -33,9 +33,9 @@
 char *mygetline(int fd)
 {
 	size_t i = 0, res, buf_size = BUFSIZE;  /* initial buffer size */
-	char *buf = mymalloc(buf_size);
-	char ch;
+	char *buf, ch;
 
+	buf = mymalloc(buf_size);
 	buf[0] = '\0';
 	while(1) {	
 		res = read(fd, &ch, 1);
