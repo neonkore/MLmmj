@@ -3,9 +3,11 @@
 mlmmj-bounce \- bounce handling utility for mlmmj
 .SH SYNOPSIS
 .B mlmmj-bounce
-\fI-L /path/to/list -a john=doe.org \fR[\fI-n num | -p\fR]
+\fI-L /path/to/list \fR[\fI-a john=doe.org | -d\fR]\fI \fR[\fI-n num | -p\fR]
 .HP
 \fB\-a\fR: Address string that bounces
+.HP
+\fB\-d\fR: Parse the mail to extract the address via the DSN (RFC1891)
 .HP
 \fB\-h\fR: This help
 .HP
