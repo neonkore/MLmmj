@@ -442,10 +442,13 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+    /* hdrfd is checked in do_all_the_voodo_here(), because the
+     * customheaders file might not exist */
 	headerfilename = concatstr(2, listdir, "/control/customheaders");
 	hdrfd = open(headerfilename, O_RDONLY);
 	myfree(headerfilename);
 	
+    /* footfd is checked in do_all_the_voodo_here(), see above */
 	footerfilename = concatstr(2, listdir, "/control/footer");
 	footfd = open(footerfilename, O_RDONLY);
 	myfree(footerfilename);
