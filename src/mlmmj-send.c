@@ -983,7 +983,7 @@ int main(int argc, char **argv)
 					"header. Not sending with VERP.");
 			verp = NULL;
 		}
-
+		
 		if(verp) {
 			initsmtp(&sockfd, relay);
 			if(write_mail_from(sockfd, verpfrom, verp)) {
@@ -1053,49 +1053,45 @@ int main(int argc, char **argv)
 					stl.count = 0;
 				}
 			} while(res > 0);
-			if(stl.count) {
-				initsmtp(&sockfd, relay);
-				if(verp) {
-					sendres = send_mail_verp(sockfd,
-							&stl, mailmap,
-							st.st_size,
-							verpfrom,
-							listdir, hdrs, hdrslen,
-							body, bodylen, verp);
-					if(sendres)
-						requeuemail(listdir, strindex,
-								&stl, 0);
-				} else {
-					sendres = send_mail_many_list(sockfd,
-							NULL, NULL, mailmap,
-							st.st_size, &stl,
-							listaddr,
-							archivefilename,
-							listdir, mlmmjbounce,
-							hdrs, hdrslen, body,
-							bodylen);
-				}
-				endsmtp(&sockfd);
-				for(i = 0; i < stl.count; i++)
-					myfree(stl.strs[i]);
-				stl.count = 0;
-			}
-
-			myfree(verpfrom);
 			myfree(subfilename);
-			myfree(stl.strs);
 			close(subfd);
 
-			if (sendres) {
-				/* If send_mail_many() failed we close the
-				 * connection to the mail server in a brutal
-				 * manner, because we could be in any state
-				 * (DATA for instance). */
-				close(sockfd);
-			} else {
-				endsmtp(&sockfd);
-			}
 		}
+		if(stl.count) {
+			initsmtp(&sockfd, relay);
+			if(verp) {
+				sendres = send_mail_verp(sockfd, &stl, mailmap,
+						st.st_size, verpfrom, listdir,
+						hdrs, hdrslen, body, bodylen,
+						verp);
+				if(sendres)
+					requeuemail(listdir, strindex, &stl,
+							0);
+			} else {
+				sendres = send_mail_many_list(sockfd, NULL,
+						NULL, mailmap, st.st_size,
+						&stl, listaddr,
+						archivefilename, listdir,
+						mlmmjbounce, hdrs, hdrslen,
+						body, bodylen);
+			}
+			endsmtp(&sockfd);
+			for(i = 0; i < stl.count; i++)
+				myfree(stl.strs[i]);
+			stl.count = 0;
+		}
+
+		if (sendres) {
+			/* If send_mail_many() failed we close the
+			 * connection to the mail server in a brutal
+			 * manner, because we could be in any state
+			 * (DATA for instance). */
+			close(sockfd);
+		} else {
+			endsmtp(&sockfd);
+		}
+		myfree(stl.strs);
+		myfree(verpfrom);
 		closedir(subddir);
 		myfree(subddirname);
 		break;
