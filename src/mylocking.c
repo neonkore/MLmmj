@@ -34,7 +34,9 @@ int myexcllock(int fd)
 	locktype.l_whence = SEEK_SET;
 	locktype.l_start = 0;
 	locktype.l_len = 0;
-	mylock = fcntl(fd, F_SETLKW, &locktype);
+	do {
+		mylock = fcntl(fd, F_SETLKW, &locktype);
+	while(mylock < 0 && errno == EINTR);
 
 	return mylock;
 }
@@ -45,7 +47,9 @@ int myunlock(int fd)
 	struct flock locktype;
 
 	locktype.l_type = F_UNLCK;
-	myunlock = fcntl(fd, F_SETLKW, &locktype);
+	do {
+		myunlock = fcntl(fd, F_SETLKW, &locktype);
+	while(myunlock < 0 && errno == EINTR)
 
 	return myunlock;
 }
