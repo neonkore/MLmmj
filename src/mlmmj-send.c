@@ -403,7 +403,7 @@ int main(int argc, char **argv)
 			fprintf(stderr, "found subfile '%s'\n", subfilename);
 			free(subfilename);
 
-			while((conncount > MAX_CONNECTIONS))
+			while((conncount >= MAX_CONNECTIONS))
 				usleep(100);
 
 			childpid = fork();
