@@ -1,3 +1,4 @@
+ o Add sanity checks to disallow denial mails going to the list
  o Implement -d option for mlmmj-maintd to be able to supply it with a directory
    containing several listdirs, where mlmmj-maintd then will run maintenance
  o Chown option and a fix for mlmmj-make-ml.sh. Thanks Ingo Lameter

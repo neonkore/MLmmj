@@ -595,6 +595,15 @@ int main(int argc, char **argv)
 	}
 
 	if(addrtocc && !intocc) {
+		/* Don't send a mail about denial to the list, but silently
+		 * discard and exit */
+		if (strncasecmp(listaddress, fromemails.emaillist[0],
+				strlen(listaddress)) == 0) {
+			myfree(listaddr);
+			unlink(donemailname);
+			myfree(donemailname);
+			exit(EXIT_SUCCESS);
+		}
 		listname = genlistname(listaddr);
 		listfqdn = genlistfqdn(listaddr);
 		maildata[0] = "*LSTADDR*";
@@ -625,6 +634,15 @@ int main(int argc, char **argv)
 
 	subonlypost = statctrl(listdir, "subonlypost");
 	if(subonlypost) {
+		/* Don't send a mail about denial to the list, but silently
+		 * discard and exit */
+		if (strncasecmp(listaddress, fromemails.emaillist[0],
+				strlen(listaddress)) == 0) {
+			myfree(listaddr);
+			unlink(donemailname);
+			myfree(donemailname);
+			exit(EXIT_SUCCESS);
+		}
 		if(is_subbed(listdir, fromemails.emaillist[0]) != 0) {
 			listname = genlistname(listaddr);
 			listfqdn = genlistfqdn(listaddr);
@@ -661,6 +679,15 @@ int main(int argc, char **argv)
 
 	access_rules = ctrlvalues(listdir, "access");
 	if (access_rules) {
+		/* Don't send a mail about denial to the list, but silently
+		 * discard and exit */
+		if (strncasecmp(listaddress, fromemails.emaillist[0],
+				strlen(listaddress)) == 0) {
+			myfree(listaddr);
+			unlink(donemailname);
+			myfree(donemailname);
+			exit(EXIT_SUCCESS);
+		}
 		if (do_access(access_rules, &allheaders) == DENY) {
 			listname = genlistname(listaddr);
 			listfqdn = genlistfqdn(listaddr);
