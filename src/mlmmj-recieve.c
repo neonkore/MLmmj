@@ -37,7 +37,7 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	char *infilename = NULL, *listdir = NULL, *line = NULL;
+	char *infilename = NULL, *listdir = NULL;
 	char *randomstr = random_str();
 	char *mlmmjprocess, *bindir;
 	int fd, opt, noprocess = 0, nofork = 0;
@@ -92,11 +92,12 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	
-	while((line = myfgetline(stdin))) {
-		writen(fd, line, strlen(line));
-		fsync(fd);
-		free(line);
+	if(dumpfd2fd(STDIN_FILENO, fd) != 0) {
+		log_error(LOG_ARGS, "Could not recieve mail");
+		exit(EXIT_FAILURE);
 	}
+
+	fsync(fd);
 
 #if 0
 	log_error(LOG_ARGS, "mlmmj-recieve: wrote %s\n", infilename);
