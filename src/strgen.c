@@ -38,7 +38,7 @@ char *random_str()
 	size_t len = 128;
 	char *dest = mymalloc(len);
 
-	snprintf(dest, len, "%X%X", random_int(), random_int());
+	snprintf(dest, len, "%x%x", random_int(), random_int());
 
 	return dest;
 }
@@ -56,7 +56,7 @@ char *random_plus_addr(const char *addr)
 	atsign = index(tmpstr, '@');
 	*atsign = '=';
 
-	snprintf(dest, len, "%X%X-%s", random_int(), random_int(), tmpstr);
+	snprintf(dest, len, "%x%x-%s", random_int(), random_int(), tmpstr);
 
 	myfree(tmpstr);
 	

@@ -1,3 +1,5 @@
+ o Make random numbers lowercase hex since gmail is lowercasing the address
+   it replies to.
  o Also make sanity check in mlmmj-maintd to ensure it's invoke either
    as root or as listdir owner
 1.0.0-RC4
