@@ -345,7 +345,7 @@ int main(int argc, char **argv)
 	char *bindir, *subjectprefix, *discardname, *listaddr;
 	char *listfqdn, *listname, *fromaddr;
 	char *queuefilename, *recipdelim, *owner = NULL;
-	char *maildata[2];
+	char *maildata[2] = { "posteraddr", NULL };
 	struct stat st;
 	uid_t uid;
 	struct email_container fromemails = { 0, NULL };
@@ -647,7 +647,6 @@ int main(int argc, char **argv)
 		if(is_subbed(listdir, fromemails.emaillist[0]) != 0) {
 			listname = genlistname(listaddr);
 			listfqdn = genlistfqdn(listaddr);
-			maildata[0] = "$posteraddr$";
 			maildata[1] = fromemails.emaillist[0];
 			fromaddr = concatstr(3, listname, "+bounces-help@",
 					listfqdn);

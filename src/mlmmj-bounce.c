@@ -98,7 +98,7 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 {
 	char *myaddr, *from, *a, *indexstr, *queuefilename, *listaddr;
 	char *listfqdn, *listname, *probefile;
-	char *maildata[] = { "$bouncenumbers$", NULL };
+	char *maildata[] = { "bouncenumbers", NULL };
 	int fd;
 	time_t t;
 

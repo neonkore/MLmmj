@@ -42,8 +42,8 @@
 char *substitute(const char *line, const char *listaddr, size_t datacount,
 		 char **data)
 {
-	char *fqdn, *listname, *d1, *d2, *token, *value, *retstr;
-	char *origline = mystrdup(line);
+	char *fqdn, *listname, *d1, *d2, *token, *value = NULL;
+	char *retstr, *origline = mystrdup(line);
 	size_t len, i;
 	
 	d1 = strchr(origline, '$');
@@ -143,12 +143,12 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	myfree(tmp);
 	
 	myfrom = substitute(from, listaddr, tokencount, data);
-	
+
 	if(replyto)
 		myreplyto = substitute(replyto, listaddr, tokencount, data);
 	else
 		myreplyto = NULL;
-		
+
 	do {
 		tmp = random_str();
 		myfree(retstr);
@@ -165,7 +165,8 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		return NULL;
 	}
 
-	str = concatstr(4, myfrom, to, replyto, subject);
+	str = concatstr(8, "From: ", myfrom, "\nTo: ", to, "\nReply-To: ",
+			replyto, "\n", subject);
 
 	if(writen(outfd, str, strlen(str)) < 0) {
 		log_error(LOG_ARGS, "Could not write std mail");

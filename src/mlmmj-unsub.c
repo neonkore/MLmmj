@@ -91,7 +91,7 @@ void notify_unsub(const char *listdir, const char *listaddr,
 		  const char *subaddr, const char *mlmmjsend,
 		  enum subtype typesub)
 {
-        char *maildata[4] = { "$oldsub$", NULL };
+        char *maildata[4] = { "oldsub", NULL };
         char *listfqdn, *listname, *fromaddr, *tostr;
         char *queuefilename = NULL, *listtext;
 
@@ -142,7 +142,7 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 	char *confirmaddr, *listname, *listfqdn, *tmpstr;
 	char *queuefilename, *fromaddr;
 	char *randomstr = NULL, *confirmfilename = NULL, *listtext;
-	char *maildata[4] = { "$subaddr$", NULL, "$confaddr$", NULL };
+	char *maildata[4] = { "subaddr", NULL, "confaddr", NULL };
 	int subconffd;
 
 	listname = genlistname(listaddr);

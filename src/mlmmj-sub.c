@@ -90,7 +90,7 @@ void notify_sub(const char *listdir, const char *listaddr,
 		const char *subaddr, const char *mlmmjsend,
 		enum subtype typesub)
 {
-	char *maildata[2] = { "$newsub$", NULL };
+	char *maildata[2] = { "newsub", NULL };
 	char *listfqdn, *listname, *fromaddr, *tostr;
 	char *queuefilename = NULL, *listtext;
 
@@ -140,7 +140,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	char *confirmaddr, *listname, *listfqdn, *confirmfilename = NULL;
 	char *listtext, *queuefilename = NULL, *fromaddr;
 	char *randomstr = NULL, *tmpstr;
-	char *maildata[4] = { "$subaddr$", NULL, "$confaddr$", NULL };
+	char *maildata[4] = { "subaddr", NULL, "confaddr", NULL };
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
