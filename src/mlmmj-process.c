@@ -70,7 +70,7 @@ void newmoderated(const char *listdir, const char *mailfilename,
 {
 	char *from, *fqdn, *listname;
 	char *buf, *moderatorfilename, *listaddr = getlistaddr(listdir);
-	char *queuefilename, *moderatorsfilename, *randomstr = random_str();
+	char *queuefilename = NULL, *moderatorsfilename, *randomstr = NULL;
 	char *mailbasename = mybasename(mailfilename), *s1;
 	int moderatorfd, queuefd, moderatorsfd, mailfd;
 	size_t count = 0;
@@ -106,16 +106,22 @@ void newmoderated(const char *listdir, const char *mailfilename,
 		exit(EXIT_FAILURE);
 	}
 
-	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
-	
-	if((queuefd = open(queuefilename, O_WRONLY|O_CREAT|O_EXCL,
-					S_IRUSR|S_IWUSR)) < 0) {
+        do {
+                randomstr = random_str();
+                myfree(queuefilename);
+                queuefilename = concatstr(3, listdir, "/queue/", randomstr);
+                myfree(randomstr);
+
+                queuefd = open(queuefilename, O_RDWR|O_CREAT|O_EXCL,
+					      S_IRUSR|S_IWUSR);
+
+        } while ((queuefd < 0) && (errno == EEXIST));
+
+	if(queuefd < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
 		myfree(queuefilename);
-		myfree(randomstr);
 		exit(EXIT_FAILURE);
 	}
-	myfree(randomstr);
 
 	from = concatstr(3, listname, "+owner@", fqdn);
 	s1 = concatstr(15, "From: ", from, "\nTo: ", listname, "-moderators@",
@@ -326,7 +332,7 @@ int main(int argc, char **argv)
 	int subonlypost = 0, addrtocc = 1, intocc = 0;
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
-	char *randomstr = random_str(), *mqueuename;
+	char *randomstr = NULL, *mqueuename;
 	char *mlmmjsend, *mlmmjsub, *mlmmjunsub, *mlmmjbounce;
 	char *bindir, *subjectprefix, *discardname, *listaddr;
 	char *listfqdn, *listname, *fromaddr, *fromstr, *subject;
@@ -383,21 +389,20 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	donemailname = concatstr(3, listdir, "/queue/", randomstr);
-	donemailfd = open(donemailname, O_RDWR|O_CREAT|O_EXCL,
-					S_IRUSR|S_IWUSR);
-	while(donemailfd < 0 && errno == EEXIST) {
-		myfree(donemailname);
-		randomstr = random_str();
-		donemailname = concatstr(3, listdir, "/queue/", randomstr);
-		fd = open(donemailname, O_RDWR|O_CREAT|O_EXCL,
-					S_IRUSR|S_IWUSR);
-	}
+        do {
+                myfree(donemailname);
+                myfree(randomstr);
+                randomstr = random_str();
+                donemailname = concatstr(3, listdir, "/queue/", randomstr);
+
+                donemailfd = open(donemailname, O_RDWR|O_CREAT|O_EXCL,
+						S_IRUSR|S_IWUSR);
+
+        } while ((donemailfd < 0) && (errno == EEXIST));
 	
 	if(donemailfd < 0) {
+		log_error(LOG_ARGS, "could not create %s", donemailname);
 		myfree(donemailname);
-		log_error(LOG_ARGS, "could not create mail file in queue"
-				    "directory");
 		exit(EXIT_FAILURE);
 	}
 #if 0
@@ -463,6 +468,7 @@ int main(int argc, char **argv)
 			rename(donemailname, discardname);
 			myfree(donemailname);
 			myfree(discardname);
+			myfree(randomstr);
 			/* TODO: free emailstructs */
 			exit(EXIT_SUCCESS);
 		}
@@ -616,6 +622,7 @@ int main(int argc, char **argv)
 			myfree(subject);
 			unlink(donemailname);
 			myfree(donemailname);
+			myfree(randomstr);
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "1",
 					"-T", fromemails.emaillist[0],
@@ -646,6 +653,7 @@ int main(int argc, char **argv)
 		return EXIT_SUCCESS;
 	}
 
+	myfree(randomstr);
 
 	if(noprocess) {
 		myfree(donemailname);
