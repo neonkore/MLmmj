@@ -210,7 +210,10 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	case CTRL_BOUNCES:
 		bouncenr = strrchr(param, '-');
-		if (!bouncenr) exit(EXIT_SUCCESS); /* malformed bounce, ignore */
+		if (!bouncenr) { /* malformed bounce, ignore and clean up */
+			unlink(mailname);
+			exit(EXIT_SUCCESS);
+		}
 		*bouncenr++ = '\0';
 		execlp(mlmmjbounce, mlmmjbounce,
 				"-L", listdir,
