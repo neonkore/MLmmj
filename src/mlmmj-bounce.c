@@ -181,6 +181,8 @@ int main(int argc, char **argv)
 
 	log_set_name(argv[0]);
 
+	CHECKFULLPATH(argv[0]);
+
 	bindir = mydirname(argv[0]);
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	free(bindir);

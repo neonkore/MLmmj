@@ -42,6 +42,8 @@ int main(int argc, char **argv)
 	char *mlmmjprocess, *bindir;
 	int fd, opt, noprocess = 0, nofork = 0;
 	pid_t childpid;
+
+	CHECKFULLPATH(argv[0]);
 	
 	log_set_name(argv[0]);
 

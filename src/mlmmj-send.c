@@ -406,6 +406,8 @@ int main(int argc, char **argv)
 	DIR *subddir;
 	struct dirent *dp;
 	struct stat st;
+
+	CHECKFULLPATH(argv[0]);
 	
 	log_set_name(argv[0]);
 

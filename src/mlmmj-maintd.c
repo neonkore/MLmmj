@@ -471,16 +471,123 @@ int probe_bouncers(const char *listdir, const char *mlmmjbounce)
 	return 0;
 }
 
-int unsub_bouncers(const char *listdir)
+int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 {
-#if 0
 	DIR *bouncedir;
+	char *dirname = concatstr(2, listdir, "/bounce/");
+	char *probefile, *address, *a, *firstbounce, *bouncedata;
+	char *logstr;
 	struct dirent *dp;
-#endif
+	struct stat st;
+	pid_t pid, childpid;
+	int status, fd;
+	time_t bouncetime, t;
+	
+	if(chdir(dirname) < 0) {
+		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
+		free(dirname);
+		return 1;
+	}
+		
+	if((bouncedir = opendir(dirname)) == NULL) {
+		log_error(LOG_ARGS, "Could not opendir(%s)", dirname);
+		free(dirname);
+		return 1;
+	}
 
-	/* TODO: Unsubscribe all that still bounces after BOUNCELIFE time
-	 * (control/bouncelife later on )
-	 */
+	free(dirname);
+
+	while((dp = readdir(bouncedir)) != NULL) {
+		if((strcmp(dp->d_name, "..") == 0) ||
+		   (strcmp(dp->d_name, ".") == 0))
+				continue;
+
+		if(stat(dp->d_name, &st) < 0) {
+			log_error(LOG_ARGS, "Could not stat(%s)", dp->d_name);
+			continue;
+		}
+		
+		if(strstr(dp->d_name, "-probe"))
+			continue;
+		
+		probefile = concatstr(2, dp->d_name, "-probe");
+		
+		/* Skip files which already have a probe out */
+		if(stat(probefile, &st) == 0) {
+			free(probefile);
+			continue;
+		}
+		free(probefile);
+
+		/* Get the first line of the bounce file to check if it's
+		 * been bouncing for long enough
+		 */
+		fd = open(dp->d_name, O_RDONLY);
+		if(fd < 0) {
+			log_error(LOG_ARGS, "Could not open %s", dp->d_name);
+			continue;
+		}
+		firstbounce = mygetline(fd);
+		close(fd);
+		if(firstbounce == NULL)
+			continue;
+
+		/* End the string at the comment */
+		a = strchr(firstbounce, '#');
+		if(a == NULL) {
+			free(firstbounce);
+			continue;
+		}
+		*a = '\0';
+		bouncedata = strdup(a+1); /* Save for the log */
+		chomp(bouncedata);
+		a = strchr(firstbounce, ':');
+		if(a == NULL) {
+			free(firstbounce);
+			continue;
+		}
+
+		a++; /* Increase to first digit */
+		bouncetime = (time_t)strtol(a, NULL, 10);
+		free(firstbounce);
+		t = time(NULL);
+		if(t - bouncetime < BOUNCELIFE + WAITPROBE)
+			continue; /* ok, don't unsub this one */
+		
+		/* Ok, go ahead and unsubscribe the address */
+		address = strdup(dp->d_name);
+		a = strchr(address, '=');
+		if(a == NULL) { /* skip malformed */
+			free(address);
+			continue;
+		}
+		*a = '@';
+
+		childpid = fork();
+		
+		if(childpid < 0) {
+			log_error(LOG_ARGS, "Could not fork");
+			continue;
+		}
+
+		if(childpid > 0) {
+			WRITEMAINTLOG6(5, "UNSUB: ", address, ". Bounced since",
+					bouncedata, ".\n");
+			free(bouncedata);
+			do /* Parent waits for the child */
+				pid = waitpid(childpid, &status, 0);
+			while(pid == -1 && errno == EINTR);
+			unlink(dp->d_name);
+		} else {
+			execlp(mlmmjunsub, mlmmjunsub,
+					"-L", listdir,
+					"-a", address, 0);
+			log_error(LOG_ARGS, "Could not execlp %s",
+						mlmmjunsub);
+			return 1;
+		}
+	}
+	closedir(bouncedir);
 
 	return 0;
 }
@@ -488,10 +595,12 @@ int unsub_bouncers(const char *listdir)
 int main(int argc, char **argv)
 {
 	int opt, daemonize = 1;
-	char *bindir, *listdir = NULL, *mlmmjsend, *mlmmjbounce;
+	char *bindir, *listdir = NULL, *mlmmjsend, *mlmmjbounce, *mlmmjunsub;
 	char *logstr, *logname, *random = random_str();
 	char uidstr[16];
 	struct stat st;
+
+	CHECKFULLPATH(argv[0]);
 
 	log_set_name(argv[0]);
 
@@ -525,34 +634,32 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	
-	WRITEMAINTLOG4(3, "chdir(", listdir, ");");
+	WRITEMAINTLOG4(3, "chdir(", listdir, ");\n");
 	if(chdir(listdir) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s), exiting. "
 				    "No maintenance performed.", listdir);
 		exit(EXIT_FAILURE);
 	}
-	WRITELOGOK;	
 
-	WRITEMAINTLOG4(3, "stat(", listdir, ", &st);");
+	WRITEMAINTLOG4(3, "stat(", listdir, ", &st);\n");
 	if(stat(listdir, &st) < 0) {
 		log_error(LOG_ARGS, "Could not stat listdir '%s'", listdir);
 		exit(EXIT_FAILURE);
 	}
-	WRITELOGOK;	
 
 	chown(logname, st.st_uid, st.st_gid);
 
 	snprintf(uidstr, sizeof(uidstr), "%d", (int)st.st_uid);
-	WRITEMAINTLOG4(3, "setuid(", uidstr, ");");
+	WRITEMAINTLOG4(3, "setuid(", uidstr, ");\n");
 	if(setuid(st.st_uid) < 0) {
 		log_error(LOG_ARGS, "Could not setuid listdir owner");
 		exit(EXIT_FAILURE);
 	}
-	WRITELOGOK;	
 	
 	bindir = mydirname(argv[0]);
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	mlmmjbounce = concatstr(2, bindir, "/mlmmj-bounce");
+	mlmmjunsub = concatstr(2, bindir, "/mlmmj-unsub");
 	free(bindir);
 
 	if(daemonize && daemon(1,0) < 0) {
@@ -562,38 +669,31 @@ int main(int argc, char **argv)
 	}
 
 	for(;;) {
-		WRITEMAINTLOG4(3, "clean_moderation(", listdir, ");");
+		WRITEMAINTLOG4(3, "clean_moderation(", listdir, ");\n");
 		clean_moderation(listdir);
-		WRITELOGOK;	
 
-		WRITEMAINTLOG4(3, "clean_discarded(", listdir, ");");
+		WRITEMAINTLOG4(3, "clean_discarded(", listdir, ");\n");
 		clean_discarded(listdir);
-		WRITELOGOK;	
 
 		WRITEMAINTLOG6(5, "resend_queue(", listdir, ", ", mlmmjsend,
-							");");
+							");\n");
 		resend_queue(listdir, mlmmjsend);
-		WRITELOGOK;	
 
 		WRITEMAINTLOG6(5, "resend_requeue(", listdir, ", ", mlmmjsend,
-							");");
+							");\n");
 		resend_requeue(listdir, mlmmjsend);
-		WRITELOGOK;	
 
-		WRITEMAINTLOG4(3, "clean_nolongerbouncing(", listdir, ");");
+		WRITEMAINTLOG4(3, "clean_nolongerbouncing(", listdir, ");\n");
 		clean_nolongerbouncing(listdir);
-		WRITELOGOK;	
 
-		WRITEMAINTLOG6(5, "probe_bouncers(", listdir, ", ",
-							mlmmjbounce, ");");
-		probe_bouncers(listdir, mlmmjbounce);
-		WRITELOGOK;	
-
-#if 0
-		unsub_bouncers(listdir);
-		writen(maintdlogfd, A_OK_LOG, sizeof(A_OK_LOG));
-#endif
+		WRITEMAINTLOG6(5, "unsub_bouncers(", listdir, ", ",
+							mlmmjunsub, ");\n");
+		unsub_bouncers(listdir, mlmmjunsub);
 		
+		WRITEMAINTLOG6(5, "probe_bouncers(", listdir, ", ",
+							mlmmjbounce, ");\n");
+		probe_bouncers(listdir, mlmmjbounce);
+
 		close(maintdlogfd);
 		logstr = concatstr(3, listdir, "/", MAINTD_LOGFILE);
 		if(rename(logname, logstr) < 0)

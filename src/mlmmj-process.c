@@ -180,6 +180,8 @@ int main(int argc, char **argv)
 		{ NULL, 0, NULL }
 	};
 
+	CHECKFULLPATH(argv[0]);
+
 	log_set_name(argv[0]);
 
 	bindir = mydirname(argv[0]);

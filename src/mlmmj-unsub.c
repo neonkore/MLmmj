@@ -271,12 +271,14 @@ int main(int argc, char **argv)
 	off_t suboff;
 	DIR *subddir;
 	struct dirent *dp;
+
+	CHECKFULLPATH(argv[0]);
 	
+	log_set_name(argv[0]);
+
 	bindir = mydirname(argv[0]);
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	free(bindir);
-
-	log_set_name(argv[0]);
 
 	while ((opt = getopt(argc, argv, "hcCVL:a:")) != -1) {
 		switch(opt) {
