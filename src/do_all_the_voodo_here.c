@@ -95,7 +95,12 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 					return -1;
 				}
 			}
-			writen(outfd, hdrline, strlen(hdrline));
+			if(writen(outfd, hdrline, strlen(hdrline)) < 0) {
+				myfree(hdrline);
+				log_error(LOG_ARGS, "Error writing hdrs.");
+				return -1;
+			}
+			
 			fsync(outfd);
 			myfree(hdrline);
 			break;

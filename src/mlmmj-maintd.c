@@ -72,7 +72,7 @@ int delolder(const char *dirname, time_t than)
 
 	while((dp = readdir(dir)) != NULL) {
 		if(stat(dp->d_name, &st) < 0) {
-			log_error(LOG_ARGS, "Could not stat(%s)",dp->d_name);
+			log_error(LOG_ARGS, "Could not stat(%s)", dp->d_name);
 			continue;
 		}
 		if(!S_ISREG(st.st_mode))
@@ -103,6 +103,26 @@ int clean_discarded(const char *listdir)
 	int ret = delolder(discardeddirname, DISCARDEDLIFE);
 
 	myfree(discardeddirname);
+
+	return ret;
+}
+
+int clean_subconf(const char *listdir)
+{
+	char *subconfdirname = concatstr(2, listdir, "/subconf");
+	int ret = delolder(subconfdirname, CONFIRMLIFE);
+
+	myfree(subconfdirname);
+
+	return ret;
+}
+
+int clean_unsubconf(const char *listdir)
+{
+	char *unsubconfdirname = concatstr(2, listdir, "/unsubconf");
+	int ret = delolder(unsubconfdirname, CONFIRMLIFE);
+
+	myfree(unsubconfdirname);
 
 	return ret;
 }
@@ -734,7 +754,7 @@ int main(int argc, char **argv)
 
 	for(;;) {
 		random = random_str();
-		logname = concatstr(3, listdir, "maintdlog-", random);
+		logname = concatstr(3, listdir, "/maintdlog-", random);
 		myfree(random);
 		maintdlogfd = open(logname, O_WRONLY|O_EXCL|O_CREAT,
 					S_IRUSR|S_IWUSR);
@@ -749,6 +769,12 @@ int main(int argc, char **argv)
 
 		WRITEMAINTLOG4(3, "clean_discarded(", listdir, ");\n");
 		clean_discarded(listdir);
+
+		WRITEMAINTLOG4(3, "clean_subconf(", listdir, ");\n");
+		clean_subconf(listdir);
+
+		WRITEMAINTLOG4(3, "clean_unsubconf(", listdir, ");\n");
+		clean_unsubconf(listdir);
 
 		WRITEMAINTLOG6(5, "resend_queue(", listdir, ", ", mlmmjsend,
 							");\n");
