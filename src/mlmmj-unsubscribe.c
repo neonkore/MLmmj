@@ -20,7 +20,7 @@
 #include "mlmmj-subscribe.h"
 #include "mylocking.h"
 #include "wrappers.h"
-#include "readln.h"
+#include "mygetline.h"
 #include "getlistaddr.h"
 #include "subscriberfuncs.h"
 #include "strgen.h"
@@ -233,18 +233,22 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 
 void unsubscribe(int subreadfd, int subwritefd, const char *address)
 {
-	char buf[4096];
+	char *buf;
+	FILE *subfile;
 
 	lseek(subreadfd, 0, SEEK_SET);
 	lseek(subwritefd, 0, SEEK_SET);
 
-	/* XXX: readln only guarantees to have read a complete line
-	 * when the last char is a newline, so a check should be made
-	 */
-	while(readln(subreadfd, buf, sizeof(buf)) > 0)
+	if((subfile = fdopen(subreadfd, "r")) == NULL) {
+		log_error("could not fdopen subfilefd");
+		exit(EXIT_FAILURE);
+	}
+
+	while((buf = mygetline(subfile))) {
 		if(strncasecmp(buf, address, strlen(address)) != 0)
 			writen(subwritefd, buf, strlen(buf));
-	
+		free(buf);
+	}
 	ftruncate(subwritefd, lseek(subwritefd, 0, SEEK_CUR));
 }
 

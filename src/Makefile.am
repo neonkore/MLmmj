@@ -30,9 +30,9 @@ mlmmj_process_SOURCES = mlmmj-process.c writen.c find_email_adr.c \
 
 mlmmj_subscribe_SOURCES = mlmmj-subscribe.c writen.c mylocking.c \
 			getlistaddr.c chomp.c random-int.c strgen.c \
-			subscriberfuncs.c readln.c print-version.c \
-			log_error.c
+			subscriberfuncs.c print-version.c \
+			log_error.c mygetline.c
 
-mlmmj_unsubscribe_SOURCES = mlmmj-unsubscribe.c writen.c readln.c mylocking.c\
+mlmmj_unsubscribe_SOURCES = mlmmj-unsubscribe.c writen.c mylocking.c\
 			getlistaddr.c chomp.c subscriberfuncs.c random-int.c \
-			strgen.c print-version.c log_error.c
+			strgen.c print-version.c log_error.c mygetline.c
