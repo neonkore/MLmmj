@@ -9,8 +9,13 @@
 #ifndef MLMMJ_MAINTD_H
 #define MLMMJ_MAINTD_H
 
+#include <sys/types.h>
+
+void delolder(const char *dirname, time_t than);
 int clean_moderation(const char *listdir);
-int resend_queue(const char *listdir);
+int clean_discarded(const char *listdir);
+int resend_queue(const char *listdir, const char *mlmmjsend);
+int resend_requeue(const char *listdir, const char *mlmmjsend);
 int probe_bouncers(const char *listdir);
 int unsub_bouncers(const char *listdir);
 

@@ -11,11 +11,15 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
+#include <time.h>
 
 #include "mlmmj-maintd.h"
 #include "mlmmj.h"
+#include "strgen.h"
 #include "log_error.h"
+#include "mygetline.h"
 
 static void print_help(const char *prg)
 {
@@ -28,52 +32,183 @@ static void print_help(const char *prg)
 	exit(EXIT_SUCCESS);
 }
 
+void delolder(const char *dirname, time_t than)
+{
+	DIR *dir;
+	struct dirent *dp;
+	struct stat st;
+	time_t t;
+
+	if(chdir(dirname) < 0) {
+		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
+		exit(EXIT_FAILURE);
+	}
+	if((dir = opendir(dirname)) == NULL) {
+		log_error(LOG_ARGS, "Could not opendir(%s)", dirname);
+		exit(EXIT_FAILURE);
+	}
+
+	while((dp = readdir(dir)) != NULL) {
+		if(stat(dp->d_name, &st) < 0) {
+			log_error(LOG_ARGS, "Could not stat(%s)",dp->d_name);
+			continue;
+		}
+		if(!S_ISREG(st.st_mode))
+			continue;
+		t = time(NULL);
+		if(t - st.st_mtime > than)
+			unlink(dp->d_name);
+	}
+	closedir(dir);
+}
+
+
 int clean_moderation(const char *listdir)
 {
-#if 0
-	DIR *moddir;
-	struct dirent *dp;
-#endif
-	
-	/* TODO: Go through the moderation/ directory and delete mails
-	 * older than MODREQLIFE (control/modreqlife later on)
-	 * Also delete/resend from moderation/queue (probably delete)
-	 */
+	char *moddirname;
+		
+	moddirname = concatstr(2, listdir, "/moderation");
+	delolder(moddirname, MODREQLIFE);	
+			
+	free(moddirname);
+
+	moddirname = concatstr(2, listdir, "/moderation/queue");
+	delolder(moddirname, MODREQLIFE);	
+		
+	free(moddirname);
 		
 	return 0;
 }
 
 int clean_discarded(const char *listdir)
 {
-#if 0
-	DIR *queuedir;
-	struct dirent *dp;
-#endif
+	char *discardeddirname = concatstr(2, listdir, "/queue/discarded");
 
-	/* TODO: Go through all the mails sitting in queue/discarded/ and
-	 * delete those older than DISCARDEDLIFE (control/discardedlife)
-	 */
+	delolder(discardeddirname, DISCARDEDLIFE);
+
+	free(discardeddirname);
 
 	return 0;
 }
 
-int resend_queue(const char *listdir)
+int resend_queue(const char *listdir, const char *mlmmjsend)
 {
-#if 0
 	DIR *queuedir;
 	struct dirent *dp;
-#endif
+	char *mailname, *fromname, *toname, *reptoname, *from, *to, *repto;
+	char *discardedname, *dirname = concatstr(2, listdir, "/queue/");
+	FILE *fromfile, *tofile, *f;
+	size_t len;
+	pid_t pid;
+	int i;
+	struct stat st;
+	time_t t;
 
-	/* TODO: Go through all mails sitting in queue and send all that
-	 * has a .mailfrom, .reciptto suffix.
-	 * Move the ones without to discarded, since we cannot know what to
-	 * do with them.
-	 */
+	if(chdir(dirname) < 0) {
+		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
+		free(dirname);
+		return 1;
+	}
+	if((queuedir = opendir(dirname)) == NULL) {
+		log_error(LOG_ARGS, "Could not opendir(%s)", dirname);
+		free(dirname);
+		return 1;
+	}
+
+	while((dp = readdir(queuedir)) != NULL) {
+		if(stat(dp->d_name, &st) < 0) {
+			log_error(LOG_ARGS, "Could not stat(%s)",dp->d_name);
+			continue;
+		}
+		if(!S_ISREG(st.st_mode))
+			continue;
+		mailname = strdup(dp->d_name);
+		if(strstr(dp->d_name, ".mailfrom") ||
+		   strstr(dp->d_name, ".reciptto") ||
+		   strstr(dp->d_name, ".reply-to")) {
+			mailname[len - 9] = '\0';
+		}
+
+		fromname = concatstr(4, listdir, "/queue/", mailname,
+					".mailfrom");
+		toname = concatstr(4, listdir, "/queue/", mailname,
+					".reciptto");
+		reptoname = concatstr(4, listdir, "/queue/", mailname,
+					".reply-to");
+
+		fromfile = fopen(fromname, "r");
+		i = errno;
+		tofile = fopen(toname, "r");
+		if((fromfile == NULL && i == ENOENT) ||
+		    (tofile == NULL && errno == ENOENT)) {
+			unlink(fromname);
+			free(fromname);
+			unlink(toname);
+			free(toname);
+			unlink(reptoname);
+			free(reptoname);
+			stat(mailname, &st);
+			t = time(NULL);
+			/* move it to discarded if it's an hour old */
+			if(t - st.st_mtime > (time_t)3600) {
+				discardedname = concatstr(4, listdir,
+						"/queue/discarded/",
+						mailname);
+				rename(mailname, discardedname);
+				free(discardedname);
+			}
+			free(mailname);
+			continue;
+		}
+		from = myfgetline(fromfile);
+		fclose(fromfile);
+		to = myfgetline(tofile);
+		fclose(tofile);
+		f = fopen(reptoname, "r");
+		if(f == NULL) {
+			free(reptoname);
+			repto = NULL;
+		} else {
+			repto = myfgetline(f);
+			fclose(f);
+		}
+
+		pid = fork();
+
+		if(pid == 0) {
+			if(repto)
+				execlp(mlmmjsend, mlmmjsend,
+						"-l", "1",
+						"-m", mailname,
+						"-F", from,
+						"-T", to,
+						"-R", repto,
+						"-a", 0);
+			else
+				execlp(mlmmjsend, mlmmjsend,
+						"-l", "1",
+						"-m", mailname,
+						"-F", from,
+						"-T", to,
+						"-a", 0);
+		}
+
+		if(pid > 0) {
+			unlink(fromname);
+			free(fromname);
+			unlink(toname);
+			free(toname);
+			if(repto) {
+				unlink(reptoname);
+				free(reptoname);
+			}
+		}
+	}
 
 	return 0;
 }
 
-int resend_requeue(const char *listdir)
+int resend_requeue(const char *listdir, const char *mlmmjsend)
 {
 #if 0
 	DIR *queuedir;
@@ -122,7 +257,7 @@ int unsub_bouncers(const char *listdir)
 int main(int argc, char **argv)
 {
 	int opt, daemonize = 1;
-	char *listdir = NULL;
+	char *bindir, *listdir = NULL, *mlmmjsend;
 	
 	log_set_name(argv[0]);
 
@@ -155,6 +290,10 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	bindir = mydirname(argv[0]);
+	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
+	free(bindir);
+
 	if(daemonize) {
 		if(daemon(1,0) < 0) {
 			log_error(LOG_ARGS, "Could not daemonize. Only one "
@@ -166,8 +305,8 @@ int main(int argc, char **argv)
 	for(;;) {
 		clean_moderation(listdir);
 		clean_discarded(listdir);
-		resend_queue(listdir);
-		resend_requeue(listdir);
+		resend_queue(listdir, mlmmjsend);
+		resend_requeue(listdir, mlmmjsend);
 		probe_bouncers(listdir);
 		unsub_bouncers(listdir);
 		
