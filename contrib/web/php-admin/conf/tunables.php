@@ -115,4 +115,27 @@ mlmmj_boolean("nosubconfirm",
 	      "used, but there is times on local lists etc. where this is ".
 	      "useful. HANDLE WITH CARE!");
 
+mlmmj_boolean("noget",
+	      "No get",
+	      "If this option is set, listname+get-INDEX is turned off.");
+
+mlmmj_boolean("notoccdenymails",
+	      "No To: Cc: deny mails",
+	      "This switch turns off whether mlmmj sends out notification ".
+	      "about postings being denied due to the listaddress not being ".
+	      "in To: or Cc: (see 'tocc').");
+
+mlmmj_boolean("noaccessdenymails",
+	      "No access deny mails",
+	      "This switch turns off whether mlmmj sends out notification ".
+	      "about postings being rejected due to an access rule (see ".
+	      "'access').");
+
+mlmmj_boolean("nosubonlydenymails",
+	      "No subscribers only deny mails",
+	      "This switch turns off whether mlmmj sends out notification ".
+	      "about postings being rejected due to a subscribers only ".
+	      "posting list (see 'subonlypost').");
+
+
 ?>

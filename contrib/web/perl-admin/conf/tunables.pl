@@ -96,3 +96,22 @@ mlmmj_boolean("noarchive",
 			  "No archive",
 			  "If this option is set, the mails won't be saved in the ".
 			  "archive but simply deleted");
+
+mlmmj_boolean("noget",
+			  "No get",
+			  "If this option is set, listname+get-INDEX is turned off.");
+
+mlmmj_boolean("notoccdenymails",
+			  "No To: Cc: deny mails",
+			  "This switch turns off whether mlmmj sends out notification about postings ".
+			  "being denied due to the listaddress not being in To: or Cc: (see 'tocc').");
+
+mlmmj_boolean("noaccessdenymails",
+			  "No access deny mails",
+			  "This switch turns off whether mlmmj sends out notification about postings ".
+			  "being rejected due to an access rule (see 'access').");
+
+mlmmj_boolean("nosubonlydenymails",
+			  "No subscribers only deny mails",
+			  "This switch turns off whether mlmmj sends out notification about postings ".
+			  "being rejected due to a subscribers only posting list (see 'subonlypost').");

@@ -697,15 +697,15 @@ int main(int argc, char **argv)
 		enum action accret;
 		/* Don't send a mail about denial to the list, but silently
 		 * discard and exit. Also do this in case it's turned off */
-		if ((strcasecmp(listaddr, fromemails.emaillist[0]) == 0)
-				|| noaccessdenymails) {
-			myfree(listaddr);
-			unlink(donemailname);
-			myfree(donemailname);
-			exit(EXIT_SUCCESS);
-		}
 		accret = do_access(access_rules, &allheaders);
 		if (accret == DENY) {
+			if ((strcasecmp(listaddr, fromemails.emaillist[0]) ==
+						0) || noaccessdenymails) {
+				myfree(listaddr);
+				unlink(donemailname);
+				myfree(donemailname);
+				exit(EXIT_SUCCESS);
+			}
 			listname = genlistname(listaddr);
 			listfqdn = genlistfqdn(listaddr);
 			fromaddr = concatstr(3, listname, "+bounces-help@",

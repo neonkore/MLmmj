@@ -78,7 +78,7 @@ test -f "$LISTDIR"/index || touch "$LISTDIR"/index
 echo -n "The Domain for the List? [] : "
 read FQDN
 if [ -z "$FQDN" ]; then
-	FQDN=`domainname`
+	FQDN=`domainname -f`
 fi
 
 echo -n "The emailaddress of the list owner? [postmaster] : "
@@ -88,16 +88,22 @@ if [ -z "$OWNER" ]; then
 fi
 echo "$OWNER" > "$LISTDIR"/"control/owner"
 
-TEXTPATH=@textlibdir@
-echo -n "The path to texts for the list? [$TEXTPATH] : "
+TEXTPATHDEF=@textlibdir@
+echo -n "The path to texts for the list? [$TEXTPATHDEF] : "
 read TEXTPATHIN
-test TEXTPATHIN && TEXTPATH=$TEXTPATHIN
-if [ -z "$TEXTPATHIN" -o ! -d "$TEXTPATH" ]; then
-	echo "**NOTE** Could not copy the texts for the list"
-	echo "Please manually copy the files from the listtexts/ directory"
-	echo "in the source distribution of mlmmj."
+if [ -z "$TEXTPATHIN" ] ; then
+	TEXTPATH=$TEXTPATHDEF
 else
-	cp "$TEXTPATH"/* "$LISTDIR"/"text"
+	TEXTPATH=$TEXTPATHIN
+fi
+if [ ! -d "$TEXTPATH" ]; then
+	echo
+        echo "**NOTE** Could not copy the texts for the list"
+        echo "Please manually copy the files from the listtexts/ directory"
+        echo "in the source distribution of mlmmj."
+	sleep 2
+else
+        cp "$TEXTPATH"/* "$LISTDIR"/"text"
 fi
 
 LISTADDRESS="$LISTNAME@$FQDN"

@@ -25,6 +25,7 @@ AC_C_CONST
 AC_TYPE_SIZE_T
 
 savex=$exec_prefix
+test "x$prefix" = xNONE && prefix=$ac_default_prefix
 test "x$exec_prefix" = xNONE && exec_prefix=$prefix
 tmp=$datadir/$PACKAGE/text.skel
 while textlibdir=`eval echo "$tmp"`; test "x$textlibdir" != "x$tmp"; do tmp=$textlibdir; done

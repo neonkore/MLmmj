@@ -321,6 +321,9 @@ int endsmtp(int *sockfd)
 {
 	int retval = 0;
 	char *reply = NULL;
+
+	if(*sockfd == -1)
+		return retval;
 	
 	write_quit(*sockfd);
 	reply = checkwait_smtpreply(*sockfd, MLMMJ_QUIT);
@@ -587,7 +590,7 @@ static void print_help(const char *prg)
 int main(int argc, char **argv)
 {
 	size_t len = 0, hdrslen, bodylen;
-	int sockfd = 0, mailfd = 0, opt, mindex = 0, subfd = 0, tmpfd, i;
+	int sockfd = -1, mailfd = 0, opt, mindex = 0, subfd = 0, tmpfd, i;
 	int deletewhensent = 1, sendres = 0, archive = 1, digest = 0;
 	int ctrlarchive, res;
 	char *listaddr = NULL, *mailfilename = NULL, *subfilename = NULL;
@@ -977,14 +980,18 @@ int main(int argc, char **argv)
 		myfree(listname);
 		myfree(listfqdn);
 
+		if(digest)
+			verp = NULL;
+
 		if(verp && (strcmp(verp, "postfix") == 0)) {
 			myfree(verp);
 			verp = mystrdup("XVERP=-=");
 		}
 
 		if(addtohdr && verp) {
-			log_error(LOG_ARGS, "Cannot use VERP and add To: "
-					"header. Not sending with VERP.");
+			log_error(LOG_ARGS, "Cannot use VERP and add "
+					"To: header. Not sending with "
+					"VERP.");
 			verp = NULL;
 		}
 		

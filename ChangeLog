@@ -1,3 +1,7 @@
+1.2.2
+ o Make mlmmj-send work allthough no subscribers exist
+ o Bring webinterfaces up to speed (Christian Laursen)
+ o Fix moderate tag in access
  o Make mlmmj-make-ml.sh default the listtext dir to where they were
    installed in the system (Stephan Kulow)
 1.2.1
