@@ -120,7 +120,10 @@ char *hostnamestr()
         struct hostent *hostlookup;
         char hostname[1024];
 
+        /* TODO use dynamic allocation */
         gethostname(hostname, sizeof(hostname) - 1);
+        /* gethostname() is allowed to return an unterminated string */
+        hostname[sizeof(hostname)-1] = '\0';
         hostlookup = gethostbyname(hostname);
 
         return strdup(hostlookup->h_name);
