@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <regex.h>
 
 #include "mlmmj.h"
 #include "wrappers.h"
@@ -48,6 +49,21 @@
 #include "prepstdreply.h"
 #include "subscriberfuncs.h"
 #include "memory.h"
+
+
+enum action {
+	ALLOW,
+	DENY
+};
+
+
+struct rule_list {
+	regex_t regexp;
+	unsigned int not;
+	enum action act;
+	struct rule_list *next;
+};
+
 
 void newmoderated(const char *listdir, const char *mailfilename,
 		  const char *mlmmjsend)
@@ -168,6 +184,123 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	exit(EXIT_FAILURE);
 }
 
+
+static void free_rules(struct rule_list *rule)
+{
+	struct rule_list *next;
+
+	while (rule) {
+		next = rule->next;
+		regfree(&rule->regexp);
+		myfree(rule);
+		rule = next;
+	}
+}
+
+
+static enum action do_access(struct strlist *rule_strs, struct strlist *hdrs)
+{
+	int i;
+	unsigned int match;
+	unsigned int rule_nr;
+	struct rule_list *head = NULL;
+	struct rule_list *rule, *new_rule;
+	char *rule_ptr;
+	char errbuf[128];
+	int err;
+	enum action ret;
+
+	for (i=rule_strs->count-1; i>=0; i--) {
+		new_rule = mymalloc(sizeof(struct rule_list));
+
+		/* linked list */
+		new_rule->next = head;
+		head = new_rule;
+
+		rule_ptr = rule_strs->strs[i];
+		if (strncmp(rule_ptr, "allow", 5) == 0) {
+			rule_ptr += 5;
+			new_rule->act = ALLOW;
+		} else if (strncmp(rule_ptr, "deny", 4) == 0) {
+			rule_ptr += 4;
+			new_rule->act = DENY;
+		} else {
+			errno = 0;
+			log_error(LOG_ARGS, "Unable to parse rule #%d!"
+					" Denying post to list", i);
+			free_rules(head);
+			return DENY;
+		}
+
+		if (*rule_ptr == ' ') {
+			*rule_ptr++;
+		} else if (*rule_ptr) {
+			/* we must have space or end of string */
+			errno = 0;
+			log_error(LOG_ARGS, "Unable to parse rule #%d!"
+					" Denying post to list", i);
+			free_rules(head);
+			return DENY;
+		}
+
+		if (*rule_ptr == '!') {
+			rule_ptr++;
+			new_rule->not = 1;
+		} else {
+			new_rule->not = 0;
+		}
+
+		if ((err = regcomp(&new_rule->regexp, rule_ptr,
+				REG_EXTENDED | REG_NOSUB | REG_ICASE))) {
+			regerror(err, &new_rule->regexp, errbuf,
+					sizeof(errbuf));
+			errno = 0;
+			log_error(LOG_ARGS, "regcomp() failed for rule #%d!"
+					" (message: '%s') (expression: '%s')"
+					" Denying post to list",
+					i, errbuf, rule_ptr);
+			free_rules(head);
+			return DENY;
+		}
+		
+#if 0
+		printf("rule #%d: %s if%s match '%s'\n", i,
+				(new_rule->act == ALLOW) ? "allow" : "deny",
+				(new_rule->not) ? " not" : "",
+				rule_ptr);
+#endif
+
+	}
+
+	rule = head;
+	for (rule_nr=0; rule; rule_nr++) {
+		match = 0;
+		for (i=0; i<hdrs->count; i++) {
+			if (regexec(&rule->regexp, hdrs->strs[i], 0, NULL, 0)
+					== 0) {
+				match = 1;
+				break;
+			}
+		}
+		if (match != rule->not) {
+			errno = 0;
+			log_error(LOG_ARGS, "A mail was %s by rule #%d",
+					(rule->act == ALLOW) ?
+					"allowed" : "denied",
+					rule_nr);
+			ret = rule->act;
+			free_rules(head);
+			return ret;
+		}
+
+		rule = rule->next;
+	}
+
+	free_rules(head);
+	return DENY;
+}
+
+
 static void print_help(const char *prg)
 {
         printf("Usage: %s -L /path/to/list -m /path/to/mail [-h] [-P] [-V]\n"
@@ -197,7 +330,9 @@ int main(int argc, char **argv)
 	struct email_container toemails = { 0, NULL };
 	struct email_container ccemails = { 0, NULL };
 	struct email_container efromemails = { 0, NULL };
+	struct strlist *access_rules;
 	struct strlist *delheaders;
+	struct strlist allheaders;
 	struct mailhdr readhdrs[] = {
 		{ "From:", 0, NULL },
 		{ "To:", 0, NULL },
@@ -293,7 +428,7 @@ int main(int argc, char **argv)
 	
 	if(do_all_the_voodo_here(rawmailfd, donemailfd, hdrfd, footfd,
 				(const char**)delheaders->strs, readhdrs,
-				subjectprefix) < 0) {
+				&allheaders, subjectprefix) < 0) {
 		log_error(LOG_ARGS, "Error in do_all_the_voodo_here");
 		exit(EXIT_FAILURE);
 	}
@@ -396,6 +531,7 @@ int main(int argc, char **argv)
 		queuefilename = prepstdreply(listdir, "notintocc", fromstr,
 					     fromemails.emaillist[0], NULL,
 					     subject, 1, maildata);
+		MY_ASSERT(queuefilename)
 		myfree(listaddr);
 		myfree(listname);
 		myfree(listfqdn);
@@ -428,6 +564,7 @@ int main(int argc, char **argv)
 			queuefilename = prepstdreply(listdir, "subonlypost",
 					fromstr, fromemails.emaillist[0], NULL,
 					     subject, 2, maildata);
+			MY_ASSERT(queuefilename)
 			myfree(listaddr);
 			myfree(listname);
 			myfree(listfqdn);
@@ -444,8 +581,43 @@ int main(int argc, char **argv)
 		}
 	}
 
-	moderated = statctrl(listdir, "moderated");
+	access_rules = ctrlvalues(listdir, "access");
+	if (access_rules) {
+		if (do_access(access_rules, &allheaders) == DENY) {
+			listname = genlistname(listaddr);
+			listfqdn = genlistfqdn(listaddr);
+			maildata[0] = "*LSTADDR*";
+			maildata[1] = listaddr;
+			fromaddr = concatstr(3, listname, "+bounces-help@",
+					listfqdn);
+			fromstr = concatstr(3, listname, "+owner@", listfqdn);
+			subject = concatstr(3, "Post to ", listaddr,
+					" denied.");
+			queuefilename = prepstdreply(listdir, "access",
+							fromstr,
+							fromemails.emaillist[0],
+							NULL,
+							subject, 1, maildata);
+			MY_ASSERT(queuefilename)
+			myfree(listaddr);
+			myfree(listname);
+			myfree(listfqdn);
+			myfree(fromstr);
+			myfree(subject);
+			execlp(mlmmjsend, mlmmjsend,
+					"-l", "1",
+					"-T", fromemails.emaillist[0],
+					"-F", fromaddr,
+					"-m", queuefilename, 0);
 
+			log_error(LOG_ARGS, "execlp() of '%s' failed",
+					mlmmjsend);
+			exit(EXIT_FAILURE);
+		}
+	}
+	
+
+	moderated = statctrl(listdir, "moderated");
 	if(moderated) {
 		mqueuename = concatstr(3, listdir, "/moderation/",
 				       randomstr);

@@ -77,9 +77,12 @@ void getinfo(const char *line, struct mailhdr *readhdrs)
 
 int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 		 const char **delhdrs, struct mailhdr *readhdrs,
-		 const char *prefix)
+		 struct strlist *allhdrs, const char *prefix)
 {
 	char *hdrline, *subject;
+
+	allhdrs->count = 0;
+	allhdrs->strs = NULL;
 
 	while((hdrline = gethdrline(infd))) {
 		/* Done with headers? Then add extra if wanted*/
@@ -100,6 +103,13 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 		/* Do we want info from hdrs? Get it before it's gone */
 		if(readhdrs)
 			getinfo(hdrline, readhdrs);
+
+		/* Snatch a copy of the header */
+		allhdrs->count++;
+		allhdrs->strs = myrealloc(allhdrs->strs,
+					sizeof(char *) * allhdrs->count + 1);
+		allhdrs->strs[allhdrs->count-1] = mystrdup(hdrline);
+		allhdrs->strs[allhdrs->count] = NULL;  /* XXX why, why, why? */
 
 		/* Add Subject: prefix if wanted */
 		if(prefix) {
