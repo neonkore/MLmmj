@@ -234,17 +234,11 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 void unsubscribe(int subreadfd, int subwritefd, const char *address)
 {
 	char *buf;
-	FILE *subfile;
 
 	lseek(subreadfd, 0, SEEK_SET);
 	lseek(subwritefd, 0, SEEK_SET);
 
-	if((subfile = fdopen(subreadfd, "r")) == NULL) {
-		log_error("could not fdopen subfilefd");
-		exit(EXIT_FAILURE);
-	}
-
-	while((buf = myfgetline(subfile))) {
+	while((buf = mygetline(subreadfd))) {
 		if(strncasecmp(buf, address, strlen(address)) != 0)
 			writen(subwritefd, buf, strlen(buf));
 		free(buf);

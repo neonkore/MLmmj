@@ -19,14 +19,8 @@
 int find_subscriber(int subfilefd, const char *address)
 {
 	char *buf;
-	FILE *subfile;
 
-	if((subfile = fdopen(subfilefd, "r")) == NULL) {
-		log_error("could not fdopen subfilefd");
-		exit(EXIT_FAILURE);
-	}
-	
-	while ((buf = myfgetline(subfile))) {
+	while ((buf = mygetline(subfilefd))) {
 		while (buf[0] && isspace(buf[strlen(buf)-1]))
 			buf[strlen(buf)-1] = '\0';
 		if (strcasecmp(buf, address) == 0) {
