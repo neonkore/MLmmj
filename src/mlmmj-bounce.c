@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include <time.h>
 #include <dirent.h>
+#include <sys/mman.h>
 
 #include "getlistaddr.h"
 #include "mlmmj.h"
@@ -24,12 +25,14 @@
 #include "log_error.h"
 #include "subscriberfuncs.h"
 #include "mygetline.h"
-
+#include "chomp.h"
+#include "prepstdreply.h"
 
 char *fetchindexes(const char *bouncefile)
 {
 	int fd;
-	char *indexstr, *tmp, *start, *cur, *next;
+	char *indexstr = NULL, *s, *start, *line, *cur, *colon, *next;
+	size_t len;
 	struct stat st;
 	
 	fd = open(bouncefile, O_RDONLY);
@@ -42,7 +45,7 @@ char *fetchindexes(const char *bouncefile)
 	if(fstat(fd, &st) < 0) {
 		log_error(LOG_ARGS, "Could not open bounceindexfile %s",
 					bouncefile);
-
+	}
 
 	start = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
 	if(start == MAP_FAILED) {
@@ -50,24 +53,38 @@ char *fetchindexes(const char *bouncefile)
 		return NULL;
 	}
 	
+	
 	for(next = cur = start; next < start + st.st_size; next++) {
+		if(*next == '\n') {
+			len = next - cur;
+			line = malloc(len + 1);
+			strncpy(line, cur, len);
+			line[len] = '\0';
+			cur = next + 1;
+		} else
+	 		continue;
 
+		colon = strchr(line, ':');
+		*colon = '\0';
+		s = indexstr;
+		indexstr = concatstr(4, s, "        ", line, "\n");
+		free(s);
+		free(line);
+	}
+		
+	munmap(start, st.st_size);
+	close(fd);
 
-	
-	
-
-	
-
+	return indexstr;
 }
 
-/* XXX this is not finished */
 void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 {
-	char *myaddr, *from, *randomstr, *a, *line, *textfilename;
-	char *queuefilename, *listaddr, *listfqdn, *listname;
-	char *fromstr, *tostr, *subjectstr, *tmp;
-	int textfd, queuefd;
-	ssize_t n;
+	char *myaddr, *from, *a, *fromstr, *subjectstr, *indexstr;
+	char *queuefilename, *listaddr, *listfqdn, *listname, *probefile;
+	char *maildata[] = { "*LSTADDR*", NULL, "*BOUNCENUMBERS*", NULL };
+	int fd;
+	time_t t;
 
 	myaddr = strdup(addr);
 	MY_ASSERT(myaddr);
@@ -78,7 +95,7 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 
-	from = concatstr(3, listname, "+bounces-", myaddr, "-probe@", listfqdn);
+	from = concatstr(5, listname, "+bounces-", myaddr, "-probe@", listfqdn);
 
 	a = strchr(myaddr, '=');
 	if (!a) {
@@ -89,34 +106,44 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 	}
 	*a = '@';
 
-	tmp = concatstr(2, listdir, "/queue/");
-	queuefd = openrandexclrw(tmp, "-probe", S_IRUSR|S_IWUSR);
-	free(tmp);
+	fromstr = concatstr(3, listname, "+owner@", listfqdn);
 
-	if(queuefd < 0) {
-		log_error(LOG_ARGS, "Could not create a queue file (%s)");
-		free(myaddr);
+	subjectstr = concatstr(3, "Mails to you from ", listaddr,
+					" have been bouncing");
+
+	indexstr = fetchindexes(addr);
+	if(indexstr == NULL) {
+		log_error(LOG_ARGS, "Could not fetch bounceindexes");
 		exit(EXIT_FAILURE);
 	}
 
-	/* XXX */
-	fromstr = concatstr(3, listname, "+owner@", listfqdn);
+	maildata[1] = listaddr;
+	maildata[3] = indexstr;
+	queuefilename = prepstdreply(listdir, "bounce-probe", fromstr,
+					myaddr, NULL, subjectstr, 2, maildata);
+	MY_ASSERT(queuefilename);
+	free(fromstr);
+	free(subjectstr);
+	free(listaddr);
+	free(listfqdn);
+	free(listname);
 
-	/* XXX Put subject in the text file? */
-	subjectstr = concatstr(2, "Mails to you from ", listaddr,
-					" have been bouncing");
+	probefile = concatstr(4, listdir, "/bounce/", addr, "-probe");
+	MY_ASSERT(probefile);
+	t = time(NULL);
+	a = malloc(32);
+	snprintf(a, 31, "%ld", (long int)t);
+	a[31] = '\0';
+	unlink(probefile);
+	fd = open(probefile, O_WRONLY|O_TRUNC|O_CREAT|O_NOFOLLOW,
+				S_IRUSR|S_IWUSR);
+	if(fd < 0)
+		log_error(LOG_ARGS, "Could not open %s", probefile);
+	else
+		if(writen(fd, a, strlen(a)) < 0)
+			log_error(LOG_ARGS, "Could not write time in probe");
 
-
-	while((line = mygetline(textfd))) {
-		if (strncmp(line, "*LISTADDR*", 10) == 0) {
-			free(line);
-			/*line = concatstr( XXX */
-		} else {
-			n = writen(queuefd, line, strlen(line));
-			MY_ASSERT(n >= 0);
-			free(line);
-		}
-	}
+	free(probefile);
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
@@ -129,12 +156,9 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 	exit(EXIT_FAILURE);
 }
 
-
 static void print_help(const char *prg)
 {
-	/* XXX how do we represent the fact that you have to specify either -n
-	 * or -p ? MMJ, please change to your preferred way. */
-	printf("Usage: %s -L /path/to/list -a john=doe.org (-n 12 | -p)\n"
+	printf("Usage: %s -L /path/to/list -a john=doe.org [-n num | -p]\n"
 		" -a: Address string that bounces\n"
 		" -h: This help\n"
 		" -L: Full path to list directory\n"
@@ -272,7 +296,7 @@ int main(int argc, char **argv)
 	if (!buf) exit(EXIT_FAILURE);
 
 	t = time(NULL);
-	snprintf(buf, len-26, "%s:%d # ", number, (int)t);
+	snprintf(buf, len-26, "%s:%ld # ", number, (long int)t);
 	ctime_r(&t, buf+strlen(buf));
 	writen(fd, buf, strlen(buf));
 	close(fd);
