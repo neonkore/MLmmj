@@ -69,7 +69,8 @@ struct mailhdr {
 enum subtype {
 	SUB_NORMAL,
 	SUB_DIGEST,
-	SUB_NOMAIL
+	SUB_NOMAIL,
+	SUB_FILE /* For single files (moderator, owner etc.) */
 };
 
 void print_version(const char *prg);
@@ -95,7 +96,7 @@ void print_version(const char *prg);
 #ifdef strdup
 #undef strdup
 #define strdup	Bad_programmer__no_biscuit
-#endif
+#endif  /* strdup */
 #endif  /* _MEMORY_C */
 
 #endif /* MLMMJ_GENERIC_INCLUDES */

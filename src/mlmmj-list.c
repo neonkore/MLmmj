@@ -39,28 +39,70 @@
 
 static void print_help(const char *prg)
 {
-        printf("Usage: %s -L /path/to/listdir [-d] [-h] [-n] [-N]\n"
-	       " -h: This help\n"
+        printf("Usage: %s -L /path/to/listdir [-c] [-d] [-h] [-m] [-n] "
+			"[-o] [-s] [-V]\n"
 	       " -L: Full path to list directory\n"
-	       " -d: Print for digesters list\n"
-	       " -n: Print for nomail version of list\n"
 	       " -c: Print subscriber count\n"
+	       " -d: Print for digesters list\n"
+	       " -h: This help\n"
+	       " -m: Print moderators for list\n"
+	       " -n: Print for nomail version of list\n"
+	       " -o: Print owner(s) of list\n"
+	       " -s: Print normal subscribers (default) \n"
 	       " -V: Print version\n", prg);
 	exit(EXIT_SUCCESS);
 }
 
-int main(int argc, char **argv)
+int dumpcount(const char *filename, int *count)
 {
-	int opt, fd, count = 0, docount = 0;
-	char *listdir = NULL, *fileiter = NULL, *start;
-	char *next, *cur, *subddir, *subdir;
-	DIR *dirp;
-	struct dirent *dp;
+	int fd;
+	char *start, *next, *cur;
 	struct stat st;
 	size_t len;
+	
+	if((fd = open(filename, O_RDONLY)) < 0)
+		return -1;
+
+	if(stat(filename, &st) < 0)
+		return -1;
+	
+	if(!S_ISREG(st.st_mode))
+		return -1;
+
+	start = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+	if(start == MAP_FAILED)
+		return -1;
+
+	for(next = cur = start; next < start + st.st_size; next++) {
+		if(*next == '\n' || next == start + st.st_size - 1) {
+			len = next - cur;
+			if(next == start + st.st_size - 1 && *next != '\n')
+				len++;
+			if(count)
+				(*count)++;
+			else {
+				writen(STDOUT_FILENO, cur, len);
+				writen(STDOUT_FILENO, "\n", 1);
+			}
+			cur = next + 1;
+		}
+	}
+	munmap(start, st.st_size);
+	close(fd);
+
+	return 0;
+}
+
+int main(int argc, char **argv)
+{
+	int opt, ret, count = 0, docount = 0;
+	char *listdir = NULL, *fileiter = NULL, *tmp;
+	char *subddir, *subdir, *subfile = NULL;
+	DIR *dirp;
+	struct dirent *dp;
 	enum subtype typesub = SUB_NORMAL;
 
-	while ((opt = getopt(argc, argv, "cdhnVL:")) != -1) {
+	while ((opt = getopt(argc, argv, "cdhmnosVL:")) != -1) {
 		switch(opt) {
 		case 'c':
 			docount = 1;
@@ -74,12 +116,24 @@ int main(int argc, char **argv)
 		case 'L':
 			listdir = optarg;
 			break;
+		case 'm':
+			typesub = SUB_FILE;
+			subfile = "/control/moderators";
+			break;
 		case 'n':
 			typesub = SUB_NOMAIL;
+			break;
+		case 'o':
+			typesub = SUB_FILE;
+			subfile = "/control/owner";
 			break;
 		case 'V':
 			print_version(argv[0]);
 			exit(EXIT_SUCCESS);
+		default:
+		case 's':
+			typesub = SUB_NORMAL;
+			break;
 		}
 	}
 
@@ -92,73 +146,57 @@ int main(int argc, char **argv)
 	switch(typesub) {
 		default:
 		case SUB_NORMAL:
-			subddir = mystrdup("/subscribers.d/");
+			subddir = "/subscribers.d/";
 			break;
 		case SUB_DIGEST:
-			subddir = mystrdup("/digesters.d/");
+			subddir = "/digesters.d/";
 			break;
 		case SUB_NOMAIL:
-			subddir = mystrdup("/nomailsubs.d/");
+			subddir = "/nomailsubs.d/";
+			break;
+		case SUB_FILE:
+			subddir = NULL;
 			break;
 	}
 	
-	subdir = concatstr(2, listdir, subddir);
-	myfree(subddir);
+	if(subddir)
+		subdir = concatstr(2, listdir, subddir);
+	else
+		subdir = NULL;
 
-	dirp = opendir(subdir);
-	if(dirp == NULL) {
-		fprintf(stderr, "Could not opendir(%s);\n", subdir);
-		exit(EXIT_FAILURE);
-	}
-	while((dp = readdir(dirp)) != NULL) {
-		if((strcmp(dp->d_name, "..") == 0) ||
-				(strcmp(dp->d_name, ".") == 0))
-			continue;
-			
-		fileiter = concatstr(2, subdir, dp->d_name);
+	if(subdir) {
+		dirp = opendir(subdir);
+		if(dirp == NULL) {
+			fprintf(stderr, "Could not opendir(%s);\n", subdir);
+			exit(EXIT_FAILURE);
+		}
+		while((dp = readdir(dirp)) != NULL) {
+			if((strcmp(dp->d_name, "..") == 0) ||
+					(strcmp(dp->d_name, ".") == 0))
+				continue;
 
-		if(stat(fileiter, &st) < 0) {
+			fileiter = concatstr(2, subdir, dp->d_name);
+
+			if(docount)
+				dumpcount(fileiter, &count);
+			else
+				ret = dumpcount(fileiter, NULL);
+
 			myfree(fileiter);
-			continue;
 		}
-		if(!S_ISREG(st.st_mode)) {
-			myfree(fileiter);
-			continue;
-		}
-		if((fd = open(fileiter, O_RDONLY)) < 0) {
-			myfree(fileiter);
-			continue;
-		}
-		start = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
-		if(start == MAP_FAILED) {
-			myfree(fileiter);
-			continue;
-		}
-		for(next = cur = start; next < start + st.st_size; next++) {
-			if(*next == '\n' || next == start + st.st_size - 1) {
-				len = next - cur;
-				if(next == start + st.st_size - 1 &&
-						*next != '\n')
-					len++;
-				if(docount)
-					count++;
-				else {
-					writen(STDOUT_FILENO, cur, len);
-					writen(STDOUT_FILENO, "\n", 1);
-				}
-				cur = next + 1;
-			}
-		}
-		munmap(start, st.st_size);
-		close(fd);
-		myfree(fileiter);
+		myfree(subdir);
+		closedir(dirp);
+	} else {
+		tmp = concatstr(2, listdir, subfile);
+		if(docount)
+			dumpcount(tmp, &count);
+		else
+			dumpcount(tmp, NULL);
 	}
 
 	if(docount)
 		printf("%d\n", count);
 
-	myfree(subdir);
-	closedir(dirp);
 
 	return 0;
 }
