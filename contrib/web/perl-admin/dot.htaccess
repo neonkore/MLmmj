@@ -1,7 +1,0 @@
-Options +ExecCGI
-DirectoryIndex index.cgi
-
-Require valid-user
-AuthType Basic
-AuthName "mlmmj web-interface"
-AuthUserFile /srv/www/htdocs/.htpasswd
