@@ -1,0 +1,25 @@
+Subject: Moderation für $listaddr$ gebraucht
+
+Hallo,
+
+Jemand hat eine Nachricht die Moderation benötigt an
+
+$listaddr$
+
+geschickt.
+
+Um die Nachricht zu akzeptieren schicken Sie eine Mail an:
+
+$moderateaddr$
+
+Ihr Mailprogramm benutzt diese Adresse warscheinlich von selber wenn Sie
+die Antworten funktion benutzen.  
+Wenn Sie die Machricht nicht akzeptieren möchten ignorieren sie einfach
+diese Mail.
+
+die folgenden Moderatoren haben dies Mail erhalten:
+
+$moderators$
+
+--- unterhalb dieser Linie sehen Sie die ersten 100 Zeilen der Nachricht
+die Moderation erfordert. --->

@@ -1,0 +1,26 @@
+Subject: Bestätigen Sie bitte das eintragen auf die Digest Version der Liste $listaddr$
+
+Hi, dies ist das mlmmj Programm das die Mailingliste
+
+$listaddr$
+
+verwaltet.
+
+Um zu bestätigen das Sie die Adresse 
+
+$subaddr$
+
+auf die Digest Version der Mailingliste eintragen wollen senden
+Sie bitte eine Bestätigung an folgende Adresse:
+
+$confaddr$
+
+Diese Bestätigung erfüllt zwei zwecke. Wenn Sie diese Mail erhalten haben
+kann die Liste Nachrichten an Sie zustellen und zweitens wird sichergestellt
+das niemand diese Adresse auf eine Liste einträgt ohne das Sie dies möchten.
+
+Ihr Mail-Programm sollte wenn Sie die Antworten Funktion benutzen automatisch
+eine Mail an die Bestätigungsadresse schicken.
+
+Das Subject und der Text spielen bei dieser Mail keine Rolle.
+

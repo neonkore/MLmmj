@@ -1,0 +1,26 @@
+Subject: $listaddr$ ist eine geschlossene Liste.
+
+Hi, dies ist das mlmmj Programm das die Mailingliste
+
+$listaddr$
+
+verwaltet.
+
+Sie haben versuchen von der Adresse:
+
+$posteraddr$
+
+eine Nachricht an die Liste zu schreiben. 
+Diese Adresse ist aber nicht auf der Liste eingetragen.  
+
+Diese Liste ist eine geschlossene Liste und erlaubt nur
+Nachrichten von Adressen die auch eingetragen sind. 
+
+Wenn Sie glauben das Sie eingetragen sind überprüfen Sie bitte
+die Willkommen Nachricht oder überprüfen Sie die Header irgendeiner
+Mail an die Liste.
+
+Um auch von einer anderen Adresse als von der mit der Sie eingetragen
+sind Nachrichten an die Liste schicken zu können tragen Sie sich bitte
+auf die Nomail Version dieser Liste ein.
+

@@ -1,0 +1,19 @@
+Subject: Nachricht an $listaddr$ abgelehnt
+
+Hi, dies ist das mlmmj Programm das die Mailingliste
+
+$listaddr$
+
+verwaltet.
+
+Es tut mir leid aber Ihre Nachricht konnte nicht ant die Liste zugestellt
+werden.
+
+Um auf die liste zu posten muss die Adresse der Liste entweder im 
+To: oder im Cc: Feld eingetragen sein.
+
+Wenn Sie ein Admin einer mlmmj liste sind sollten Sie wissen das dieses
+Verhalten in dem control file 'tocc' verändert werden kann.
+
+Danke.
+

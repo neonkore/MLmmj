@@ -1,0 +1,25 @@
+Subject: Bestätigen Sie bitte das austragen aus der Nomail Version der Liste $listaddr$
+
+Hi, dies ist das mlmmj Programm das die Mailingliste
+
+$listaddr$
+
+verwaltet.
+
+Um zu bestätigen das Sie die Adresse
+
+$subaddr$
+
+aus der Nomail Version der Liste austragen wollen senden Sie bitte eine
+Bestätigung an folgende Adresse:
+
+$confaddr$
+
+Ihr Mail-Programm sollte wenn Sie die Antworten Funktion benutzen automatisch
+eine Mail an die Bestätigungsadresse schicken.
+
+Wenn Sie nicht auf der Liste eingetragen sind werden Sie keine Antwort
+erhalten. Um zu sehen mit welcher Adresse Sie auf der Liste eingetragen
+sind überprüfen Sie bitte die Willkommen Nachricht oder überprüfen Sie
+die Header irgendeiner Nachricht an die Liste.
+
