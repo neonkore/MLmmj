@@ -1,7 +1,11 @@
+ o Discard mails that doesn't have one and only one From: address. Discard
+   here means moving them to queue/discard
+ o Make sure we retrieve info from all headers
  o Fixed error handling in mlmmj-send if we can not open subscribers.d/
  o Make mlmmj-send a lot more robust with SMTP and handle
    bounces from the relayhost.
  o Fix BUG in mlmmj-bounce still using listdir/subscribers
+ o Handle subconf/unsubconf bounces
  o Begin work on mlmmj-maintd--the mlmmj maintenance daemon
  o Make help consistent and up to date with all options
  o Make mlmmj-send print the replies from the mailserver
