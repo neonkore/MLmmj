@@ -250,38 +250,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		mailname = concatstr(3, listdir, "/queue/", dp->d_name);
 
 		fromname = concatstr(2, mailname, ".mailfrom");
-		if(stat(fromname, &st) < 0) {
-			if(errno == ENOENT) {
-				discardedname = concatstr(4,
-						listdir, "/queue/discarded/",
-						dp->d_name, ".by-maintd");
-				discarded = discardmail(mailname,
-							discardedname,
-							3600);
-				myfree(discardedname);
-			} else {
-				log_error(LOG_ARGS, "Could not stat(%s)",
-						dp->d_name);
-			}
-		}
-		
-
 		toname = concatstr(2, mailname, ".reciptto");
-		if(!discarded && stat(toname, &st) < 0) {
-			if(errno == ENOENT) {
-				discardedname = concatstr(4,
-						listdir, "/queue/discarded/",
-						dp->d_name, ".by-maintd");
-				discarded = discardmail(mailname,
-							discardedname,
-							3600);
-				myfree(discardedname);
-			} else {
-				log_error(LOG_ARGS, "Could not stat(%s)",
-						dp->d_name);
-			}
-		}
-
 		reptoname = concatstr(2, mailname, ".reply-to");
 
 		fromfd = open(fromname, O_RDONLY);
