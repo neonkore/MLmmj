@@ -42,13 +42,11 @@
 int send_digest(const char *listdir, int firstindex, int lastindex,
 		const char *addr, const char *mlmmjsend)
 {
-	int i;
-	int fd, archivefd;
+	int i, fd, archivefd, status, hdrfd;
 	char buf[45];
-	char *tmp, *queuename = NULL, *archivename;
+	char *tmp, *queuename = NULL, *archivename, *fromstr;
 	char *boundary, *listaddr, *listname, *listfqdn;
 	pid_t childpid, pid;
-	int status;
 
 	if (addr) {
 		errno = 0;
@@ -75,6 +73,10 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 		return -1;
 	}
 
+	tmp = concatstr(2, listdir, "/control/customheaders");
+	hdrfd = open(tmp, O_RDONLY);
+	myfree(tmp);
+
 	boundary = random_str();
 
 	listaddr = getlistaddr(listdir);
@@ -87,20 +89,35 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	} else {
 		snprintf(buf, sizeof(buf), " (%d-%d)", firstindex, lastindex);
 	}
-	tmp = concatstr(10,	"From: ", listname, "+help@", listfqdn,
-				"\nMIME-Version: 1.0"
-				"\nContent-Type: multipart/" DIGESTMIMETYPE "; "
-					"boundary=", boundary,
-				"\nSubject: Digest of ", listname, buf,
-				"\n\n");
+
+	fromstr = concatstr(4, "From: ", listname, "+help@", listfqdn);
+	fromstr[6] = RECIPDELIM;
+	tmp = concatstr(6, "\nMIME-Version: 1.0"
+			    "\nContent-Type: multipart/" DIGESTMIMETYPE "; "
+			    "boundary=", boundary,
+			    "\nSubject: Digest of ", listname, buf, "\n\n");
 	myfree(listfqdn);
 
-	if (writen(fd, tmp, strlen(tmp)) == -1) {
+	if (writen(fd, fromstr, strlen(fromstr)) < -1)
+		goto errdighdrs;
+
+	myfree(fromstr);
+	
+	if(dumpfd2fd(hdrfd, fd) < 0) {
+		close(hdrfd);
+		goto errdighdrs;
+	}
+
+	close(hdrfd);
+
+	if (writen(fd, tmp, strlen(tmp)) < -1) {
+errdighdrs:
 		log_error(LOG_ARGS, "Could not write digest headers to '%s'",
 				queuename);
 		close(fd);
 		unlink(queuename);
 		myfree(boundary);
+		myfree(fromstr);
 		myfree(tmp);
 		myfree(queuename);
 		myfree(listname);
