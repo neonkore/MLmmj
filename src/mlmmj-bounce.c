@@ -308,6 +308,8 @@ int main(int argc, char **argv)
 				unlink(mailname);
 			exit(EXIT_SUCCESS);
 		}
+		a = strrchr(address, '@');
+		*a = '=';
 	}
 			
 	if(number != NULL && probe != 0) {
