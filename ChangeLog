@@ -1,3 +1,8 @@
+1.0.0-RC3
+ o Add web-interface (PHP). Thank you Christoph Thiel.
+ o Have the random numbers be somewhat longer everywhere and not just somewhere
+ o Move free() to where it belongs
+ o Fix printing of cron entry in mlmmj-make-ml.sh
 1.0.0-RC2
  o Do not allow mails from <> going to the list
  o Fix mailing to +owner again by adding missing 'break;' to switch in

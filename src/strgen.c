@@ -56,7 +56,7 @@ char *random_plus_addr(const char *addr)
 	atsign = index(tmpstr, '@');
 	*atsign = '=';
 
-	snprintf(dest, len, "%d-%s", random_int(), tmpstr);
+	snprintf(dest, len, "%X%X-%s", random_int(), random_int(), tmpstr);
 
 	myfree(tmpstr);
 	

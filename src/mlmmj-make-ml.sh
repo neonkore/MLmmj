@@ -132,7 +132,7 @@ fi
 echo
 echo "If you're not starting mlmmj-maintd in daemon mode,"
 echo "don't forget to add this to your crontab:"
-echo $CRONENTRY
+echo "$CRONENTRY"
 
 echo
 echo " ** FINAL NOTES **
