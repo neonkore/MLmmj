@@ -1,3 +1,4 @@
+ o Add Message-Id: and Date: headers to mail from mlmmj
  o Make log_oper() varargs capable, thanks Rob Holland
 1.1.1-RC1
  o Never discard anything from LISTDIR/queue/, let the admin be able to judge

@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 {
 	char *infilename = NULL, *listdir = NULL;
 	char *randomstr = random_str();
-	char *mlmmjprocess, *bindir, *logstr;
+	char *mlmmjprocess, *bindir;
 	int fd, opt, noprocess = 0, nofork = 0;
 	struct stat st;
 	uid_t uid;
@@ -138,6 +138,8 @@ int main(int argc, char **argv)
 		log_error(LOG_ARGS, "Could not recieve mail");
 		exit(EXIT_FAILURE);
 	}
+
+	log_oper(listdir, OPLOGFNAME, "mlmmj-recieve got %s", infilename);
 
 	fsync(fd);
 	close(fd);

@@ -208,8 +208,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 	DIR *queuedir;
 	struct dirent *dp;
 	char *mailname, *fromname, *toname, *reptoname, *from, *to, *repto;
-	char *discardedname = NULL, *ch;
-	char *dirname = concatstr(2, listdir, "/queue/");
+	char *ch, *dirname = concatstr(2, listdir, "/queue/");
 	pid_t childpid, pid;
 	struct stat st;
 	int fromfd, tofd, fd, discarded = 0, status;

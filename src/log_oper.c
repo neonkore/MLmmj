@@ -54,14 +54,9 @@ int log_oper(const char *prefix, const char *basename, const char *fmt, ...)
 		log_error(LOG_ARGS, "Could not stat logfile %s", logfilename);
 		myfree(logfilename);
 		return -1;
-	} else if((st.st_mode & S_IFMT) == S_IFLNK) {
-		log_error(LOG_ARGS, "%s is a symbolic link, not opening",
-					logfilename);
-		myfree(logfilename);
-		return -1;
 	}
 	
-	if(st.st_size > (off_t)524288) {
+	if(st.st_size > (off_t)OPLOGSIZE) {
 		tmp = concatstr(2, logfilename, ".rotated");
 		if(rename(logfilename, tmp) < 0) {
 			log_error(LOG_ARGS, "Could not rename %s,%s",
