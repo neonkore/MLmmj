@@ -228,15 +228,24 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		childpid = fork();
 
 		if(childpid < 0) {
+			free(mailname);
+			free(from);
+			free(to);
+			free(repto);
 			log_error(LOG_ARGS, "Could not fork");
 			continue;
 		}
 
 		if(childpid > 0) {
+			free(mailname);
+			free(from);
+			free(to);
+			free(repto);
 			do /* Parent waits for the child */
 			      pid = waitpid(childpid, &status, 0);
 			while(pid == -1 && errno == EINTR);
 		} else {
+			closedir(queuedir);
 			if(repto) {
 				execlp(mlmmjsend, mlmmjsend,
 						"-l", "1",
@@ -254,10 +263,6 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 						"-a", 0);
 			}
 		}
-		free(mailname);
-		free(from);
-		free(to);
-		free(repto);
 	}
 
 	closedir(queuedir);
@@ -340,15 +345,20 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 		childpid = fork();
 
 		if(childpid < 0) {
+			free(archivefilename);
+			free(subnewname);
 			log_error(LOG_ARGS, "Could not fork");
 			continue;
 		}
 
 		if(childpid > 0) {
+			free(archivefilename);
+			free(subnewname);
 			do /* Parent waits for the child */
 			      pid = waitpid(childpid, &status, 0);
 			while(pid == -1 && errno == EINTR);
 		} else {
+			closedir(queuedir);
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "3",
 					"-L", listdir,
@@ -357,8 +367,6 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 					"-a",
 					"-D", 0);
 		}
-		free(archivefilename);
-		free(subnewname);
 	}
 
 	closedir(queuedir);
@@ -602,6 +610,7 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		if(childpid > 0) {
 			WRITEMAINTLOG6(5, "UNSUB: ", address, ". Bounced since",
 					bouncedata, ".\n");
+			free(address);
 			free(bouncedata);
 			do /* Parent waits for the child */
 				pid = waitpid(childpid, &status, 0);
@@ -615,7 +624,6 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 						mlmmjunsub);
 			return 1;
 		}
-		free(address);
 	}
 	closedir(bouncedir);
 

@@ -554,7 +554,7 @@ int main(int argc, char **argv)
 						S_IRUSR|S_IWUSR);
 			free(tmpstr);
 			if(tmpfd >= 0) {
-				writen(tmpfd, to_addr, strlen(to_addr));
+				writen(tmpfd, bounceaddr, strlen(to_addr));
 				fsync(tmpfd);
 			}
 			close(tmpfd);
@@ -563,7 +563,7 @@ int main(int argc, char **argv)
 						S_IRUSR|S_IWUSR);
 			free(tmpstr);
 			if(tmpfd >= 0) {
-				writen(tmpfd, bounceaddr, strlen(bounceaddr));
+				writen(tmpfd, to_addr, strlen(bounceaddr));
 				fsync(tmpfd);
 			}
 			close(tmpfd);
