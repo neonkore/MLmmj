@@ -43,8 +43,8 @@ static void print_help(const char *prg)
 	       " -h: This help\n"
 	       " -L: Full path to list directory\n"
 	       " -d: Print for digesters list\n"
-	       " -N: Print for nomail version of list\n"
-	       " -n: Print subscriber count\n"
+	       " -n: Print for nomail version of list\n"
+	       " -c: Print subscriber count\n"
 	       " -V: Print version\n", prg);
 	exit(EXIT_SUCCESS);
 }
@@ -60,8 +60,11 @@ int main(int argc, char **argv)
 	size_t len;
 	enum subtype typesub = SUB_NORMAL;
 
-	while ((opt = getopt(argc, argv, "dhnNVL:")) != -1) {
+	while ((opt = getopt(argc, argv, "cdhnVL:")) != -1) {
 		switch(opt) {
+		case 'c':
+			docount = 1;
+			break;
 		case 'd':
 			typesub = SUB_DIGEST;
 			break;
@@ -72,9 +75,6 @@ int main(int argc, char **argv)
 			listdir = optarg;
 			break;
 		case 'n':
-			docount = 1;
-			break;
-		case 'N':
 			typesub = SUB_NOMAIL;
 			break;
 		case 'V':
