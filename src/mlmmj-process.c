@@ -28,6 +28,9 @@
 #include "mygetline.h"
 #include "statctrl.h"
 #include "ctrlvalue.h"
+#include "getlistaddr.h"
+#include "prepstdreply.h"
+#include "subscriberfuncs.h"
 
 void newmoderated(const char *listdir, const char *mailfilename,
 		  const char *mlmmjsend)
@@ -164,11 +167,15 @@ int main(int argc, char **argv)
 {
 	int i, fd, opt, noprocess = 0, moderated = 0;
 	int hdrfd, footfd, rawmailfd, donemailfd;
+	int subonlypost = 0, addrtocc = 1, intocc = 0;
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
 	char *randomstr = random_str(), *mqueuename;
 	char *mlmmjsend, *mlmmjsub, *mlmmjunsub, *mlmmjbounce;
-	char *bindir, *subjectprefix, *discardname;
+	char *bindir, *subjectprefix, *discardname, *listaddr;
+	char *listfqdn, *listname, *fromaddr, *fromstr, *subject;
+	char *queuefilename;
+	char *maildata[4];
 	struct email_container fromemails = { 0, NULL };
 	struct email_container toemails = { 0, NULL };
 	struct email_container ccemails = { 0, NULL };
@@ -290,8 +297,8 @@ int main(int argc, char **argv)
 	}
 
 	if(readhdrs[2].token) { /* Cc: addresses */
-		for(i = 0; i < readhdrs[1].valuecount; i++) {
-			find_email_adr(readhdrs[1].values[i], &ccemails);
+		for(i = 0; i < readhdrs[2].valuecount; i++) {
+			find_email_adr(readhdrs[2].values[i], &ccemails);
 		}
 	}
 	if(strchr(toemails.emaillist[0], RECIPDELIM)) {
@@ -303,11 +310,77 @@ int main(int argc, char **argv)
 			    donemailname);
 		return EXIT_SUCCESS;
 	}
-#if 0
-	for(i = 0; i < toemails.emailcount; i++) {
-		if(strncmp(listaddr, toemails.emaillist[i],
-					strlen(toemails.emaillist[i]))
-#endif
+
+	listaddr = getlistaddr(listdir);
+
+	addrtocc = !(statctrl(listdir, "tocc"));
+	if(addrtocc) {
+		for(i = 0; i < toemails.emailcount; i++)
+			if(strcmp(listaddr, toemails.emaillist[i]) == NULL)
+				intocc = 1;
+		for(i = 0; i < ccemails.emailcount; i++)
+			if(strcmp(listaddr, ccemails.emaillist[i]) == NULL)
+				intocc = 1;
+	}
+
+	if(addrtocc && !intocc) {
+		listname = genlistname(listaddr);
+		listfqdn = genlistfqdn(listaddr);
+		maildata[0] = "*LSTADDR*";
+		maildata[1] = listaddr;
+		fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
+		fromstr = concatstr(3, listname, "+owner@", listfqdn);
+		subject = concatstr(3, "Post to ", listaddr, " denied.");
+		queuefilename = prepstdreply(listdir, "notintocc", fromstr,
+					     fromemails.emaillist[0], NULL,
+					     subject, 1, maildata);
+		free(listaddr);
+		free(listname);
+		free(listfqdn);
+		free(fromstr);
+		free(subject);
+		execlp(mlmmjsend, mlmmjsend,
+				"-l", "1",
+				"-T", fromemails.emaillist[0],
+				"-F", fromaddr,
+				"-m", queuefilename, 0);
+
+		log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
+		exit(EXIT_FAILURE);
+	}
+
+	subonlypost = statctrl(listdir, "subonlypost");
+	if(subonlypost) {
+		if(is_subbed(listdir, fromemails.emaillist[0]) != 0) {
+			listname = genlistname(listaddr);
+			listfqdn = genlistfqdn(listaddr);
+			maildata[0] = "*LSTADDR*";
+			maildata[1] = listaddr;
+			maildata[2] = "*POSTERADDR*";
+			maildata[3] = fromemails.emaillist[0];
+			fromaddr = concatstr(3, listname, "+bounces-help@",
+					listfqdn);
+			fromstr = concatstr(3, listname, "+owner@", listfqdn);
+			subject = concatstr(3, "Post to ", listaddr,
+						" denied");
+			queuefilename = prepstdreply(listdir, "subonlypost",
+					fromstr, fromemails.emaillist[0], NULL,
+					     subject, 2, maildata);
+			free(listaddr);
+			free(listname);
+			free(listfqdn);
+			free(fromstr);
+			free(subject);
+			execlp(mlmmjsend, mlmmjsend,
+					"-l", "1",
+					"-T", fromemails.emaillist[0],
+					"-F", fromaddr,
+					"-m", queuefilename, 0);
+
+			log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
+			exit(EXIT_FAILURE);
+		}
+	}
 
 	moderated = statctrl(listdir, "moderated");
 
