@@ -1,7 +1,8 @@
+Subject: Post to $listaddr$ denied
+
 Hi, this is the mlmmj program managing the mailinglist
 
-*LSTADDR*
-
+$listaddr$
 
 I'm sorry to inform you that Your mail could not be delivered to the
 list. Your mail was rejected because it matched a rule set up by the

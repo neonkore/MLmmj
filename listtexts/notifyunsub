@@ -1,9 +1,10 @@
+Subject: $oldsub$ unsubscribed from $listaddr$
+
 Hi, this is the mlmmj program managing the mailinglist
 
-*LSTADDR*
-
+$listaddr$
 
 The following address has just unsubscribed from the mailinglist:
 
-*SUBADDR*
+$oldaddr$
 

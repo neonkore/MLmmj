@@ -1,20 +1,22 @@
+Subject: Commands available for $listaddr$
+
 Hello,
 
 There exists the following options:
 
 To unsubscribe send a mail to
 
-*UNSUBADDR*
+$unsubaddr$
 
+To subscribe to the digest of this list send a mail to
 
-To subscribe send a mail to
+$digestsubaddr$
 
-*SUBADDR*
+For retrieval of message number 42 in the archive send a mail to
 
+$get42$
 
-For this help send a mail to
+To send a mail to the list owner, send a mail to:
 
-*HLPADDR*
+$owner$
 
-
-Mails can have any subject and any body.

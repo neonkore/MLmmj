@@ -1,7 +1,8 @@
+Subject: Messages from $listaddr$ to you have been bouncing
+
 Hi, this is the mlmmj program managing the mailinglist
 
-*LSTADDR*
-
+$listaddr$
 
 Some messages to you could not be delivered. If you're getting this
 message it means things are back to normal, and it's merely for your
@@ -10,5 +11,5 @@ information.
 Here is the index(es) of the messages that bounced in the attempt of
 delivering them to you:
 
-*BOUNCENUMBERS*
+$bouncenumbers$
 

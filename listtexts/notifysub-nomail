@@ -1,10 +1,11 @@
+Subject: $newsub$ subscribed to nomail version of $listaddr$
+
 Hi, this is the mlmmj program managing the mailinglist
 
-*LSTADDR*
-
+$listaddr$
 
 The following address has just subscribed to the nomail version of the
 mailinglist:
 
-*SUBADDR*
+$newsub$
 

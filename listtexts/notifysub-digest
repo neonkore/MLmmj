@@ -1,10 +1,11 @@
+Subject: $newsub$ subscribed to digest of $listaddr$
+
 Hi, this is the mlmmj program managing the mailinglist
 
-*LSTADDR*
-
+$listaddr$
 
 The following address has just subscribed to the digest of the
 mailinglist:
 
-*SUBADDR*
+$newsub$
 
