@@ -34,7 +34,7 @@
 
 void init_sockfd(int *sockfd, const char *relayhost, unsigned short port)
 {
-	int len;
+	int len, on;
 	struct sockaddr_in addr;
 
 	if (getenv("MLMMJ_TESTING")) {
@@ -56,4 +56,9 @@ void init_sockfd(int *sockfd, const char *relayhost, unsigned short port)
 				    "exiting ... ", relayhost);
 		exit(EXIT_FAILURE);
 	}
+
+	on = 1;
+	if(setsockopt(*sockfd, SOL_SOCKET, SO_KEEPALIVE, (void *)&on,
+				sizeof(on) < 0))
+		log_error(LOG_ARGS, "Could not set SO_KEEPALIVE");
 }
