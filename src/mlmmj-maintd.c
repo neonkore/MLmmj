@@ -70,7 +70,7 @@ static int mydaemon(const char *rootdir)
 		return -1;
 	}
 
-	if(signal(SIGHUP, SIG_IGN) == SIG_IGN) {
+	if(signal(SIGHUP, SIG_IGN) == SIG_ERR) {
 		log_error(LOG_ARGS, "Could not signal(SIGHUP, SIG_IGN)");
 		return -1;
 	}
