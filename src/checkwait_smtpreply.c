@@ -41,8 +41,9 @@ char *checkwait_smtpreply(int sockfd, int replytype)
 		printf("Timed out in waiting for reply--will try later\n");
 		return (char *)-1;
 	}
-
+#if 0
 	fprintf(stderr, "%s", smtpreply);
+#endif
 
 	/* This case might seem like (and is ATM) total overkill. But it's
 	 * easy for us to extend it later on if needed.
