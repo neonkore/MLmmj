@@ -119,7 +119,7 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 		/* Snatch a copy of the header */
 		allhdrs->count++;
 		allhdrs->strs = myrealloc(allhdrs->strs,
-					sizeof(char *) * allhdrs->count + 1);
+					sizeof(char *) * (allhdrs->count + 1));
 		allhdrs->strs[allhdrs->count-1] = mystrdup(hdrline);
 		allhdrs->strs[allhdrs->count] = NULL;  /* XXX why, why, why? */
 
