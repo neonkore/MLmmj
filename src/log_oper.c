@@ -57,7 +57,7 @@ int log_oper(const char *prefix, const char *basename, const char *str)
 		return -1;
 	}
 	
-	if(st.st_size > (size_t)524288) {
+	if(st.st_size > (off_t)524288) {
 		tmp = concatstr(2, logfilename, ".rotated");
 		if(rename(logfilename, tmp) < 0) {
 			log_error(LOG_ARGS, "Could not rename %s,%s",
