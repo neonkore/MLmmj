@@ -577,12 +577,8 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 			continue;
 
 		a = strrchr(dp->d_name, '.');
-		if(a && (strcmp(a, ".lastmsg") == 0)) {
-			myfree(a);
+		if(a && (strcmp(a, ".lastmsg") == 0))
 			continue;
-		}
-
-		myfree(a);
 		
 		probefile = concatstr(2, dp->d_name, "-probe");
 		
