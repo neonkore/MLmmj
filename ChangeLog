@@ -1,4 +1,5 @@
 1.1.0
+ o Add German listtexts (Hendrik Norman Vogelsang)
  o Add hooks for installing listtexts into $(pkgdatadir) (Drake Wyrm)
  o Add mlmmj-list manual page
  o Make mlmmj-list be capable of listing owners, moderators too
