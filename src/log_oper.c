@@ -42,7 +42,7 @@
 
 int log_oper(const char *prefix, const char *basename, const char *fmt, ...)
 {
-	int fd;
+	int fd, statres;
 	char ct[26], *logstr, *logfilename, *tmp, log_msg[256];
 	struct stat st;
 	time_t t;
@@ -50,13 +50,14 @@ int log_oper(const char *prefix, const char *basename, const char *fmt, ...)
 	size_t i;
 
 	logfilename = concatstr(2, prefix, basename);
-	if(lstat(logfilename, &st) < 0 && errno != ENOENT) {
+	statres = lstat(logfilename, &st);
+	if(statres < 0 && errno != ENOENT) {
 		log_error(LOG_ARGS, "Could not stat logfile %s", logfilename);
 		myfree(logfilename);
 		return -1;
 	}
 	
-	if(st.st_size > (off_t)OPLOGSIZE) {
+	if(statres >= 0 && st.st_size > (off_t)OPLOGSIZE) {
 		tmp = concatstr(2, logfilename, ".rotated");
 		if(rename(logfilename, tmp) < 0) {
 			log_error(LOG_ARGS, "Could not rename %s,%s",
