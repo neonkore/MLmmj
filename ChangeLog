@@ -1,4 +1,5 @@
 1.0.0
+ o Add parenthesis around realloc call to make sure we alloc correctly
  o Make header matching case insensitive
  o Fix dumping of addresses to requeue
  o Make the time an address can bounce before unsubscribed configurable with
