@@ -259,6 +259,13 @@ static enum action do_access(struct strlist *rule_strs, struct strlist *hdrs)
 			new_rule->not = 0;
 		}
 
+		/* remove unanchored ".*" from beginning of regexp to stop the
+		 * regexp matching to loop so long time it seems like it's
+		 * hanging */
+		
+		if (strlen(rule_ptr) > 2 && !strncmp(rule_ptr, ".*", 2))
+			memmove(rule_ptr, rule_ptr + 2, strlen(rule_ptr) - 1);
+
 		if ((err = regcomp(&new_rule->regexp, rule_ptr,
 				REG_EXTENDED | REG_NOSUB | REG_ICASE))) {
 			regerror(err, &new_rule->regexp, errbuf,
