@@ -1,0 +1,21 @@
+Subject: Bekræft afmelding af "ingen-mail" versionen af $listaddr$
+
+Hej, dette er mlmmj programmet der bestyrer postlisten
+
+$listaddr$
+
+For at bekræfte at addressen
+
+$subaddr$
+
+skal afmeldes "ingen-mail" versionen af postlisten, send et svar til
+
+$confaddr$
+
+Dit mailprogram vil sandsynligvis automatisk besvare til denne
+bekræftelses addresse, når du trykker på "Besvar" knappen
+
+Hvis du ikke er tilmeldt listen, modtager du ikke noget svar. Du kan
+se i "Envelope" headeren i en mail til postlisten, hvilken addresse
+du er tilmeldt med.
+

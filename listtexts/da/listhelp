@@ -1,0 +1,32 @@
+Subject: Disse kommandoer er tilgængelige for $listaddr$
+
+Hej,
+
+Der eksisterer følgende muligheder:
+
+For afmelding, send en mail til:
+
+$listunsubaddr$
+
+For tilmelding til resume af denne liste, send en mail til:
+
+$digestsubaddr$
+
+For tilmelding til "ingen-mail" versionen af denne liste,
+send en mail til:
+
+$nomailsubaddr$
+
+Ingen-mail versionen af denne postliste betyder at du bliver anset 
+som tilmeldt, men du får ingen mail fra listen. Nyttigt, hvis det 
+er nødvendigt at sende beskeder til en "kun-for-tilmeldte" postliste, 
+fra flere addresser.
+
+For at hente besked nummer N i arkivet, send en mail til
+
+$listgetN$
+
+For at sende en mail til postlistens ejer, send til:
+
+$listowner$
+

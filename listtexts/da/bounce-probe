@@ -1,0 +1,15 @@
+Subject: Beskeder fra $listaddr$ til dig er blevet returneret.
+
+Hej, dette er mlmmj programmet der bestyrer postlisten
+
+$listaddr$
+
+Nogle beskeder til dig kunne ikke leveres. Hvis du får denne besked,
+er det fordi tingene er tilbage til normal, og dette er kun for din
+egen opmærksomheds skyld.
+
+Her er index numrene på de beskeder som kom retur, i forsøget
+på at aflevere dem til dig.
+
+$bouncenumbers$
+

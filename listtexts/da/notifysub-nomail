@@ -1,0 +1,10 @@
+Subject: $newsub$ subscribed to nomail version of $listaddr$
+
+Hej, dette er mlmmj programmet der bestyrer postlisten
+
+$listaddr$
+
+Følgende har netop tilmeldt sig "ingen-mail" versionen af postlisten:
+
+$newsub$
+

@@ -1,0 +1,10 @@
+Subject: $newsub$ tilmeldte sig postlisten $listaddr$
+
+Hej, dette er mlmmj programmet der bestyrer postlisten
+
+$listaddr$
+
+Følgende addresse har netop tilmeldt sig postlisten:
+
+$newsub$
+
