@@ -22,14 +22,116 @@
 #include "wrappers.h"
 #include "log_error.h"
 #include "subscriberfuncs.h"
+#include "mygetline.h"
+
+
+/* XXX this is not finished */
+void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
+{
+	char *myaddr, *from, *randomstr, *a, *line;
+	char *textfilename, *queuefilename;
+	int textfd, queuefd;
+	ssize_t n;
+
+	myaddr = strdup(addr);
+	MY_ASSERT(myaddr);
+
+	from = concatstr(3, "LISTNAME+bounces-", myaddr, "-probe@DOMAIN.TLD");
+
+	a = strchr(myaddr, '=');
+	if (!a) {
+		free(myaddr);
+		free(from);
+		log_error(LOG_ARGS, "do_probe(): malformed address");
+		exit(EXIT_FAILURE);
+	}
+	*a = '@';
+
+	textfilename = concatstr(2, listdir, "/text/probe");
+	if((textfd = open(textfilename, O_RDONLY)) < 0) {
+		log_error(LOG_ARGS, "Could not open '%s'", textfilename);
+		free(textfilename);
+		free(myaddr);
+		exit(EXIT_FAILURE);
+	}
+	free(textfilename);
+
+	queuefilename = NULL;
+	do {
+		randomstr = random_str();
+		free(queuefilename);  /* It is OK to free() NULL, as this
+					 will in the first iteration. */
+		queuefilename = concatstr(3, listdir, "/queue/probe-",
+					randomstr);
+		free(randomstr);
+		printf("%s\n", queuefilename);
+
+		queuefd = open(queuefilename, O_RDWR|O_CREAT|O_EXCL,
+				S_IRUSR|S_IWUSR);
+
+	} while ((queuefd < 0) && (errno == EEXIST));
+
+	if(queuefd < 0) {
+		log_error(LOG_ARGS, "Could not create a queue file (%s)",
+				queuefilename);
+		free(myaddr);
+		exit(EXIT_FAILURE);
+	}
+
+	/* XXX */
+	line = concatstr(1, "From: LISTNAME+owner-probe@DOMAIN.TLD\n");
+	n = writen(queuefd, line, strlen(line));
+	MY_ASSERT(n >= 0);
+	free(line);
+
+	line = concatstr(3, "To: ", myaddr, "\n");
+	n = writen(queuefd, line, strlen(line));
+	MY_ASSERT(n >= 0);
+	free(line);
+
+	/* XXX Put subject in the text file? */
+	line = concatstr(1, "Subject: Mails to you from LISTADDR have "
+			"been bouncing\n");
+	n = writen(queuefd, line, strlen(line));
+	MY_ASSERT(n >= 0);
+	free(line);
+
+	n = writen(queuefd, "\n", 1);
+	MY_ASSERT(n >= 0);
+
+	while((line = mygetline(textfd))) {
+		if (strncmp(line, "*LISTADDR*", 10) == 0) {
+			free(line);
+			/*line = concatstr( XXX */
+		} else {
+			n = writen(queuefd, line, strlen(line));
+			MY_ASSERT(n >= 0);
+			free(line);
+		}
+	}
+
+	execlp(mlmmjsend, mlmmjsend,
+				"-l", "1",
+				"-T", myaddr,
+				"-F", from,
+				"-m", queuefilename, 0);
+
+	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
+
+	exit(EXIT_FAILURE);
+}
+
 
 static void print_help(const char *prg)
 {
-	printf("Usage: %s -L /path/to/list -a john=doe.org -n 12\n"
+	/* XXX how do we represent the fact that you have to specify either -n
+	 * or -p ? MMJ, please change to your preferred way. */
+	printf("Usage: %s -L /path/to/list -a john=doe.org (-n 12 | -p)\n"
 		" -a: Address string that bounces\n"
 		" -h: This help\n"
 		" -L: Full path to list directory\n"
 		" -n: Message number in the archive\n"
+		" -p: Send out a probe\n"
 		" -V: Print version\n", prg);
 
 	exit(EXIT_SUCCESS);
@@ -39,14 +141,20 @@ int main(int argc, char **argv)
 {
 	int opt, fd;
 	char *listdir = NULL, *address = NULL, *number = NULL;
+	char *bindir, *mlmmjsend;
 	char *mailname = NULL, *savename, *bfilename, *a, *buf;
 	size_t len;
 	time_t t;
+	int probe = 0;
 	struct stat st;
 
 	log_set_name(argv[0]);
 
-	while ((opt = getopt(argc, argv, "hVL:a:n:m:")) != -1) {
+	bindir = mydirname(argv[0]);
+	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
+	free(bindir);
+
+	while ((opt = getopt(argc, argv, "hVL:a:n:m:p")) != -1) {
 		switch(opt) {
 		case 'L':
 			listdir = optarg;
@@ -60,6 +168,9 @@ int main(int argc, char **argv)
 		case 'n':
 			number = optarg;
 			break;
+		case 'p':
+			probe = 1;
+			break;
 		case 'h':
 			print_help(argv[0]);
 			break;
@@ -68,9 +179,21 @@ int main(int argc, char **argv)
 			exit(0);
 		}
 	}
-	if(listdir == NULL || address == NULL || number == NULL) {
-		fprintf(stderr, "You have to specify -L, -a and -n\n");
+	if(listdir == NULL || address == NULL || (number == NULL && probe == 0)) {
+		fprintf(stderr, "You have to specify -L, -a and -n or -p\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+	if(number != NULL && probe != 0) {
+		fprintf(stderr, "You can only specify one of -n or -p\n");
+		fprintf(stderr, "%s -h for help\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	if (probe) {
+		/* send out a probe */
+		do_probe(listdir, mlmmjsend, address);
+		/* do_probe() will never return */
 		exit(EXIT_FAILURE);
 	}
 
