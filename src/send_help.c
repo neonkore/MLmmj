@@ -102,7 +102,7 @@ void send_help(const char *listdir, const char *emailaddr,
 	fclose(queuefile);
 
 	execlp(mlmmjsend, mlmmjsend,
-				"-L", "1",
+				"-l", "1",
 				"-T", emailaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, 0);
