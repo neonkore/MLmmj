@@ -378,8 +378,6 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 		myfree(dirname);
 		return 1;
 	}
-
-	myfree(dirname);
 	
 	while((dp = readdir(queuedir)) != NULL) {
 		if((strcmp(dp->d_name, "..") == 0) ||
@@ -458,6 +456,8 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 	}
 
 	closedir(queuedir);
+
+	myfree(dirname);
 
 	return 0;
 }
