@@ -1,3 +1,10 @@
+0.8.1
+ o Add the option to add a To: header including the recipient emailaddress.
+   NOTE that this does not remove any existing To: headers, they should be
+   removed in control/delheaders
+ o Optimize mlmmj-send by preparing the mail in memory to reduce the amount of
+   write syscalls. control/memmailsize (size in bytes) controls how big it can
+   be. Default is 16k before it's send line by line.
  o Make sure we check if the Subject: prefix might be present in the
    de-quoted printable version of the Subject. If so, don't add it.
  o Fix bug with queuefilename not being correctly initialized when generating

@@ -42,6 +42,9 @@
 			     mlmmj-maintd runs daemonized? 7200s is 2 hours */
 #define MAINTD_LOGFILE "mlmmj-maintd.lastrun.log"
 
+#define MEMORYMAILSIZE 16384  /* How big can a mail be before we don't want to
+			         it in memory? control/memorymailsize */
+
 struct strlist {
 	int count;
 	char **strs;

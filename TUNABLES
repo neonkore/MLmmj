@@ -63,3 +63,16 @@ to specify several entries (one pr. line), it's marked "list".
    If this file exists, all headers of a post to the list is matched against
    the rules. The first rule to match wins. See README.access for syntax and
    examples.
+
+ · memorymailsize		(normal)
+
+   Here is specified in bytes how big a mail can be and still be prepared for
+   sending in memory. It's greatly reducing the amount of write system calls to
+   prepare it in memory before sending it, but can also lead to denial of
+   service attacks. Default is 16k (16384 bytes).
+
+ · addtohdr			(boolean)
+
+   When this file is present, a To: header including the recipients
+   emailaddress will be added to outgoing mail. Recommended usage is to remove
+   existing To: headers with delheaders (see above) first.

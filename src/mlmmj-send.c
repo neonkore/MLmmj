@@ -36,6 +36,7 @@
 #include <syslog.h>
 #include <stdarg.h>
 #include <sys/mman.h>
+#include <limits.h>
 
 #include "mlmmj-send.h"
 #include "mlmmj.h"
@@ -51,6 +52,11 @@
 #include "mygetline.h"
 #include "wrappers.h"
 #include "memory.h"
+#include "statctrl.h"
+#include "ctrlvalue.h"
+
+static int addtohdr = 0;
+static int prepmailinmem = 0;
 
 char *bounce_from_adr(const char *recipient, const char *listadr,
 		      const char *mailfilename)
@@ -158,10 +164,12 @@ int bouncemail(const char *listdir, const char *mlmmjbounce, const char *from)
 
 int send_mail(int sockfd, const char *from, const char *to,
 	      const char *replyto, char *mailmap, size_t mailsize,
-	      const char *listdir, const char *mlmmjbounce)
+	      const char *listdir, const char *mlmmjbounce,
+	      const char *hdrs, size_t hdrslen, const char *body,
+	      size_t bodylen)
 {
 	int retval = 0;
-	char *reply;
+	char *reply, *tohdr;
 	
 	retval = write_mail_from(sockfd, from);
 	if(retval) {
@@ -222,10 +230,37 @@ int send_mail(int sockfd, const char *from, const char *to,
 		}
 	}
 
-	retval = write_mailbody_from_map(sockfd, mailmap, mailsize);
-	if(retval) {
-		log_error(LOG_ARGS, "Could not write mailbody\n");
-		return retval;
+	if(addtohdr)
+		tohdr = concatstr(3, "To: ", to, "\r\n");
+	else
+		tohdr = NULL;
+
+	if(prepmailinmem) {
+		retval = writen(sockfd, hdrs, hdrslen);
+		if(retval < 0) {
+			log_error(LOG_ARGS, "Could not write mailheaders.\n");
+			return retval;
+		}
+		if(tohdr) {
+			retval = writen(sockfd, tohdr, strlen(tohdr));
+			if(retval < 0) {
+				log_error(LOG_ARGS, "Could not write To:.\n");
+				return retval;
+			}
+			myfree(tohdr);
+		}
+		retval = writen(sockfd, body, bodylen);
+		if(retval < 0) {
+			log_error(LOG_ARGS, "Could not write mailbody.\n");
+			return retval;
+		}
+	} else {
+		retval = write_mailbody_from_map(sockfd, mailmap, mailsize,
+						 tohdr);
+		if(retval) {
+			log_error(LOG_ARGS, "Could not write mail\n");
+			return retval;
+		}
 	}
 
 	retval = write_dot(sockfd);
@@ -297,7 +332,9 @@ int endsmtp(int *sockfd)
 int send_mail_many(int sockfd, const char *from, const char *replyto,
 		   char *mailmap, size_t mailsize, int subfd,
 		   const char *listaddr, const char *archivefilename,
-		   const char *listdir, const char *mlmmjbounce)
+		   const char *listdir, const char *mlmmjbounce,
+		   const char *hdrs, size_t hdrslen, const char *body,
+		   size_t bodylen)
 {
 	int sendres = 0, addrfd;
 	char *bounceaddr, *addr, *index, *dirname, *addrfilename;
@@ -330,12 +367,14 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 
 		if(from)
 			sendres = send_mail(sockfd, from, addr, replyto,
-					    mailmap, mailsize, listdir, NULL);
+					    mailmap, mailsize, listdir, NULL,
+					    hdrs, hdrslen, body, bodylen);
 		else {
 			bounceaddr = bounce_from_adr(addr, listaddr,
 						     archivefilename);
 			sendres = send_mail(sockfd, bounceaddr, addr, replyto,
-				  mailmap, mailsize, listdir, mlmmjbounce);
+				  mailmap, mailsize, listdir, mlmmjbounce,
+				  hdrs, hdrslen, body, bodylen);
 			myfree(bounceaddr);
 		}
 		if(sendres && listaddr && archivefilename) {
@@ -411,7 +450,7 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	size_t len = 0;
+	size_t len = 0, hdrslen, bodylen;
 	int sockfd = 0, mailfd = 0, opt, mindex, subfd, tmpfd;
 	int deletewhensent = 1, sendres, archive = 1;
 	char *listaddr, *mailfilename = NULL, *subfilename = NULL;
@@ -419,6 +458,8 @@ int main(int argc, char **argv)
 	char *relayhost = NULL, *archivefilename = NULL, *tmpstr;
 	char *listctrl = NULL, *subddirname = NULL, *listdir = NULL;
 	char *mlmmjbounce = NULL, *bindir, *mailmap, *probefile, *a;
+	char *body = NULL, *hdrs = NULL, *memmailsizestr = NULL;
+	size_t memmailsize = 0;
 	DIR *subddir;
 	struct dirent *dp;
 	struct stat st;
@@ -519,10 +560,43 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	addtohdr = statctrl(listdir, "addtohdr");
+	memmailsizestr = ctrlvalue(listdir, "memorymailsize");
+	if(memmailsizestr) {
+		memmailsize = strtol(memmailsizestr, NULL, 10);
+		myfree(memmailsizestr);
+	}
+
+	if(memmailsize == 0)
+		memmailsize = MEMORYMAILSIZE;
+
+	if(st.st_size > memmailsize) {
+		prepmailinmem = 0;
+		errno = 0;
+		log_error(LOG_ARGS, "Not preparing in memory. "
+				    "Mail is %ld bytes", (long)st.st_size);
+	} else
+		prepmailinmem = 1;
+
 	mailmap = mmap(0, st.st_size, PROT_READ, MAP_SHARED, mailfd, 0);
 	if(mailmap == MAP_FAILED) {
 		log_error(LOG_ARGS, "Could not mmap mailfd");
 		exit(EXIT_FAILURE);
+	}
+
+	if(prepmailinmem) {
+		hdrs = get_preppedhdrs_from_map(mailmap, &hdrslen);
+		if(hdrs == NULL) {
+			log_error(LOG_ARGS, "Could not prepare headers");
+			exit(EXIT_FAILURE);
+		}
+		body = get_prepped_mailbody_from_map(mailmap, st.st_size,
+						     &bodylen);
+		if(body == NULL) {
+			log_error(LOG_ARGS, "Could not prepare mailbody");
+			myfree(hdrs);
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	switch(listctrl[0]) {
@@ -534,6 +608,8 @@ int main(int argc, char **argv)
 		if((subfd = open(subfilename, O_RDONLY)) < 0) {
 			log_error(LOG_ARGS, "Could not open '%s':",
 					    subfilename);
+			myfree(hdrs);
+			myfree(body);
 			myfree(subfilename);
 			/* No moderators is no error. Could be the sysadmin
 			 * likes to do it manually.
@@ -546,6 +622,8 @@ int main(int argc, char **argv)
 		if((subfd = open(subfilename, O_RDONLY)) < 0) {
 			log_error(LOG_ARGS, "Could not open '%s':",
 					    subfilename);
+			myfree(hdrs);
+			myfree(body);
 			exit(EXIT_FAILURE);
 		}
 
@@ -569,7 +647,8 @@ int main(int argc, char **argv)
 	case '1': /* A single mail is to be sent */
 		initsmtp(&sockfd, relayhost);
 		sendres = send_mail(sockfd, bounceaddr, to_addr, replyto,
-				mailmap, st.st_size, listdir, NULL);
+				mailmap, st.st_size, listdir, NULL,
+				hdrs, hdrslen, body, bodylen);
 		endsmtp(&sockfd);
 		if(sendres) {
 			/* error, so keep it in the queue */
@@ -610,8 +689,9 @@ int main(int argc, char **argv)
 		break;
 	case '2': /* Moderators */
 		initsmtp(&sockfd, relayhost);
-		if(send_mail_many(sockfd, bounceaddr, NULL, mailmap, st.st_size,
-				subfd, NULL, NULL, listdir, NULL))
+		if(send_mail_many(sockfd, bounceaddr, NULL, mailmap,
+				  st.st_size, subfd, NULL, NULL, listdir,
+				  NULL, hdrs, hdrslen, body, bodylen))
 			close(sockfd);
 		else
 			endsmtp(&sockfd);
@@ -620,7 +700,7 @@ int main(int argc, char **argv)
 		initsmtp(&sockfd, relayhost);
 		if(send_mail_many(sockfd, NULL, NULL, mailmap, st.st_size,
 				subfd, listaddr, mailfilename, listdir,
-				mlmmjbounce))
+				mlmmjbounce, hdrs, hdrslen, body, bodylen))
 			close(sockfd);
 		else
 			endsmtp(&sockfd);
@@ -630,7 +710,7 @@ int main(int argc, char **argv)
 		initsmtp(&sockfd, relayhost);
 		if(send_mail_many(sockfd, bounceaddr, NULL, mailmap, st.st_size,
 				subfd, listaddr, mailfilename, listdir,
-				mlmmjbounce))
+				mlmmjbounce, hdrs, hdrslen, body, bodylen))
 			close(sockfd);
 		else
 			endsmtp(&sockfd);
@@ -638,7 +718,8 @@ int main(int argc, char **argv)
 	case '5': /* bounceprobe - handle relayhost local users bouncing*/
 		initsmtp(&sockfd, relayhost);
 		sendres = send_mail(sockfd, bounceaddr, to_addr, replyto,
-				mailmap, st.st_size, listdir, NULL);
+				mailmap, st.st_size, listdir, NULL,
+				hdrs, hdrslen, body, bodylen);
 		endsmtp(&sockfd);
 		if(sendres) {
 			/* error, so remove the probefile */
@@ -658,6 +739,8 @@ int main(int argc, char **argv)
 			log_error(LOG_ARGS, "Could not opendir(%s)",
 					    subddirname);
 			myfree(subddirname);
+			myfree(hdrs);
+			myfree(body);
 			exit(EXIT_FAILURE);
 		}
 		myfree(subddirname);
@@ -680,7 +763,8 @@ int main(int argc, char **argv)
 			initsmtp(&sockfd, relayhost);
 			sendres = send_mail_many(sockfd, NULL, NULL, mailmap,
 					st.st_size, subfd, listaddr,
-					archivefilename, listdir, mlmmjbounce);
+					archivefilename, listdir, mlmmjbounce,
+					hdrs, hdrslen, body, bodylen);
 			if (sendres) {
 				/* If send_mail_many() failed we close the
 				 * connection to the mail server in a brutal
@@ -696,6 +780,8 @@ int main(int argc, char **argv)
 		break;
 	}
 	
+	myfree(hdrs);
+	myfree(body);
 	munmap(mailmap, st.st_size);
 	close(mailfd);
 	

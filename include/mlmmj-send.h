@@ -26,11 +26,15 @@
 
 int send_mail(int sockfd, const char *from, const char *to,
 	      const char *replyto, char *mailmap, size_t mailsize,
-	      const char *listdir, const char *mlmmjbounce);
+	      const char *listdir, const char *mlmmjbounce,
+	      const char *hdrs, size_t hdrslen, const char *body,
+	      size_t bodylen);
 int send_mail_many(int sockfd, const char *from, const char *replyto,
 		   char *mailmap, size_t mailsize, int subfd,
 		   const char *listaddr, const char *archivefilename,
-		   const char *listdir, const char *mlmmjbounce);
+		   const char *listdir, const char *mlmmjbounce,
+		   const char *hdrs, size_t hdrslen, const char *body,
+		   size_t bodylen);
 int initsmtp(int *sockfd, const char *relayhost);
 int endsmtp(int *sockfd);
 

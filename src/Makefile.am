@@ -15,7 +15,8 @@ EXTRA_DIST = mlmmj-make-ml.sh
 mlmmj_send_SOURCES = mlmmj-send.c writen.c mail-functions.c itoa.c chomp.c \
                      incindexfile.c checkwait_smtpreply.c getlistaddr.c \
 		     mylocking.c init_sockfd.c strgen.c random-int.c \
-		     print-version.c log_error.c mygetline.c memory.c
+		     print-version.c log_error.c mygetline.c memory.c \
+		     statctrl.c ctrlvalue.c
 
 mlmmj_recieve_SOURCES = mlmmj-recieve.c writen.c random-int.c strgen.c \
 			print-version.c log_error.c dumpfd2fd.c memory.c
