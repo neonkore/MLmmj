@@ -45,7 +45,7 @@ char *mygetline(int fd)
 {
 	size_t i = 0, buf_size = BUFSIZE;  /* initial buffer size */
 	char *buf = malloc(buf_size);
-	int ch;
+	char ch;
 
 	buf[0] = '\0';
 	while(read(fd, &ch, 1) > 0) {	
