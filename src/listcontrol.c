@@ -266,13 +266,17 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 							param);
 			if(stat(archivefilename, &stbuf) < 0)
 				exit(EXIT_SUCCESS);
-			else
+			else {
 				execlp(mlmmjsend, mlmmjsend,
 					"-T", fromemails->emaillist[0],
 					"-L", listdir,
 					"-l", "6",
 					"-m", archivefilename,
 					"-a", "-D", NULL);
+				log_error(LOG_ARGS, "execlp() of '%s' failed",
+							mlmmjsend);
+				exit(EXIT_FAILURE);
+			}
 		}
 		break;
 	}
