@@ -1,3 +1,5 @@
+ o Add README.sendmail from Andrea Barisani
+ o Add README.exim4 from Jakob Hirsch
  o Skip addresses without a @ when sending
  o Set SO_KEEPALIVE for our connection socket
 1.2.4

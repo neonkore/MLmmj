@@ -1,0 +1,64 @@
+README.exim4                                                   March 16th 2005
+
+
+This is a step-by-step guide to run mlmmj with Exim4.
+
+
+
+Notes:
+- We assume that you have a user and group called mlmmj to use with mlmmj
+- The exim user needs read access rights to mlmmj's spool directory and its
+  subdirectories
+- Existence of mailing lists is automatically checked and you don't need to
+  put anything into your aliases file
+
+
+1. In the main configuration section:
+
+MLMMJ_HOME=/var/spool/mlmmj
+domainlist mlmmj_domains = list.your.domain
+
+
+2. Add +mlmmj_domains to relay_to_domains:
+
+domainlist relay_to_domains = other.domain : +mlmmj_domains
+
+
+3. In the routers section (before the dnslookup router, preferably at the
+beginning):
+
+mlmmj_router:
+  driver = accept
+  domains = +mlmmj_domains
+  require_files = MLMMJ_HOME/${lc::$local_part}/index
+  local_part_suffix = +*
+  local_part_suffix_optional
+  transport = mlmmj_transport
+
+
+4. Somewhere in the transports section (change the path of mlmmj-recieve if you
+don't use the default location):
+
+mlmmj_transport:
+  driver = pipe
+  return_path_add
+  user = mlmmj
+  group = mlmmj
+  home_directory = MLMMJ_HOME
+  current_directory = MLMMJ_HOME
+  command = /usr/local/bin/mlmmj-recieve -F -L MLMMJ_HOME/${lc::$local_part}
+
+
+5. Test your setup with
+
+$ exim -bt mlmmj-test@your.list.domain
+mlmmj-test@your.list.domain
+  router = mlmmj_router, transport = mlmmj_transport
+
+If you get different output, run it with -d to see what's going wrong.
+If not, you're done!
+
+
+
+	Jakob Hirsch (jh at plonk dot de)
+

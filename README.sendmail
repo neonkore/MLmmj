@@ -1,0 +1,96 @@
+Using sendmail + VERP
+
+--------------------------------------------------------------------------------
+
+The following configuration enables VERP (http://cr.yp.to/proto/verp.txt) which
+is useful for mailing list managers that are able to take advantage of that 
+feature.
+
+This configuration is currently used for using the mlmmj manager 
+(http://mlmmj.mmj.dk) with VERP enabled + sendmail.
+
+The hack consists in hooking VERP rewriting in a replacement ruleset for the 
+existing EnvFromSMTP one (called VerpEnvFromSMTP). This is going to work *only*
+if we are splitting messages with multiple recipients in separate queue files 
+since the macro we are using for the rewriting ($u) is not set when multiple 
+rcpt are present.
+
+The first step consists in forcing envelope splitting, this is done using the 
+QUEUE_GROUP feature, here we are definining r=1 (max 1 rcpt per message) for the
+default queue group:
+
+
+QUEUE_GROUP(`mqueue', `P=/var/spool/mqueue, F=f, I=1m,  R=2, r=1')
+
+
+Since we are going to split a lot it's advisable to use the FAST_SPLIT option, 
+additionally we need to enforce return-path inclusion in the local mailer:
+
+
+define(`confFAST_SPLIT', `100')dnl
+define(`LOCAL_SHELL_FLAGS', `eu9P')dnl
+
+
+Then we define a regex map for matching the addresses that we are going to 
+rewrite, in our example we'll rewrite addresses like 
+
+<listname+bounces-123@domain.net> 
+
+with
+
+<listname+bounces-123-user=foo.net@domain.net> 
+
+where user@foo.net is the recipient address of the message. So we need to apply 
+our verp ruleset *only* to those addresses. Additionally we are also adding the 
+Delivered-To header:
+
+
+LOCAL_CONFIG
+Kmatch_verp regex -m -a@VERP (listname\+bounces\-[0-9]+<@domain\.net\.?>)
+H?l?Delivered-To: $u
+
+
+Here's the ruleset, the first half of the ruleset is the existing EnvFromSMTP 
+ruleset present in default sendmail.cf, the seconf half is the VERP stuff:
+
+
+SVerpEnvFromSMTP
+R$+                     $: $>PseudoToReal $1            sender/recipient common
+R$* :; <@>              $@                              list:; special case
+R$*                     $: $>MasqSMTP $1                qualify unqual'ed names
+R$+                     $: $>MasqEnv $1                 do masquerading
+
+R $*                                    $: $(match_verp $1 $)                            match the address
+R $* + $* < @ $* . > $* @VERP           $: $1 + $2 - $&u < @ $3 . > $4 VERP              rewrite it using $u macro and add VERP string for failsafe
+R $* - < @ $* . > $* VERP               $: $1 < @ $2 . > $3                              if $u wasn't defined rewrite the address back
+R $* - < $+ @ $+ > < @ $* . > $* VERP   $: $(dequote $1 "-" $2 "=" $3 $) < @ $4 . > $5   replace the "@" in rcpt address with "="
+R $* - $+ @ $+ < @ $* . > $* VERP       $: $(dequote $1 "-" $2 "=" $3 $) < @ $4 . > $5   replace the "@" in rcpt address with "="
+
+
+Finally we need to rewrite the mailer definition for the used mailer (typically 
+esmtp) specifying VerpEnvFromSMTP as the sender rewrite ruleset:
+
+
+MAILER_DEFINITIONS
+Mesmtp,		P=[IPC], F=mDFMuXa, S=VerpEnvFromSMTP/HdrFromSMTP, R=EnvToSMTP, E=\r\n, L=990,
+		T=DNS/RFC822/SMTP,
+		A=TCP $h
+
+
+
+NOTE: for mailing list servers it's also a good idea keeping existing 
+Delivered-To headers, sendmail needs the following patch for doing this 
+
+--- sendmail/conf.c.orig	2004-07-14 21:54:23.000000000 +0000
++++ sendmail/conf.c	2004-12-06 15:22:05.000000000 +0000
+@@ -117,6 +117,7 @@
+ 	{ "content-length",		H_ACHECK,		NULL	},
+ 	{ "subject",			H_ENCODABLE,		NULL	},
+ 	{ "x-authentication-warning",	H_FORCE,		NULL	},
++	{ "delivered-to",	    H_FORCE,		NULL	},
+ 
+ 	{ NULL,				0,			NULL	}
+ };
+
+
+-- lcars@gentoo.org
