@@ -101,8 +101,6 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	if (writen(fd, fromstr, strlen(fromstr)) < -1)
 		goto errdighdrs;
 
-	myfree(fromstr);
-	
 	if(dumpfd2fd(hdrfd, fd) < 0) {
 		close(hdrfd);
 		goto errdighdrs;
@@ -124,6 +122,7 @@ errdighdrs:
 		return -1;
 	}
 	myfree(tmp);
+	myfree(fromstr);
 
 	for (i=firstindex; i<=lastindex; i++) {
 		snprintf(buf, sizeof(buf), "%d", i);
