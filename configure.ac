@@ -24,6 +24,14 @@ AC_CHECK_HEADERS([sys/socket.h syslog.h unistd.h time.h])
 AC_C_CONST
 AC_TYPE_SIZE_T
 
+savex=$exec_prefix
+test "x$exec_prefix" = xNONE && exec_prefix=$prefix
+tmp=$datadir/$PACKAGE/text.skel
+while textlibdir=`eval echo "$tmp"`; test "x$textlibdir" != "x$tmp"; do tmp=$textlibdir; done
+exec_prefix=$savex
+
+AC_SUBST(textlibdir)
+
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([ftruncate memset socket strerror strncasecmp snprintf fcntl])
@@ -31,5 +39,6 @@ AC_CHECK_FUNCS([nanosleep time strftime syslog regcomp regexec])
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([src/Makefile])
+AC_CONFIG_FILES([src/mlmmj-make-ml.sh])
 AC_CONFIG_FILES([listtexts/Makefile])
 AC_OUTPUT

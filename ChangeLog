@@ -1,3 +1,5 @@
+ o Make mlmmj-make-ml.sh default the listtext dir to where they were
+   installed in the system (Stephan Kulow)
 1.2.1
  o Introduce switches to turn off mails about posts being denied.
 1.2.0

@@ -88,9 +88,11 @@ if [ -z "$OWNER" ]; then
 fi
 echo "$OWNER" > "$LISTDIR"/"control/owner"
 
-echo -n "The path to texts for the list? (listtexts/ dir in the src) [] : "
-read TEXTPATH
-if [ -z "$TEXTPATH" -o ! -d "$TEXTPATH" ]; then
+TEXTPATH=@textlibdir@
+echo -n "The path to texts for the list? [$TEXTPATH] : "
+read TEXTPATHIN
+test TEXTPATHIN && TEXTPATH=$TEXTPATHIN
+if [ -z "$TEXTPATHIN" -o ! -d "$TEXTPATH" ]; then
 	echo "**NOTE** Could not copy the texts for the list"
 	echo "Please manually copy the files from the listtexts/ directory"
 	echo "in the source distribution of mlmmj."

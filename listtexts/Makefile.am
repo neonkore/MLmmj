@@ -1,6 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 
-textlibdir = $(pkgdatadir)/text.skel
 dist_textlib_DATA = access bounce-probe listhelp moderation notifysub \
 	notifysub-digest notifysub-nomail notifyunsub notifyunsub-digest \
 	notifyunsub-nomail notintocc sub-confirm sub-confirm-digest \
