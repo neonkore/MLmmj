@@ -647,7 +647,6 @@ int main(int argc, char **argv)
 			*a = '=';
 			probefile = concatstr(4, listdir, "/bounce/", tmpstr,
 					"-probe");
-			log_error(LOG_ARGS, "probefile = [%s]", probefile);
 			unlink(probefile);
 			myfree(probefile);
 			myfree(tmpstr);
