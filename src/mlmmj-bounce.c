@@ -172,7 +172,7 @@ char *dsnparseaddr(const char *mailname)
 {
 	int fd, indsn = 0, i;
 	char *line, *linedup, *search, *addr = NULL;
-	struct email_container emails;
+	struct email_container emails = { 0, NULL };
 
 	fd = open(mailname, O_RDONLY);
 	if(fd < 0) {
@@ -410,6 +410,8 @@ int main(int argc, char **argv)
 	}
 		
 	myfree(bfilename);
+	if(dsnbounce && address)
+		myfree(address);
 
 	return EXIT_SUCCESS;
 }
