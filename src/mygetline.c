@@ -20,6 +20,10 @@ char *myfgetline(FILE *infile)
 	char *buf = malloc(buf_size);
 	
 	buf[0] = '\0';
+	
+	if(infile == NULL)
+		return NULL;
+
 	for (;;) {
 		buf_used = strlen(buf);
 		if (fgets(buf+buf_used, buf_size-buf_used, infile) == NULL) {
