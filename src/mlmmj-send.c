@@ -427,9 +427,9 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 
 static void print_help(const char *prg)
 {
-        printf("Usage: %s [-L /path/to/list || -l listctrl] -m /path/to/mail "
-	       "[-a] [-D] [-F]\n"
-	       "       [-h] [-r] [-R] [-s] [-T] [-V]\n"
+        printf("Usage: %s [-L /path/to/list || -l listctrl] \n"
+	       "       -m /path/to/mail [-a] [-D] [-F] [-h] [-r] [-R] "
+	       "[-s] [-T] [-V]\n"
 	       " -a: Don't archive the mail\n"
 	       " -D: Don't delete the mail after it's sent\n"
 	       " -F: What to use as MAIL FROM:\n"
@@ -438,9 +438,11 @@ static void print_help(const char *prg)
 	printf("    '1' means 'send a single mail'\n"
 	       "    '2' means 'mail to moderators'\n"
 	       "    '3' means 'resend failed list mail'\n"
+	       "    '4' means 'send to file with recipients'\n"
+	       "    '5' means 'bounceprobe'\n"
 	       " -L: Full path to list directory\n"
 	       " -m: Full path to mail file\n"
-	       " -r: Relayhost (defaults to localhost)\n"
+	       " -r: Relayhost IP address (defaults to 127.0.0.1)\n"
 	       " -R: What to use as Reply-To: header\n"
 	       " -s: Subscribers file name\n"
 	       " -T: What to use as RCPT TO:\n"
@@ -459,7 +461,7 @@ int main(int argc, char **argv)
 	char *listctrl = NULL, *subddirname = NULL, *listdir = NULL;
 	char *mlmmjbounce = NULL, *bindir, *mailmap, *probefile, *a;
 	char *body = NULL, *hdrs = NULL, *memmailsizestr = NULL;
-	size_t memmailsize = 0;
+	ssize_t memmailsize = 0;
 	DIR *subddir;
 	struct dirent *dp;
 	struct stat st;
