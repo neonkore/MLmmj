@@ -20,6 +20,11 @@
 #define READ_BUFSIZE 2048
 #define RECIPDELIM '+'
 
+struct mailhdr {
+	const char *token;
+	char *value;
+};
+
 void print_version(const char *prg);
 
 #endif /* MLMMJ_GENERIC_INCLUDES */
