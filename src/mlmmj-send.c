@@ -162,19 +162,12 @@ int send_mail(int sockfd, const char *from, const char *to, const char *replyto,
 int main(int argc, char **argv)
 {
 	size_t len = 0;
-	int sockfd = 0, opt, mindex, retval=0;
-	FILE *subfile = 0, *mailfile = 0;
-	char *mailfilename = 0;
-	char *subfilename = 0;
-	char *listdir = 0;
-	char listadr[READ_BUFSIZE];
-	char *replyto = 0;
-	char *bounce_adr = 0;
-	char *to_addr = 0;
-	char *archivefilename = 0;
-	char buf[READ_BUFSIZE];
-	char *bufres;
-	char *relayhost = 0;
+	int sockfd = 0, opt, mindex, retval = 0;
+	FILE *subfile = NULL, *mailfile = NULL;
+	char listadr[READ_BUFSIZE], buf[READ_BUFSIZE];
+	char *mailfilename = NULL, *subfilename = NULL, *listdir = NULL;
+	char *replyto = NULL, *bounce_adr = NULL, *to_addr = NULL;
+	char *bufres, *relayhost = NULL, *archivefilename = NULL;
 	int deletewhensent = 1;
 	
 	log_set_name(argv[0]);
@@ -253,7 +246,8 @@ int main(int argc, char **argv)
 		mindex = incindexfile((const char *)listdir, 1);
 		len = strlen(listdir) + 9 + 20;
 		archivefilename = malloc(len);
-		snprintf(archivefilename, len, "%s/archive/%d", listdir, mindex);
+		snprintf(archivefilename, len, "%s/archive/%d", listdir,
+			 mindex);
 	}
 
 	if((retval = checkwait_smtpreply(sockfd, MLMMJ_CONNECT)) != 0) {

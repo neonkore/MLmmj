@@ -11,6 +11,8 @@
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "mlmmj.h"
 #include "header_token.h"
@@ -19,6 +21,7 @@
 #include "strgen.h"
 #include "send_help.h"
 #include "log_error.h"
+#include "statctrl.h"
 
 int listcontrol(const char *mailfilename, const char *listdir,
 		const char *controladdr, const char *mlmmjsub,
@@ -30,12 +33,17 @@ int listcontrol(const char *mailfilename, const char *listdir,
 	char *controlstr, *conffilename;
 	FILE *mailfile, *tempfile;
 	struct email_container fromemails;
+	struct stat stbuf;
 	size_t len;
+	int closedlist;
 	
 	if((mailfile = fopen(mailfilename, "r")) == NULL) {
 		log_error(LOG_ARGS, "listcontrol, could not open mail");
 		exit(EXIT_FAILURE);
 	}
+	/* Closed list only handling bounces? TODO: part of configfile instead?*/
+	closedlist = statctrl(listdir, "closedlist");
+	
 	recipdelimsign = index(controladdr, RECIPDELIM);
 	atsign = index(controladdr, '@');
 	len = atsign - recipdelimsign;

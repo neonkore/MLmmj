@@ -60,7 +60,8 @@ LISTDIR="$SPOOLDIR/$LISTNAME"
 
 mkdir -p $LISTDIR
 
-for DIR in incoming queue archive text subconf unsubconf bounce
+for DIR in incoming queue archive text subconf unsubconf bounce control \
+	   moderation moderation/queue
 do
 	mkdir "$LISTDIR"/"$DIR"
 done
