@@ -6,3 +6,4 @@ mkinstalldirs
 Makefile.in
 configure
 Makefile
+\[config.h\].in
