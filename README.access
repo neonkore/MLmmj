@@ -1,5 +1,5 @@
-README.access                            present in mlmmj versions >= 0.8.0
-
+README.access                           present in mlmmj versions >= 0.8.0
+                                        (moderate tag since 1.1.0-RC3)
 Access control in mlmmj
 =======================
 
@@ -13,41 +13,49 @@ Each header in the mail is tested against each rule, rule by rule. That is,
 all headers are first tested against the first rule, then all headers are
 tested against the second rule, and so on.
 
-The first rule to match a header decides which action to take - allow or
-deny the post.
+The first rule to match a header decides which action to take - allow, deny
+or moderate the post.
 
 The syntax is quite simple: action[ [!]regexp]
-- "Action" can be "allow" or "deny".
+- "Action" can be "allow", "deny" or "moderate".
 - The optional "!" makes the rule a match, if NO header matches the regular
   expression.
 - "Regexp" is a POSIX.2 extended regular expression. Matching is done case
   insensitive.
 
+IMPORTANT: if "moderate" is used then don't forget to add people who should
+           function as moderators in listdir/control/moderators
 
 First a simple example. This rule set will reject any mail that is NOT plain
 text, or has a subject that contains "BayStar", and allow anything else:
 
-deny !^Content-Type: text/plain
-deny ^Subject:.*BayStar
-allow
+ deny !^Content-Type: text/plain
+ deny ^Subject:.*BayStar
+ allow
 
+To allow only text mails, but have the moderators moderate every html mail one
+would use this:
+
+ allow ^Content-Type: text/plain
+ moderate ^Content-Type: text/html
+ deny
 
 Now on to a more advanced example. Morten can post anything, Mads Martin can
 post if the subject does not contain "SCO". Everything else is denied:
 
-allow ^From: Morten
-deny ^Subject:.*SCO
-allow ^From: Mads Martin
-deny
+ allow ^From: Morten
+ deny ^Subject:.*SCO
+ allow ^From: Mads Martin
+ deny
 
 The last rule (deny) can be left out, as deny is the default action.
-
 
 A third example. Deny any mails with "discount", "weightloss", or "bonus" in
 the subject. Allow PGP signed and plain text mails. Anything else is denied:
 
-deny ^Subject:.*discount
-deny ^Subject:.*weightloss
-deny ^Subject:.*bonus
-allow ^Content-Type: multipart/signed
-allow ^Content-Type: text/plain
+ deny ^Subject:.*discount
+ deny ^Subject:.*weightloss
+ deny ^Subject:.*bonus
+ allow ^Content-Type: multipart/signed
+ allow ^Content-Type: text/plain
+

@@ -1,3 +1,6 @@
+1.1.0-RC3
+ o Add 'moderate' tag for usage in control/access when one wants to have the
+   moderators moderate posts hitting this regexp. See README.access
  o Add a To: header with the recipient's address when sending digests
 1.1.0-RC2
  o Strip envelope from before resending to +owner

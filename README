@@ -1,4 +1,4 @@
-README mlmmj-1.1.0-RC2					November 22th 2004
+README mlmmj-1.1.0-RC3					November 25th 2004
 
 This is an attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
@@ -17,6 +17,7 @@ The functionality:
  · Functionality to retrieve old posts
  · Web-interface
  · Digests
+ · No mail delivery subscription
 
 To use mlmmj, do the following:
 
