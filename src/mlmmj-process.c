@@ -327,13 +327,13 @@ int main(int argc, char **argv)
 	recipdelim = strchr(toemails.emaillist[0], RECIPDELIM);
 
 	if(recipdelim) {
-		owner = ctrlvalue(listdir, "owner");
+		owner = concatstr(2, listdir, "control/owner");
 		if(owner && strncmp(recipdelim, "+owner@", 7) == 0) {
 			unlink(donemailname);
 			execlp(mlmmjsend, mlmmjsend,
-					"-l", "1",
-					"-T", owner,
+					"-l", "4",
 					"-F", efromemails.emaillist[0],
+					"-s", owner,
 					"-a",
 					"-m", mailfile, 0);
 			log_error(LOG_ARGS, "execlp() of '%s' failed",

@@ -5,7 +5,8 @@ The following files can be used for changing the behaviour of a list. The
 filename is supposed to be below listdir/control. In the case it's a "boolean",
 the contents of a file does not matter, the mere presence of it, will set the
 variable to "true". If it's a "normal" file, the first line will be used as
-value, leaving line 2 and forward ready for commentary etc.
+value, leaving line 2 and forward ready for commentary etc. If it's possible
+to specify several entries pr. line, it's marked "list".
 
  · closedlist			(boolean)
 
@@ -33,6 +34,11 @@ value, leaving line 2 and forward ready for commentary etc.
 
    The prefix for the Subject: line of mails to the list. This will alter the
    Subject: line, and add a prefix if it's not present elsewhere.
+
+ · owner			(list)
+
+   The emailaddresses in this file (1 pr. line) will get mails to
+   listname+owner@listdomain.tld
 
 
 ... more to follow. (relayhost, owner etc.)

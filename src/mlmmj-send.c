@@ -531,7 +531,8 @@ int main(int argc, char **argv)
 			exit(EXIT_SUCCESS);
 		}
 		break;
-	case '3': /* resending earlier failed mails */
+	case '3':
+	case '4': /* sending mails to subfile */
 		if((subfd = open(subfilename, O_RDONLY)) < 0) {
 			log_error(LOG_ARGS, "Could not open '%s':",
 					    subfilename);
@@ -614,6 +615,15 @@ int main(int argc, char **argv)
 		else
 			endsmtp(&sockfd);
 		unlink(subfilename);
+		break;
+	case '4': /* send mails to owner */
+		initsmtp(&sockfd, relayhost);
+		if(send_mail_many(sockfd, bounceaddr, NULL, mailmap, st.st_size,
+				subfd, listaddr, mailfilename, listdir,
+				mlmmjbounce))
+			close(sockfd);
+		else
+			endsmtp(&sockfd);
 		break;
 	default: /* normal list mail */
 		subddirname = concatstr(2, listdir, "/subscribers.d/");
