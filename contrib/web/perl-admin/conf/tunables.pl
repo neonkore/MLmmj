@@ -59,3 +59,7 @@ mlmmj_string("relayhost",
 mlmmj_boolean("notifysub",
 			  "Notify subscribers",
 			  "If this option is set, the owner(s) will get a mail with the address of someone sub/unsubscribing to a mailinglist.");
+mlmmj_string("bouncelife",
+			  "Bouncing lifetime",
+			  "Here is specified for how long time in seconds an address can bounce before it's unsubscribed. Defaults ".
+			  "to 432000 seconds, which is 5 days.");

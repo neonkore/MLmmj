@@ -106,7 +106,7 @@ if [ -z "$MLMMJRECIEVE" ]; then
 fi
 
 ALIAS="$LISTNAME:  \"|$MLMMJRECIEVE -L $SPOOLDIR/$LISTNAME/\""
-CRONENTRY="0 */2 * * * \"$MLMMJMAINTD -L $SPOOLDIR/$LISTNAME/\""
+CRONENTRY="0 */2 * * * \"$MLMMJMAINTD -F -L $SPOOLDIR/$LISTNAME/\""
 
 if [ -n "$A_CREATE" ]; then
 	echo "I want to add the following to your /etc/aliases file:"

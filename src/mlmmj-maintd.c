@@ -41,6 +41,7 @@
 #include "mygetline.h"
 #include "wrappers.h"
 #include "memory.h"
+#include "ctrlvalue.h"
 
 static int maintdlogfd = -1;
 
@@ -603,12 +604,12 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 	DIR *bouncedir;
 	char *dirname = concatstr(2, listdir, "/bounce/");
 	char *probefile, *address, *a, *firstbounce, *bouncedata;
-	char *logstr;
+	char *logstr, *bouncelifestr;
 	struct dirent *dp;
 	struct stat st;
 	pid_t pid, childpid;
 	int status, fd;
-	time_t bouncetime, t;
+	time_t bouncetime, t, bouncelife = 0;
 	
 	if(chdir(dirname) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
@@ -623,6 +624,15 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 	}
 
 	myfree(dirname);
+
+	bouncelifestr = ctrlvalue(listdir, "bouncelife");
+	if(bouncelifestr) {
+		bouncelife = atol(bouncelifestr);
+		myfree(bouncelifestr);
+	}
+	
+	if(bouncelife == 0)
+		bouncelife = BOUNCELIFE;
 
 	while((dp = readdir(bouncedir)) != NULL) {
 		if((strcmp(dp->d_name, "..") == 0) ||
@@ -682,7 +692,7 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		bouncetime = (time_t)strtol(a, NULL, 10);
 		myfree(firstbounce);
 		t = time(NULL);
-		if(t - bouncetime < BOUNCELIFE + WAITPROBE)
+		if(t - bouncetime < bouncelife + WAITPROBE)
 			continue; /* ok, don't unsub this one */
 		
 		/* Ok, go ahead and unsubscribe the address */

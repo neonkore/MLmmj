@@ -1,3 +1,6 @@
+ o Make the time an address can bounce before unsubscribed configurable with
+   listdir/control/bouncelife
+ o Correct mlmmj-make-ml.sh cronentry line to include -F
  o Add manual pages. Thanks Soeren Boll for the initial ones
  o Make random numbers lowercase hex since gmail is lowercasing the address
    it replies to.

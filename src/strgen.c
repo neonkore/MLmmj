@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <libgen.h>
+#include <time.h>
 
 #include "strgen.h"
 #include "wrappers.h"
@@ -212,3 +213,23 @@ char *cleanquotedp(char *qpstr)
 
 	return retstr;
 }
+
+/* Unused for now, but lets keep it for later
+
+char *genmsgid()
+{
+	size_t len = 128;
+	char *s = mymalloc(len), *retstr;
+	time_t t;
+
+	t = time(NULL);
+
+	snprintf(s, len-1, "<%ld-%x-mlmmj-%x@%x.plonk", t, random_int(),
+				random_int(), random_int());
+
+	retstr = concatstr(3, "Message-ID: ", s, ">\n");
+	myfree(s);
+	
+	return retstr;
+}
+*/
