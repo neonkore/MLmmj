@@ -37,6 +37,8 @@ int main(int argc, char **argv)
 	int fd, opt, noprocess = 0;
 	char *mlmmjprocess, *argv0 = strdup(argv[0]);
 	
+	log_set_name(argv[0]);
+
 	mlmmjprocess = concatstr(2, dirname(argv0), "/mlmmj-process");
 	free(argv0);
 	
