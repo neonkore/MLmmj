@@ -211,8 +211,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	case CTRL_MODERATE:
 		/* TODO Add accept/reject parameter to moderate */
-		moderatefilename = concatstr(3, listdir, "/moderation/queue/",
-						       param);
+		moderatefilename = concatstr(3, listdir, "/moderation/", param);
 		free(param);
 		if(stat(moderatefilename, &stbuf) < 0) {
 			free(moderatefilename);

@@ -50,8 +50,7 @@ void newmoderated(const char *listdir, const char *mailfilename,
 		free(moderatorfilename);
 		exit(EXIT_FAILURE);
 	}
-	queuefilename = concatstr(4, listdir, "/queue/", randomstr,
-				  ".moderaterequest");
+	queuefilename = concatstr(3, listdir, "/moderation/queue", randomstr);
 	printf("%s\n", queuefilename);
 	
 	if((queuefile = fopen(queuefilename, "w")) == NULL) {
@@ -150,20 +149,22 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	int fd, opt, noprocess = 0, moderated = 0;
+	int i, fd, opt, noprocess = 0, moderated = 0;
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
-	char *randomstr = random_str(), *basename, *mqueuename;
+	char *randomstr = random_str(), *mqueuename;
 	char *mlmmjsend, *mlmmjsub, *mlmmjunsub, *mlmmjbounce;
-	char *bindir, *subjectprefix;
+	char *bindir, *subjectprefix, *discardname;
 	FILE *headerfile, *footerfile, *rawmailfile, *donemailfile;
+	struct email_container fromemails = { 0, NULL };
 	struct email_container toemails = { 0, NULL };
+/*	struct email_container ccemails = { 0, NULL };*/
 	const char *badheaders[] = { "From ", "Return-Path:", NULL };
 	struct mailhdr readhdrs[] = {
-		{ "To:", NULL },
-		{ "Cc:", NULL },
-		{ "From:", NULL },
-		{ NULL, NULL }
+		{ "From:", 0, NULL },
+		{ "To:", 0, NULL },
+/*		{ "Cc:", 0, NULL },*/
+		{ NULL, 0, NULL }
 	};
 
 	log_set_name(argv[0]);
@@ -200,15 +201,12 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	basename = strdup(randomstr);
-	free(randomstr);
-	donemailname = concatstr(3, listdir, "/queue/", basename);
+	donemailname = concatstr(3, listdir, "/queue/", randomstr);
 	fd = open(donemailname, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
 	while(fd == -1 && errno == EEXIST) {
 		free(donemailname);
 		randomstr = random_str();
 		donemailname = concatstr(3, listdir, "/queue/", randomstr);
-		free(randomstr);
 		fd = open(donemailname, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
 	}
 	
@@ -258,27 +256,39 @@ int main(int argc, char **argv)
 	if(footerfile)
 		fclose(footerfile);
 
-	if(readhdrs[0].value) {
-		find_email_adr(readhdrs[0].value, &toemails);
+	if(readhdrs[0].token) { /* From: addresses */
+		for(i = 0; i < readhdrs[0].valuecount; i++) {
+			find_email_adr(readhdrs[0].values[i], &fromemails);
+		}
+		if(fromemails.emailcount != 1) { /* discard malformed mail */
+			discardname = concatstr(3, listdir,
+						"/queue/discarded/",
+						randomstr);
+			rename(donemailname, discardname);
+			free(donemailname);
+			free(discardname);
+			/* TODO: free emailstructs */
+			exit(EXIT_SUCCESS);
+		}
+	}
+
+	if(readhdrs[1].token) { /* To: addresses */
+		for(i = 0; i < readhdrs[1].valuecount; i++) {
+			find_email_adr(readhdrs[1].values[i], &toemails);
+		}
+	}
 #if 0
-		for(i = 0; i < toemails.emailcount; i++)
-			printf("toemails.emaillist[%d] = %s\n", i,
-					toemails.emaillist[i]);
+	if(readhdrs[2].token) { /* Cc: addresses */
+		for(j = 0; j < readhdrs[1].valuecount; j++) {
+			find_email_adr(readhdrs[1].values[j], &ccemails);
+		}
 	}
-	if(readhdrs[1].value) {
-		find_email_adr(readhdrs[1].value, &ccemails);
-		for(i = 0; i < ccemails.emailcount; i++)
-			printf("ccemails.emaillist[%d] = %s\n", i,
-					ccemails.emaillist[i]);
 #endif
-	}
-
-
 	if(strchr(toemails.emaillist[0], RECIPDELIM)) {
 #if 0
-		log_error(LOG_ARGS, "listcontrol(%s, %s, %s, %s, %s, %s, %s)\n", donemailname, listdir, toemails.emaillist[0], mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
+		log_error(LOG_ARGS, "listcontrol(from, %s, %s, %s, %s, %s, %s)\n", listdir, toemails.emaillist[0], mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
 #endif
-		listcontrol(donemailname, listdir, toemails.emaillist[0],
+		listcontrol(&fromemails, listdir, toemails.emaillist[0],
 			    mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
 		return EXIT_SUCCESS;
 	}
@@ -286,11 +296,11 @@ int main(int argc, char **argv)
 	moderated = statctrl(listdir, "moderated");
 
 	if(moderated) {
-		mqueuename = concatstr(3, listdir, "/moderation/queue/",
-				       basename);
+		mqueuename = concatstr(3, listdir, "/moderation/",
+				       randomstr);
 		printf("Going into moderatemode, mqueuename = [%s]\n",
 				mqueuename);
-		free(basename);
+		free(randomstr);
 		if(rename(donemailname, mqueuename) < 0) {
 			printf("could not rename(%s,%s)\n", 
 					    donemailname, mqueuename);
