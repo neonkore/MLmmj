@@ -65,6 +65,7 @@ char *mygetline(int fd)
 		return buf;
 	}
 
+	free(buf);
 	return NULL;
 }
 #if 0
