@@ -399,23 +399,34 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 			addrfd = open(addrfilename, O_WRONLY|O_CREAT|O_APPEND,
 							S_IRUSR|S_IWUSR);
 			if(addrfd < 0) {
-				log_error(LOG_ARGS, "Could not write to %s",
+				log_error(LOG_ARGS, "Could not open %s",
 						    addrfilename);
 				myfree(addrfilename);
 				myfree(addr);
 				return -1;
-			} else { /* dump the remaining addresses */
-				do {
-					/* Dirty hack to add newline. */
-					len = strlen(addr);
-					if(writen(addrfd, addr, len) < 0)
-						log_error(LOG_ARGS,
-							"Could not add [%s] "
-							"to requeue address "
-							"file.", addr);
-					myfree(addr);
-					addr = mygetline(subfd);
-				} while(addr);
+			} else {
+				/* Dump the remaining addresses. We dump the
+				 * remaining before we write the failing
+				 * address to ensure the potential good ones
+				 * will be tried first when mlmmj-maintd
+				 * sends out mails that have been requeued. */
+				if(writen(addrfd, cur, start+st.st_size-cur)
+						< 0) {
+					log_error(LOG_ARGS, "Could not dump "
+							"remaining addresses "
+							"of subfile to "
+							"requeue address "
+							"file");
+				}
+				/* Dirty hack to add newline. */
+				addr[len] = '\n';
+				if(writen(addrfd, addr, len+1) < 0) {
+					addr[len] = '\0';
+					log_error(LOG_ARGS, "Could not add "
+							"[%s] to requeue "
+							"address file", addr);
+				}
+				
 			}
 			
 			myfree(addr);
