@@ -1,3 +1,4 @@
+ o Skip addresses without a @ when sending
  o Set SO_KEEPALIVE for our connection socket
 1.2.4
  o Spend some time making valgrind completely happy

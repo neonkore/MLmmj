@@ -178,6 +178,13 @@ int send_mail(int sockfd, const char *from, const char *to,
 {
 	int retval = 0;
 	char *reply, *tohdr;
+
+	if(strchr(to, '@') == NULL) {
+		errno = 0;
+		log_error(LOG_ARGS, "No @ in address, ignoring %s",
+				to);
+		return 0;
+	}
 	
 	retval = write_mail_from(sockfd, from, "");
 	if(retval) {
@@ -367,6 +374,12 @@ int send_mail_verp(int sockfd, struct strlist *addrs, char *mailmap,
 		return MLMMJ_FROM;
 	}
 	for(i = 0; i < addrs->count; i++) {
+		if(strchr(addrs->strs[i], '@') == NULL) {
+			errno = 0;
+			log_error(LOG_ARGS, "No @ in address, ignoring %s",
+					addrs->strs[i]);
+			continue;
+		}
 		retval = write_rcpt_to(sockfd, addrs->strs[i]);
 		if(retval) {
 			log_error(LOG_ARGS, "Could not write RCPT TO:\n");
@@ -542,6 +555,12 @@ int send_mail_many_list(int sockfd, const char *from, const char *replyto,
 
 	for(i = 0; i < addrs->count; i++) {
 		addr = addrs->strs[i];
+		if(strchr(addr, '@') == NULL) {
+			errno = 0;
+			log_error(LOG_ARGS, "No @ in address, ignoring %s",
+					addr);
+			continue;
+		}
 		if(from) {
 			res = send_mail(sockfd, from, addr, replyto,
 					    mailmap, mailsize, listdir, NULL,
