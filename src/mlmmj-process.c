@@ -512,6 +512,8 @@ int main(int argc, char **argv)
 		owner = concatstr(2, listdir, "/control/owner");
 		if(owner && strncmp(recipdelim, "+owner@", 7) == 0) {
 			/* strip envelope from before resending */
+			delheaders->count = 0;
+			delheaders->strs = NULL;
 			delheaders->strs = myrealloc(delheaders->strs,
 				(delheaders->count+3) * sizeof(char *));
 			delheaders->strs[delheaders->count++] =
