@@ -37,7 +37,6 @@
 #include "strgen.h"
 #include "log_error.h"
 #include "memory.h"
-#include "log_oper.h"
 
 extern char *optarg;
 
@@ -139,8 +138,9 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+#if 0
 	log_oper(listdir, OPLOGFNAME, "mlmmj-recieve got %s", infilename);
-
+#endif
 	fsync(fd);
 	close(fd);
 

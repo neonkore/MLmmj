@@ -1,5 +1,12 @@
+1.2.0-RC2
+ o Add logging regular operation to mlmmj.operation.log
+ o Fix the sending loop by not sending the rest of the batch in every
+   iteration
 1.2.0-RC1
- o Add VERP support. http://www.postfix.org/VERP_README.html for Postfix howto
+ o Add VERP support. http://cr.yp.to/proto/verp.txt
+   For Postfix: http://www.postfix.org/VERP_README.html, add "postfix" to
+   LISTDIR/control/verp
+   $smtpd_authorized_verp_clients should be the only one needed to touch
 1.1.1-RC2
  o It's ok to log to a symbolic link to somewhere else
  o Add Message-Id: and Date: headers to mail from mlmmj

@@ -41,6 +41,7 @@
 #include "mygetline.h"
 #include "chomp.h"
 #include "memory.h"
+#include "log_oper.h"
 
 enum ctrl_e {
 	CTRL_SUBSCRIBE_DIGEST,
@@ -170,6 +171,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		if (!strchr(fromemails->emaillist[0], '@'))
 			/* Not a valid From: address, silently ignore */
 			exit(EXIT_SUCCESS);
+		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: request for digest"
+					" subscription from %s",
+					fromemails->emaillist[0]);
 		execlp(mlmmjsub, mlmmjsub,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
@@ -188,6 +192,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		if (!strchr(fromemails->emaillist[0], '@'))
 			/* Not a valid From: address, silently ignore */
 			exit(EXIT_SUCCESS);
+		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: request for nomail"
+					" subscription from %s",
+					fromemails->emaillist[0]);
 		execlp(mlmmjsub, mlmmjsub,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
@@ -206,6 +213,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		if (!strchr(fromemails->emaillist[0], '@'))
 			/* Not a valid From: address, silently ignore */
 			exit(EXIT_SUCCESS);
+		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: request for regular"
+					" subscription from %s",
+					fromemails->emaillist[0]);
 		execlp(mlmmjsub, mlmmjsub,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
@@ -230,6 +240,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		chomp(tmpstr);
 		close(tmpfd);
 		unlink(conffilename);
+		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: %s confirmed"
+					" subscription to digest", tmpstr);
 		execlp(mlmmjsub, mlmmjsub,
 				"-L", listdir,
 				"-a", tmpstr,
@@ -255,6 +267,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		chomp(tmpstr);
 		close(tmpfd);
 		unlink(conffilename);
+		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: %s confirmed"
+					" subscription to nomail", tmpstr);
 		execlp(mlmmjsub, mlmmjsub,
 				"-L", listdir,
 				"-a", tmpstr,
@@ -280,6 +294,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		chomp(tmpstr);
 		close(tmpfd);
 		unlink(conffilename);
+		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: %s confirmed"
+					" subscription to regular list",
+					tmpstr);
 		execlp(mlmmjsub, mlmmjsub,
 				"-L", listdir,
 				"-a", tmpstr,
@@ -297,6 +314,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		if (!strchr(fromemails->emaillist[0], '@'))
 			/* Not a valid From: address, silently ignore */
 			exit(EXIT_SUCCESS);
+		log_oper(listdir, OPLOGFNAME, "mlmmj-unsub: %s requests"
+					" unsubscribe from digest",
+					fromemails->emaillist[0]);
 		execlp(mlmmjunsub, mlmmjunsub,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
@@ -315,6 +335,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		if (!strchr(fromemails->emaillist[0], '@'))
 			/* Not a valid From: address, silently ignore */
 			exit(EXIT_SUCCESS);
+		log_oper(listdir, OPLOGFNAME, "mlmmj-unsub: %s requests"
+					" unsubscribe from nomail",
+					fromemails->emaillist[0]);
 		execlp(mlmmjunsub, mlmmjunsub,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
@@ -333,6 +356,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		if (!strchr(fromemails->emaillist[0], '@'))
 			/* Not a valid From: address, silently ignore */
 			exit(EXIT_SUCCESS);
+		log_oper(listdir, OPLOGFNAME, "mlmmj-unsub: %s requests"
+					" unsubscribe from regular list",
+					fromemails->emaillist[0]);
 		execlp(mlmmjunsub, mlmmjunsub,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
@@ -357,6 +383,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		close(tmpfd);
 		chomp(tmpstr);
 		unlink(conffilename);
+		log_oper(listdir, OPLOGFNAME, "mlmmj-unsub: %s confirmed"
+					" unsubscribe from digest", tmpstr);
 		execlp(mlmmjunsub, mlmmjunsub,
 				"-L", listdir,
 				"-a", tmpstr,
@@ -382,6 +410,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		close(tmpfd);
 		chomp(tmpstr);
 		unlink(conffilename);
+		log_oper(listdir, OPLOGFNAME, "mlmmj-unsub: %s confirmed"
+					" unsubscribe from nomail", tmpstr);
 		execlp(mlmmjunsub, mlmmjunsub,
 				"-L", listdir,
 				"-a", tmpstr,
@@ -407,6 +437,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		close(tmpfd);
 		chomp(tmpstr);
 		unlink(conffilename);
+		log_oper(listdir, OPLOGFNAME, "mlmmj-unsub: %s confirmed"
+					" unsubscribe from regular list",
+					tmpstr);
 		execlp(mlmmjunsub, mlmmjunsub,
 				"-L", listdir,
 				"-a", tmpstr,
@@ -444,6 +477,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 			myfree(moderatefilename);
 			exit(EXIT_SUCCESS); /* just exit, no mail to moderate */
 		}
+		log_oper(listdir, OPLOGFNAME, "%s moderated %s",
+				fromemails->emaillist[0], moderatefilename);
 		execlp(mlmmjsend, mlmmjsend,
 				"-L", listdir,
 				"-m", moderatefilename, NULL);
@@ -455,9 +490,12 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	/* listname+help@domain.tld */
 	case CTRL_HELP:
 		unlink(mailname);
-		if(strchr(fromemails->emaillist[0], '@'))
+		if(strchr(fromemails->emaillist[0], '@')) {
+			log_oper(listdir, OPLOGFNAME, "%s requested help",
+				fromemails->emaillist[0]);
 			send_help(listdir, fromemails->emaillist[0],
 				  mlmmjsend);
+		}
 		break;
 
 	/* listname+get-INDEX@domain.tld */
@@ -475,6 +513,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 						param);
 		if(stat(archivefilename, &stbuf) < 0)
 			exit(EXIT_SUCCESS);
+		log_oper(listdir, OPLOGFNAME, "%s got archive/%s",
+				fromemails->emaillist[0], archivefilename);
 		execlp(mlmmjsend, mlmmjsend,
 				"-T", fromemails->emaillist[0],
 				"-L", listdir,

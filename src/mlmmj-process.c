@@ -49,7 +49,7 @@
 #include "prepstdreply.h"
 #include "subscriberfuncs.h"
 #include "memory.h"
-
+#include "log_oper.h"
 
 enum action {
 	ALLOW,
@@ -558,6 +558,9 @@ int main(int argc, char **argv)
 			close(rawmailfd);
 			close(donemailfd);
 			unlink(mailfile);
+			log_oper(listdir, OPLOGFNAME, "mlmmj-recieve: sending"
+					" mail from %s to owner",
+					efromemails.emaillist[0]);
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "4",
 					"-F", efromemails.emaillist[0],

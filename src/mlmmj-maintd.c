@@ -44,8 +44,7 @@
 #include "ctrlvalue.h"
 #include "send_digest.h"
 #include "mylocking.h"
-
-static int maintdlogfd = -1;
+#include "log_oper.h"
 
 static void print_help(const char *prg)
 {
@@ -590,7 +589,7 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 	DIR *bouncedir;
 	char *dirname = concatstr(2, listdir, "/bounce/");
 	char *probefile, *address, *a, *firstbounce, *bouncedata;
-	char *logstr, *bouncelifestr;
+	char *bouncelifestr;
 	struct dirent *dp;
 	struct stat st;
 	pid_t pid, childpid;
