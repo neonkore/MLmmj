@@ -68,7 +68,7 @@ void getinfo(const char *line, struct mailhdr *readhdrs)
 			readhdrs[i].values[readhdrs[i].valuecount - 1] =
 					(char *)mymalloc(valuelen + 1);
 			strncpy(readhdrs[i].values[readhdrs[i].valuecount - 1],
-						line+tokenlen-1, valuelen);
+						line+tokenlen, valuelen);
 			chomp(readhdrs[i].values[readhdrs[i].valuecount - 1]);
 		}
 		i++;
