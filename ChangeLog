@@ -1,3 +1,7 @@
+ o Danish listtexts, thanks Jesper Lund
+ o Add control/noget to turn of listname+get-INDEX
+ o Rearrange envelope from to be listname+bounces-index-user=domain.tld@ instead
+   of listname+bounces-user=domain.tld-index@ to prepare for VERP support
 1.1.0
  o If mlmmj-recieve was invoked with a uid not root or not the owner of listdir
    inform about the uid actually invoked with
