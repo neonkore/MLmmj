@@ -114,9 +114,9 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 	char *mailname, *fromname, *toname, *reptoname, *from, *to, *repto;
 	char *discardedname = NULL, *ch;
 	char *dirname = concatstr(2, listdir, "/queue/");
-	pid_t pid;
+	pid_t childpid, pid;
 	struct stat st;
-	int fromfd, tofd, fd, discarded = 0;
+	int fromfd, tofd, fd, discarded = 0, status;
 
 	if(chdir(dirname) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
@@ -225,10 +225,19 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 			free(reptoname);
 		}
 
-		pid = fork();
+		childpid = fork();
 
-		if(pid == 0) {
-			if(repto)
+		if(childpid < 0) {
+			log_error(LOG_ARGS, "Could not fork");
+			continue;
+		}
+
+		if(childpid > 0) {
+			do /* Parent waits for the child */
+			      pid = waitpid(childpid, &status, 0);
+			while(pid == -1 && errno == EINTR);
+		} else {
+			if(repto) {
 				execlp(mlmmjsend, mlmmjsend,
 						"-l", "1",
 						"-m", mailname,
@@ -236,15 +245,21 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 						"-T", to,
 						"-R", repto,
 						"-a", 0);
-			else
+			} else {
 				execlp(mlmmjsend, mlmmjsend,
 						"-l", "1",
 						"-m", mailname,
 						"-F", from,
 						"-T", to,
 						"-a", 0);
+			}
 		}
+		free(mailname);
+		free(from);
+		free(to);
+		free(repto);
 	}
+
 	closedir(queuedir);
 
 	return 0;
@@ -257,8 +272,9 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 	char *dirname = concatstr(2, listdir, "/requeue/");
 	char *archivefilename, *subfilename, *subnewname;
 	struct stat st;
-	pid_t pid;
+	pid_t childpid, pid;
 	time_t t;
+	int status;
 
 	if(chdir(dirname) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
@@ -321,9 +337,18 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 		}
 		free(subfilename);
 		
-		pid = fork();
+		childpid = fork();
 
-		if(pid == 0)
+		if(childpid < 0) {
+			log_error(LOG_ARGS, "Could not fork");
+			continue;
+		}
+
+		if(childpid > 0) {
+			do /* Parent waits for the child */
+			      pid = waitpid(childpid, &status, 0);
+			while(pid == -1 && errno == EINTR);
+		} else {
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "3",
 					"-L", listdir,
@@ -331,6 +356,9 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 					"-s", subnewname,
 					"-a",
 					"-D", 0);
+		}
+		free(archivefilename);
+		free(subnewname);
 	}
 
 	closedir(queuedir);
@@ -457,9 +485,10 @@ int probe_bouncers(const char *listdir, const char *mlmmjbounce)
 				pid = waitpid(childpid, &status, 0);
 			while(pid == -1 && errno == EINTR);
 		} else {
+			probefile = strdup(dp->d_name);
 			execlp(mlmmjbounce, mlmmjbounce,
 					"-L", listdir,
-					"-a", dp->d_name,
+					"-a", probefile,
 					"-p", 0);
 			log_error(LOG_ARGS, "Could not execlp %s",
 						mlmmjbounce);
@@ -586,6 +615,7 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 						mlmmjunsub);
 			return 1;
 		}
+		free(address);
 	}
 	closedir(bouncedir);
 
@@ -627,21 +657,12 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	logname = concatstr(3, listdir, "maintdlog-", random);
-	maintdlogfd = open(logname, O_WRONLY|O_EXCL|O_CREAT, S_IRUSR|S_IWUSR);
-	if(maintdlogfd < 0) {
-		log_error(LOG_ARGS, "Could not open maintenance logfile");
-		exit(EXIT_FAILURE);
-	}
-	
-	WRITEMAINTLOG4(3, "chdir(", listdir, ");\n");
 	if(chdir(listdir) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s), exiting. "
 				    "No maintenance performed.", listdir);
 		exit(EXIT_FAILURE);
 	}
 
-	WRITEMAINTLOG4(3, "stat(", listdir, ", &st);\n");
 	if(stat(listdir, &st) < 0) {
 		log_error(LOG_ARGS, "Could not stat listdir '%s'", listdir);
 		exit(EXIT_FAILURE);
@@ -650,7 +671,6 @@ int main(int argc, char **argv)
 	chown(logname, st.st_uid, st.st_gid);
 
 	snprintf(uidstr, sizeof(uidstr), "%d", (int)st.st_uid);
-	WRITEMAINTLOG4(3, "setuid(", uidstr, ");\n");
 	if(setuid(st.st_uid) < 0) {
 		log_error(LOG_ARGS, "Could not setuid listdir owner");
 		exit(EXIT_FAILURE);
@@ -669,6 +689,14 @@ int main(int argc, char **argv)
 	}
 
 	for(;;) {
+		logname = concatstr(3, listdir, "maintdlog-", random);
+		maintdlogfd = open(logname, O_WRONLY|O_EXCL|O_CREAT,
+					S_IRUSR|S_IWUSR);
+		if(maintdlogfd < 0) {
+			log_error(LOG_ARGS, "Could not open maintenance logfile");
+			exit(EXIT_FAILURE);
+		}
+	
 		WRITEMAINTLOG4(3, "clean_moderation(", listdir, ");\n");
 		clean_moderation(listdir);
 
@@ -697,7 +725,8 @@ int main(int argc, char **argv)
 		close(maintdlogfd);
 		logstr = concatstr(3, listdir, "/", MAINTD_LOGFILE);
 		if(rename(logname, logstr) < 0)
-			log_error(LOG_ARGS, "Could not rename logfile");
+			log_error(LOG_ARGS, "Could not rename(%s,%s)",
+						logname, logstr);
 
 		free(logname);
 		free(logstr);
