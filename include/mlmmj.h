@@ -40,5 +40,11 @@ void print_version(const char *prg);
 			exit(EXIT_FAILURE); \
 		}
 
+#define CHECKFULLPATH(name) if(strchr(name, '/') == NULL) { \
+			fprintf(stderr, "All mlmmj binaries have to " \
+					"be invoked with full path,\n" \
+					"e.g. /usr/local/bin/%s\n", name); \
+			exit(EXIT_FAILURE); \
+			};
 
 #endif /* MLMMJ_GENERIC_INCLUDES */

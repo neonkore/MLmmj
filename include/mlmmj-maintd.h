@@ -18,9 +18,12 @@ int resend_queue(const char *listdir, const char *mlmmjsend);
 int resend_requeue(const char *listdir, const char *mlmmjsend);
 int clean_nolongerbouncing(const char *listdir);
 int probe_bouncers(const char *listdir, const char *mlmmjbounce);
-int unsub_bouncers(const char *listdir);
+int unsub_bouncers(const char *listdir, const char *mlmmjunsub);
 
-#define WRITELOGOK writen(maintdlogfd, " ... ok\n" , sizeof(" ... ok\n"));
+/* I know the below is nasty, but it requires C99 to have multiple
+ * argument macros, and this would then be the only thing needing
+ * C99 -- Jun 09 2004, mmj
+ */
 
 #define WRITEMAINTLOG4( s1, s2, s3, s4 ) do { \
 		logstr = concatstr( s1, s2, s3, s4 ) ;\
