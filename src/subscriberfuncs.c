@@ -29,13 +29,18 @@ off_t find_subscriber(int fd, const char *address)
 
 	if(fstat(fd, &st) < 0) {
 		log_error(LOG_ARGS, "Could not stat fd");
-		return 1;
+		return (off_t)-1;
+	}
+
+	if(!S_ISREG(st.st_mode)) {
+		log_error(LOG_ARGS, "Non regular file in subscribers.d/");
+		return (off_t)-1;
 	}
 
 	if((start = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0)) ==
 			(void *)-1) {
 		log_error(LOG_ARGS, "Could not mmap fd");
-		return 1;
+		return (off_t)-1;
 	}
 	
 	for(next = cur = start; next < start + st.st_size; next++) {

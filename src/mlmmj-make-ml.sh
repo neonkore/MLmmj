@@ -67,7 +67,6 @@ do
 done
 
 touch "$LISTDIR"/index
-touch "$LISTDIR"/subscribers
 
 echo -n "The Domain for the List? [] : "
 read FQDN
@@ -88,7 +87,7 @@ fi
 LISTADDRESS="$LISTNAME@$FQDN"
 echo "$LISTADDRESS" > "$LISTDIR"/"listaddress"
 
-MLMMJRECIEVE=`which mlmmj-recieve`
+MLMMJRECIEVE=`which mlmmj-recieve 2>/dev/null`
 if [ -z "$MLMMJRECIEVE" ]; then
 	MLMMJRECIEVE="/path/to/mlmmj-recieve"
 fi

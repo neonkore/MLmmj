@@ -1,21 +1,14 @@
-This only applies if you used mlmmj before version 0.3.0
----------------------------------------------------------
-If you don't have a help file in listdir/text/listhelp there is one in
-listtexts/listhelp, which can be installed by doing:
-$ install -m 644 listtexts/listhelp /path/to/mylist/text
+This applies to everyone using mlmmj < 0.5.0:
+---------------------------------------------
 
+ Note that listdir/subcribers is no longer used for subscribers. Instead
+ every file in listdir/subscribers.d/ is used.
 
-This only applies if you used mlmmj before version 0.2.0:
----------------------------------------------------------
+ A quick way to convert:
 
-Starting with mlmmj-0.2.0, it is no longer necessary to specify the listaddress
-on the commandline. See the README for how the aliases look, or simply just
-remove the -l <listaddr> switch.
+ $ for i in `cat listdir/subscribers` ; do mlmmj-sub -a $i -L listdir ; done
 
-Also starting with mlmmj-0.2.0, there is a need to extend the mailinglist
-directory. Have a look in the README and in the mlmmj-make-ml.sh script, but
-basically this should do it:
+ And then remove listdir/subscribers.
 
-$ mkdir /path/to/mylist/{queue,text,subconf,unsubconf}
-$ install -m 644 listtexts/* /path/to/mylist/text
-
+ A quick and dirty hack would be to simply move listdir/subscribers into
+ subscribers.d/. This could lead to double subscriptions, so use with caution!

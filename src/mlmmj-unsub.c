@@ -9,14 +9,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
-#include <syslog.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <dirent.h>
 
 #include "mlmmj.h"
 #include "mlmmj-unsub.h"
@@ -190,13 +189,14 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 	exit(EXIT_FAILURE);
 }
 
-int unsubscribe(int subreadfd, int subwritefd, const char *address)
+ssize_t unsubscribe(int subreadfd, int subwritefd, const char *address)
 {
 	off_t suboff = find_subscriber(subreadfd, address);
 	struct stat st;
 	char *inmap;
 	size_t len = strlen(address) + 1; /* + 1 for the '\n' */
-
+	ssize_t writeres, written = 0;
+	
 	if(suboff == -1)
 		return 1; /* Did not find subscriber */
 
@@ -211,11 +211,18 @@ int unsubscribe(int subreadfd, int subwritefd, const char *address)
 		return 1;
 	}
 
-	writen(subwritefd, inmap, suboff);
-	writen(subwritefd, inmap + suboff + len, st.st_size - len - suboff);
+	if((writeres = writen(subwritefd, inmap, suboff)) < 0)
+		return -1;
+	written += writeres;
+	
+	if((writeres = writen(subwritefd, inmap + suboff + len,
+					st.st_size - len - suboff) < 0))
+		return -1;
+	written += writeres;
+
 	munmap(inmap, st.st_size);
 
-	return 0;
+	return written;
 }
 
 static void print_help(const char *prg)
@@ -235,12 +242,15 @@ int main(int argc, char **argv)
 	int confirmunsub = 0, unsubconfirm = 0;
 	char *listaddr, *listdir = NULL, *address = NULL, *subreadname = NULL;
 	char *subwritename, *mlmmjsend, *argv0 = strdup(argv[0]);
+	char *subddirname;
 	off_t suboff;
+	DIR *subddir;
+	struct dirent *dp;
 	
 	mlmmjsend = concatstr(2, dirname(argv0), "/mlmmj-send");
 	free(argv0);
 
-        log_set_name(argv[0]);
+	log_set_name(argv[0]);
 
 	while ((opt = getopt(argc, argv, "hcCVL:a:")) != -1) {
 		switch(opt) {
@@ -282,71 +292,110 @@ int main(int argc, char **argv)
 	if(unsubconfirm)
 		generate_unsubconfirm(listdir, listaddr, address, mlmmjsend);
 
-	subreadname = concatstr(2, listdir, "/subscribers");
-	subwritename = concatstr(2, listdir, "/subscribers.new");
-
-	subread = open(subreadname, O_RDWR);
-	if(subread == -1) {
-		free(subreadname); free(subwritename);
-		log_error(LOG_ARGS, "Could not open '%s'", subreadname);
-		exit(EXIT_FAILURE);
+	subddirname = concatstr(2, listdir, "/subscribers.d/");
+	if((subddir = opendir(subddirname)) == NULL) {
+		log_error(LOG_ARGS, "Could not opendir(%s)",
+				    subddirname);
+		free(subddirname);
 	}
+	free(subddirname);
+	while((dp = readdir(subddir)) != NULL) {
+		if(!strcmp(dp->d_name, "."))
+			continue;
+		if(!strcmp(dp->d_name, ".."))
+			continue;
+		subreadname = concatstr(3, listdir, "/subscribers.d/",
+				dp->d_name);
 
-	rlock = myexcllock(subread);
-	if(rlock < 0) {
-		perror("rlock");
-		log_error(LOG_ARGS, "Error locking '%s' file", subreadname);
-		close(subread);
-		free(subreadname); free(subwritename);
-		exit(EXIT_FAILURE);
-	}
+		subread = open(subreadname, O_RDWR);
+		if(subread == -1) {
+			log_error(LOG_ARGS, "Could not open '%s'", subreadname);
+			free(subreadname);
+			continue;
+		}
 
-	suboff = find_subscriber(subread, address);
-	if(suboff == -1) {
-		myunlock(subread);
-		free(subreadname); free(subwritename);
-		close(subread);
-		exit(EXIT_SUCCESS);
-	}
+		suboff = find_subscriber(subread, address);
+		if(suboff == -1) {
+			close(subread);
+			free(subreadname);
+			continue;
+		}
 
-	subwrite = open(subwritename, O_RDWR | O_CREAT | O_EXCL,
-		        S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-	if(subwrite == -1){
-		log_error(LOG_ARGS, "Could not open '%s'", subwritename);
-		close(subread);
-		free(subreadname); free(subwritename);
-		exit(EXIT_FAILURE);
-	}
+		rlock = myexcllock(subread);
+		if(rlock < 0) {
+			log_error(LOG_ARGS, "Error locking '%s' file",
+					subreadname);
+			close(subread);
+			free(subreadname);
+			continue;
+		}
 
-	wlock = myexcllock(subwrite);
-	if(wlock < 0) {
-		perror("wlock");
-		log_error(LOG_ARGS, "Error locking '%s' file", subwritename);
-		close(subread); close(subwrite);
-		free(subreadname); free(subwritename);
-		exit(EXIT_FAILURE);
-	}
+		subwritename = concatstr(2, subreadname, ".new");
 
-	unsubres = unsubscribe(subread, subwrite, address);
+		subwrite = open(subwritename, O_RDWR | O_CREAT | O_EXCL,
+				S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+		if(subwrite == -1){
+			log_error(LOG_ARGS, "Could not open '%s'",
+					subwritename);
+			myunlock(subread);
+			close(subread);
+			free(subreadname);
+			free(subwritename);
+			continue;
+		}
 
-	if(unsubres == 0)
+		wlock = myexcllock(subwrite);
+		if(wlock < 0) {
+			log_error(LOG_ARGS, "Error locking '%s'",
+					subwritename);
+			myunlock(subread);
+			close(subread);
+			close(subwrite);
+			free(subreadname);
+			free(subwritename);
+			continue;
+		}
+
+		unsubres = unsubscribe(subread, subwrite, address);
+		if(unsubres < 0) {
+			myunlock(subread);
+			myunlock(subwrite);
+			close(subread);
+			close(subwrite);
+			unlink(subwritename);
+			free(subreadname);
+			free(subwritename);
+			continue;
+		}
+
 		unlink(subreadname);
-	
-	if(rename(subwritename, subreadname) < 0) {
-		log_error(LOG_ARGS, "Could not rename '%s' to '%s'",
-			  subwritename, subreadname);
-		myunlock(subread); myunlock(subwrite);
-		close(subread); close(subwrite);
-		free(subreadname); free(subwritename);
-		exit(EXIT_FAILURE);
+
+		if(unsubres > 0) {
+			if(rename(subwritename, subreadname) < 0) {
+				log_error(LOG_ARGS,
+					"Could not rename '%s' to '%s'",
+					subwritename, subreadname);
+				myunlock(subread);
+				myunlock(subwrite);
+				close(subread);
+				close(subwrite);
+				free(subreadname);
+				free(subwritename);
+				continue;
+			}
+		} else /* unsubres == 0, no subscribers left */
+			unlink(subwritename);
+
+		myunlock(subread);
+		myunlock(subwrite);
+		close(subread);
+		close(subwrite);
+		free(subreadname);
+		free(subwritename);
+
+		if(confirmunsub)
+			confirm_unsub(listdir, listaddr, address, mlmmjsend);
 	}
-	myunlock(subread); myunlock(subwrite);
-
-	free(subreadname); free(subwritename);
-	close(subread); close(subwrite);
-
-	if(confirmunsub)
-		confirm_unsub(listdir, listaddr, address, mlmmjsend);
 
 	return EXIT_SUCCESS;
 }

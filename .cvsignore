@@ -1,4 +1,5 @@
-.cvsignore
-autom4te.cache
-configure
-mlmmj-test
+aclocal.m4
+depcomp
+install-sh
+missing
+mkinstalldirs

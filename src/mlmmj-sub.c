@@ -203,7 +203,7 @@ static void print_help(const char *prg)
 int main(int argc, char **argv)
 {
 	char *listaddr, *listdir = NULL, *address = NULL, *subfilename = NULL;
-	char *mlmmjsend, *argv0 = strdup(argv[0]);
+	char *mlmmjsend, *argv0 = strdup(argv[0]), chstr[2];
 	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock;
 	size_t len;
 	off_t suboff;
@@ -254,7 +254,9 @@ int main(int argc, char **argv)
 		exit(EXIT_SUCCESS);  /* XXX is this success? */
 	}
 
-	subfilename = concatstr(2, listdir, "/subscribers");
+	chstr[0] = address[0];
+	chstr[1] = '\0';
+	subfilename = concatstr(3, listdir, "/subscribers.d/", chstr);
 
 	subfilefd = open(subfilename, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
 	if(subfilefd == -1) {

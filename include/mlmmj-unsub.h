@@ -9,9 +9,11 @@
 #ifndef MLMMJ_UNSUBSCRIBE_H
 #define MLMMJ_UNSUBSCRIBE_H
 
+#include <sys/types.h>
+
 void confirm_unsub(const char *listdir, const char *listaddr,
 		   const char *subaddr, const char *mlmmj);
-int unsubscribe(int subreadfd, int subwritefd, const char *address);
+ssize_t unsubscribe(int subreadfd, int subwritefd, const char *address);
 void generate_unsubconfirm(const char *listdir, const char *listaddr,
 			   const char *subaddr, const char *mlmmjsend);
 
