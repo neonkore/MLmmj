@@ -14,5 +14,6 @@
 ssize_t writen(int fd, const void *vptr, size_t n);
 int random_int(void);
 int dumpfd2fd(int infd, int outfd);
+int openrandexclrw(const char *dir, const char *prefix, mode_t mode);
 
 #endif /* WRAPPERS_H */
