@@ -6,9 +6,9 @@
  * Public License as described at http://www.gnu.org/licenses/gpl.txt
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "mlmmj.h"
 #include "mygetline.h"
@@ -17,6 +17,8 @@
 #include "chomp.h"
 #include "ctrlvalue.h"
 #include "do_all_the_voodo_here.h"
+#include "log_error.h"
+#include "wrappers.h"
 
 int findit(const char *line, const char **headers)
 {
@@ -57,25 +59,25 @@ void getinfo(const char *line, struct mailhdr *readhdrs)
 	}
 }
 
-void do_all_the_voodo_here(FILE *in, FILE *out, FILE *hdradd, FILE *footers,
+int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 		 const char **delhdrs, struct mailhdr *readhdrs,
 		 const char *prefix)
 {
-	char *hdrline, *line, *subject;
+	char *hdrline, *subject;
 
-	while((hdrline = gethdrline(in))) {
+	while((hdrline = gethdrline(infd))) {
 		/* Done with headers? Then add extra if wanted*/
 		if((strlen(hdrline) == 1) && (hdrline[0] == '\n')){
-			if(hdradd) {
-				fflush(out);
-				while((line = myfgetline(hdradd))) {
-					fputs(line, out);
-					free(line);
+			if(hdrfd) {
+				if(dumpfd2fd(hdrfd, outfd) < 0) {
+					log_error(LOG_ARGS, "Could not"
+						"add extra headers");
+					free(hdrline);
+					return -1;
 				}
-				fflush(out);
 			}
-			fputs(hdrline, out);
-			fflush(out);
+			write(outfd, hdrline, strlen(hdrline));
+			fsync(outfd);
 			free(hdrline);
 			break;
 		}
@@ -90,7 +92,8 @@ void do_all_the_voodo_here(FILE *in, FILE *out, FILE *hdradd, FILE *footers,
 					subject = concatstr(4,
 							"Subject: ", prefix,
 							" ", hdrline + 9);
-					fputs(subject, out);
+					writen(outfd, subject,
+							strlen(subject));
 					free(subject);
 					free(hdrline);
 					continue;
@@ -101,55 +104,28 @@ void do_all_the_voodo_here(FILE *in, FILE *out, FILE *hdradd, FILE *footers,
 		/* Should it be stripped? */
 		if(delhdrs) {
 			if(!findit(hdrline, delhdrs))
-				fputs(hdrline, out);
+				writen(outfd, hdrline, strlen(hdrline));
 		} else
-			fputs(hdrline, out);
+			writen(outfd, hdrline, strlen(hdrline));
 
 
 		free(hdrline);
 	}
 
 	/* Just print the rest of the mail */
-	while((line = myfgetline(in))) {
-		fputs(line, out);
-		free(line);
+	if(dumpfd2fd(infd, outfd) < 0) {
+		log_error(LOG_ARGS, "Error when dumping rest of mail");
+		return -1;
 	}
-
-	fflush(out);
 
 	/* No more, lets add the footer if one */
-	if(footers) {
-		while((line = myfgetline(footers))) {
-			fputs(line, out);
-			free(line);
+	if(footfd)
+		if(dumpfd2fd(footfd, outfd) < 0) {
+			log_error(LOG_ARGS, "Error when adding footer");
+			return -1;
 		}
-	}
 
-	fflush(out);
-}
-#if 0
-int main(int argc, char **argv)
-{
-	int i = 0;
-	FILE *hdrfile = fopen(argv[1], "r");
-	FILE *footfile = fopen(argv[2], "r");
-	const char *badhdrs[] = {"From ", "Received:", NULL};
-	struct mailhdr readhdrs[] = {
-		{"MIME-Version: ", NULL},
-		{"Date: ", NULL},
-		{ NULL , NULL }
-	};
-	
-	do_all_the_voodo_here(stdin, stdout, hdrfile, footfile, badhdrs,
- 				readhdrs);
-
-	while(readhdrs[i].token) {
-		printf(	"readhdrs[%d].token = [%s]\n"
-			"readhdrs[%d].value = [%s]\n", i, readhdrs[i].token,
-						     i, readhdrs[i].value);
-		i++;
-	}
+	fsync(outfd);
 
 	return 0;
 }
-#endif
