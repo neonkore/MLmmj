@@ -14,8 +14,6 @@
 #define RELAYHOST "127.0.0.1"
 #define READ_BUFSIZE 2048
 #define RECIPDELIM '+'
-#define MAX_CONNECTIONS 1 /* How many max connections to relayhost */
-#define WAITSLEEP 1000
 #define MODREQLIFE 604800 /* How long time will moderation requests be kept?
 			   * 604800s is 7 days */
 #define DISCARDEDLIFE 604800 /* How long time will discarded mails be kept?
