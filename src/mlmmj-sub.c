@@ -244,9 +244,10 @@ int main(int argc, char **argv)
 {
 	char *listaddr, *listdir = NULL, *address = NULL, *subfilename = NULL;
 	char *mlmmjsend, *bindir, chstr[2], *subdir, *subddirname = NULL;
+	char *sublockname;
 	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock, notifysub;
 	int changeuid = 1, status, digest = 0, nomail = 0;
-	int groupwritable = 0;
+	int groupwritable = 0, sublock, sublockfd;
 	size_t len;
 	off_t suboff;
 	struct stat st;
@@ -298,6 +299,12 @@ int main(int argc, char **argv)
 		fprintf(stderr, "You have to specify -L and -a\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
 		exit(EXIT_FAILURE);
+	}
+
+	if(strchr(address, '@') == NULL) {
+		log_error(LOG_ARGS, "No '@' sign in '%s', not subscribing",
+				address);
+		exit(EXIT_SUCCESS);
 	}
 
 	if(digest && nomail) {
@@ -364,6 +371,24 @@ int main(int argc, char **argv)
 		
 	subfilename = concatstr(3, listdir, subdir, chstr);
 	myfree(subdir);
+
+	sublockname = concatstr(5, listdir, subdir, ".", chstr, ".lock");
+	sublockfd = open(sublockname, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+	if(sublockfd < 0) {
+		log_error(LOG_ARGS, "Error opening lock file %s",
+				sublockname);
+		myfree(sublockname);
+		exit(EXIT_FAILURE);
+	}
+
+	sublock = myexcllock(sublockfd);
+	if(sublock < 0) {
+		log_error(LOG_ARGS, "Error locking '%s' file",
+				sublockname);
+		myfree(sublockname);
+		close(sublockfd);
+		exit(EXIT_FAILURE);
+	}
 
 	subfilefd = open(subfilename, O_RDWR|O_CREAT,
 				S_IRUSR|S_IWUSR|groupwritable);

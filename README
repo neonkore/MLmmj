@@ -1,4 +1,4 @@
-README mlmmj-1.2.2					February 1st 2005
+README mlmmj-1.2.3					February 7th 2005
 
 This is an attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
@@ -19,6 +19,7 @@ The functionality:
  · Digests
  · No mail delivery subscription
  · VERP support
+ · Delivery Status Notification (RFC1891) support
 
 To use mlmmj, do the following:
 

@@ -231,29 +231,34 @@ ssize_t unsubscribe(int subreadfd, int subwritefd, const char *address)
 	struct stat st;
 	char *inmap;
 	size_t len = strlen(address) + 1; /* + 1 for the '\n' */
-	ssize_t writeres, written = 0;
+	ssize_t writeres = 0, written = 0;
 	
 	if(suboff == -1)
-		return 1; /* Did not find subscriber */
+		return -1; /* Did not find subscriber */
 
 	if(fstat(subreadfd, &st) < 0) {
-		log_error(LOG_ARGS, "Could not stat fd");
-		return 1;
+		log_error(LOG_ARGS, "Could not stat subreadfd");
+		return -1;
 	}
 
 	if((inmap = mmap(0, st.st_size, PROT_READ, MAP_SHARED,
 		       subreadfd, 0)) == MAP_FAILED) {
-		log_error(LOG_ARGS, "Could not mmap fd");
-		return 1;
+		log_error(LOG_ARGS, "Could not mmap subreadfd");
+		return -1;
 	}
 
-	if((writeres = writen(subwritefd, inmap, suboff)) < 0)
-		return -1;
+	if(suboff > 0) {
+		writeres = writen(subwritefd, inmap, suboff);
+		if(writeres < 0)
+			return -1;
+	}
 	written += writeres;
 	
-	if((writeres = writen(subwritefd, inmap + suboff + len,
-					st.st_size - len - suboff) < 0))
+	writeres = writen(subwritefd, inmap + len + suboff,
+				st.st_size - len - suboff);
+	if(writeres < 0)
 		return -1;
+
 	written += writeres;
 
 	munmap(inmap, st.st_size);
@@ -283,10 +288,10 @@ int main(int argc, char **argv)
 {
 	int subread, subwrite, rlock, wlock, opt, unsubres, status, nomail = 0;
 	int confirmunsub = 0, unsubconfirm = 0, notifysub = 0, digest = 0;
-	int changeuid = 1, groupwritable = 0;
+	int changeuid = 1, groupwritable = 0, sublock, sublockfd;
 	char *listaddr, *listdir = NULL, *address = NULL, *subreadname = NULL;
 	char *subwritename, *mlmmjsend, *bindir, *subdir;
-	char *subddirname;
+	char *subddirname, *sublockname;
 	off_t suboff;
 	DIR *subddir;
 	struct dirent *dp;
@@ -439,25 +444,50 @@ int main(int argc, char **argv)
 			continue;
 		}
 
+		/* create a .name.lock file and aquire the lock */
+		sublockname = concatstr(5, listdir, subdir, ".", dp->d_name,
+					".lock");
+		sublockfd = open(sublockname, O_RDWR | O_CREAT,
+						S_IRUSR | S_IWUSR);
+		if(sublockfd < 0) {
+			log_error(LOG_ARGS, "Error opening lock file %s",
+					sublockname);
+			myfree(sublockname);
+			continue;
+		}
+
+		sublock = myexcllock(sublockfd);
+		if(sublock < 0) {
+			log_error(LOG_ARGS, "Error locking '%s' file",
+					sublockname);
+			myfree(sublockname);
+			close(sublockfd);
+			continue;
+		}
+		
 		rlock = myexcllock(subread);
 		if(rlock < 0) {
 			log_error(LOG_ARGS, "Error locking '%s' file",
 					subreadname);
 			close(subread);
+			close(sublockfd);
 			myfree(subreadname);
+			myfree(sublockname);
 			continue;
 		}
 
 		subwritename = concatstr(2, subreadname, ".new");
 
-		subwrite = open(subwritename, O_RDWR | O_CREAT | O_EXCL,
+		subwrite = open(subwritename, O_RDWR | O_CREAT | O_TRUNC,
 				S_IRUSR | S_IWUSR | groupwritable);
 		if(subwrite == -1){
 			log_error(LOG_ARGS, "Could not open '%s'",
 					subwritename);
 			close(subread);
+			close(sublockfd);
 			myfree(subreadname);
 			myfree(subwritename);
+			myfree(sublockname);
 			continue;
 		}
 
@@ -467,8 +497,10 @@ int main(int argc, char **argv)
 					subwritename);
 			close(subread);
 			close(subwrite);
+			close(sublockfd);
 			myfree(subreadname);
 			myfree(subwritename);
+			myfree(sublockname);
 			continue;
 		}
 
@@ -476,13 +508,13 @@ int main(int argc, char **argv)
 		if(unsubres < 0) {
 			close(subread);
 			close(subwrite);
+			close(sublockfd);
 			unlink(subwritename);
 			myfree(subreadname);
 			myfree(subwritename);
+			myfree(sublockname);
 			continue;
 		}
-
-		unlink(subreadname);
 
 		if(unsubres > 0) {
 			if(rename(subwritename, subreadname) < 0) {
@@ -495,13 +527,18 @@ int main(int argc, char **argv)
 				myfree(subwritename);
 				continue;
 			}
-		} else /* unsubres == 0, no subscribers left */
+		} else { /* unsubres == 0, no subscribers left */
 			unlink(subwritename);
+			unlink(subreadname);
+		}
 
 		close(subread);
 		close(subwrite);
+		close(sublockfd);
 		myfree(subreadname);
 		myfree(subwritename);
+		unlink(sublockname);
+		myfree(sublockname);
 
 		if(confirmunsub) {
 			childpid = fork();

@@ -1,4 +1,7 @@
- o In case of listname+bounces-INDEX use the DSN (RFC1891) to extract
+1.2.3
+ o Only allow subscription of addresses with '@' in them
+ o Add extra lock layer (.filename.lock) when accessing subscribers files
+ o In case of listname+bounces-INDEX use the DSN (RFC1891) report to extract
    the bouncing address
  o Fix usage of a zero sized control/verp string
  o Make the Date: header RFC2822 conformant
