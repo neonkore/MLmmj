@@ -23,34 +23,68 @@
 #include "log_error.h"
 #include "statctrl.h"
 
+enum ctrl_e {
+	CTRL_SUBSCRIBE,
+	CTRL_CONFSUB,
+	CTRL_UNSUBSCRIBE,
+	CTRL_CONFUNSUB,
+	CTRL_BOUNCES,
+	CTRL_MODERATE,
+	CTRL_HELP,
+	CTRL_END  /* end marker, must be last */
+};
+
+/* MMJ says that function pointers are just for show off, so I will
+ * switch an enum :-)  -- mortenp 20040511 */
+struct ctrl_command {
+	char *command;
+	unsigned int accepts_parameter;
+};
+
+/* must match the enum */
+static struct ctrl_command ctrl_commands[] = {
+	{ "subscribe",   0 },
+	{ "confsub",     1 },
+	{ "unsubscribe", 0 },
+	{ "confunsub",   1 },
+	{ "bounces",     1 },
+	{ "moderate",    1 },
+	{ "help",        0 }
+};
+
+
 int listcontrol(const char *mailfilename, const char *listdir,
 		const char *controladdr, const char *mlmmjsub,
 		const char *mlmmjunsub, const char *mlmmjsend,
 		const char *mlmmjbounce)
 {
 	char tmpstr[READ_BUFSIZE];
-	char *atsign, *recipdelimsign, *tokenvalue, *confstr, *bouncenr;
-	char *controlstr, *conffilename, *moderatefilename;
+	char *atsign, *recipdelimsign, *tokenvalue, *bouncenr;
+	char *controlstr, *param, *conffilename, *moderatefilename;
 	FILE *mailfile, *tempfile;
 	struct email_container fromemails;
 	size_t len;
 	struct stat stbuf;
-#if 0
 	int closedlist;
-#endif
+	size_t cmdlen;
+	unsigned int ctrl;
 	
 	if((mailfile = fopen(mailfilename, "r")) == NULL) {
 		log_error(LOG_ARGS, "listcontrol, could not open mail");
 		exit(EXIT_FAILURE);
 	}
-	/* Closed list only handling bounces?
-	closedlist = statctrl(listdir, "closedlist"); */
-	
+
+	/* A closed list doesn't allow subscribtion and unsubscription */
+	closedlist = statctrl(listdir, "closedlist");
+
 	recipdelimsign = index(controladdr, RECIPDELIM);
+	MY_ASSERT(recipdelimsign);
 	atsign = index(controladdr, '@');
+	MY_ASSERT(atsign);
 	len = atsign - recipdelimsign;
 
 	controlstr = malloc(len);
+	MY_ASSERT(controlstr);
 	snprintf(controlstr, len, "%s", recipdelimsign + 1);
 
 	tokenvalue = find_header_file(mailfile, tmpstr, "From:");
@@ -62,9 +96,36 @@ int listcontrol(const char *mailfilename, const char *listdir,
 #if 0
 	log_error(LOG_ARGS, "controlstr = [%s]\n", controlstr);
 #endif
+	for (ctrl=0; ctrl<CTRL_END; ctrl++) {
+		cmdlen = strlen(ctrl_commands[ctrl].command);
+		if (strncmp(controlstr, ctrl_commands[ctrl].command, cmdlen)
+				== 0) {
 
-	if(strncasecmp(controlstr, "subscribe", 9) == 0) {
-		free(controlstr);
+			if (ctrl_commands[ctrl].accepts_parameter &&
+					(controlstr[cmdlen] == '-')) {
+				param = strdup(controlstr + cmdlen + 1);
+				MY_ASSERT(param);
+				free(controlstr);
+				break;
+			} else if (!ctrl_commands[ctrl].accepts_parameter &&
+					(controlstr[cmdlen] == '\0')) {
+				param = NULL;
+				free(controlstr);
+				break;
+			} else {
+				log_error(LOG_ARGS, "Received a malformed"
+					" list control request");
+				free(controlstr);
+				return -1;
+			}
+
+		}
+	}
+
+	switch (ctrl) {
+
+	case CTRL_SUBSCRIBE:
+		if (closedlist) exit(EXIT_SUCCESS);
 		if(index(fromemails.emaillist[0], '@')) {
 			execlp(mlmmjsub, mlmmjsub,
 					"-L", listdir,
@@ -74,12 +135,12 @@ int listcontrol(const char *mailfilename, const char *listdir,
 			exit(EXIT_FAILURE);
 		} else /* Not a valid From: address, so we silently ignore */
 			exit(EXIT_SUCCESS);
-	} else if(strncasecmp(controlstr, "confsub-", 8) == 0) {
-		len -= 7;
-		confstr = malloc(len);
-		snprintf(confstr, len, "%s", controlstr + 8);
-		free(controlstr);
-		conffilename = concatstr(3, listdir, "/subconf/", confstr);
+		break;
+
+	case CTRL_CONFSUB:
+		if (closedlist) exit(EXIT_SUCCESS);
+		conffilename = concatstr(3, listdir, "/subconf/", param);
+		free(param);
 		if((tempfile = fopen(conffilename, "r"))) {
 			fgets(tmpstr, READ_BUFSIZE, tempfile);
 			fclose(tempfile);
@@ -98,8 +159,10 @@ int listcontrol(const char *mailfilename, const char *listdir,
 			}
 		} else /* Not a confirm so silently ignore */
 			exit(EXIT_SUCCESS);
-	} else if(strncasecmp(controlstr, "unsubscribe", 11) == 0) {
-		free(controlstr);
+		break;
+
+	case CTRL_UNSUBSCRIBE:
+		if (closedlist) exit(EXIT_SUCCESS);
 		if(index(fromemails.emaillist[0], '@')) {
 			execlp(mlmmjunsub, mlmmjunsub,
 					"-L", listdir,
@@ -109,12 +172,12 @@ int listcontrol(const char *mailfilename, const char *listdir,
 			exit(EXIT_FAILURE);
 		} else /* Not a valid From: address, so we silently ignore */
 			exit(EXIT_SUCCESS);
-	} else if(strncasecmp(controlstr, "confunsub-", 10) == 0) {
-		len -= 9;
-		confstr = malloc(len);
-		snprintf(confstr, len, "%s", controlstr + 10);
-		free(controlstr);
-		conffilename = concatstr(3, listdir, "/unsubconf/", confstr);
+		break;
+
+	case CTRL_CONFUNSUB:
+		if (closedlist) exit(EXIT_SUCCESS);
+		conffilename = concatstr(3, listdir, "/unsubconf/", param);
+		free(param);
 		if((tempfile = fopen(conffilename, "r"))) {
 			fgets(tmpstr, READ_BUFSIZE, tempfile);
 			fclose(tempfile);
@@ -133,26 +196,25 @@ int listcontrol(const char *mailfilename, const char *listdir,
 			}
 		} else /* Not a confirm so silently ignore */
 			exit(EXIT_SUCCESS);
-	} else if(strncasecmp(controlstr, "bounces-", 8) == 0) {
-		controlstr += 8;
-		bouncenr = strrchr(controlstr, '-');
+		break;
+
+	case CTRL_BOUNCES:
+		bouncenr = strrchr(param, '-');
 		if (!bouncenr) exit(EXIT_SUCCESS); /* malformed bounce, ignore */
 		*bouncenr++ = '\0';
-#if 0
-		log_error(LOG_ARGS, "bounce, bounce, bounce email=[%s] nr=[%s]", controlstr, bouncenr);
-#endif
 		execlp(mlmmjbounce, mlmmjbounce,
 				"-L", listdir,
-				"-a", controlstr,
+				"-a", param,
 				"-n", bouncenr, 0);
 		log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjbounce);
 		exit(EXIT_FAILURE);
-	} else if(strncasecmp(controlstr, "moderate-", 9) == 0) {
-		controlstr += 9;
+		break;
+
+	case CTRL_MODERATE:
+		/* TODO Add accept/reject parameter to moderate */
 		moderatefilename = concatstr(3, listdir, "/moderation/queue/",
-						       controlstr);
-		controlstr -= 9;
-		free(controlstr);
+						       param);
+		free(param);
 		if(stat(moderatefilename, &stbuf) < 0) {
 			free(moderatefilename);
 			exit(EXIT_SUCCESS); /* just exit, no mail to moderate */
@@ -163,12 +225,16 @@ int listcontrol(const char *mailfilename, const char *listdir,
 			log_error(LOG_ARGS, "execlp() of %s failed", mlmmjsend);
 			exit(EXIT_FAILURE);
 		}
-	} else if(strncasecmp(controlstr, "help", 4) == 0) {
+		break;
+
+	case CTRL_HELP:
 		printf("Help wanted!\n");
-		free(controlstr);
 		if(index(fromemails.emaillist[0], '@'))
 			send_help(listdir, fromemails.emaillist[0],
 				  mlmmjsend);
+		break;
+
 	}
+
 	return 0;
 }
