@@ -35,8 +35,6 @@
 #include "log_error.h"
 #include "mygetline.h"
 
-static int conncount = 0;  /* Connection count */
-
 char *bounce_from_adr(const char *recipient, const char *listadr,
 		      const char *mailfilename)
 {
@@ -345,15 +343,6 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 	return 0;
 }	
 
-void sig_child(int sig)
-{
-	pid_t pid;
-	int stat;
-
-	while((pid = waitpid(-1, &stat, WNOHANG) > 0))
-		conncount--;
-}
-
 static void print_help(const char *prg)
 {
         printf("Usage: %s [-L /path/to/list || -l listctrl] -m /path/to/mail "
@@ -380,7 +369,7 @@ int main(int argc, char **argv)
 {
 	size_t len = 0;
 	int sockfd = 0, opt, mindex;
-	int deletewhensent = 1, *newsockfd, sendres, archive = 1;
+	int deletewhensent = 1, sendres, archive = 1;
 	char *listaddr, *mailfilename = NULL, *subfilename = NULL;
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
 	char *relayhost = NULL, *archivefilename = NULL, *tmpstr;
@@ -389,8 +378,6 @@ int main(int argc, char **argv)
 	DIR *subddir;
 	FILE *subfile = NULL, *mailfile = NULL, *tmpfile;
 	struct dirent *dp;
-	pid_t childpid;
-	struct sigaction sigact;
 	
 	log_set_name(argv[0]);
 
@@ -564,11 +551,6 @@ int main(int argc, char **argv)
 		}
 		free(subddirname);
 
-		sigact.sa_handler = sig_child;
-		sigemptyset(&sigact.sa_mask);
-		sigact.sa_flags = SA_NOCLDSTOP;
-		sigaction(SIGCHLD, &sigact, 0);
-
 		while((dp = readdir(subddir)) != NULL) {
 			if(!strcmp(dp->d_name, "."))
 				continue;
@@ -585,41 +567,19 @@ int main(int argc, char **argv)
 			fprintf(stderr, "found subfile '%s'\n", subfilename);
 			free(subfilename);
 
-			while((conncount >= MAX_CONNECTIONS))
-				usleep(WAITSLEEP);
-
-			childpid = fork();
-			if(childpid < 0)
-				log_error(LOG_ARGS, "Could not fork.");
-				/* TODO: we have to keep track of unsent
-				 * files */
-
-			conncount++;
-
-			if(childpid == 0) {
-				newsockfd = malloc(sizeof(int));
-				initsmtp(newsockfd, relayhost);
-				send_mail_many(*newsockfd, NULL, NULL,
-					       mailfile, subfile, listaddr,
-					       archivefilename, listdir,
-					       mlmmjbounce);
-				endsmtp(newsockfd);
-				free(newsockfd);
-				fclose(subfile);
-				exit(EXIT_SUCCESS);
-			} else
-				fclose(subfile);
+			initsmtp(&sockfd, relayhost);
+			send_mail_many(sockfd, NULL, NULL, mailfile, subfile,
+					listaddr, archivefilename, listdir,
+					mlmmjbounce);
+			endsmtp(&sockfd);
+			fclose(subfile);
 		}
 		closedir(subddir);
 		break;
 	}
 	
-	while(conncount > 0)
-		usleep(WAITSLEEP);
-
 	if(archive) {
 		rename(mailfilename, archivefilename);
-
 		free(archivefilename);
 	} else if(deletewhensent)
 		unlink(mailfilename);
