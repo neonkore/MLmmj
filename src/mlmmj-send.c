@@ -107,7 +107,6 @@ int bouncemail(const char *listdir, const char *mlmmjbounce, const char *from)
 	pid_t pid = 0;
 
 	if((c = strchr(myfrom, '@')) == NULL) {
-		log_error(LOG_ARGS, "strchr(%s, '@') = [%s]", myfrom, c);
 		free(myfrom);
 		return 0; /* Success when mailformed 'from' */
 	}
@@ -120,8 +119,7 @@ int bouncemail(const char *listdir, const char *mlmmjbounce, const char *from)
 	len = num - myfrom - 1;
 	addr = malloc(len + 1);
 	addr[len] = '\0';
-	memcpy(addr, myfrom, len);
-	errno = 0;
+	strncpy(addr, myfrom, len);
 
 	pid = fork();
 	
@@ -176,6 +174,7 @@ int send_mail(int sockfd, const char *from, const char *to,
 		checkwait_smtpreply(sockfd, MLMMJ_RSET);
 		if(mlmmjbounce && (reply[1] == '5') && ((reply[0] == '4') ||
 					(reply[0] == '5'))) {
+			free(reply);
 			return bouncemail(listdir, mlmmjbounce, from);
 		} else {
 			log_error(LOG_ARGS, "Error in RCPT TO. Reply = [%s]",
@@ -194,6 +193,7 @@ int send_mail(int sockfd, const char *from, const char *to,
 	reply = checkwait_smtpreply(sockfd, MLMMJ_DATA);
 	if(reply) {
 		log_error(LOG_ARGS, "Error with DATA. Reply = [%s]", reply);
+		free(reply);
 		write_rset(sockfd);
 		checkwait_smtpreply(sockfd, MLMMJ_RSET);
 		return MLMMJ_DATA;
@@ -224,6 +224,7 @@ int send_mail(int sockfd, const char *from, const char *to,
 		log_error(LOG_ARGS, "Mailserver did not ack end of mail.\n"
 				"<CR><LF>.<CR><LF> was written, to no"
 				"avail. Reply = [%s]", reply);
+		free(reply);
 		write_rset(sockfd);
 		checkwait_smtpreply(sockfd, MLMMJ_RSET);
 		return MLMMJ_DOT;
