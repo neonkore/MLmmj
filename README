@@ -1,4 +1,4 @@
-README mlmmj-0.5.1					May 19th 2004
+README mlmmj-0.5.2					May 29th 2004
 
 This is an attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
@@ -33,6 +33,7 @@ To use mlmmj, do the following:
 
    /var/spool/mlmmj/mlmmj-test/incoming
    /var/spool/mlmmj/mlmmj-test/queue
+   /var/spool/mlmmj/mlmmj-test/queue/discarded
    /var/spool/mlmmj/mlmmj-test/archive
    /var/spool/mlmmj/mlmmj-test/text
    /var/spool/mlmmj/mlmmj-test/subconf
@@ -71,8 +72,8 @@ That's it! You might want to go through the next steps too.
    user that writes mail.
 
 5) If you want custom headers like X-Mailinglist, Reply-To: etc. just add a
-   file called 'customheaders' in the list directory like this:
-   $ cat /var/spool/mlmmj/mlmmj-test/customheaders
+   file called 'customheaders' in the list control/ directory like this:
+   $ cat /var/spool/mlmmj/mlmmj-test/control/customheaders
    X-Mailinglist: mlmmj-test
    Reply-To: mlmmj-test@domain.tld
 
@@ -81,7 +82,7 @@ That's it! You might want to go through the next steps too.
    To unsubscribe send a mail to coollist+unsubscribe@lists.domain.net
 
    Just add what you want to a file named "footer" in the same dir as
-   "customheader".
+   "customheader" (listdir/control/).
 
 7) For having a moderated list, simply create a file called 'moderated' in the
    control/ directory. Moderators are added to a file called 'moderators' in

@@ -1,3 +1,14 @@
+This applies to everyone using mlmmj > 0.5.1:
+---------------------------------------------
+
+ Following directories have to be created:
+
+  · listdir/requeue/
+  · listdir/queue/discarded/
+
+ The footer and customheaders file are now to be placed in the control/
+ directory where they belong, so they should be moved there from listdir.
+
 This applies to everyone using mlmmj > 0.5.0:
 ---------------------------------------------
 
@@ -12,9 +23,3 @@ This applies to everyone using mlmmj > 0.5.0:
 
  A quick and dirty hack would be to simply move listdir/subscribers into
  subscribers.d/. This could lead to double subscriptions, so use with caution!
-
-This applies to everyone using mlmmj > 0.5.1:
----------------------------------------------
-
- listdir/requeue/ directory have to be created
-

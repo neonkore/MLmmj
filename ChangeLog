@@ -1,4 +1,6 @@
 0.5.2
+ o footer and customheaders are now accessed from listdir/control/ where
+   they belong
  o Discard mails that doesn't have one and only one From: address. Discard
    here means moving them to queue/discard
  o Make sure we retrieve info from all headers matching the token we want
