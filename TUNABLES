@@ -110,6 +110,10 @@ to specify several entries (one pr. line), it's marked "list".
    list. This should in principle never ever be used, but there is times
    on local lists etc. where this is useful. HANDLE WITH CARE!
 
+ · noget			(boolean)
+
+   If this file exists, then retrieving old posts with +get-N is disabled
+
  · verp				(normal)
 
    Enable VERP support. Anything added in this variable will be appended the
