@@ -1,0 +1,28 @@
+mlmmj-1.0.0                                                  August 31th 2004
+
+To use this web-interface you have to:
+
+1) Copy the files from the php-admin directory of the mlmmj distribution to a
+   suitable location and point your webroot to the htdocs directory. If you
+   don't want the webinterface in the root of your website it is recommended to
+   make an alias in your web server configuration in order to keep the conf
+   directory at the same level as the htdocs directory and still outside
+   webscope.
+
+2) Change the permissions of the listdir/control directories of any list you
+   want to control using the web-interface, so the web server can write in it:
+
+     # chown -R wwwrun /var/spool/mlmmj/mlmmj-test/control/
+
+To enable access control on Apache you have to:
+
+3) Rename dot.htaccess to .htaccess and edit the path inside the file to point
+   to a htpasswd file somewhere outside the webscope.
+
+   If you don't have one already, you can create one like this
+
+      htpasswd -c /home/mlmmj/htpasswd USER
+
+   It will then ask you for a password for the given username.
+
+4) That is it, you are ready to use the interface.
