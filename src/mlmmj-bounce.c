@@ -96,21 +96,23 @@ char *fetchindexes(const char *bouncefile)
 
 void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 {
-	char *myaddr, *from, *a, *fromstr, *subjectstr, *indexstr;
-	char *queuefilename, *listaddr, *listfqdn, *listname, *probefile;
-	char *maildata[] = { "*LSTADDR*", NULL, "*BOUNCENUMBERS*", NULL };
+	char *myaddr, *from, *a, *indexstr, *queuefilename, *listaddr;
+	char *listfqdn, *listname, *probefile;
+	char *maildata[] = { "$bouncenumbers$", NULL };
 	int fd;
 	time_t t;
 
 	myaddr = mystrdup(addr);
 
 	listaddr = getlistaddr(listdir);
-	chomp(listaddr);
-
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 
 	from = concatstr(5, listname, "+bounces-", myaddr, "-probe@", listfqdn);
+
+	myfree(listaddr);
+	myfree(listfqdn);
+	myfree(listname);
 
 	a = strrchr(myaddr, '=');
 	if (!a) {
@@ -118,13 +120,9 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 		myfree(from);
 		log_error(LOG_ARGS, "do_probe(): malformed address");
 		exit(EXIT_FAILURE);
+
 	}
 	*a = '@';
-
-	fromstr = concatstr(3, listname, "+owner@", listfqdn);
-
-	subjectstr = concatstr(3, "Mails to you from ", listaddr,
-					" have been bouncing");
 
 	indexstr = fetchindexes(addr);
 	if(indexstr == NULL) {
@@ -132,16 +130,10 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 		exit(EXIT_FAILURE);
 	}
 
-	maildata[1] = listaddr;
-	maildata[3] = indexstr;
-	queuefilename = prepstdreply(listdir, "bounce-probe", fromstr,
-					myaddr, NULL, subjectstr, 2, maildata);
+	maildata[1] = indexstr;
+	queuefilename = prepstdreply(listdir, "bounce-probe", "$listowner$",
+					myaddr, NULL, 1, maildata);
 	MY_ASSERT(queuefilename);
-	myfree(fromstr);
-	myfree(subjectstr);
-	myfree(listaddr);
-	myfree(listfqdn);
-	myfree(listname);
 	myfree(indexstr);
 
 	probefile = concatstr(4, listdir, "/bounce/", addr, "-probe");

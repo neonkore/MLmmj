@@ -40,6 +40,11 @@ to specify several entries (one pr. line), it's marked "list".
    The emailaddresses in this file (1 pr. line) will get mails to
    listname+owner@listdomain.tld
 
+ · customheaders		(list)
+
+   These headers are added to every mail coming through. This is the place you
+   want to add Reply-To: header in case you want such.
+
  · delheaders			(list)
 
    In this file is specified *ONE* headertoken to match pr. line. If the file

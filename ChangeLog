@@ -1,3 +1,6 @@
+1.1.0-RC1
+ o Rewrite the way listtexts are managed, and in the process move the Subject:
+   out into the listtext file making mlmmj completely translateable
  o Enhance perl webinterface - including group writable patch
  o Add option control/nosubconfirm which makes it possible to subscribe
    without confirmation by just sending the mail. USE WITH CARE!

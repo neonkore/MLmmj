@@ -49,8 +49,8 @@ char *getlistaddr(const char *listdir)
 	tmpstr = mygetline(listnamefd);
 
 	if(tmpstr == NULL){
-		log_error(LOG_ARGS, "FATAL. Could not get listaddress in %s",
-					listdir);
+		log_error(LOG_ARGS, "FATAL. Could not get listaddress "
+				    "in %s/control/listaddress", listdir);
 		exit(EXIT_FAILURE);
 	}
 

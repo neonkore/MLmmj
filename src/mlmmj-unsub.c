@@ -50,104 +50,39 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 		   const char *subaddr, const char *mlmmjsend,
 		   enum subtype typesub)
 {
-	int subtextfd, queuefd;
-	char *buf, *subtextfilename, *randomstr, *queuefilename = NULL;
-	char *fromaddr, *listname, *listfqdn, *s1, *subject;
-
-	switch(typesub) {
-		case SUB_NORMAL:
-			subtextfilename = concatstr(2, listdir,
-					"/text/sub-ok");
-			break;
-		case SUB_DIGEST:
-			subtextfilename = concatstr(2, listdir,
-					"/text/sub-ok-digest");
-			break;
-		case SUB_NOMAIL:
-			subtextfilename = concatstr(2, listdir,
-					"/text/sub-ok-nomail");
-			break;
-	}
-
-	if((subtextfd = open(subtextfilename, O_RDONLY)) < 0) {
-		log_error(LOG_ARGS, "Could not open '%s'", subtextfilename);
-		myfree(subtextfilename);
-		exit(EXIT_FAILURE);
-	}
-	myfree(subtextfilename);
+	char *queuefilename, *fromaddr, *listname, *listfqdn, *listtext;
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 
-	do {
-		randomstr = random_str();
-		myfree(queuefilename);
-		queuefilename = concatstr(3, listdir, "/queue/", randomstr);
-		myfree(randomstr);
-
-		queuefd = open(queuefilename, O_RDWR|O_CREAT|O_EXCL,
-					      S_IRUSR|S_IWUSR);
-
-	} while ((queuefd < 0) && (errno == EEXIST));
-
-	if(queuefd < 0) {
-		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
-		myfree(queuefilename);
-		exit(EXIT_FAILURE);
-	}
-
 	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
-
-	switch(typesub) {
-		case SUB_NORMAL:
-			subject = mystrdup("from ");
-			break;
-		case SUB_DIGEST:
-			subject = mystrdup("from digest of ");
-			break;
-		case SUB_NOMAIL:
-			subject = mystrdup("from nomail version of ");
-			break;
-	}
-
-	s1 = concatstr(10, "From: ", listname, "+help@", listfqdn, "\nTo: ",
-			   subaddr, "\nSubject: Goodbye ", subject, listaddr,
-			   "\n\n");
-	myfree(subject);
-
-	if(writen(queuefd, s1, strlen(s1)) < 0) {
-		log_error(LOG_ARGS, "Could not write subconffile");
-		exit(EXIT_FAILURE);
-	}
-
-	myfree(s1);
-
-	while((buf = mygetline(subtextfd))) {
-		if(strncmp(buf, "*LSTADDR*", 9) == 0) {
-			if(writen(queuefd, listaddr, strlen(listaddr)) < 0) {
-				log_error(LOG_ARGS,
-					"Could not write goodbye mail");
-				exit(EXIT_FAILURE);
-			}
-		} else {
-			if(writen(queuefd, buf, strlen(buf)) < 0) {
-				log_error(LOG_ARGS,
-					"Could not write goodbye mail");
-				exit(EXIT_FAILURE);
-			}
-		}
-	}
 
 	myfree(listname);
 	myfree(listfqdn);
-	close(subtextfd);
-	close(queuefd);
+
+	switch(typesub) {
+		case SUB_NORMAL:
+			listtext = mystrdup("/text/unsub-ok");
+			break;
+		case SUB_DIGEST:
+			listtext = mystrdup("/text/unsub-ok-digest");
+			break;
+		case SUB_NOMAIL:
+			listtext = mystrdup("/text/unsub-ok-nomail");
+			break;
+	}
+
+	queuefilename = prepstdreply(listdir, listtext, "$helpaddr$",
+				     subaddr, NULL, 0, NULL);
+	MY_ASSERT(queuefilename);
+	myfree(listtext);
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
 				"-T", subaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, NULL);
+
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 	exit(EXIT_FAILURE);
 }
@@ -156,54 +91,44 @@ void notify_unsub(const char *listdir, const char *listaddr,
 		  const char *subaddr, const char *mlmmjsend,
 		  enum subtype typesub)
 {
-        char *maildata[4] = { "*LSTADDR*", NULL, "*SUBADDR*", NULL };
-        char *listfqdn, *listname, *fromaddr, *fromstr, *subject;
+        char *maildata[4] = { "$oldsub$", NULL };
+        char *listfqdn, *listname, *fromaddr, *tostr;
         char *queuefilename = NULL, *listtext;
 
         listname = genlistname(listaddr);
         listfqdn = genlistfqdn(listaddr);
-        maildata[1] = mystrdup(listaddr);
-        maildata[3] = mystrdup(subaddr);
+
+        maildata[1] = mystrdup(subaddr);
+
         fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
-        fromstr = concatstr(3, listname, "+owner@", listfqdn);
+	tostr = concatstr(3, listname, "+owner@", listfqdn);
+
+	myfree(listname);
+	myfree(listfqdn);
 
 	switch(typesub) {
 		case SUB_NORMAL:
-			subject = concatstr(2,
-					"Unsubscription from ", listaddr);
 			listtext = mystrdup("notifyunsub");
 			break;
 		case SUB_DIGEST:
-			subject = concatstr(2,
-					"Unsubscription from digest of ",
-					listaddr);
 			listtext = mystrdup("notifyunsub-digest");
 			break;
 		case SUB_NOMAIL:
-			subject = concatstr(2,
-					"Unsubscription from nomail of ",
-					listaddr);
 			listtext = mystrdup("notifyunsub-nomail");
 			break;
 	}
-
 	
-	queuefilename = prepstdreply(listdir, listtext, fromstr, fromstr,
-				     NULL, subject, 2, maildata);
+	queuefilename = prepstdreply(listdir, listtext, "$listowner$",
+				     "$listowner$", NULL, 1, maildata);
 	MY_ASSERT(queuefilename);
 	myfree(listtext);
-	myfree(listname);
-	myfree(listfqdn);
-	myfree(subject);
 	myfree(maildata[1]);
-	myfree(maildata[3]);
+
 	execlp(mlmmjsend, mlmmjsend,
 			"-l", "1",
-			"-T", fromstr,
+			"-T", tostr,
 			"-F", fromaddr,
 			"-m", queuefilename, NULL);
-
-	myfree(fromstr);
 
         log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
         exit(EXIT_FAILURE);
@@ -214,10 +139,11 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 			   const char *subaddr, const char *mlmmjsend,
 			   enum subtype typesub)
 {
-	char *confirmaddr, *buf, *listname, *listfqdn, *tmpstr;
-	char *subtextfilename, *queuefilename = NULL, *fromaddr, *s1;
-	char *randomstr = NULL, *confirmfilename = NULL, *subject;
-	int subconffd, subtextfd, queuefd;
+	char *confirmaddr, *listname, *listfqdn, *tmpstr;
+	char *queuefilename, *fromaddr;
+	char *randomstr = NULL, *confirmfilename = NULL, *listtext;
+	char *maildata[4] = { "$subaddr$", NULL, "$confaddr$", NULL };
+	int subconffd;
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
@@ -257,18 +183,15 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 
 	switch(typesub) {
 		case SUB_NORMAL:
-			subtextfilename = concatstr(2, listdir,
-						"/text/unsub-confirm");
+			listtext = mystrdup("unsub-confirm");
 			tmpstr = mystrdup("+confunsub-");
 			break;
 		case SUB_DIGEST:
-			subtextfilename = concatstr(2, listdir,
-						"/text/unsub-confirm-digest");
+			listtext = mystrdup("unsub-confirm-digest");
 			tmpstr = mystrdup("+confunsub-digest-");
 			break;
 		case SUB_NOMAIL:
-			subtextfilename = concatstr(2, listdir,
-						"/text/unsub-confirm-nomail");
+			listtext = mystrdup("unsub-confirm-nomail");
 			tmpstr = mystrdup("+confunsub-nomail-");
 			break;
 	}
@@ -278,92 +201,22 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 	myfree(randomstr);
 	myfree(tmpstr);
 
-	if((subtextfd = open(subtextfilename, O_RDONLY)) < 0) {
-		log_error(LOG_ARGS, "Could not open '%s'", subtextfilename);
-		myfree(subtextfilename);
-		exit(EXIT_FAILURE);
-	}
-	myfree(subtextfilename);
+	maildata[1] = mystrdup(subaddr);
+	maildata[3] = mystrdup(confirmaddr);
 
-	do {
-		randomstr = random_str();
-		myfree(queuefilename);
-		queuefilename = concatstr(3, listdir, "/queue/", randomstr);
-		myfree(randomstr);
+	queuefilename = prepstdreply(listdir, listtext, "$helpaddr$", subaddr,
+				     confirmaddr, 2, maildata);
 
-		queuefd = open(queuefilename, O_RDWR|O_CREAT|O_EXCL,
-					      S_IRUSR|S_IWUSR);
-
-	} while ((queuefd < 0) && (errno == EEXIST));
-
-	if(queuefd < 0) {
-		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
-		myfree(queuefilename);
-		exit(EXIT_FAILURE);
-	}
-
-	switch(typesub) {
-		case SUB_NORMAL:
-			subject = mystrdup("from ");
-			break;
-		case SUB_DIGEST:
-			subject = mystrdup("from digest of ");
-			break;
-		case SUB_NOMAIL:
-			subject = mystrdup("from nomail version of ");
-			break;
-	}
-
-	s1 = concatstr(10, "From: ", listname, "+help@", listfqdn, "\nTo: ",
-			   subaddr, "\nSubject: Confirm unsubscribe ", subject,
-			   listaddr, "\n\n");
-
-	if(writen(queuefd, s1, strlen(s1)) < 0) {
-		log_error(LOG_ARGS, "Could not write subconffile");
-		exit(EXIT_FAILURE);
-	}
-
-	myfree(s1);
-
-	while((buf = mygetline(subtextfd))) {
-		if(strncmp(buf, "*LSTADDR*", 9) == 0) {
-			if(writen(queuefd, listaddr, strlen(listaddr)) < 0) {
-				log_error(LOG_ARGS,
-					"Could not write subconffile");
-				exit(EXIT_FAILURE);
-			}
-		} else if(strncmp(buf, "*SUBADDR*", 9) == 0) {
-			if(writen(queuefd, subaddr, strlen(subaddr)) < 0) {
-				log_error(LOG_ARGS,
-					"Could not write subconffile");
-				exit(EXIT_FAILURE);
-			}
-		} else if(strncmp(buf, "*CNFADDR*", 9) == 0) {
-			if(writen(queuefd, confirmaddr, strlen(confirmaddr))
-					< 0) {
-				log_error(LOG_ARGS,
-					"Could not write subconffile");
-				exit(EXIT_FAILURE);
-			}
-		} else {
-			if(writen(queuefd, buf, strlen(buf)) < 0) {
-				log_error(LOG_ARGS,
-					"Could not write subconffile");
-				exit(EXIT_FAILURE);
-			}
-		}
-	}
+	myfree(maildata[1]);
+	myfree(maildata[3]);
 
 	myfree(listname);
 	myfree(listfqdn);
-	close(subtextfd);
-	close(queuefd);
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
 				"-T", subaddr,
 				"-F", fromaddr,
-				"-R", confirmaddr,
 				"-m", queuefilename, NULL);
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 	exit(EXIT_FAILURE);
@@ -654,8 +507,6 @@ int main(int argc, char **argv)
 		myfree(subreadname);
 		myfree(subwritename);
 
-		closedir(subddir);
-
 		if(confirmunsub) {
 			childpid = fork();
 
@@ -678,6 +529,7 @@ int main(int argc, char **argv)
 		}
         }
 
+	closedir(subddir);
 	myfree(subdir);
 
         notifysub = statctrl(listdir, "notifysub");

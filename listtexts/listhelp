@@ -6,7 +6,7 @@ There exists the following options:
 
 To unsubscribe send a mail to:
 
-$unsubaddr$
+$listunsubaddr$
 
 To subscribe to the digest of this list send a mail to:
 
@@ -20,11 +20,11 @@ The nomail version of a list means that you are reckognized as a
 subscriber, but will not get any mails to the list. Useful when it's
 necessary to post from several emailaddresses to a subscribers only list.
 
-For retrieval of message number 42 in the archive send a mail to
+For retrieval of message number N in the archive send a mail to
 
-$get42$
+$listgetN$
 
 To send a mail to the list owner, send a mail to:
 
-$owner$
+$listowner$
 

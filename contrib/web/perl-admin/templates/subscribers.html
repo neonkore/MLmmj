@@ -1,0 +1,19 @@
+<html><head><title>mlmmj subscribers</title></head><body>
+<h1>mlmmj subscribers</h1>
+<p>
+<a href="index.cgi">Index</a> | <a href="subscribers.cgi?list=$LIST">Reload subscriber list</a>
+</p>
+<p>
+$ACTION
+</p>
+<form action="subscribers.cgi" method="post">
+<input type="hidden" name="list" value="$LIST">
+<input type="hidden" name="maxid" value="$MAXID">
+<p>Add subscriber: <input type="text" name="email"> <input type="submit" name="subscribe" value="Subscribe"></p>
+<table border="1">
+<tr><th>Email address</th><th>Unsubscribe</th></tr>
+$ROWS
+</table>
+<p><input type="submit" name="unsubscribe" value="Unsubscribe selected"></p>
+</form>
+</body></html>

@@ -24,8 +24,10 @@
 #ifndef PREPSTDREPLY_H
 #define PREPSTDREPLY_H
 
+char *substitute(const char *line, const char *listaddr, size_t datacount,
+		 char **data);
 char *prepstdreply(const char *listdir, const char *filename, const char *from,
-		   const char *to, const char *replyto, const char *subject,
-		   size_t tokencount, char **data);
+		   const char *to, const char *replyto, size_t tokencount,
+		   char **data);
 
 #endif /* PREPSTDREPLY_H */

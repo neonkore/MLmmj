@@ -45,39 +45,23 @@ void send_help(const char *listdir, const char *emailaddr,
 	       const char *mlmmjsend)
 {
 	char *queuefilename, *listaddr, *listname, *listfqdn, *fromaddr;
-	char *fromstr, *subject;
-	char *maildata[] = { "*UNSUBADDR*", NULL, "*SUBADDR*", NULL,
-			     "*HLPADDR*", NULL };
 
-        listaddr = getlistaddr(listdir);
-	chomp(listaddr);
-
+	listaddr = getlistaddr(listdir);
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 
 	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
 
-        maildata[1] = concatstr(3, listname, "+unsubscribe@", listfqdn);
-	maildata[3] = concatstr(3, listname, "+subscribe@", listfqdn);
-	maildata[5] = concatstr(3, listname, "+help@", listfqdn);
-	fromstr = concatstr(3, listname, "+owner@", listfqdn);
-	subject = concatstr(2, "Help for ", listaddr);
-
-	queuefilename = prepstdreply(listdir, "listhelp", fromstr, emailaddr,
-				NULL, subject, 3, maildata);
+	queuefilename = prepstdreply(listdir, "listhelp", "$listowner$",
+					emailaddr, NULL, 0, NULL);
 	if(queuefilename == NULL) {
 		log_error(LOG_ARGS, "Could not prepare help mail");
 		exit(EXIT_FAILURE);
 	}
 	
-	myfree(fromstr);
 	myfree(listaddr);
 	myfree(listname);
 	myfree(listfqdn);
-	myfree(maildata[1]);
-	myfree(maildata[3]);
-	myfree(maildata[5]);
-	myfree(subject);
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",

@@ -343,9 +343,9 @@ int main(int argc, char **argv)
 	char *randomstr = NULL, *mqueuename;
 	char *mlmmjsend, *mlmmjsub, *mlmmjunsub, *mlmmjbounce;
 	char *bindir, *subjectprefix, *discardname, *listaddr;
-	char *listfqdn, *listname, *fromaddr, *fromstr, *subject;
+	char *listfqdn, *listname, *fromaddr;
 	char *queuefilename, *recipdelim, *owner = NULL;
-	char *maildata[4];
+	char *maildata[2];
 	struct stat st;
 	uid_t uid;
 	struct email_container fromemails = { 0, NULL };
@@ -615,20 +615,13 @@ int main(int argc, char **argv)
 		}
 		listname = genlistname(listaddr);
 		listfqdn = genlistfqdn(listaddr);
-		maildata[0] = "*LSTADDR*";
-		maildata[1] = listaddr;
 		fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
-		fromstr = concatstr(3, listname, "+owner@", listfqdn);
-		subject = concatstr(3, "Post to ", listaddr, " denied.");
-		queuefilename = prepstdreply(listdir, "notintocc", fromstr,
-					     fromemails.emaillist[0], NULL,
-					     subject, 1, maildata);
+		queuefilename = prepstdreply(listdir, "notintocc",
+					"$listowner$", fromemails.emaillist[0],
+					NULL, 0, NULL);
 		MY_ASSERT(queuefilename)
-		myfree(listaddr);
 		myfree(listname);
 		myfree(listfqdn);
-		myfree(fromstr);
-		myfree(subject);
 		unlink(donemailname);
 		myfree(donemailname);
 		execlp(mlmmjsend, mlmmjsend,
@@ -654,24 +647,17 @@ int main(int argc, char **argv)
 		if(is_subbed(listdir, fromemails.emaillist[0]) != 0) {
 			listname = genlistname(listaddr);
 			listfqdn = genlistfqdn(listaddr);
-			maildata[0] = "*LSTADDR*";
-			maildata[1] = listaddr;
-			maildata[2] = "*POSTERADDR*";
-			maildata[3] = fromemails.emaillist[0];
+			maildata[0] = "$posteraddr$";
+			maildata[1] = fromemails.emaillist[0];
 			fromaddr = concatstr(3, listname, "+bounces-help@",
 					listfqdn);
-			fromstr = concatstr(3, listname, "+owner@", listfqdn);
-			subject = concatstr(3, "Post to ", listaddr,
-						" denied");
 			queuefilename = prepstdreply(listdir, "subonlypost",
-					fromstr, fromemails.emaillist[0], NULL,
-					     subject, 2, maildata);
+					"$listowner$", fromemails.emaillist[0],
+					NULL, 1, maildata);
 			MY_ASSERT(queuefilename)
 			myfree(listaddr);
 			myfree(listname);
 			myfree(listfqdn);
-			myfree(fromstr);
-			myfree(subject);
 			unlink(donemailname);
 			myfree(donemailname);
 			execlp(mlmmjsend, mlmmjsend,
@@ -698,24 +684,16 @@ int main(int argc, char **argv)
 		if (do_access(access_rules, &allheaders) == DENY) {
 			listname = genlistname(listaddr);
 			listfqdn = genlistfqdn(listaddr);
-			maildata[0] = "*LSTADDR*";
-			maildata[1] = listaddr;
 			fromaddr = concatstr(3, listname, "+bounces-help@",
 					listfqdn);
-			fromstr = concatstr(3, listname, "+owner@", listfqdn);
-			subject = concatstr(3, "Post to ", listaddr,
-					" denied.");
 			queuefilename = prepstdreply(listdir, "access",
-							fromstr,
+							"$listowner$",
 							fromemails.emaillist[0],
-							NULL,
-							subject, 1, maildata);
+							NULL, 0, NULL);
 			MY_ASSERT(queuefilename)
 			myfree(listaddr);
 			myfree(listname);
 			myfree(listfqdn);
-			myfree(fromstr);
-			myfree(subject);
 			unlink(donemailname);
 			myfree(donemailname);
 			myfree(randomstr);
