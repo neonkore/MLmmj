@@ -26,7 +26,8 @@
 
 void reversestr(char *str)
 {
-	int c, i, j;
+	char c;
+	int i, j;
 
 	for(i = 0, j = strlen(str) - 1; i < j; i++, j--) {
 		c = str[i];
