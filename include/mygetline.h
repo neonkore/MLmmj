@@ -4,6 +4,7 @@
 
 #define BUFSIZE 256
 
-char *mygetline(FILE *infile);
+char *myfgetline(FILE *infile);
+char *mygetline(int fd);
 
 #endif /* #ifndef __MYGETLINE_H__ */
