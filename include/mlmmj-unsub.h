@@ -27,9 +27,10 @@
 #include <sys/types.h>
 
 void confirm_unsub(const char *listdir, const char *listaddr,
-		   const char *subaddr, const char *mlmmj);
+		   const char *subaddr, const char *mlmmj, int digest);
 ssize_t unsubscribe(int subreadfd, int subwritefd, const char *address);
 void generate_unsubconfirm(const char *listdir, const char *listaddr,
-			   const char *subaddr, const char *mlmmjsend);
+			   const char *subaddr, const char *mlmmjsend,
+			   int digest);
 
 #endif /* MLMMJ_UNSUBSCRIBE_H */

@@ -47,13 +47,18 @@
 #include "prepstdreply.h"
 
 void confirm_unsub(const char *listdir, const char *listaddr,
-		   const char *subaddr, const char *mlmmjsend)
+		   const char *subaddr, const char *mlmmjsend, int digest)
 {
 	int subtextfd, queuefd;
 	char *buf, *subtextfilename, *randomstr, *queuefilename = NULL;
 	char *fromaddr, *listname, *listfqdn, *s1;
 
-	subtextfilename = concatstr(2, listdir, "/text/unsub-ok");
+	if (!digest) {
+		subtextfilename = concatstr(2, listdir, "/text/unsub-ok");
+	} else {
+		subtextfilename = concatstr(2, listdir,
+					    "/text/unsub-ok-digest");
+	}
 
 	if((subtextfd = open(subtextfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", subtextfilename);
@@ -84,9 +89,15 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 
 	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
 
-	s1 = concatstr(9, "From: ", listname, "+help@", listfqdn, "\nTo: ",
-			subaddr, "\nSubject: Goodbye from ", listaddr,
-			"\n\n");
+	if (!digest) {
+		s1 = concatstr(9, "From: ", listname, "+help@", listfqdn,
+			"\nTo: ", subaddr, "\nSubject: Goodbye from ",
+			listaddr, "\n\n");
+	} else {
+		s1 = concatstr(9, "From: ", listname, "+help@", listfqdn,
+			"\nTo: ", subaddr, "\nSubject: Goodbye from "
+			"digest of ", listaddr, "\n\n");
+	}
 
 	if(writen(queuefd, s1, strlen(s1)) < 0) {
 		log_error(LOG_ARGS, "Could not write subconffile");
@@ -126,7 +137,7 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 }
 
 void notify_unsub(const char *listdir, const char *listaddr,
-		  const char *subaddr, const char *mlmmjsend)
+		  const char *subaddr, const char *mlmmjsend, int digest)
 {
         char *maildata[4] = { "*LSTADDR*", NULL, "*SUBADDR*", NULL };
         char *listfqdn, *listname, *fromaddr, *fromstr, *subject;
@@ -138,9 +149,17 @@ void notify_unsub(const char *listdir, const char *listaddr,
         maildata[3] = mystrdup(subaddr);
         fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
         fromstr = concatstr(3, listname, "+owner@", listfqdn);
-        subject = concatstr(2, "Unsubscription from ", listaddr);
-        queuefilename = prepstdreply(listdir, "notifyunsub", fromstr,
+	if (!digest) {
+        	subject = concatstr(2, "Unsubscription from ", listaddr);
+        	queuefilename = prepstdreply(listdir, "notifyunsub", fromstr,
                                      fromstr, NULL, subject, 2, maildata);
+	} else {
+        	subject = concatstr(2, "Unsubscription from digest of ",
+					listaddr);
+        	queuefilename = prepstdreply(listdir, "notifyunsub-digest",
+                                     fromstr, fromstr, NULL, subject, 2,
+                                     maildata);
+	}
         MY_ASSERT(queuefilename)
         myfree(listname);
         myfree(listfqdn);
@@ -161,7 +180,8 @@ void notify_unsub(const char *listdir, const char *listaddr,
 
 
 void generate_unsubconfirm(const char *listdir, const char *listaddr,
-			   const char *subaddr, const char *mlmmjsend)
+			   const char *subaddr, const char *mlmmjsend,
+			   int digest)
 {
 	char *confirmaddr, *buf, *listname, *listfqdn;
 	char *subtextfilename, *queuefilename = NULL, *fromaddr, *s1;
@@ -201,13 +221,21 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 
 	close(subconffd);
 
-	confirmaddr = concatstr(5, listname, "+confunsub-", randomstr, "@",
-			           listfqdn);
 	fromaddr = concatstr(5, listname, "+bounces-confunsub-", randomstr,
 				"@", listfqdn);
-	myfree(randomstr);
 
-	subtextfilename = concatstr(2, listdir, "/text/unsub-confirm");
+	if (!digest) {
+		subtextfilename = concatstr(2, listdir, "/text/unsub-confirm");
+		confirmaddr = concatstr(5, listname, "+confunsub-", randomstr,
+					"@", listfqdn);
+	} else {
+		subtextfilename = concatstr(2, listdir,
+					"/text/unsub-confirm-digest");
+		confirmaddr = concatstr(5, listname, "+confunsub-digest-",
+					randomstr, "@", listfqdn);
+	}
+
+	myfree(randomstr);
 
 	if((subtextfd = open(subtextfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", subtextfilename);
@@ -233,9 +261,16 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 		exit(EXIT_FAILURE);
 	}
 
-	s1 = concatstr(9, "From: ", listname, "+help@", listfqdn, "\nTo: ",
-			subaddr, "\nSubject: Confirm unsubscribe from ",
-			listaddr, "\n\n");
+	if (!digest) {
+		s1 = concatstr(9, "From: ", listname, "+help@", listfqdn,
+				"\nTo: ", subaddr, "\nSubject: Confirm "
+				"unsubscribe from ", listaddr, "\n\n");
+	} else {
+		s1 = concatstr(9, "From: ", listname, "+help@", listfqdn,
+				"\nTo: ", subaddr, "\nSubject: Confirm "
+				"unsubscribe from digest of ", listaddr,
+				"\n\n");
+	}
 
 	if(writen(queuefd, s1, strlen(s1)) < 0) {
 		log_error(LOG_ARGS, "Could not write subconffile");
@@ -331,6 +366,7 @@ static void print_help(const char *prg)
 	       " -a: Email address to unsubscribe \n"
 	       " -c: Send goodbye mail\n"
 	       " -C: Request mail confirmation\n"
+	       " -d: Subscribe to digest of list\n"
 	       " -h: This help\n"
 	       " -L: Full path to list directory\n"
 	       " -V: Print version\n"
@@ -342,7 +378,7 @@ static void print_help(const char *prg)
 int main(int argc, char **argv)
 {
 	int subread, subwrite, rlock, wlock, opt, unsubres, status;
-	int confirmunsub = 0, unsubconfirm = 0, notifysub = 0;
+	int confirmunsub = 0, unsubconfirm = 0, notifysub = 0, digest = 0;
 	char *listaddr, *listdir = NULL, *address = NULL, *subreadname = NULL;
 	char *subwritename, *mlmmjsend, *bindir;
 	char *subddirname;
@@ -359,7 +395,7 @@ int main(int argc, char **argv)
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	myfree(bindir);
 
-	while ((opt = getopt(argc, argv, "hcCVL:a:")) != -1) {
+	while ((opt = getopt(argc, argv, "hcCdVL:a:")) != -1) {
 		switch(opt) {
 		case 'L':
 			listdir = optarg;
@@ -372,6 +408,9 @@ int main(int argc, char **argv)
 			break;
 		case 'C':
 			unsubconfirm = 1;
+			break;
+		case 'd':
+			digest = 1;
 			break;
 		case 'h':
 			print_help(argv[0]);
@@ -397,9 +436,14 @@ int main(int argc, char **argv)
 	listaddr = getlistaddr(listdir);
 
 	if(unsubconfirm)
-		generate_unsubconfirm(listdir, listaddr, address, mlmmjsend);
+		generate_unsubconfirm(listdir, listaddr, address, mlmmjsend,
+				digest);
 
-	subddirname = concatstr(2, listdir, "/subscribers.d/");
+	if (!digest) {
+		subddirname = concatstr(2, listdir, "/subscribers.d/");
+	} else {
+		subddirname = concatstr(2, listdir, "/digesters.d/");
+	}
 	if((subddir = opendir(subddirname)) == NULL) {
 		log_error(LOG_ARGS, "Could not opendir(%s)",
 				    subddirname);
@@ -412,8 +456,13 @@ int main(int argc, char **argv)
 			continue;
 		if(!strcmp(dp->d_name, ".."))
 			continue;
-		subreadname = concatstr(3, listdir, "/subscribers.d/",
+		if (!digest) {
+			subreadname = concatstr(3, listdir, "/subscribers.d/",
 				dp->d_name);
+		} else {
+			subreadname = concatstr(3, listdir, "/digesters.d/",
+				dp->d_name);
+		}
 
 		subread = open(subreadname, O_RDWR);
 		if(subread == -1) {
@@ -509,7 +558,7 @@ int main(int argc, char **argv)
 			if(childpid < 0) {
 				log_error(LOG_ARGS, "Could not fork");
 				confirm_unsub(listdir, listaddr, address,
-						mlmmjsend);
+						mlmmjsend, digest);
 			}
 
 			if(childpid > 0) {
@@ -521,7 +570,7 @@ int main(int argc, char **argv)
 			/* child confirms subscription */
 			if(childpid == 0)
 				confirm_unsub(listdir, listaddr, address,
-						mlmmjsend);
+						mlmmjsend, digest);
 		}
         }
 
@@ -530,7 +579,7 @@ int main(int argc, char **argv)
 
         /* Notify list owner about subscription */
         if (notifysub)
-                notify_unsub(listdir, listaddr, address, mlmmjsend);
+                notify_unsub(listdir, listaddr, address, mlmmjsend, digest);
 
 	myfree(listaddr);
 

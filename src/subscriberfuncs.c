@@ -87,22 +87,18 @@ off_t find_subscriber(int fd, const char *address)
 	return (off_t)-1;
 }
 
-int is_subbed(const char *listdir, const char *address)
+static int is_subbed_in(const char *subddirname, const char *address)
 {
 	int retval = 1, subread;
-	char *subddirname, *subreadname;
+	char *subreadname;
 	off_t suboff;
 	DIR *subddir;
 	struct dirent *dp;
 
-	subddirname = concatstr(2, listdir, "/subscribers.d/");
 	if((subddir = opendir(subddirname)) == NULL) {
 		log_error(LOG_ARGS, "Could not opendir(%s)", subddirname);
-		myfree(subddirname);
 		exit(EXIT_FAILURE);
 	}
-
-	myfree(subddirname);
 
 	while((dp = readdir(subddir)) != NULL) {
 		if(!strcmp(dp->d_name, "."))
@@ -110,8 +106,7 @@ int is_subbed(const char *listdir, const char *address)
 		if(!strcmp(dp->d_name, ".."))
 			continue;
 
-		subreadname = concatstr(3, listdir, "/subscribers.d/",
-				dp->d_name);
+		subreadname = concatstr(2, subddirname, dp->d_name);
 		subread = open(subreadname, O_RDONLY);
 		if(subread < 0) {
 			log_error(LOG_ARGS, "Could not open '%s'",
@@ -134,4 +129,24 @@ int is_subbed(const char *listdir, const char *address)
 	closedir(subddir);
 
 	return retval;
+}
+
+int is_subbed(const char *listdir, const char *address)
+{
+	int retval;
+	char *subddirname;
+	
+	subddirname = concatstr(2, listdir, "/subscribers.d/");
+	retval = is_subbed_in(subddirname, address);
+	myfree(subddirname);
+	if (retval == 0)
+		return 0;
+
+	subddirname = concatstr(2, listdir, "/digesters.d/");
+	retval = is_subbed_in(subddirname, address);
+	myfree(subddirname);
+	if (retval == 0)
+		return 0;
+
+	return 1;
 }

@@ -25,8 +25,9 @@
 #define MLMMJ_SUBSCRIBE_H
 
 void confirm_sub(const char *listdir, const char *listaddr,
-		 const char *subaddr, const char *mlmmjsend);
+		 const char *subaddr, const char *mlmmjsend, int digest);
 void generate_subconfirm(const char *listdir, const char *listadr,
-		const char *subaddr, const char *mlmmjsend);
+		const char *subaddr, const char *mlmmjsend,
+		int digest);
 
 #endif /* MLMMJ_SUBSCRIBE_H */

@@ -28,7 +28,7 @@
 
 #define RELAYHOST "127.0.0.1"
 #define READ_BUFSIZE 2048
-#define RECIPDELIM '+'
+#define RECIPDELIM '+'  /* XXX Warning: not changable at the moment */
 #define MODREQLIFE 604800 /* How long time will moderation requests be kept?
 			   * 604800s is 7 days */
 #define DISCARDEDLIFE 604800 /* How long time will discarded mails be kept?
@@ -47,6 +47,12 @@
 
 #define MEMORYMAILSIZE 16384  /* How big can a mail be before we don't want to
 			         it in memory? control/memorymailsize */
+#define DIGESTINTERVAL 604800  /* How long do we collect mails for digests
+				* 604800s is 7 days */
+#define DIGESTMAXMAILS 50 /* How many mails can accumulate before we send the
+			   * digest */
+#define DIGESTMIMETYPE "digest" /* Which sub-type of multipart to use when
+				 * sending digest mails */
 
 struct strlist {
 	int count;

@@ -16,6 +16,7 @@ The functionality:
  · Regular expression access control
  · Functionality to retrieve old posts
  · Web-interface
+ · Digests
 
 To use mlmmj, do the following:
 

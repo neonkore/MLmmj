@@ -34,6 +34,7 @@ int resend_requeue(const char *listdir, const char *mlmmjsend);
 int clean_nolongerbouncing(const char *listdir);
 int probe_bouncers(const char *listdir, const char *mlmmjbounce);
 int unsub_bouncers(const char *listdir, const char *mlmmjunsub);
+int run_digests(const char *listdir, const char *mlmmjsend);
 
 /* I know the below is nasty, but it requires C99 to have multiple
  * argument macros, and this would then be the only thing needing

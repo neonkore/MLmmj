@@ -67,12 +67,12 @@ LISTDIR="$SPOOLDIR/$LISTNAME"
 mkdir -p $LISTDIR
 
 for DIR in incoming queue queue/discarded archive text subconf unsubconf \
-	   bounce control moderation subscribers.d requeue
+	   bounce control moderation subscribers.d digesters.d requeue
 do
 	mkdir "$LISTDIR"/"$DIR"
 done
 
-touch "$LISTDIR"/index
+test -f "$LISTDIR"/index || touch "$LISTDIR"/index
 
 echo -n "The Domain for the List? [] : "
 read FQDN

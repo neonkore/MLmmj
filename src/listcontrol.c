@@ -43,9 +43,13 @@
 #include "memory.h"
 
 enum ctrl_e {
+	CTRL_SUBSCRIBE_DIGEST,
 	CTRL_SUBSCRIBE,
+	CTRL_CONFSUB_DIGEST,
 	CTRL_CONFSUB,
+	CTRL_UNSUBSCRIBE_DIGEST,
 	CTRL_UNSUBSCRIBE,
+	CTRL_CONFUNSUB_DIGEST,
 	CTRL_CONFUNSUB,
 	CTRL_BOUNCES,
 	CTRL_MODERATE,
@@ -61,16 +65,22 @@ struct ctrl_command {
 	unsigned int accepts_parameter;
 };
 
-/* must match the enum */
+/* Must match the enum. CAREFUL when using commands that are substrings
+ * of other commands. In that case the longest one have to be listed
+ * first to match correctly. */
 static struct ctrl_command ctrl_commands[] = {
-	{ "subscribe",   0 },
-	{ "confsub",     1 },
-	{ "unsubscribe", 0 },
-	{ "confunsub",   1 },
-	{ "bounces",     1 },
-	{ "moderate",    1 },
-	{ "help",        0 },
-	{ "get",         1 }
+	{ "subscribe-digest",   0 },
+	{ "subscribe",          0 },
+	{ "confsub-digest",     1 },
+	{ "confsub",            1 },
+	{ "unsubscribe-digest", 0 },
+	{ "unsubscribe",        0 },
+	{ "confunsub-digest",   1 },
+	{ "confunsub",          1 },
+	{ "bounces",            1 },
+	{ "moderate",           1 },
+	{ "help",               0 },
+	{ "get",                1 }
 };
 
 
@@ -122,96 +132,192 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 						" discarding mail");
 					exit(EXIT_SUCCESS);
 				}
-				myfree(controlstr);
-				break;
 			} else if (!ctrl_commands[ctrl].accepts_parameter &&
 					(controlstr[cmdlen] == '\0')) {
 				param = NULL;
-				myfree(controlstr);
-				break;
 			} else {
-				log_error(LOG_ARGS, "Received a malformed"
-					" list control request");
-				myfree(controlstr);
-				return -1;
+				/* malformed request, ignore and clean up */
+				unlink(mailname);
+				exit(EXIT_SUCCESS);
 			}
+
+			myfree(controlstr);
+			break;
 
 		}
 	}
 
 	switch (ctrl) {
 
+	/* listname+subscribe-digest@domain.tld */
+	case CTRL_SUBSCRIBE_DIGEST:
+		unlink(mailname);
+		if (closedlist)
+			exit(EXIT_SUCCESS);
+		if (!strchr(fromemails->emaillist[0], '@'))
+			/* Not a valid From: address, silently ignore */
+			exit(EXIT_SUCCESS);
+		execlp(mlmmjsub, mlmmjsub,
+				"-L", listdir,
+				"-a", fromemails->emaillist[0],
+				"-d",
+				"-C", NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+					mlmmjsub);
+		exit(EXIT_FAILURE);
+		break;
+
+	/* listname+subscribe@domain.tld */
 	case CTRL_SUBSCRIBE:
 		unlink(mailname);
-		if (closedlist) exit(EXIT_SUCCESS);
-		if(strchr(fromemails->emaillist[0], '@')) {
-			execlp(mlmmjsub, mlmmjsub,
-					"-L", listdir,
-					"-a", fromemails->emaillist[0],
-					"-C", NULL);
-			log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsub);
-			exit(EXIT_FAILURE);
-		} else /* Not a valid From: address, so we silently ignore */
+		if (closedlist)
 			exit(EXIT_SUCCESS);
+		if (!strchr(fromemails->emaillist[0], '@'))
+			/* Not a valid From: address, silently ignore */
+			exit(EXIT_SUCCESS);
+		execlp(mlmmjsub, mlmmjsub,
+				"-L", listdir,
+				"-a", fromemails->emaillist[0],
+				"-C", NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+					mlmmjsub);
+		exit(EXIT_FAILURE);
 		break;
 
-	case CTRL_CONFSUB:
+	/* listname+subconf-digest-COOKIE@domain.tld */
+	case CTRL_CONFSUB_DIGEST:
 		unlink(mailname);
-		if (closedlist) exit(EXIT_SUCCESS);
+		if (closedlist)
+			exit(EXIT_SUCCESS);
 		conffilename = concatstr(3, listdir, "/subconf/", param);
 		myfree(param);
-		if((tmpfd = open(conffilename, O_RDONLY)) >= 0) {
-			tmpstr = mygetline(tmpfd);
-			chomp(tmpstr);
-			close(tmpfd);
-			unlink(conffilename);
-			execlp(mlmmjsub, mlmmjsub,
-					"-L", listdir,
-					"-a", tmpstr,
-					"-c", NULL);
-			log_error(LOG_ARGS, "execlp() of '%s' failed",
-					mlmmjsub);
-			exit(EXIT_FAILURE);
-		} else /* Not a confirm so silently ignore */
+		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
+			/* invalid COOKIE, silently ignore */
 			exit(EXIT_SUCCESS);
+		}
+		tmpstr = mygetline(tmpfd);
+		chomp(tmpstr);
+		close(tmpfd);
+		unlink(conffilename);
+		execlp(mlmmjsub, mlmmjsub,
+				"-L", listdir,
+				"-a", tmpstr,
+				"-d",
+				"-c", NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+				mlmmjsub);
+		exit(EXIT_FAILURE);
 		break;
 
+	/* listname+subconf-COOKIE@domain.tld */
+	case CTRL_CONFSUB:
+		unlink(mailname);
+		if (closedlist)
+			exit(EXIT_SUCCESS);
+		conffilename = concatstr(3, listdir, "/subconf/", param);
+		myfree(param);
+		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
+			/* invalid COOKIE, silently ignore */
+			exit(EXIT_SUCCESS);
+		}
+		tmpstr = mygetline(tmpfd);
+		chomp(tmpstr);
+		close(tmpfd);
+		unlink(conffilename);
+		execlp(mlmmjsub, mlmmjsub,
+				"-L", listdir,
+				"-a", tmpstr,
+				"-c", NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+				mlmmjsub);
+		exit(EXIT_FAILURE);
+		break;
+
+	/* listname+unsubscribe-digest@domain.tld */
+	case CTRL_UNSUBSCRIBE_DIGEST:
+		unlink(mailname);
+		if (closedlist)
+			exit(EXIT_SUCCESS);
+		if (!strchr(fromemails->emaillist[0], '@'))
+			/* Not a valid From: address, silently ignore */
+			exit(EXIT_SUCCESS);
+		execlp(mlmmjunsub, mlmmjunsub,
+				"-L", listdir,
+				"-a", fromemails->emaillist[0],
+				"-d",
+				"-C", NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+				mlmmjunsub);
+		exit(EXIT_FAILURE);
+		break;
+
+	/* listname+unsubscribe@domain.tld */
 	case CTRL_UNSUBSCRIBE:
 		unlink(mailname);
-		if (closedlist) exit(EXIT_SUCCESS);
-		if(strchr(fromemails->emaillist[0], '@')) {
-			execlp(mlmmjunsub, mlmmjunsub,
-					"-L", listdir,
-					"-a", fromemails->emaillist[0],
-					"-C", NULL);
-			log_error(LOG_ARGS, "execlp() of '%s' failed",
-					mlmmjunsub);
-			exit(EXIT_FAILURE);
-		} else /* Not a valid From: address, so we silently ignore */
+		if (closedlist)
 			exit(EXIT_SUCCESS);
+		if (!strchr(fromemails->emaillist[0], '@'))
+			/* Not a valid From: address, silently ignore */
+			exit(EXIT_SUCCESS);
+		execlp(mlmmjunsub, mlmmjunsub,
+				"-L", listdir,
+				"-a", fromemails->emaillist[0],
+				"-C", NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+				mlmmjunsub);
+		exit(EXIT_FAILURE);
 		break;
 
-	case CTRL_CONFUNSUB:
+	/* listname+unsubconf-digest-COOKIE@domain.tld */
+	case CTRL_CONFUNSUB_DIGEST:
 		unlink(mailname);
-		if (closedlist) exit(EXIT_SUCCESS);
+		if (closedlist)
+			exit(EXIT_SUCCESS);
 		conffilename = concatstr(3, listdir, "/unsubconf/", param);
 		myfree(param);
-		if((tmpfd = open(conffilename, O_RDONLY)) >= 0) {
-			tmpstr = mygetline(tmpfd);
-			close(tmpfd);
-			chomp(tmpstr);
-			unlink(conffilename);
-			execlp(mlmmjunsub, mlmmjunsub,
-					"-L", listdir,
-					"-a", tmpstr,
-					"-c", NULL);
-			log_error(LOG_ARGS, "execlp() of '%s' failed",
-					mlmmjunsub);
-			exit(EXIT_FAILURE);
-		} else /* Not a confirm so silently ignore */
+		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
+			/* invalid COOKIE, silently ignore */
 			exit(EXIT_SUCCESS);
+		}
+		tmpstr = mygetline(tmpfd);
+		close(tmpfd);
+		chomp(tmpstr);
+		unlink(conffilename);
+		execlp(mlmmjunsub, mlmmjunsub,
+				"-L", listdir,
+				"-a", tmpstr,
+				"-d",
+				"-c", NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+				mlmmjunsub);
+		exit(EXIT_FAILURE);
 		break;
 
+	/* listname+unsubconf-COOKIE@domain.tld */
+	case CTRL_CONFUNSUB:
+		unlink(mailname);
+		if (closedlist)
+			exit(EXIT_SUCCESS);
+		conffilename = concatstr(3, listdir, "/unsubconf/", param);
+		myfree(param);
+		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
+			/* invalid COOKIE, silently ignore */
+			exit(EXIT_SUCCESS);
+		}
+		tmpstr = mygetline(tmpfd);
+		close(tmpfd);
+		chomp(tmpstr);
+		unlink(conffilename);
+		execlp(mlmmjunsub, mlmmjunsub,
+				"-L", listdir,
+				"-a", tmpstr,
+				"-c", NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+				mlmmjunsub);
+		exit(EXIT_FAILURE);
+		break;
+
+	/* listname+bounces-user=example.tld-INDEX@domain.tld */
 	case CTRL_BOUNCES:
 		bouncenr = strrchr(param, '-');
 		if (!bouncenr) { /* malformed bounce, ignore and clean up */
@@ -228,6 +334,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		exit(EXIT_FAILURE);
 		break;
 
+	/* listname+moderate-COOKIE@domain.tld */
 	case CTRL_MODERATE:
 		/* TODO Add accept/reject parameter to moderate */
 		unlink(mailname);
@@ -236,15 +343,16 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		if(stat(moderatefilename, &stbuf) < 0) {
 			myfree(moderatefilename);
 			exit(EXIT_SUCCESS); /* just exit, no mail to moderate */
-		} else {
-			execlp(mlmmjsend, mlmmjsend,
-					"-L", listdir,
-					"-m", moderatefilename, NULL);
-			log_error(LOG_ARGS, "execlp() of %s failed", mlmmjsend);
-			exit(EXIT_FAILURE);
 		}
+		execlp(mlmmjsend, mlmmjsend,
+				"-L", listdir,
+				"-m", moderatefilename, NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+					mlmmjsend);
+		exit(EXIT_FAILURE);
 		break;
 
+	/* listname+help@domain.tld */
 	case CTRL_HELP:
 		unlink(mailname);
 		if(strchr(fromemails->emaillist[0], '@'))
@@ -252,32 +360,27 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				  mlmmjsend);
 		break;
 
+	/* listname+get-INDEX@domain.tld */
 	case CTRL_GET:
-		errno = 0;
 		unlink(mailname);
-		if(!param) /* malformed get, ignore silently */
-			exit(EXIT_SUCCESS);
-		else { /* sanity check--is it all digits? */
-			for(c = param; *c != '\0'; c++) {
-				if(!isdigit((int)*c))
-					exit(EXIT_SUCCESS);
-			}
-			archivefilename = concatstr(3, listdir, "/archive/",
-							param);
-			if(stat(archivefilename, &stbuf) < 0)
+		/* sanity check--is it all digits? */
+		for(c = param; *c != '\0'; c++) {
+			if(!isdigit((int)*c))
 				exit(EXIT_SUCCESS);
-			else {
-				execlp(mlmmjsend, mlmmjsend,
-					"-T", fromemails->emaillist[0],
-					"-L", listdir,
-					"-l", "6",
-					"-m", archivefilename,
-					"-a", "-D", NULL);
-				log_error(LOG_ARGS, "execlp() of '%s' failed",
-							mlmmjsend);
-				exit(EXIT_FAILURE);
-			}
 		}
+		archivefilename = concatstr(3, listdir, "/archive/",
+						param);
+		if(stat(archivefilename, &stbuf) < 0)
+			exit(EXIT_SUCCESS);
+		execlp(mlmmjsend, mlmmjsend,
+				"-T", fromemails->emaillist[0],
+				"-L", listdir,
+				"-l", "6",
+				"-m", archivefilename,
+				"-a", "-D", NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+					mlmmjsend);
+		exit(EXIT_FAILURE);
 		break;
 	}
 

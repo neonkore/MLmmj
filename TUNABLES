@@ -78,6 +78,17 @@ to specify several entries (one pr. line), it's marked "list".
    If this file is present, the owner(s) will get a mail with the address of
    someone sub/unsubscribing to a mailinglist.
 
+ · digestinterval		(normal)
+
+   This file specifies how many seconds will pass before the next digest is
+   sent. Defaults to 604800 seconds, which is 7 days.
+
+ · digestmaxmails		(normal)
+
+   This file specifies how many mails can accumulate before digest sending is
+   triggered. Defaults to 50 mails, meaning that if 50 mails arrive to the list
+   before digestinterval have passed, the digest is delivered.
+
  · bouncelife			(normal)
 
    Here is specified for how long time in seconds an address can bounce before

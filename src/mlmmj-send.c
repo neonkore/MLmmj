@@ -369,11 +369,11 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 		} else
 			continue;
 
-		if(from)
+		if(from) {
 			sendres = send_mail(sockfd, from, addr, replyto,
 					    mailmap, mailsize, listdir, NULL,
 					    hdrs, hdrslen, body, bodylen);
-		else {
+		} else {
 			bounceaddr = bounce_from_adr(addr, listaddr,
 						     archivefilename);
 			sendres = send_mail(sockfd, bounceaddr, addr, replyto,
@@ -456,6 +456,7 @@ static void print_help(const char *prg)
 	       "    '4' means 'send to file with recipients'\n"
 	       "    '5' means 'bounceprobe'\n"
 	       "    '6' means 'single listmail to single recipient'\n"
+	       "    '7' means 'digest'\n"
 	       " -L: Full path to list directory\n"
 	       " -m: Full path to mail file\n"
 	       " -r: Relayhost IP address (defaults to 127.0.0.1)\n"
@@ -470,7 +471,7 @@ int main(int argc, char **argv)
 {
 	size_t len = 0, hdrslen, bodylen;
 	int sockfd = 0, mailfd = 0, opt, mindex, subfd, tmpfd;
-	int deletewhensent = 1, sendres, archive = 1;
+	int deletewhensent = 1, sendres, archive = 1, digest = 0;
 	char *listaddr, *mailfilename = NULL, *subfilename = NULL;
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
 	char *relayhost = NULL, *archivefilename = NULL, *tmpstr;
@@ -574,6 +575,12 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	if((listctrl[0] == '7' && listdir == NULL)) {
+		fprintf(stderr, "With -l 7 you need -L\n");
+		exit(EXIT_FAILURE);
+	}
+
+
 	switch(listctrl[0]) {
 		case '1':
 		case '2':
@@ -581,6 +588,7 @@ int main(int argc, char **argv)
 		case '4':
 		case '5':
 		case '6':
+		case '7':
 			archive = 0;
 		default:
 			break;
@@ -797,8 +805,16 @@ int main(int argc, char **argv)
 			myfree(tmpstr);
 		}
 		break;
+	case '7':
+		digest = 1;
+		archivefilename = mystrdup("digest");
+		/* fall through */
 	default: /* normal list mail */
-		subddirname = concatstr(2, listdir, "/subscribers.d/");
+		if (!digest) {
+			subddirname = concatstr(2, listdir, "/subscribers.d/");
+		} else {
+			subddirname = concatstr(2, listdir, "/digesters.d/");
+		}
 		if((subddir = opendir(subddirname)) == NULL) {
 			log_error(LOG_ARGS, "Could not opendir(%s)",
 					    subddirname);
@@ -807,15 +823,13 @@ int main(int argc, char **argv)
 			myfree(body);
 			exit(EXIT_FAILURE);
 		}
-		myfree(subddirname);
 
 		while((dp = readdir(subddir)) != NULL) {
 			if(!strcmp(dp->d_name, "."))
 				continue;
 			if(!strcmp(dp->d_name, ".."))
 				continue;
-			subfilename = concatstr(3, listdir, "/subscribers.d/",
-						dp->d_name);
+			subfilename = concatstr(2, subddirname, dp->d_name);
 			if((subfd = open(subfilename, O_RDONLY)) < 0) {
 				log_error(LOG_ARGS, "Could not open '%s'",
 						    subfilename);
@@ -841,6 +855,7 @@ int main(int argc, char **argv)
 			close(subfd);
 		}
 		closedir(subddir);
+		myfree(subddirname);
 		break;
 	}
 	
