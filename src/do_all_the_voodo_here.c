@@ -87,7 +87,7 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 
 	while((hdrline = gethdrline(infd))) {
 		/* Done with headers? Then add extra if wanted*/
-		if((strncasecmp(hdrline, "mime", 4) == NULL) ||
+		if((strncasecmp(hdrline, "mime", 4) == 0) ||
 			((strlen(hdrline) == 1) && (hdrline[0] == '\n'))){
 			if(!hdrsadded && hdrfd >= 0) {
 				if(dumpfd2fd(hdrfd, outfd) < 0) {
