@@ -1,5 +1,5 @@
  o Convert mlmmj-sub, mlmmj-unsub and mlmmj-process (moderation) to use
-   the new and shiny prepstdreply() function.
+   the new prepstdreply() function.
  o Add some more logging to mlmmj-maintd
 
 Functionality items:
