@@ -22,6 +22,12 @@ The functionality:
 
 To use mlmmj, do the following:
 
+ 0) Compile it if you're not using a binary package such as dpkg, rpm or
+    a ports collection from a BSD or Gentoo. To compile, untar the tar-ball
+    and do:
+
+    $ ./configure && make && make install
+
  1) Make sure your mailserver accepts '+' as a recipient delimiter. In Postfix
     it's done by adding
 
