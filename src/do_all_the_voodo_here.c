@@ -43,7 +43,7 @@ int findit(const char *line, const char **headers)
 
 	while(headers[i]) {
 		len = strlen(headers[i]);
-		if(strncmp(line, headers[i], len) == 0)
+		if(strncasecmp(line, headers[i], len) == 0)
 			return 1;
 		i++;
 	}
@@ -59,7 +59,7 @@ void getinfo(const char *line, struct mailhdr *readhdrs)
 	while(readhdrs[i].token) {
 		tokenlen = strlen(readhdrs[i].token);
 		linelen = strlen(line);
-		if(strncmp(line, readhdrs[i].token, tokenlen) == 0) {
+		if(strncasecmp(line, readhdrs[i].token, tokenlen) == 0) {
 			readhdrs[i].valuecount++;
 			valuelen = linelen - tokenlen + 1;
 			readhdrs[i].values =
@@ -125,7 +125,7 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 
 		/* Add Subject: prefix if wanted */
 		if(prefix) {
-			if(strncmp(hdrline, "Subject: ", 9) == 0) {
+			if(strncasecmp(hdrline, "Subject: ", 9) == 0) {
 				unqp = cleanquotedp(hdrline + 9);
 				if(strstr(hdrline + 9, prefix) == NULL &&
 				   strstr(unqp, prefix) == NULL) {
