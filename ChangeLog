@@ -1,3 +1,5 @@
+ o Implement requeueing mechanism to be able to resend mail when relayhost
+   trouble occur
 0.5.1
  o Add a file TUNABLES which documents the ways to tune mlmmj lists.
  o Add support for Subject: prefix

@@ -2,9 +2,6 @@
    · parse of bouncefiles
    · probe emails
    · handle of help-bounces
- o requeueing mechanism
  o owner functionality
  o listname+get functionality
- o subject prefix. (Subject: [mlmmj-test] Lets see)
  o mlmmj-maintenance
- o rewamp of the SMTP stuff
