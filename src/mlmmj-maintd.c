@@ -984,7 +984,7 @@ int main(int argc, char **argv)
 
 	log_set_name(argv[0]);
 
-	while ((opt = getopt(argc, argv, "hFVLd:")) != -1) {
+	while ((opt = getopt(argc, argv, "hFVL:d:")) != -1) {
 		switch(opt) {
 		case 'd':
 			dirlists = optarg;
