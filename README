@@ -23,7 +23,12 @@ To use mlmmj, do the following:
 
         recipient_delimiter = +
 
-    to /etc/postfix/main.cf.
+    to /etc/postfix/main.cf. In Exim it's done by adding
+
+        local_part_suffix = +*
+	local_part_suffix_optional
+
+    to the "userforward:" and the "localuser:" router in /etc/exim/exim.conf.
 
     There is a nice FAQ explaining here: http://faqs.org/faqs/mail/addressing/
 
