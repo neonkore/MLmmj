@@ -108,7 +108,7 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 
-	from = concatstr(5, listname, "+bounces-", myaddr, "-probe@", listfqdn);
+	from = concatstr(5, listname, "+bounces-probe-", myaddr, "@", listfqdn);
 
 	myfree(listaddr);
 	myfree(listfqdn);
@@ -261,8 +261,8 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-#if 0
-	log_error(LOG_ARGS, "[%s] [%s] [%s]", listdir, address, number);
+#if 1
+	log_error(LOG_ARGS, "listdir = [%s] address = [%s] number = [%s]", listdir, address, number);
 #endif
 
 	/* check if it's sub/unsub requests bouncing, and in that case
@@ -270,24 +270,23 @@ int main(int argc, char **argv)
 	 * number are a bit misleading in this case due to the different
 	 * construction of the sub/unsub confirmation From header.
 	 */
-	if(strncmp(address, "confsub-", 8) == 0) {
-		a = concatstr(5, listdir, "/subconf/", address + 8, "-",
-				number);
+	if(strcmp(number, "confsub") == 0) {
+		a = concatstr(3, listdir, "/subconf/", address);
 		unlink(a);
 		myfree(a);
 		exit(EXIT_SUCCESS);
 	}
-	if(strncmp(address, "confunsub-", 10) == 0) {
-		a = concatstr(5, listdir, "/unsubconf/", address + 10, "-",
-				number);
+	if(strcmp(number, "confunsub") == 0) {
+		a = concatstr(3, listdir, "/unsubconf/", address);
 		unlink(a);
 		myfree(a);
 		exit(EXIT_SUCCESS);
 	}
 	/* Below checks for bounce probes bouncing. If they do, simply remove
-	 * the probe file and exit successfully
+	 * the probe file and exit successfully. Yes, I know the variables
+	 * have horrible names, but please bear with me.
 	 */
-	if(strncmp(number, "probe", 5) == 0) {
+	if(strcmp(number, "probe") == 0) {
 		a = concatstr(4, listdir, "/bounce/", address, "-probe");
 		unlink(a);
 		unlink(mailname);
