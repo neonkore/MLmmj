@@ -34,6 +34,3 @@ int myunlock(int fd)
 
 	return myunlock;
 }
-
-
-

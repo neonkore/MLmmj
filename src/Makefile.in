@@ -55,19 +55,18 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_mlmmj_process_OBJECTS = mlmmj-process.$(OBJEXT) writen.$(OBJEXT) \
-	strip_file_to_fd.$(OBJEXT) find_email_adr.$(OBJEXT) \
-	incindexfile.$(OBJEXT) itoa.$(OBJEXT) getlistaddr.$(OBJEXT) \
-	chomp.$(OBJEXT) mylocking.$(OBJEXT) listcontrol.$(OBJEXT) \
-	random-int.$(OBJEXT) strgen.$(OBJEXT) header_token.$(OBJEXT) \
-	print-version.$(OBJEXT) send_help.$(OBJEXT) \
-	do_all_the_voodo_here.$(OBJEXT) mygetline.$(OBJEXT) \
-	gethdrline.$(OBJEXT)
+	find_email_adr.$(OBJEXT) incindexfile.$(OBJEXT) itoa.$(OBJEXT) \
+	getlistaddr.$(OBJEXT) chomp.$(OBJEXT) mylocking.$(OBJEXT) \
+	listcontrol.$(OBJEXT) random-int.$(OBJEXT) strgen.$(OBJEXT) \
+	header_token.$(OBJEXT) print-version.$(OBJEXT) \
+	send_help.$(OBJEXT) do_all_the_voodo_here.$(OBJEXT) \
+	mygetline.$(OBJEXT) gethdrline.$(OBJEXT)
 mlmmj_process_OBJECTS = $(am_mlmmj_process_OBJECTS)
 mlmmj_process_LDADD = $(LDADD)
 am_mlmmj_recieve_OBJECTS = mlmmj-recieve.$(OBJEXT) writen.$(OBJEXT) \
-	strip_file_to_fd.$(OBJEXT) random-int.$(OBJEXT) \
-	header_token.$(OBJEXT) getlistaddr.$(OBJEXT) chomp.$(OBJEXT) \
-	strgen.$(OBJEXT) print-version.$(OBJEXT) mygetline.$(OBJEXT)
+	random-int.$(OBJEXT) header_token.$(OBJEXT) \
+	getlistaddr.$(OBJEXT) chomp.$(OBJEXT) strgen.$(OBJEXT) \
+	print-version.$(OBJEXT) mygetline.$(OBJEXT)
 mlmmj_recieve_OBJECTS = $(am_mlmmj_recieve_OBJECTS)
 mlmmj_recieve_LDADD = $(LDADD)
 am_mlmmj_send_OBJECTS = mlmmj-send.$(OBJEXT) writen.$(OBJEXT) \
@@ -117,7 +116,6 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/print-version.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/random-int.Po ./$(DEPDIR)/readln.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/send_help.Po ./$(DEPDIR)/strgen.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/strip_file_to_fd.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/subscriberfuncs.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/writen.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
@@ -211,16 +209,15 @@ mlmmj_send_SOURCES = mlmmj-send.c writen.c mail-functions.c itoa.c chomp.c \
 		     mylocking.c init_sockfd.c strgen.c random-int.c \
 		     print-version.c
 
-mlmmj_recieve_SOURCES = mlmmj-recieve.c writen.c strip_file_to_fd.c \
-                        random-int.c header_token.c getlistaddr.c chomp.c \
-			strgen.c print-version.c mygetline.c
+mlmmj_recieve_SOURCES = mlmmj-recieve.c writen.c random-int.c header_token.c \
+			getlistaddr.c chomp.c strgen.c print-version.c \
+			mygetline.c
 
-mlmmj_process_SOURCES = mlmmj-process.c writen.c strip_file_to_fd.c \
-                        find_email_adr.c incindexfile.c itoa.c \
-			getlistaddr.c chomp.c mylocking.c listcontrol.c \
-			random-int.c strgen.c header_token.c print-version.c \
-			send_help.c do_all_the_voodo_here.c mygetline.c \
-			gethdrline.c
+mlmmj_process_SOURCES = mlmmj-process.c writen.c find_email_adr.c \
+			incindexfile.c itoa.c getlistaddr.c chomp.c \
+			mylocking.c listcontrol.c random-int.c strgen.c i\
+			header_token.c print-version.c send_help.c \
+			do_all_the_voodo_here.c mygetline.c gethdrline.c
 
 mlmmj_subscribe_SOURCES = mlmmj-subscribe.c writen.c mylocking.c \
 			getlistaddr.c chomp.c random-int.c strgen.c \
@@ -351,7 +348,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/readln.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/send_help.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strgen.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strip_file_to_fd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/subscriberfuncs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/writen.Po@am__quote@
 
