@@ -530,15 +530,19 @@ int main(int argc, char **argv)
 		break;
 	case '2': /* Moderators */
 		initsmtp(&sockfd, relayhost);
-		send_mail_many(sockfd, bounceaddr, NULL, mailfile, subfile,
-			       NULL, NULL, listdir, NULL);
-		endsmtp(&sockfd);
+		if(send_mail_many(sockfd, bounceaddr, NULL, mailfile, subfile,
+			       NULL, NULL, listdir, NULL))
+			close(sockfd);
+		else
+			endsmtp(&sockfd);
 		break;
 	case '3': /* resending earlier failed mails */
 		initsmtp(&sockfd, relayhost);
-		send_mail_many(sockfd, NULL, NULL, mailfile, subfile,
-				listaddr, mailfilename, listdir, mlmmjbounce);
-		endsmtp(&sockfd);
+		if(send_mail_many(sockfd, NULL, NULL, mailfile, subfile,
+				listaddr, mailfilename, listdir, mlmmjbounce))
+			close(sockfd);
+		else
+			endsmtp(&sockfd);
 		unlink(subfilename);
 		break;
 	default: /* normal list mail */
@@ -568,10 +572,12 @@ int main(int argc, char **argv)
 			free(subfilename);
 
 			initsmtp(&sockfd, relayhost);
-			send_mail_many(sockfd, NULL, NULL, mailfile, subfile,
+			if(send_mail_many(sockfd, NULL, NULL, mailfile, subfile,
 					listaddr, archivefilename, listdir,
-					mlmmjbounce);
-			endsmtp(&sockfd);
+					mlmmjbounce))
+				close(sockfd);
+			else
+				endsmtp(&sockfd);
 			fclose(subfile);
 		}
 		closedir(subddir);
