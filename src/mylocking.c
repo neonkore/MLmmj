@@ -29,7 +29,7 @@
 
 int myexcllock(int fd)
 {
-	int mylock;
+	int excllock;
 	struct flock locktype;
 
 	locktype.l_type = F_WRLCK;
@@ -37,15 +37,15 @@ int myexcllock(int fd)
 	locktype.l_start = 0;
 	locktype.l_len = 0;
 	do {
-		mylock = fcntl(fd, F_SETLKW, &locktype);
-	} while(mylock < 0 && errno == EINTR);
+		excllock = fcntl(fd, F_SETLKW, &locktype);
+	} while(excllock < 0 && errno == EINTR);
 
-	return mylock;
+	return excllock;
 }
 
 int myunlock(int fd)
 {
-	int myunlock;
+	int unlock;
 	struct flock locktype;
 
 	locktype.l_type = F_UNLCK;
@@ -53,8 +53,8 @@ int myunlock(int fd)
 	locktype.l_start = 0;
 	locktype.l_len = 0;
 	do {
-		myunlock = fcntl(fd, F_SETLKW, &locktype);
-	} while(myunlock < 0 && errno == EINTR);
+		unlock = fcntl(fd, F_SETLKW, &locktype);
+	} while(unlock < 0 && errno == EINTR);
 
-	return myunlock;
+	return unlock;
 }
