@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <libgen.h>
 
 #include "mlmmj.h"
 #include "wrappers.h"
@@ -34,6 +35,7 @@ int main(int argc, char **argv)
 	char *infilename = NULL, *listdir = NULL, *line = NULL;
 	char *randomstr = random_str();
 	int fd, opt, noprocess = 0;
+	char *mlmmjprocess = concatstr(2, dirname(argv[0]), "/mlmmj-process");
 	
 	while ((opt = getopt(argc, argv, "hPVL:")) != -1) {
 		switch(opt) {
@@ -89,10 +91,10 @@ int main(int argc, char **argv)
 		exit(EXIT_SUCCESS);
 	}
 
-	execlp(BINDIR"mlmmj-process", "mlmmj-process",
+	execlp(mlmmjprocess, mlmmjprocess,
 				"-L", listdir,
 				"-m", infilename, 0);
-	log_error("execlp() of "BINDIR"mlmmj-process failed");
+	log_error("execlp() of mlmmj-process failed");
 
 	return EXIT_FAILURE;
 }

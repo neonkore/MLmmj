@@ -19,23 +19,14 @@
 #include "getlistaddr.h"
 #include "log_error.h"
 
-void send_help(const char *listdir, const char *emailaddr)
+void send_help(const char *listdir, const char *emailaddr,
+	       const char *mlmmjsend)
 {
-	FILE *helpfile;
-	FILE *queuefile;
-	char *bufres;
-	char buf[READ_BUFSIZE];
-	char *helpaddr;
-	char *fromaddr;
-	char *fromstr;
-	char *tostr;
-	char *subjectstr;
-	char *helpfilename;
-	char *queuefilename;
-	char *listname;
-	char *randomstr;
-	char *listfqdn;
-	char listaddr[READ_BUFSIZE];
+	FILE *helpfile, *queuefile;
+	char buf[READ_BUFSIZE], listaddr[READ_BUFSIZE];
+	char *bufres, *helpaddr, *fromaddr, *fromstr, *tostr;
+	char *subjectstr, *helpfilename, *queuefilename, *listname;
+	char *randomstr, *listfqdn;
 	size_t len;
 
         getlistaddr(listaddr, listdir);
@@ -110,11 +101,11 @@ void send_help(const char *listdir, const char *emailaddr)
 	fclose(helpfile);
 	fclose(queuefile);
 
-	execlp(BINDIR"mlmmj-send", "mlmmj-send",
+	execlp(mlmmjsend, mlmmjsend,
 				"-L", "1",
 				"-T", emailaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, 0);
-	log_error("execlp() of "BINDIR"mlmmj-send failed");
+	log_error("execlp() of mlmmjsend failed");
 	exit(EXIT_FAILURE);
 }

@@ -9,8 +9,9 @@
 #ifndef MLMMJ_SUBSCRIBE_H
 #define MLMMJ_SUBSCRIBE_H
 
-void unsubscribe(int subreadfd, int subwritefd, const char *address);
+void confirm_sub(const char *listdir, const char *listaddr,
+		 const char *subaddr, const char *mlmmjsend);
 void generate_subconfirm(const char *listdir, const char *listadr,
-		const char *subaddr);
+		const char *subaddr, const char *mlmmjsend);
 
 #endif /* MLMMJ_SUBSCRIBE_H */

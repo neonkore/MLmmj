@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <libgen.h>
 
 #include "mlmmj.h"
 #include "wrappers.h"
@@ -38,6 +39,9 @@ int main(int argc, char **argv)
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
 	char *randomstr = random_str();
+	char *mlmmjsend = concatstr(2, dirname(argv[0]), "/mlmmj-send");
+	char *mlmmjsub = concatstr(2, dirname(argv[0]), "/mlmmj-sub");
+	char *mlmmjunsub = concatstr(2, dirname(argv[0]), "/mlmmj-unsub");
 	FILE *headerfile, *footerfile, *rawmailfile, *donemailfile;
 	struct email_container toemails = { 0, NULL };
 	const char *badheaders[] = { "From ", "Return-Path:", NULL };
@@ -115,7 +119,7 @@ int main(int argc, char **argv)
 				footerfile, badheaders, readhdrs);
 
 	fclose(rawmailfile);
-	/*XXX: unlink(mailfile);*/
+	unlink(mailfile);
 	close(fd);
 	fclose(donemailfile);
 
@@ -140,9 +144,11 @@ int main(int argc, char **argv)
 	}
 
 	if(strchr(toemails.emaillist[0], RECIPDELIM)) {
-		printf("listcontrol(%s, %s, %s)\n", donemailname, listdir,
-						toemails.emaillist[0]);
-		listcontrol(donemailname, listdir, toemails.emaillist[0]);
+		printf("listcontrol(%s, %s, %s, %s, %s, %s)\n", donemailname,
+				listdir, toemails.emaillist[0], mlmmjsub,
+				mlmmjunsub, mlmmjsend);
+		listcontrol(donemailname, listdir, toemails.emaillist[0],
+			    mlmmjsub, mlmmjunsub, mlmmjsend);
 		return EXIT_SUCCESS;
 	}
 
@@ -152,7 +158,7 @@ int main(int argc, char **argv)
 		exit(EXIT_SUCCESS);
 	}
 
-	execlp(BINDIR"mlmmj-send", "mlmmj-send",
+	execlp(mlmmjsend, mlmmjsend,
 				"-L", listdir,
 				"-m", donemailname, 0);
 	log_error("execlp() of mlmmj-send failed");

@@ -71,7 +71,8 @@ static char *bounce_from_adr(char *recipient, char *listadr, char *mailfilename)
 		free(listadr);
 		return NULL;
 	}
-	snprintf(bounce_adr, len, "%s-bounces%c%s@%s", listadr, RECIPDELIM, recipient, listdomain);
+	snprintf(bounce_adr, len, "%s-bounces%c%s@%s", listadr, RECIPDELIM,
+		 recipient, listdomain);
 
 	free(recipient);
 	free(listadr);

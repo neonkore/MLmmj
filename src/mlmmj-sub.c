@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <libgen.h>
 
 #include "mlmmj.h"
 #include "mlmmj-sub.h"
@@ -25,23 +26,16 @@
 #include "subscriberfuncs.h"
 #include "log_error.h"
 
-void confirm_sub(const char *listdir, const char *listaddr, const char *subaddr)
+void confirm_sub(const char *listdir, const char *listaddr,
+		const char *subaddr, const char *mlmmjsend)
 {
 	size_t len;
 	FILE *subtextfile;
 	FILE *queuefile;
 	char buf[READ_BUFSIZE];
-	char *bufres;
-	char *subtextfilename;
-	char *randomstr;
-	char *queuefilename;
-	char *fromstr;
-	char *tostr;
-	char *subjectstr;
-	char *fromaddr;
-	char *helpaddr;
-	char *listname;
-	char *listfqdn;
+	char *bufres, *subtextfilename, *randomstr, *queuefilename;
+	char *fromstr, *tostr, *subjectstr, *fromaddr, *helpaddr;
+	char *listname, *listfqdn;
 
 	subtextfilename = concatstr(2, listdir, "/text/sub-ok");
 
@@ -105,36 +99,24 @@ void confirm_sub(const char *listdir, const char *listaddr, const char *subaddr)
 	fclose(subtextfile);
 	fclose(queuefile);
 
-	execlp(BINDIR"mlmmj-send", "mlmmj-send",
+	execlp(mlmmjsend, mlmmjsend,
 				"-L", "1",
 				"-T", subaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, 0);
-	log_error("execlp() of "BINDIR"mlmmj-send");
+	log_error("execlp() of mlmmj-send failed");
 	exit(EXIT_FAILURE);
 }
 
 void generate_subconfirm(const char *listdir, const char *listaddr,
-				const char *subaddr)
+			 const char *subaddr, const char *mlmmjsend)
 {
 	size_t len;
-	char *confirmaddr;
 	char buf[READ_BUFSIZE];
-	char *bufres;
-	char *listname;
-	char *listfqdn;
-	char *confirmfilename;
-	char *subtextfilename;
-	char *queuefilename;
-	char *fromaddr;
-	char *randomstr;
-	char *tostr;
-	char *fromstr;
-	char *helpaddr;
-	char *subjectstr;
-	FILE *subconffile;
-	FILE *subtextfile;
-	FILE *queuefile;
+	char *confirmaddr, *bufres, *listname, *listfqdn, *confirmfilename;
+	char *subtextfilename, *queuefilename, *fromaddr, *randomstr;
+	char *tostr, *fromstr, *helpaddr, *subjectstr;
+	FILE *subconffile, *subtextfile, *queuefile;
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
@@ -220,13 +202,13 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	fclose(subtextfile);
 	fclose(queuefile);
 
-	execlp(BINDIR"mlmmj-send", "mlmmj-send",
+	execlp(mlmmjsend, mlmmjsend,
 				"-L", "1",
 				"-T", subaddr,
 				"-F", fromaddr,
 				"-R", confirmaddr,
 				"-m", queuefilename, 0);
-	log_error("execlp() of "BINDIR"mlmmj-send failed");
+	log_error("execlp() of mlmmj-send failed");
 	exit(EXIT_FAILURE);
 }
 
@@ -246,11 +228,9 @@ int main(int argc, char **argv)
 	size_t len;
 	int opt, subfilefd, lock;
 	char listaddr[READ_BUFSIZE];
-	char *listdir = 0;
-	char *address = 0;
-	char *subfilename = 0;
-	int subconfirm = 0;
-	int confirmsub = 0;
+	char *listdir = NULL, *address = NULL, *subfilename = NULL;
+	char *mlmmjsend = concatstr(2, dirname(argv[0]), "/mlmmj-send");
+	int subconfirm = 0, confirmsub = 0;
 
 	log_set_name(argv[0]);
 
@@ -312,7 +292,8 @@ int main(int argc, char **argv)
 
 	if(find_subscriber(subfilefd, address)) {
 		if(subconfirm)
-			generate_subconfirm(listdir, listaddr, address);
+			generate_subconfirm(listdir, listaddr, address,
+					    mlmmjsend);
 		else {
 			lseek(subfilefd, 0L, SEEK_END);
 			len = strlen(address);
@@ -329,7 +310,7 @@ int main(int argc, char **argv)
 	}
 
 	if(confirmsub)
-		confirm_sub(listdir, listaddr, address);
+		confirm_sub(listdir, listaddr, address, mlmmjsend);
 
 	return EXIT_SUCCESS;
 }

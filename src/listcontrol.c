@@ -21,15 +21,12 @@
 #include "log_error.h"
 
 int listcontrol(const char *mailfilename, const char *listdir,
-		const char *controladdr)
+		const char *controladdr, const char *mlmmjsub,
+		const char *mlmmjunsub, const char *mlmmjsend)
 {
-	char *atsign;
-	char *recipdelimsign;
 	char tmpstr[READ_BUFSIZE];
-	char *tokenvalue;
-	char *confstr;
-	char *controlstr;
-	char *conffilename;
+	char *atsign, *recipdelimsign, *tokenvalue, *confstr;
+	char *controlstr, *conffilename;
 	FILE *mailfile, *tempfile;
 	struct email_container fromemails;
 	size_t len;
@@ -56,11 +53,11 @@ int listcontrol(const char *mailfilename, const char *listdir,
 	if(strncasecmp(controlstr, "subscribe", 9) == 0) {
 		free(controlstr);
 		if(index(fromemails.emaillist[0], '@')) {
-			execlp(BINDIR"mlmmj-sub", "mlmmj-sub",
+			execlp(mlmmjsub, mlmmjsub,
 					"-L", listdir,
 					"-a", fromemails.emaillist[0],
 					"-C", 0);
-			log_error("execlp() of "BINDIR"mlmmj-sub failed");
+			log_error("execlp() of mlmmj-sub failed");
 			exit(EXIT_FAILURE);
 		} else /* Not a valid From: address, so we silently ignore */
 			exit(EXIT_SUCCESS);
@@ -76,12 +73,11 @@ int listcontrol(const char *mailfilename, const char *listdir,
 			if(strncasecmp(tmpstr, fromemails.emaillist[0],
 						strlen(tmpstr)) == 0) {
 				unlink(conffilename);
-				execlp(BINDIR"mlmmj-sub", "mlmmj-sub",
+				execlp(mlmmjsub, mlmmjsub,
 						"-L", listdir,
 						"-a", tmpstr,
 						"-c", 0);
-				log_error("execlp() of "BINDIR"mlmmj-sub"
-					" failed");
+				log_error("execlp() of mlmmj-sub failed");
 				exit(EXIT_FAILURE);
 			} else {
 				/* Not proper confirm */
@@ -92,12 +88,11 @@ int listcontrol(const char *mailfilename, const char *listdir,
 	} else if(strncasecmp(controlstr, "unsubscribe", 11) == 0) {
 		free(controlstr);
 		if(index(fromemails.emaillist[0], '@')) {
-			execlp(BINDIR"mlmmj-unsub", "mlmmj-unsub",
+			execlp(mlmmjunsub, mlmmjunsub,
 					"-L", listdir,
 					"-a", fromemails.emaillist[0],
 					"-C", 0);
-			log_error("execlp() of "BINDIR"mlmmj-unsub"
-				" failed");
+			log_error("execlp() of mlmmj-unsub failed");
 			exit(EXIT_FAILURE);
 		} else /* Not a valid From: address, so we silently ignore */
 			exit(EXIT_SUCCESS);
@@ -113,12 +108,11 @@ int listcontrol(const char *mailfilename, const char *listdir,
 			if(strncasecmp(tmpstr, fromemails.emaillist[0],
 						strlen(tmpstr)) == 0) {
 				unlink(conffilename);
-				execlp(BINDIR"mlmmj-unsub", "mlmmj-unsub",
+				execlp(mlmmjunsub, mlmmjunsub,
 						"-L", listdir,
 						"-a", tmpstr,
 						"-c", 0);
-				log_error("execlp() of "
-					BINDIR"mlmmj-unsub failed");
+				log_error("execlp() of mlmmj-unsub failed");
 				exit(EXIT_FAILURE);
 			} else {
 				exit(EXIT_SUCCESS);
@@ -129,7 +123,8 @@ int listcontrol(const char *mailfilename, const char *listdir,
 		printf("Help wanted!\n");
 		free(controlstr);
 		if(index(fromemails.emaillist[0], '@'))
-			send_help(listdir, fromemails.emaillist[0]);
+			send_help(listdir, fromemails.emaillist[0],
+				  mlmmjsend);
 	}
 	return 0;
 }

@@ -10,6 +10,7 @@
 #define LISTCONTROL_H
 
 int listcontrol(const char *mailfilename, const char *listdir,
-		const char *controladdr);
+		const char *controladdr, const char *mlmmjsub,
+		const char *mlmmjunsub, const char *mlmmjsend);
 
 #endif /* LISTCONTROL_H */
