@@ -3,7 +3,7 @@
  o Grab the lock when sending a mail to make sure noone does bad things
    to it underneath us
  o Danish listtexts, thanks Jesper Lund
- o Add control/noget to turn of listname+get-INDEX
+ o Add control/noget to turn off listname+get-INDEX
  o Rearrange envelope from to be listname+bounces-index-user=domain.tld@ instead
    of listname+bounces-user=domain.tld-index@ to prepare for VERP support
 1.1.0
