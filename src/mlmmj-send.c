@@ -386,7 +386,7 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 			index = mybasename(archivefilename);	
 			dirname = concatstr(3, listdir, "/requeue/", index);
 			myfree(index);
-			if(mkdir(dirname, 0750 && errno != EEXIST) < 0) {
+			if(mkdir(dirname, 0750) < 0 && errno != EEXIST) {
 				log_error(LOG_ARGS, "Could not mkdir(%s) for "
 						    "requeueing. Mail cannot "
 						    "be requeued.", dirname);
