@@ -1,0 +1,27 @@
+
+TUNABLES for lists managed with mlmmj:
+--------------------------------------
+
+The following files can be used for changing the behaviour of a list. The
+filename is supposed to be below listdir/control. In the case it's a "boolean",
+the contents of a file does not matter, the mere presence of it, will set the
+variable to "true". If it's a "normal" file, the first line will be used as
+value, leaving line 2 and forward ready for commentary etc.
+
+ · closedlist			(boolean)
+
+   Is the list is open or closed. If it's closed the behaviour
+   is changed and mortenp will expand this section to describe it.
+
+ · moderated			(boolean)
+
+   If this file is present, the emailaddresses in the file listdir/moderators
+   will act as moderators for the list.
+
+ · prefix			(normal)
+
+   The prefix for the Subject: line of mails to the list. This will alter the
+   Subject: line, and add a prefix if it's not present elsewhere.
+
+
+... more to follow. (relayhost, owner etc.)

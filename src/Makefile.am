@@ -26,7 +26,7 @@ mlmmj_process_SOURCES = mlmmj-process.c writen.c find_email_adr.c \
 			mylocking.c listcontrol.c random-int.c strgen.c \
 			header_token.c print-version.c send_help.c \
 			do_all_the_voodo_here.c mygetline.c gethdrline.c \
-			log_error.c statctrl.c
+			log_error.c statctrl.c ctrlvalue.c
 
 mlmmj_sub_SOURCES = mlmmj-sub.c writen.c mylocking.c \
 			getlistaddr.c chomp.c random-int.c strgen.c \

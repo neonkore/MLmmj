@@ -27,6 +27,7 @@
 #include "log_error.h"
 #include "mygetline.h"
 #include "statctrl.h"
+#include "ctrlvalue.h"
 
 void newmoderated(const char *listdir, const char *mailfilename,
 		  const char *mlmmjsend)
@@ -148,7 +149,7 @@ int main(int argc, char **argv)
 	char *footerfilename = NULL, *donemailname = NULL;
 	char *randomstr = random_str(), *basename, *mqueuename;
 	char *mlmmjsend, *mlmmjsub, *mlmmjunsub, *mlmmjbounce;
-	char *argv0 = strdup(argv[0]);
+	char *argv0 = strdup(argv[0]), *subjectprefix;
 	FILE *headerfile, *footerfile, *rawmailfile, *donemailfile;
 	struct email_container toemails = { 0, NULL };
 	const char *badheaders[] = { "From ", "Return-Path:", NULL };
@@ -240,8 +241,11 @@ int main(int argc, char **argv)
 	footerfile = fopen(footerfilename, "r");
 	free(footerfilename);
 	
+	subjectprefix = ctrlvalue(listdir, "prefix");	
+	
 	do_all_the_voodo_here(rawmailfile, donemailfile, headerfile,
-				footerfile, badheaders, readhdrs);
+				footerfile, badheaders, readhdrs,
+				subjectprefix);
 
 	fclose(rawmailfile);
 	unlink(mailfile);

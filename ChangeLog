@@ -1,3 +1,6 @@
+0.5.1
+ o Add a file TUNABLES which documents the ways to tune mlmmj lists.
+ o Add support for Subject: prefix
  o Added WAITTIME (time to sleep before checking if we should spawn another
    mlmmj-send process) option in mlmmj.h
  o Fixed error handling in mlmmj-unsub if we can not open subscribers.d/

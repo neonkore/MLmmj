@@ -15,6 +15,7 @@
 #include "gethdrline.h"
 #include "strgen.h"
 #include "chomp.h"
+#include "ctrlvalue.h"
 #include "do_all_the_voodo_here.h"
 
 int findit(const char *line, const char **headers)
@@ -54,9 +55,10 @@ void getinfo(const char *line, struct mailhdr *readhdrs)
 }
 
 void do_all_the_voodo_here(FILE *in, FILE *out, FILE *hdradd, FILE *footers,
-		 const char **delhdrs, struct mailhdr *readhdrs)
+		 const char **delhdrs, struct mailhdr *readhdrs,
+		 const char *prefix)
 {
-	char *hdrline, *line;
+	char *hdrline, *line, *subject;
 
 	while((hdrline = gethdrline(in))) {
 		/* Done with headers? Then add extra if wanted*/
@@ -77,11 +79,29 @@ void do_all_the_voodo_here(FILE *in, FILE *out, FILE *hdradd, FILE *footers,
 		/* Do we want info from hdrs? Get it before it's gone */
 		if(readhdrs)
 			getinfo(hdrline, readhdrs);
+
+		/* Add Subject: prefix if wanted */
+		if(prefix) {
+			if(strncmp(hdrline, "Subject: ", 9) == 0) {
+				if(strstr(hdrline + 9, prefix) == NULL) {
+					subject = concatstr(4,
+							"Subject: ", prefix,
+							" ", hdrline + 9);
+					fputs(subject, out);
+					free(subject);
+					free(hdrline);
+					continue;
+				}
+			}
+		}
 		
 		/* Should it be stripped? */
-		if(delhdrs)
+		if(delhdrs) {
 			if(!findit(hdrline, delhdrs))
 				fputs(hdrline, out);
+		} else
+			fputs(hdrline, out);
+
 
 		free(hdrline);
 	}
@@ -94,7 +114,7 @@ void do_all_the_voodo_here(FILE *in, FILE *out, FILE *hdradd, FILE *footers,
 
 	fflush(out);
 
-	/* No more, lets add the footer if one*/
+	/* No more, lets add the footer if one */
 	if(footers) {
 		while((line = myfgetline(footers))) {
 			fputs(line, out);
