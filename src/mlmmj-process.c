@@ -489,7 +489,10 @@ int main(int argc, char **argv)
 		}
 	}
 
-	recipdelim = strchr(toemails.emaillist[0], RECIPDELIM);
+	if(toemails.emaillist)
+		recipdelim = strchr(toemails.emaillist[0], RECIPDELIM);
+	else
+		recipdelim = NULL;
 
 	if(recipdelim) {
 		owner = concatstr(2, listdir, "control/owner");

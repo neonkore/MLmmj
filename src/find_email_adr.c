@@ -41,9 +41,9 @@ struct email_container *find_email_adr(const char *str,
 	while(index_atsign) {
 		c = index_atsign;
 		retstruct->emailcount++;
-		while(*c != '<' && *c != ' ' && *c != ',' && *c != ';'
-				&& *c != '(' && *c != '[' && *c >= 32
-				&& *c != '{' && c != tempstr) {
+		while(c >= tempstr && *c != '<' && *c != ' ' && *c != ','
+				&& *c != ';' && *c != '(' && *c != '[' &&
+				*c >= 32 && *c != '{') {
 			c--;
 		}
 		first_char = ++c;
@@ -64,7 +64,7 @@ struct email_container *find_email_adr(const char *str,
 		snprintf(retstruct->emaillist[retstruct->emailcount-1], len,
 			 "%s", first_char);
 #if 0
-		printf("find_email_adr, [%s]\n",
+		log_error(LOG_ARGS, "find_email_adr POST, [%s]\n",
 				retstruct->emaillist[retstruct->emailcount-1]);
 #endif
 		*index_atsign = 'A'; /* Clear it so we don't find it again */

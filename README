@@ -1,4 +1,4 @@
-README mlmmj-0.8.1					Jun 25th 2004
+README mlmmj-0.8.2					Jul 3rd 2004
 
 This is an attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
@@ -51,12 +51,10 @@ To use mlmmj, do the following:
     /var/spool/mlmmj/mlmmj-test/subscribers.d
     /var/spool/mlmmj/mlmmj-test/requeue
 
-    And creates files similar to the ones in the listtexts/ directory of the
-    source distribution in /var/spool/mlmmj/text/.
-
-    NOTE: The mailinglist directory have to be owned by the user the mailserver
-    writes as. On some Postfix installations Postfix is run by the user postfix,
-    but still writes files as nobody:nogroup or nobody:nobody
+    NOTE: The mailinglist directory (/var/spool/mlmmj/mlmmj-test in our
+    example) have to be owned by the user the mailserver writes as. On some
+    Postfix installations Postfix is run by the user postfix, but still writes
+    files as nobody:nogroup or nobody:nobody
 
  3) Make the changes to your mailserver aliases that came as output from
     mlmmj-make-ml.sh. Following the example above they will look like this:
@@ -70,8 +68,11 @@ To use mlmmj, do the following:
 
     "0 */2 * * *  /usr/bin/mlmmj-maintd -F -L /var/spool/mlmmj/mlmmj-test"
 
-    mlmmj-maintd will become the user owning the listdir, and log it's
-    last maintenance run to listdir/mlmmj-maintd.lastrun.log.
+    It should be started as root, as mlmmj-maintd will become the user owning
+    the listdir (/var/spool/mlmmj/mlmmj-test), and log it's last maintenance
+    run to listdir/mlmmj-maintd.lastrun.log.
+
+    You need one entry for each list or a wrapper script added once in crontab.
 
 That's it! You might want to go through the next steps too.
 

@@ -1,3 +1,7 @@
+0.8.2
+ o Make sure we don't cut of the first char of an emailaddress
+ o Fix header value copying (thanks Anders Johansson)
+ o Don't segfault if there's no email address in the To: header
  o Clean up the subconf and unsubconf directories for stale requests as well
 0.8.1.1
  o Fix bug with prepstdreply not opening correct file. Thanks Christian Laursen
