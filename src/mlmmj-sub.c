@@ -29,13 +29,12 @@
 void confirm_sub(const char *listdir, const char *listaddr,
 		const char *subaddr, const char *mlmmjsend)
 {
-	size_t len;
-	FILE *subtextfile;
-	FILE *queuefile;
+	FILE *subtextfile, *queuefile;
 	char buf[READ_BUFSIZE];
 	char *bufres, *subtextfilename, *randomstr, *queuefilename;
 	char *fromstr, *tostr, *subjectstr, *fromaddr, *helpaddr;
 	char *listname, *listfqdn;
+	size_t len;
 
 	subtextfilename = concatstr(2, listdir, "/text/sub-ok");
 
@@ -86,12 +85,7 @@ void confirm_sub(const char *listdir, const char *listaddr,
 			fputs(listaddr, queuefile);
 		else
 			fputs(buf, queuefile);
-#ifdef MLMMJ_DEBUG
-	fprintf(stderr, "subaddr: [%s]", subaddr);
-	fprintf(stderr, "[%s]", fromstr);
-	fprintf(stderr, "[%s]", tostr);
-	fprintf(stderr, "[%s]", subjectstr);
-#endif
+
 	free(tostr);
 	free(subjectstr);
 	free(listname);
@@ -111,12 +105,12 @@ void confirm_sub(const char *listdir, const char *listaddr,
 void generate_subconfirm(const char *listdir, const char *listaddr,
 			 const char *subaddr, const char *mlmmjsend)
 {
-	size_t len;
+	FILE *subconffile, *subtextfile, *queuefile;
 	char buf[READ_BUFSIZE];
 	char *confirmaddr, *bufres, *listname, *listfqdn, *confirmfilename;
 	char *subtextfilename, *queuefilename, *fromaddr, *randomstr;
 	char *tostr, *fromstr, *helpaddr, *subjectstr;
-	FILE *subconffile, *subtextfile, *queuefile;
+	size_t len;
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
@@ -183,7 +177,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	fputc('\n', queuefile);
 	free(subjectstr);
 
-	while((bufres = fgets(buf, READ_BUFSIZE, subtextfile)))
+	while((bufres = fgets(buf, sizeof(buf), subtextfile)))
 		if(strncmp(buf, "*LSTADDR*", 9) == 0)
 			fputs(listaddr, queuefile);
 		else if(strncmp(buf, "*SUBADDR*", 9) == 0)
@@ -192,11 +186,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 			fputs(confirmaddr, queuefile);
 		else
 			fputs(buf, queuefile);
-#ifdef MLMMJ_DEBUG
-	fprintf(stderr, "[%s]", fromstr);
-	fprintf(stderr, "[%s]", tostr);
-	fprintf(stderr, "[%s]", subjectstr);
-#endif
+
 	free(listname);
 	free(listfqdn);
 	fclose(subtextfile);
@@ -225,12 +215,12 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	size_t len;
-	int opt, subfilefd, lock;
 	char listaddr[READ_BUFSIZE];
 	char *listdir = NULL, *address = NULL, *subfilename = NULL;
 	char *mlmmjsend, *argv0 = strdup(argv[0]);
-	int subconfirm = 0, confirmsub = 0;
+	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock;
+	size_t len;
+	off_t suboff;
 
 	mlmmjsend = concatstr(2, dirname(argv0), "/mlmmj-send");
 	free(argv0);
@@ -292,8 +282,8 @@ int main(int argc, char **argv)
 		close(subfilefd);
 		exit(EXIT_FAILURE);
 	}
-
-	if(find_subscriber(subfilefd, address)) {
+	suboff = find_subscriber(subfilefd, address);
+	if(suboff == -1) {
 		if(subconfirm)
 			generate_subconfirm(listdir, listaddr, address,
 					    mlmmjsend);

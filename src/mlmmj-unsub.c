@@ -13,6 +13,7 @@
 #include <syslog.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <libgen.h>
@@ -30,13 +31,12 @@
 void confirm_unsub(const char *listdir, const char *listaddr,
 		   const char *subaddr, const char *mlmmjsend)
 {
-	size_t len;
-	FILE *subtextfile;
-	FILE *queuefile;
+	FILE *subtextfile, *queuefile;
 	char buf[READ_BUFSIZE];
 	char *bufres, *subtextfilename, *randomstr, *queuefilename;
 	char *fromstr, *tostr, *subjectstr, *fromaddr, *helpaddr;
 	char *listname, *listfqdn;
+	size_t len;
 
 	subtextfilename = concatstr(2, listdir, "/text/unsub-ok");
 
@@ -82,17 +82,12 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 	fputs(subjectstr, queuefile);
 	fputc('\n', queuefile);
 
-	while((bufres = fgets(buf, READ_BUFSIZE, subtextfile)))
+	while((bufres = fgets(buf, sizeof(buf), subtextfile)))
 		if(strncmp(buf, "*LSTADDR*", 9) == 0)
 			fputs(listaddr, queuefile);
 		else
 			fputs(buf, queuefile);
-#ifdef MLMMJ_DEBUG
-	fprintf(stderr, "subaddr: [%s]", subaddr);
-	fprintf(stderr, "[%s]", fromstr);
-	fprintf(stderr, "[%s]", tostr);
-	fprintf(stderr, "[%s]", subjectstr);
-#endif
+
 	free(tostr);
 	free(subjectstr);
 	free(listname);
@@ -193,11 +188,7 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 			fputs(confirmaddr, queuefile);
 		else
 			fputs(buf, queuefile);
-#ifdef MLMMJ_DEBUG
-	fprintf(stderr, "[%s]", fromstr);
-	fprintf(stderr, "[%s]", tostr);
-	fprintf(stderr, "[%s]", subjectstr);
-#endif
+
 	free(listname);
 	free(listfqdn);
 	fclose(subtextfile);
@@ -213,19 +204,32 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 	exit(EXIT_FAILURE);
 }
 
-void unsubscribe(int subreadfd, int subwritefd, const char *address)
+int unsubscribe(int subreadfd, int subwritefd, const char *address)
 {
-	char *buf;
+	off_t suboff = find_subscriber(subreadfd, address);
+	struct stat st;
+	char *inmap;
+	size_t len = strlen(address) + 1; /* + 1 for the '\n' */
 
-	lseek(subreadfd, 0, SEEK_SET);
-	lseek(subwritefd, 0, SEEK_SET);
+	if(suboff == -1)
+		return 0; /* Did not find subscriber */
 
-	while((buf = mygetline(subreadfd))) {
-		if(strncasecmp(buf, address, strlen(address)) != 0)
-			writen(subwritefd, buf, strlen(buf));
-		free(buf);
+	if(fstat(subreadfd, &st) < 0) {
+		log_error(LOG_ARGS, "Could not stat fd");
+		return 1;
 	}
-	ftruncate(subwritefd, lseek(subwritefd, 0, SEEK_CUR));
+
+	if((inmap = mmap(0, st.st_size, PROT_READ, MAP_SHARED,
+		       subreadfd, 0)) == (void *)-1) {
+		log_error(LOG_ARGS, "Could not mmap fd");
+		return 1;
+	}
+
+	writen(subwritefd, inmap, suboff);
+	writen(subwritefd, inmap + suboff + len, st.st_size - len - suboff);
+	munmap(inmap, st.st_size);
+
+	return 0;
 }
 
 static void print_help(const char *prg)
@@ -241,11 +245,12 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	int subread, subwrite, sublock, opt;
+	int subread, subwrite, rlock, wlock, opt;
 	int confirmunsub = 0, unsubconfirm = 0;
 	char listaddr[READ_BUFSIZE];
 	char *listdir = NULL, *address = NULL, *subreadname = NULL;
-	char *mlmmjsend, *argv0 = strdup(argv[0]);
+	char *subwritename, *mlmmjsend, *argv0 = strdup(argv[0]);
+	off_t suboff;
 	
 	mlmmjsend = concatstr(2, dirname(argv0), "/mlmmj-send");
 	free(argv0);
@@ -290,42 +295,68 @@ int main(int argc, char **argv)
 	getlistaddr(listaddr, listdir);
 
 	subreadname = concatstr(2, listdir, "/subscribers");
+	subwritename = concatstr(2, listdir, "/subscribers.new");
 
 	subread = open(subreadname, O_RDWR);
 	if(subread == -1) {
+		free(subreadname); free(subwritename);
 		log_error(LOG_ARGS, "Could not open '%s'", subreadname);
 		exit(EXIT_FAILURE);
 	}
 
-	sublock = myexcllock(subread);
-	if(sublock) {
-		log_error(LOG_ARGS, "Error locking subscriber file");
+	rlock = myexcllock(subread);
+	if(rlock < 0) {
+		perror("rlock");
+		log_error(LOG_ARGS, "Error locking '%s' file", subreadname);
 		close(subread);
+		free(subreadname); free(subwritename);
 		exit(EXIT_FAILURE);
 	}
 
-	if(find_subscriber(subread, address)) {
+	suboff = find_subscriber(subread, address);
+	if(suboff == -1) {
+		printf("%s is not subscribed\n", address);
 		myunlock(subread);
-		free(subreadname);
+		free(subreadname); free(subwritename);
 		close(subread);
 		exit(EXIT_SUCCESS);
 	}
 
-	subwrite = open(subreadname, O_RDWR);
+	subwrite = open(subwritename, O_RDWR | O_CREAT | O_EXCL,
+		        S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	if(subwrite == -1){
-		log_error(LOG_ARGS, "Could not open '%s'", subreadname);
+		log_error(LOG_ARGS, "Could not open '%s'", subwritename);
+		close(subread);
+		free(subreadname); free(subwritename);
 		exit(EXIT_FAILURE);
 	}
+
+	wlock = myexcllock(subwrite);
+	if(wlock < 0) {
+		perror("wlock");
+		log_error(LOG_ARGS, "Error locking '%s' file", subwritename);
+		close(subread); close(subwrite);
+		free(subreadname); free(subwritename);
+		exit(EXIT_FAILURE);
+	}
+
 	if(unsubconfirm)
 		generate_unsubconfirm(listdir, listaddr, address, mlmmjsend);
 	else
 		unsubscribe(subread, subwrite, address);
 	
-	myunlock(subread);
+	if(rename(subwritename, subreadname) < 0) {
+		log_error(LOG_ARGS, "Could not rename '%s' to '%s'",
+			  subwritename, subreadname);
+		myunlock(subread); myunlock(subwrite);
+		close(subread); close(subwrite);
+		free(subreadname); free(subwritename);
+		exit(EXIT_FAILURE);
+	}
+	myunlock(subread); myunlock(subwrite);
 
-	free(subreadname);
-	close(subread);
-	close(subwrite);
+	free(subreadname); free(subwritename);
+	close(subread); close(subwrite);
 
 	if(confirmunsub)
 		confirm_unsub(listdir, listaddr, address, mlmmjsend);

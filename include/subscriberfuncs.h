@@ -9,6 +9,6 @@
 #ifndef SUBSCRIBERFUNC_H
 #define SUBSCRIBERFUNC_H
 
-int find_subscriber(int subfilefd, const char *address);
+off_t find_subscriber(int fd, const char *address);
 
 #endif /* SUBSCRIBERFUNC_H */
