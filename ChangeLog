@@ -1,3 +1,5 @@
+1.2.0-RC1
+ o Add VERP support. http://www.postfix.org/VERP_README.html for Postfix howto
 1.1.1-RC2
  o It's ok to log to a symbolic link to somewhere else
  o Add Message-Id: and Date: headers to mail from mlmmj

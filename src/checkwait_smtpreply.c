@@ -92,11 +92,11 @@ char *checkwait_smtpreply(int sockfd, int replytype)
 		break;
 	case MLMMJ_QUIT:
 		if(smtpreply[0] != '2' || smtpreply[1] != '2')
-			return (char *)0xDEADBEEF;
+			return mystrdup(smtpreply);
 		break;
 	case MLMMJ_RSET:
 		if(smtpreply[0] != '2' || smtpreply[1] != '5')
-			return (char *)0xDEADBEEF;
+			return mystrdup(smtpreply);
 		break;
 	default:
 		break;

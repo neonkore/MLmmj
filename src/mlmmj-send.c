@@ -42,8 +42,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "mlmmj-send.h"
 #include "mlmmj.h"
+#include "mlmmj-send.h"
 #include "mail-functions.h"
 #include "itoa.h"
 #include "incindexfile.h"
@@ -59,9 +59,11 @@
 #include "statctrl.h"
 #include "ctrlvalue.h"
 #include "mylocking.h"
+#include "getaddrsfromfd.h"
 
 static int addtohdr = 0;
 static int prepmailinmem = 0;
+static int maxverprecips = MAXVERPRECIPS;
 
 char *bounce_from_adr(const char *recipient, const char *listadr,
 		      const char *mailfilename)
@@ -159,8 +161,8 @@ int bouncemail(const char *listdir, const char *mlmmjbounce, const char *from)
 	
 	execlp(mlmmjbounce, mlmmjbounce,
 			"-L", listdir,
-			"-a", addr,
-			"-n", num, NULL);
+			"-a", num,
+			"-n", addr, NULL);
 
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjbounce);
 
@@ -176,7 +178,7 @@ int send_mail(int sockfd, const char *from, const char *to,
 	int retval = 0;
 	char *reply, *tohdr;
 	
-	retval = write_mail_from(sockfd, from);
+	retval = write_mail_from(sockfd, from, "");
 	if(retval) {
 		log_error(LOG_ARGS, "Could not write MAIL FROM\n");
 		return retval;
@@ -318,13 +320,15 @@ int initsmtp(int *sockfd, const char *relayhost)
 int endsmtp(int *sockfd)
 {
 	int retval = 0;
-	char *reply;
+	char *reply = NULL;
 	
 	write_quit(*sockfd);
-
-	if((reply = checkwait_smtpreply(*sockfd, MLMMJ_QUIT)) != 0) {
+	reply = checkwait_smtpreply(*sockfd, MLMMJ_QUIT);
+	if(reply) {
+		printf("reply from quit: %s\n", reply);
 		log_error(LOG_ARGS, "Mailserver would not let us QUIT. "
-			  "We close the socket anyway though.");
+			  "We close the socket anyway though. "
+			  "Mailserver reply = [%s]", reply);
 		myfree(reply);
 		retval = MLMMJ_QUIT;
 	}
@@ -334,109 +338,218 @@ int endsmtp(int *sockfd)
 	return retval;
 }
 
-int send_mail_many(int sockfd, const char *from, const char *replyto,
-		   char *mailmap, size_t mailsize, int subfd,
+int send_mail_verp(int sockfd, struct strlist *addrs, char *mailmap,
+		   size_t mailsize, const char *from, const char *listdir,
+		   const char *hdrs, size_t hdrslen, const char *body,
+		   size_t bodylen, const char *verpextra)
+{
+	int retval, i;
+	char *reply;
+
+	retval = write_mail_from(sockfd, from, verpextra);
+	if(retval) {
+		log_error(LOG_ARGS, "Could not write MAIL FROM\n");
+		return retval;
+	}
+	reply = checkwait_smtpreply(sockfd, MLMMJ_FROM);
+	if(reply) {
+		log_error(LOG_ARGS, "Error in MAIL FROM. Reply = [%s]",
+				reply);
+		myfree(reply);
+		write_rset(sockfd);
+		checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		return MLMMJ_FROM;
+	}
+	for(i = 0; i < addrs->count; i++) {
+		retval = write_rcpt_to(sockfd, addrs->strs[i]);
+		if(retval) {
+			log_error(LOG_ARGS, "Could not write RCPT TO:\n");
+			return retval;
+		}
+
+		reply = checkwait_smtpreply(sockfd, MLMMJ_RCPTTO);
+		if(reply) {
+			log_error(LOG_ARGS, "Error in RCPT TO. Reply = [%s]",
+					reply);
+			myfree(reply);
+			return MLMMJ_RCPTTO;
+		}
+	}
+
+	retval = write_data(sockfd);
+	if(retval) {
+		log_error(LOG_ARGS, "Could not write DATA\b");
+		return retval;
+	}
+
+	reply = checkwait_smtpreply(sockfd, MLMMJ_DATA);
+	if(reply) {
+		log_error(LOG_ARGS, "Error with DATA. Reply = [%s]", reply);
+		myfree(reply);
+		write_rset(sockfd);
+		checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		return MLMMJ_DATA;
+	}
+
+	if(prepmailinmem) {
+		retval = writen(sockfd, hdrs, hdrslen);
+		if(retval < 0) {
+			log_error(LOG_ARGS, "Could not write mailheaders.\n");
+			return retval;
+		}
+		retval = writen(sockfd, body, bodylen);
+		if(retval < 0) {
+			log_error(LOG_ARGS, "Could not write mailbody.\n");
+			return retval;
+		}
+	} else {
+		retval = write_mailbody_from_map(sockfd, mailmap, mailsize,
+						 NULL);
+		if(retval) {
+			log_error(LOG_ARGS, "Could not write mail\n");
+			return retval;
+		}
+	}
+
+	retval = write_dot(sockfd);
+	if(retval) {
+		log_error(LOG_ARGS, "Could not write <CR><LF>.<CR><LF>\n");
+		return retval;
+	}
+
+	reply = checkwait_smtpreply(sockfd, MLMMJ_DOT);
+	if(reply) {
+		log_error(LOG_ARGS, "Mailserver did not ack end of mail.\n"
+				"<CR><LF>.<CR><LF> was written, to no"
+				"avail. Reply = [%s]", reply);
+		myfree(reply);
+		write_rset(sockfd);
+		checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		return MLMMJ_DOT;
+	}
+
+	return 0;
+}
+
+int send_mail_many_fd(int sockfd, const char *from, const char *replyto,
+		      char *mailmap, size_t mailsize, int subfd,
+		      const char *listaddr, const char *archivefilename,
+		      const char *listdir, const char *mlmmjbounce,
+		      const char *hdrs, size_t hdrslen, const char *body,
+		      size_t bodylen)
+{
+	int res, ret, i;
+	struct strlist stl;
+
+	do {
+		res = getaddrsfromfd(&stl, subfd, maxverprecips);
+		if(stl.count == maxverprecips) {
+			ret = send_mail_many_list(sockfd, from, replyto,
+					mailmap, mailsize, &stl, listaddr,
+					archivefilename, listdir, mlmmjbounce,
+					hdrs, hdrslen, body, bodylen);
+			for(i = 0; i < stl.count; i++)
+				myfree(stl.strs[i]);
+			if(ret < 0)
+				return ret;
+			stl.count = 0;
+		}
+	} while(res > 0);
+
+	if(stl.count) {
+		ret = send_mail_many_list(sockfd, from, replyto, mailmap,
+				mailsize, &stl, listaddr, archivefilename,
+				listdir, mlmmjbounce, hdrs, hdrslen, body,
+				bodylen);
+		for(i = 0; i < stl.count; i++)
+			myfree(stl.strs[i]);
+		stl.count = 0;
+		return ret;
+	}
+
+	return 0;
+}
+
+int requeuemail(const char *listdir, const char *index, struct strlist *addrs,
+		int addrcount)
+{
+	int addrfd, i;
+	char *dirname, *addrfilename, *addr;
+	
+	dirname = concatstr(3, listdir, "/requeue/", index);
+	if(mkdir(dirname, 0750) < 0 && errno != EEXIST) {
+		log_error(LOG_ARGS, "Could not mkdir(%s) for "
+				"requeueing. Mail cannot "
+				"be requeued.", dirname);
+		myfree(dirname);
+		return -1;
+	}
+	addrfilename = concatstr(2, dirname, "/subscribers");
+	myfree(dirname);
+	addrfd = open(addrfilename, O_WRONLY|O_CREAT|O_APPEND,
+			S_IRUSR|S_IWUSR);
+	if(addrfd < 0) {
+		log_error(LOG_ARGS, "Could not open %s",
+				addrfilename);
+		myfree(addrfilename);
+		return -1;
+	} else {
+		/* Dump the remaining addresses. We dump the remaining before
+		 * we write the failing address to ensure the potential good
+		 * ones will be tried first when mlmmj-maintd sends out mails
+		 * that have been requeued. addrcount was so far we were */
+		for(i = addrcount + 1; i < addrs->count; i++) {
+			addr = concatstr(2, addrs->strs[i], "\n");
+			if(writen(addrfd, addr, strlen(addr)) < 0) {
+				log_error(LOG_ARGS, "Could not add [%s] "
+						    "to requeue file", addr);
+				return -1;
+			}
+			myfree(addr);
+		}
+		addr = concatstr(2, addrs->strs[addrcount], "\n");
+		if(writen(addrfd, addr, strlen(addr)) < 0) {
+			log_error(LOG_ARGS, "Could not add [%s] to requeue "
+					"file", addr);
+			return -1;
+		}
+		myfree(addr);
+	}
+	myfree(addrfilename);
+	close(addrfd);
+
+	return 0;
+}
+
+int send_mail_many_list(int sockfd, const char *from, const char *replyto,
+		   char *mailmap, size_t mailsize, struct strlist *addrs,
 		   const char *listaddr, const char *archivefilename,
 		   const char *listdir, const char *mlmmjbounce,
 		   const char *hdrs, size_t hdrslen, const char *body,
 		   size_t bodylen)
 {
-	int sendres = 0, addrfd;
-	char *bounceaddr, *addr, *index, *dirname, *addrfilename;
-	char *start, *cur, *next;
-	struct stat st;
-	size_t len;
+	int res = 0, i;
+	char *bounceaddr, *addr, *index;
 
-	if(fstat(subfd, &st) < 0) {
-		log_error(LOG_ARGS, "Could not stat subfd");
-		return -1;
-	}
-
-	start = mmap(0, st.st_size, PROT_READ, MAP_SHARED, subfd, 0);
-	if(start == MAP_FAILED) {
-		log_error(LOG_ARGS, "Could not mmap subfd");
-		return -1;
-	}
-
-	for(next = cur = start; next < start + st.st_size; next++) {
-		if(*next == '\n' || next == start + st.st_size - 1) {
-			len = next - cur;
-			if(next == start + st.st_size - 1 && *next != '\n')
-				len++;
-			addr = mymalloc(len + 1);
-			strncpy(addr, cur, len);
-			addr[len] = '\0';
-			cur = next + 1;
-		} else
-			continue;
-
+	for(i = 0; i < addrs->count; i++) {
+		addr = addrs->strs[i];
 		if(from) {
-			sendres = send_mail(sockfd, from, addr, replyto,
+			res = send_mail(sockfd, from, addr, replyto,
 					    mailmap, mailsize, listdir, NULL,
 					    hdrs, hdrslen, body, bodylen);
 		} else {
 			bounceaddr = bounce_from_adr(addr, listaddr,
 						     archivefilename);
-			sendres = send_mail(sockfd, bounceaddr, addr, replyto,
+			res = send_mail(sockfd, bounceaddr, addr, replyto,
 				  mailmap, mailsize, listdir, mlmmjbounce,
 				  hdrs, hdrslen, body, bodylen);
 			myfree(bounceaddr);
 		}
-		if(sendres && listaddr && archivefilename) {
+		if(res && listaddr && archivefilename) {
 			/* we failed, so save the addresses and bail */
-			index = mybasename(archivefilename);	
-			dirname = concatstr(3, listdir, "/requeue/", index);
-			myfree(index);
-			if(mkdir(dirname, 0750) < 0 && errno != EEXIST) {
-				log_error(LOG_ARGS, "Could not mkdir(%s) for "
-						    "requeueing. Mail cannot "
-						    "be requeued.", dirname);
-				myfree(dirname);
-				myfree(addr);
-				return -1;
-			}
-			addrfilename = concatstr(2, dirname, "/subscribers");
-			myfree(dirname);
-			addrfd = open(addrfilename, O_WRONLY|O_CREAT|O_APPEND,
-							S_IRUSR|S_IWUSR);
-			if(addrfd < 0) {
-				log_error(LOG_ARGS, "Could not open %s",
-						    addrfilename);
-				myfree(addrfilename);
-				myfree(addr);
-				return -1;
-			} else {
-				/* Dump the remaining addresses. We dump the
-				 * remaining before we write the failing
-				 * address to ensure the potential good ones
-				 * will be tried first when mlmmj-maintd
-				 * sends out mails that have been requeued. */
-				if(writen(addrfd, cur, start+st.st_size-cur)
-						< 0) {
-					log_error(LOG_ARGS, "Could not dump "
-							"remaining addresses "
-							"of subfile to "
-							"requeue address "
-							"file");
-				}
-				/* Dirty hack to add newline. */
-				addr[len] = '\n';
-				if(writen(addrfd, addr, len+1) < 0) {
-					addr[len] = '\0';
-					log_error(LOG_ARGS, "Could not add "
-							"[%s] to requeue "
-							"address file", addr);
-				}
-				
-			}
-			
-			myfree(addr);
-			myfree(addrfilename);
-			close(addrfd);
-
-			return -1;
+			index = mybasename(archivefilename);
+			return requeuemail(listdir, index, addrs, i);
 		}
-		myfree(addr);
 	}
 	return 0;
 }	
@@ -471,22 +584,24 @@ static void print_help(const char *prg)
 int main(int argc, char **argv)
 {
 	size_t len = 0, hdrslen, bodylen;
-	int sockfd = 0, mailfd = 0, opt, mindex, subfd = 0, tmpfd;
-	int deletewhensent = 1, sendres, archive = 1, digest = 0;
-	int ctrlarchive;
+	int sockfd = 0, mailfd = 0, opt, mindex = 0, subfd = 0, tmpfd, i;
+	int deletewhensent = 1, sendres = 0, archive = 1, digest = 0;
+	int ctrlarchive, res;
 	char *listaddr = NULL, *mailfilename = NULL, *subfilename = NULL;
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
 	char *relayhost = NULL, *archivefilename = NULL, *tmpstr;
 	char *listctrl = NULL, *subddirname = NULL, *listdir = NULL;
 	char *mlmmjbounce = NULL, *bindir, *mailmap, *probefile, *a;
-	char *body = NULL, *hdrs = NULL, *memmailsizestr = NULL;
-	char relay[16];
+	char *body = NULL, *hdrs = NULL, *memmailsizestr = NULL, *verp = NULL;
+	char relay[16], *listname, *listfqdn, *verpfrom, *maxverprecipsstr;
+	char strindex[32], *reply;
 	ssize_t memmailsize = 0;
 	DIR *subddir;
 	struct dirent *dp;
 	struct stat st;
 	struct hostent *relayent;
 	uid_t uid;
+	struct strlist stl;
 
 	CHECKFULLPATH(argv[0]);
 	
@@ -582,6 +697,18 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	maxverprecipsstr = ctrlvalue(listdir, "maxverprecips");
+	if(maxverprecipsstr) {
+		maxverprecips = atol(maxverprecipsstr);
+		log_error(LOG_ARGS, "maxverprecipsstr = [%s] maxverprecips = [%d]",
+				maxverprecipsstr, maxverprecips);
+		myfree(maxverprecipsstr);
+	}
+	if(maxverprecips <= 0)
+		maxverprecips = MAXVERPRECIPS;
+
+	verp = ctrlvalue(listdir, "verp");
+	chomp(verp);
 
 	switch(listctrl[0]) {
 		case '1':
@@ -705,6 +832,8 @@ int main(int argc, char **argv)
 			 mindex);
 	}
 
+	itoa(mindex, strindex);
+
 	if(!relayhost) {
 		relayhost = ctrlvalue(listdir, "relayhost");
 		chomp(relayhost);
@@ -770,16 +899,16 @@ int main(int argc, char **argv)
 		break;
 	case '2': /* Moderators */
 		initsmtp(&sockfd, relay);
-		if(send_mail_many(sockfd, bounceaddr, NULL, mailmap,
-				  st.st_size, subfd, NULL, NULL, listdir,
-				  NULL, hdrs, hdrslen, body, bodylen))
+		if(send_mail_many_fd(sockfd, bounceaddr, NULL, mailmap,
+				     st.st_size, subfd, NULL, NULL, listdir,
+				     NULL, hdrs, hdrslen, body, bodylen))
 			close(sockfd);
 		else
 			endsmtp(&sockfd);
 		break;
 	case '3': /* resending earlier failed mails */
 		initsmtp(&sockfd, relay);
-		if(send_mail_many(sockfd, NULL, NULL, mailmap, st.st_size,
+		if(send_mail_many_fd(sockfd, NULL, NULL, mailmap, st.st_size,
 				subfd, listaddr, mailfilename, listdir,
 				mlmmjbounce, hdrs, hdrslen, body, bodylen))
 			close(sockfd);
@@ -789,9 +918,10 @@ int main(int argc, char **argv)
 		break;
 	case '4': /* send mails to owner */
 		initsmtp(&sockfd, relay);
-		if(send_mail_many(sockfd, bounceaddr, NULL, mailmap, st.st_size,
-				subfd, listaddr, mailfilename, listdir,
-				mlmmjbounce, hdrs, hdrslen, body, bodylen))
+		if(send_mail_many_fd(sockfd, bounceaddr, NULL, mailmap,
+				st.st_size, subfd, listaddr, mailfilename,
+				listdir, mlmmjbounce, hdrs, hdrslen, body,
+				bodylen))
 			close(sockfd);
 		else
 			endsmtp(&sockfd);
@@ -834,6 +964,46 @@ int main(int argc, char **argv)
 			exit(EXIT_FAILURE);
 		}
 
+		stl.strs = (char **)mymalloc(1 + maxverprecips * sizeof(char *));
+		stl.count = 0;
+		listname = genlistname(listaddr);	
+		listfqdn = genlistfqdn(listaddr);	
+		verpfrom = concatstr(5, listname, "+bounces-", strindex, "@",
+				listfqdn);
+		myfree(listname);
+		myfree(listfqdn);
+
+		if(verp && (strcmp(verp, "postfix") == 0)) {
+			myfree(verp);
+			verp = mystrdup("XVERP=-=");
+		}
+
+		if(addtohdr && verp) {
+			log_error(LOG_ARGS, "Cannot use VERP and add To: "
+					"header. Not sending with VERP.");
+			verp = NULL;
+		}
+
+		if(verp) {
+			initsmtp(&sockfd, relay);
+			if(write_mail_from(sockfd, verpfrom, verp)) {
+				log_error(LOG_ARGS,
+						"Could not write MAIL FROM\n");
+				verp = NULL;
+			} else {
+				reply = checkwait_smtpreply(sockfd, MLMMJ_FROM);
+				if(reply) {
+					log_error(LOG_ARGS,
+						"Mailserver did not "
+						"accept verp mail from. "
+						"Not sending with VERP.");
+					myfree(reply);
+					verp = NULL;
+				}
+			}
+			endsmtp(&sockfd);
+		}
+
 		while((dp = readdir(subddir)) != NULL) {
 			if(!strcmp(dp->d_name, "."))
 				continue;
@@ -846,13 +1016,76 @@ int main(int argc, char **argv)
 				myfree(subfilename);
 				continue;
 			}
-			myfree(subfilename);
+			do {
+				res = getaddrsfromfd(&stl, subfd,
+						maxverprecips);
+				if(stl.count == maxverprecips) {
+					initsmtp(&sockfd, relay);
+					if(verp) {
+						sendres = send_mail_verp(
+								sockfd, &stl,
+								mailmap,
+								st.st_size,
+								verpfrom,
+								listdir, hdrs,
+								hdrslen, body,
+								bodylen, verp);
+						if(sendres)
+							requeuemail(listdir,
+								strindex,
+								&stl, 0);
+					} else {
+						sendres = send_mail_many_list(
+								sockfd, NULL,
+								NULL, mailmap,
+								st.st_size,
+								&stl,
+								listaddr,
+								archivefilename,
+								listdir,
+								mlmmjbounce,
+								hdrs, hdrslen,
+								body, bodylen);
+					}
+					endsmtp(&sockfd);
+					for(i = 0; i < stl.count; i++)
+						myfree(stl.strs[i]);
+					stl.count = 0;
+				}
+			} while(res > 0);
+			if(stl.count) {
+				initsmtp(&sockfd, relay);
+				if(verp) {
+					sendres = send_mail_verp(sockfd,
+							&stl, mailmap,
+							st.st_size,
+							verpfrom,
+							listdir, hdrs, hdrslen,
+							body, bodylen, verp);
+					if(sendres)
+						requeuemail(listdir, strindex,
+								&stl, 0);
+				} else {
+					sendres = send_mail_many_list(sockfd,
+							NULL, NULL, mailmap,
+							st.st_size, &stl,
+							listaddr,
+							archivefilename,
+							listdir, mlmmjbounce,
+							hdrs, hdrslen, body,
+							bodylen);
+				}
+				endsmtp(&sockfd);
+				for(i = 0; i < stl.count; i++)
+					myfree(stl.strs[i]);
+				stl.count = 0;
+			}
 
-			initsmtp(&sockfd, relay);
-			sendres = send_mail_many(sockfd, NULL, NULL, mailmap,
-					st.st_size, subfd, listaddr,
-					archivefilename, listdir, mlmmjbounce,
-					hdrs, hdrslen, body, bodylen);
+			myfree(verpfrom);
+			myfree(subfilename);
+			myfree(stl.strs);
+			close(subfd);
+
 			if (sendres) {
 				/* If send_mail_many() failed we close the
 				 * connection to the mail server in a brutal
@@ -862,7 +1095,6 @@ int main(int argc, char **argv)
 			} else {
 				endsmtp(&sockfd);
 			}
-			close(subfd);
 		}
 		closedir(subddir);
 		myfree(subddirname);
@@ -875,6 +1107,7 @@ int main(int argc, char **argv)
 	close(sockfd);
 	munmap(mailmap, st.st_size);
 	close(mailfd);
+	myfree(verp);
 
 	if(archive) {
 		if(!ctrlarchive) {

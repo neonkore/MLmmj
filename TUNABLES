@@ -109,3 +109,13 @@ to specify several entries (one pr. line), it's marked "list".
    If this file exists, no mail confirmation is needed to subscribe to the
    list. This should in principle never ever be used, but there is times
    on local lists etc. where this is useful. HANDLE WITH CARE!
+
+ · verp				(normal)
+
+   Enable VERP support. Anything added in this variable will be appended the
+   MAIL FROM: line. If "postfix" is put in the file, it'll make postfix use
+   VERP by adding XVERP=-= to the MAIL FROM: line.
+
+ · maxverprecips		(normal)
+
+   How many recipients pr. mail delivered to the smtp server. Defaults to 100.

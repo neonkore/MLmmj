@@ -63,19 +63,26 @@ int write_helo(int sockfd, const char *hostname)
 }
 /* "MAIL FROM: <>\r\n" has length 15 */
 #define EXTRA_FROM_LEN 16
-int write_mail_from(int sockfd, const char *from_addr)
+int write_mail_from(int sockfd, const char *from_addr, const char *extra)
 {
-	size_t len = (size_t)(strlen(from_addr) + EXTRA_FROM_LEN);
+	size_t len = (size_t)(strlen(from_addr) + EXTRA_FROM_LEN +
+			strlen(extra) + 2);
 	char *mail_from;
 	size_t bytes_written;
 
-	if((mail_from = mymalloc(len)) == NULL)
-		return errno;
-	snprintf(mail_from, len, "MAIL FROM: <%s>\r\n", from_addr);
+	mail_from = mymalloc(len);
+
+	if(extra && extra[0] == ' ')
+		snprintf(mail_from, len, "MAIL FROM: <%s>%s\r\n", from_addr,
+				extra);
+	else
+		snprintf(mail_from, len, "MAIL FROM: <%s> %s\r\n", from_addr,
+				extra);
+
 	len = strlen(mail_from);
 
 #if 0
-	fprintf(stderr, "\nwrite_mail_from, mail_from = [%s]\n", mail_from);
+	fprintf(stderr, "%s", mail_from);
 #endif
 	bytes_written = writen(sockfd, mail_from, len);
 	if(bytes_written < 0) {
@@ -101,9 +108,8 @@ int write_rcpt_to(int sockfd, const char *rcpt_addr)
 
 	snprintf(rcpt_to, len, "RCPT TO: <%s>\r\n", rcpt_addr);
 	len = strlen(rcpt_to);
-
 #if 0
-	fprintf(stderr, "\nwrite_rcpt_to, rcpt_to = [%s]\n", rcpt_to);
+	log_error(LOG_ARGS, "%s", rcpt_to);
 #endif
 	bytes_written = writen(sockfd, rcpt_to, len);
 	if(bytes_written < 0) {
@@ -289,7 +295,7 @@ int write_replyto(int sockfd, const char *replyaddr)
 	snprintf(replyto, len, "Reply-To: %s\r\n", replyaddr);
 	len = strlen(replyto);
 
-#ifdef MLMMJ_DEBUG
+#if 0
 	fprintf(stderr, "\nwrite_replyto, replyto = [%s]\n", replyto);
 #endif
 	bytes_written = writen(sockfd, replyto, len);
