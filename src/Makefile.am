@@ -41,4 +41,4 @@ mlmmj_bounce_SOURCES = mlmmj-bounce.c print-version.c log_error.c \
 		       subscriberfuncs.c strgen.c random-int.c writen.c
 
 mlmmj_maintd_SOURCES = mlmmj-maintd.c print-version.c log_error.c mygetline.c \
-		       strgen.c random-int.c
+		       strgen.c random-int.c chomp.c

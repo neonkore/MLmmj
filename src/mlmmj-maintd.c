@@ -18,6 +18,7 @@
 #include "mlmmj-maintd.h"
 #include "mlmmj.h"
 #include "strgen.h"
+#include "chomp.h"
 #include "log_error.h"
 #include "mygetline.h"
 
@@ -115,10 +116,8 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 	char *discardedname = NULL;
 	char *dirname = concatstr(2, listdir, "/queue/");
 	FILE *ffrom, *fto, *f;
-	size_t len;
 	pid_t pid;
 	struct stat st;
-	time_t t;
 	int discarded = 0;
 
 	if(chdir(dirname) < 0) {
@@ -133,7 +132,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 	}
 
 	while((dp = readdir(queuedir)) != NULL) {
-		if(strchr(dp->d_name, "."))
+		if(strchr(dp->d_name, '.'))
 			continue;
 		if(stat(dp->d_name, &st) < 0) {
 			log_error(LOG_ARGS, "Could not stat(%s)",dp->d_name);
@@ -157,6 +156,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 			} else {
 				log_error(LOG_ARGS, "Could not stat(%s)",
 						dp->d_name);
+			}
 		}
 
 		toname = concatstr(2, mailname, ".reciptto");
@@ -168,6 +168,9 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 				discarded = discardmail(mailname,
 							discardedname,
 							3600);
+			} else {
+				log_error(LOG_ARGS, "Could not stat(%s)",
+						dp->d_name);
 			}
 		}
 		
@@ -192,10 +195,12 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		}
 
 		from = myfgetline(ffrom);
+		chomp(from);
 		fclose(ffrom);
 		unlink(fromname);
 		free(fromname);
 		to = myfgetline(fto);
+		chomp(to);
 		fclose(fto);
 		unlink(toname);
 		free(toname);
@@ -205,6 +210,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 			repto = NULL;
 		} else {
 			repto = myfgetline(f);
+			chomp(repto);
 			fclose(f);
 			unlink(reptoname);
 			free(reptoname);
@@ -213,7 +219,10 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		pid = fork();
 
 		if(pid == 0) {
-			if(repto)
+			if(repto) {
+				printf("%s -l %s -m %s -F %s -T %s -R %s -a\n",
+						mlmmjsend, "1", mailname, from,
+						to, repto);
 				execlp(mlmmjsend, mlmmjsend,
 						"-l", "1",
 						"-m", mailname,
@@ -221,14 +230,18 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 						"-T", to,
 						"-R", repto,
 						"-a", 0);
-			else
+			} else {
+				printf("%s -l %s -m %s -F %s -T %s -a\n",
+						mlmmjsend, "1", mailname, from, to);
 				execlp(mlmmjsend, mlmmjsend,
 						"-l", "1",
 						"-m", mailname,
 						"-F", from,
 						"-T", to,
 						"-a", 0);
+			}
 		}
+	}
 
 	return 0;
 }
