@@ -101,7 +101,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	if (writen(fd, fromstr, strlen(fromstr)) < -1)
 		goto errdighdrs;
 
-	if(dumpfd2fd(hdrfd, fd) < 0) {
+	if(hdrfd >= 0 && dumpfd2fd(hdrfd, fd) < 0) {
 		close(hdrfd);
 		goto errdighdrs;
 	}
