@@ -1,3 +1,4 @@
+ o Added regular expression based access control.
  o Added wrappers for malloc(), realloc(), free() and strdup(), so we can
    bail out if any of them fail.
 0.7.3
