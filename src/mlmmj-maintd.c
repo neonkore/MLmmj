@@ -199,7 +199,6 @@ int discardmail(const char *old, const char *new, time_t age)
 			ret = 1;
 	}
 
-	myunlock(fd);
 	close(fd);
 	return ret;
 }
@@ -813,7 +812,6 @@ int run_digests(const char *listdir, const char *mlmmjsend)
 					digestname);
 			myfree(digestname);
 			myfree(s1);
-			myunlock(fd);
 			close(fd);
 			return 1;
 		}
@@ -829,7 +827,6 @@ int run_digests(const char *listdir, const char *mlmmjsend)
 		myfree(digestname);
 		myfree(indexname);
 		myfree(s1);
-		myunlock(fd);
 		close(fd);
 		return 1;
 	}
@@ -841,7 +838,6 @@ int run_digests(const char *listdir, const char *mlmmjsend)
 		myfree(digestname);
 		myfree(indexname);
 		myfree(s1);
-		myunlock(fd);
 		close(fd);
 		return 1;
 	}
@@ -878,7 +874,6 @@ int run_digests(const char *listdir, const char *mlmmjsend)
 	myfree(indexname);
 	myfree(s1);
 	myfree(s2);
-	myunlock(fd);
 	close(fd);
 	
 	return 0;
