@@ -79,7 +79,7 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 		 const char **delhdrs, struct mailhdr *readhdrs,
 		 struct strlist *allhdrs, const char *prefix)
 {
-	char *hdrline, *subject;
+	char *hdrline, *subject, *unqp;
 
 	allhdrs->count = 0;
 	allhdrs->strs = NULL;
@@ -114,7 +114,9 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 		/* Add Subject: prefix if wanted */
 		if(prefix) {
 			if(strncmp(hdrline, "Subject: ", 9) == 0) {
-				if(strstr(hdrline + 9, prefix) == NULL) {
+				unqp = cleanquotedp(hdrline + 9);
+				if(strstr(hdrline + 9, prefix) == NULL &&
+				   strstr(unqp, prefix) == NULL) {
 					subject = concatstr(4,
 							"Subject: ", prefix,
 							" ", hdrline + 9);
@@ -122,8 +124,10 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 							strlen(subject));
 					myfree(subject);
 					myfree(hdrline);
+					myfree(unqp);
 					continue;
 				}
+				myfree(unqp);
 			}
 		}
 		

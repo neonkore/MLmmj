@@ -33,5 +33,6 @@ char *concatstr(int count, ...);
 char *hostnamestr(void);
 char *mydirname(const char *path);
 char *mybasename(const char *path);
+char *cleanquotedp(char *qpstr);
 
 #endif /* STRGEN_H */

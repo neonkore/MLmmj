@@ -175,3 +175,40 @@ char *mybasename(const char *path)
 	
 	return ret;
 }
+
+char *cleanquotedp(char *qpstr)
+{
+	char *retstr = mymalloc(strlen(qpstr));
+	char qc[3], *c = qpstr;
+	long qcval;
+	int i = 0;
+
+	/* XXX: We only use this function for checking whether the subject
+	 * prefix is only present, so the recoding is neither guaranteed
+	 * complete nor correct */
+
+	qc[2] = '\0';
+	while(*c != '\0') {
+		switch(*c) {
+			case '=':
+				qc[0] = *(++c);
+				qc[1] = *(++c);
+				c++;
+				qcval = strtol(qc, NULL, 16);
+				if(qcval)
+					retstr[i++] = (char)qcval;
+				break;
+			case '_':
+				retstr[i++] = ' ';
+				c++;
+				break;
+			default:
+				retstr[i++] = *(c++);
+				break;
+		}
+	}
+	
+	retstr[i] = '\0';
+
+	return retstr;
+}
