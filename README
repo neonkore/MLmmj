@@ -88,7 +88,7 @@ That's it! You might want to go through the next steps too.
 Tunables in include/mlmmj.h:
 If you want to use something else than localhost for your maildelivery you have
 to change RELAYHOST.
-If you want to spawn more than 2 smtp connections to your relayhost, change
+If you want to spawn more than 3 smtp connections to your relayhost, change
 MAX_CONNECTIONS to the desired value.
 
 Have a fun!
