@@ -15,5 +15,6 @@ char *headerstr(const char *headertoken, const char *str);
 char *genlistname(const char *listaddr);
 char *genlistfqdn(const char *listaddr);
 char *concatstr(int count, ...);
+char *hostnamestr(void);
 
 #endif /* STRGEN_H */
