@@ -623,7 +623,6 @@ int main(int argc, char **argv)
 				free(subfilename);
 				continue;
 			}
-			fprintf(stderr, "found subfile '%s'\n", subfilename);
 			free(subfilename);
 
 			initsmtp(&sockfd, relayhost);
