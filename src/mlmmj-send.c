@@ -19,6 +19,8 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <libgen.h>
+#include <syslog.h>
+#include <stdarg.h>
 
 #include "mlmmj-send.h"
 #include "mlmmj.h"
@@ -97,56 +99,134 @@ char *bounce_from_adr(const char *recipient, const char *listadr,
 	return bounceaddr;
 }
 
+int bouncemail(const char *listdir, const char *mlmmjbounce, const char *from)
+{
+	char *myfrom = strdup(from);
+	char *addr, *num, *c;
+	size_t len;
+	pid_t pid = 0;
+
+	if((c = strchr(myfrom, '@')) == NULL) {
+		log_error(LOG_ARGS, "strchr(%s, '@') = [%s]", myfrom, c);
+		free(myfrom);
+		return 0; /* Success when mailformed 'from' */
+	}
+	*c = '\0';
+	num = strrchr(myfrom, '-');
+	num++;
+	c = strchr(myfrom, RECIPDELIM);
+	myfrom = strchr(c, '-');
+	myfrom++;
+	len = num - myfrom - 1;
+	addr = malloc(len + 1);
+	addr[len] = '\0';
+	memcpy(addr, myfrom, len);
+	errno = 0;
+
+	pid = fork();
+	
+	if(pid < 0) {
+		log_error(LOG_ARGS, "fork() failed!");
+		return 1;
+	}
+	
+	if(pid > 0)
+		return 0;
+	
+	execlp(mlmmjbounce, mlmmjbounce,
+			"-L", listdir,
+			"-a", addr,
+			"-n", num, 0);
+
+	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjbounce);
+
+	return 1;
+}
+
 int send_mail(int sockfd, const char *from, const char *to,
-	      const char *replyto, FILE *mailfile)
+	      const char *replyto, FILE *mailfile,
+	      const char *listdir, const char *mlmmjbounce)
 {
 	int retval = 0;
+	char *reply;
 
-	if((retval = write_mail_from(sockfd, from)) != 0) {
+	retval = write_mail_from(sockfd, from);
+	if(retval) {
 		log_error(LOG_ARGS, "Could not write MAIL FROM\n");
 		return retval;
 	}
-	if((retval = checkwait_smtpreply(sockfd, MLMMJ_FROM)) != 0) {
-		log_error(LOG_ARGS, "Wrong MAIL FROM:\n");
-		return retval;
+	reply = checkwait_smtpreply(sockfd, MLMMJ_FROM);
+	if(reply) {
+		log_error(LOG_ARGS, "Error in MAIL FROM. Reply = [%s]",
+				reply);
+		free(reply);
+		write_rset(sockfd);
+		checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		return MLMMJ_FROM;
 	}
-
-	if((retval = write_rcpt_to(sockfd, to)) != 0) {
+	retval = write_rcpt_to(sockfd, to);
+	if(retval) {
 		log_error(LOG_ARGS, "Could not write RCPT TO:\n");
 		return retval;
 	}
-	if((retval = checkwait_smtpreply(sockfd, MLMMJ_RCPTTO)) != 0) {
-		log_error(LOG_ARGS, "Wrong RCPT TO:\n");
-		return retval;
+
+	reply = checkwait_smtpreply(sockfd, MLMMJ_RCPTTO);
+	if(reply) {
+		write_rset(sockfd);
+		checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		if(mlmmjbounce && (reply[1] == '5') && ((reply[0] == '4') ||
+					(reply[0] == '5'))) {
+			return bouncemail(listdir, mlmmjbounce, from);
+		} else {
+			log_error(LOG_ARGS, "Error in RCPT TO. Reply = [%s]",
+					reply);
+			free(reply);
+			return MLMMJ_RCPTTO;
+		}
 	}
-	if((retval = write_data(sockfd)) != 0) {
+
+	retval = write_data(sockfd);
+	if(retval) {
 		log_error(LOG_ARGS, "Could not write DATA\b");
 		return retval;
 	}
-	if((retval = checkwait_smtpreply(sockfd, MLMMJ_DATA)) != 0) {
-		log_error(LOG_ARGS, "Mailserver not ready for DATA\n");
-		return retval;
+
+	reply = checkwait_smtpreply(sockfd, MLMMJ_DATA);
+	if(reply) {
+		log_error(LOG_ARGS, "Error with DATA. Reply = [%s]", reply);
+		write_rset(sockfd);
+		checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		return MLMMJ_DATA;
 	}
-	if(replyto)
-		if((retval = write_replyto(sockfd, replyto)) != 0) {
+
+	if(replyto) {
+		retval = write_replyto(sockfd, replyto);
+		if(retval) {
 			log_error(LOG_ARGS, "Could not write reply-to addr.\n");
 			return retval;
 		}
-	if((retval = write_mailbody_from_file(sockfd, mailfile)) != 0) {
+	}
+
+	retval = write_mailbody_from_file(sockfd, mailfile);
+	if(retval) {
 		log_error(LOG_ARGS, "Could not write mailbody\n");
 		return retval;
 	}
 
-	if((retval = write_dot(sockfd)) != 0) {
+	retval = write_dot(sockfd);
+	if(retval) {
 		log_error(LOG_ARGS, "Could not write <CR><LF>.<CR><LF>\n");
 		return retval;
 	}
 
-	if((retval = checkwait_smtpreply(sockfd, MLMMJ_DOT)) != 0) {
+	reply = checkwait_smtpreply(sockfd, MLMMJ_DOT);
+	if(reply) {
 		log_error(LOG_ARGS, "Mailserver did not ack end of mail.\n"
 				"<CR><LF>.<CR><LF> was written, to no"
-				"avail\n");
-		return retval;
+				"avail. Reply = [%s]", reply);
+		write_rset(sockfd);
+		checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		return MLMMJ_DOT;
 	}
 
 	return 0;
@@ -155,21 +235,25 @@ int send_mail(int sockfd, const char *from, const char *to,
 int initsmtp(int *sockfd, const char *relayhost)
 {
 	int retval = 0;
+	char *reply = NULL;
 	char *myhostname = hostnamestr();
 	
 	init_sockfd(sockfd, relayhost);
 	
-	if((retval = checkwait_smtpreply(*sockfd, MLMMJ_CONNECT)) != 0) {
-		log_error(LOG_ARGS, "No proper greeting to our connect\n"
-			  "We continue and hope for the best\n");
+	if((reply = checkwait_smtpreply(*sockfd, MLMMJ_CONNECT)) != NULL) {
+		log_error(LOG_ARGS, "No proper greeting to our connect"
+			  "Reply: [%s]", reply);
+		free(reply);
+		retval = MLMMJ_CONNECT;
 		/* FIXME: Queue etc. */
 	}	
 	write_helo(*sockfd, myhostname);
 	free(myhostname);
-	if((checkwait_smtpreply(*sockfd, MLMMJ_HELO)) != 0) {
-		log_error(LOG_ARGS, "Error with HELO\n"
-			  "We continue and hope for the best\n");
+	if((reply = checkwait_smtpreply(*sockfd, MLMMJ_HELO)) != NULL) {
+		log_error(LOG_ARGS, "Error with HELO. Reply: [%s]", reply);
 		/* FIXME: quit and tell admin to configure correctly */
+		free(reply);
+		retval = MLMMJ_HELO;
 	}
 
 	return retval;
@@ -178,12 +262,15 @@ int initsmtp(int *sockfd, const char *relayhost)
 int endsmtp(int *sockfd)
 {
 	int retval = 0;
+	char *reply;
 	
 	write_quit(*sockfd);
 
-	if((retval = checkwait_smtpreply(*sockfd, MLMMJ_QUIT)) != 0) {
-		log_error(LOG_ARGS, "Mailserver would not let us QUIT\n"
-			  "We close the socket anyway though\n");
+	if((reply = checkwait_smtpreply(*sockfd, MLMMJ_QUIT)) != 0) {
+		log_error(LOG_ARGS, "Mailserver would not let us QUIT. "
+			  "We close the socket anyway though.");
+		free(reply);
+		retval = MLMMJ_QUIT;
 	}
 
 	close(*sockfd);
@@ -193,7 +280,8 @@ int endsmtp(int *sockfd)
 
 int send_mail_many(int sockfd, const char *from, const char *replyto,
 		   FILE *mailfile, FILE *subfile, const char *listaddr,
-		   const char *archivefilename, const char *listdir)
+		   const char *archivefilename, const char *listdir,
+		   const char *mlmmjbounce)
 {
 	int sendres = 0;
 	char *bounceaddr, *addr, *index, *dirname, *addrfilename;
@@ -204,12 +292,12 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 		chomp(addr);
 		if(from)
 			sendres = send_mail(sockfd, from, addr, replyto,
-					    mailfile);
+					    mailfile, listdir, NULL);
 		else {
 			bounceaddr = bounce_from_adr(addr, listaddr,
 						     archivefilename);
 			sendres = send_mail(sockfd, bounceaddr, addr, replyto,
-				  mailfile);
+				  mailfile, listdir, mlmmjbounce);
 			free(bounceaddr);
 		}
 		if(sendres && listaddr && archivefilename) {
@@ -226,8 +314,8 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 				free(addr);
 				return 1;
 			}
-			free(dirname);
 			addrfilename = concatstr(2, dirname, "/subscribers");
+			free(dirname);
 			addrfile = fopen(addrfilename, "w");
 			if(addrfile == NULL) {
 				log_error(LOG_ARGS, "Could not create %s",
@@ -291,19 +379,23 @@ int main(int argc, char **argv)
 {
 	size_t len = 0;
 	int sockfd = 0, opt, mindex;
-	FILE *subfile = NULL, *mailfile = NULL, *tmpfile;
+	int deletewhensent = 1, *newsockfd, sendres;
 	char *listaddr, *mailfilename = NULL, *subfilename = NULL;
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
 	char *relayhost = NULL, *archivefilename = NULL, *tmpstr;
 	char *listctrl = NULL, *subddirname = NULL, *listdir = NULL;
-	int deletewhensent = 1, *newsockfd, sendres;
+	char *mlmmjbounce = NULL, *argv0 = strdup(argv[0]);
 	DIR *subddir;
+	FILE *subfile = NULL, *mailfile = NULL, *tmpfile;
 	struct dirent *dp;
 	pid_t childpid;
 	struct sigaction sigact;
 	
 	log_set_name(argv[0]);
 
+	mlmmjbounce = concatstr(2, dirname(argv0), "/mlmmj-bounce");
+	free(argv0);
+	
 	while ((opt = getopt(argc, argv, "VDhm:l:L:R:F:T:r:")) != -1){
 		switch(opt) {
 		case 'D':
@@ -408,7 +500,7 @@ int main(int argc, char **argv)
 	case '1': /* A single mail is to be sent */
 		initsmtp(&sockfd, relayhost);
 		sendres = send_mail(sockfd, bounceaddr, to_addr,
-				replyto, mailfile);
+				replyto, mailfile, listdir, NULL);
 		endsmtp(&sockfd);
 		if(sendres) {
 			/* error, so keep it in the queue */
@@ -437,7 +529,7 @@ int main(int argc, char **argv)
 	case '2': /* Moderators */
 		initsmtp(&sockfd, relayhost);
 		send_mail_many(sockfd, bounceaddr, NULL, mailfile, subfile,
-			       NULL, NULL, listdir);
+			       NULL, NULL, listdir, NULL);
 		endsmtp(&sockfd);
 		break;
 	default: /* normal list mail */
@@ -486,12 +578,13 @@ int main(int argc, char **argv)
 				initsmtp(newsockfd, relayhost);
 				send_mail_many(*newsockfd, NULL, NULL,
 					       mailfile, subfile, listaddr,
-					       archivefilename, listdir);
+					       archivefilename, listdir,
+					       mlmmjbounce);
 				endsmtp(newsockfd);
 				free(newsockfd);
 				exit(EXIT_SUCCESS);
 			} else {
-				log_error(LOG_ARGS, "%d/%d connections open",
+				syslog(LOG_INFO, "%d/%d connections open",
 						conncount, MAX_CONNECTIONS);
 			}
 		}
