@@ -1,3 +1,5 @@
+ o Do a mmap of the mail to send once, instead of reading the mail for
+   each mail to send
  o Rip out the ability to fork to make more than one connection to relayhost.
    It turned out to not make any performance gain (tested with lists with
    more than 120000 subscribers), and thus only complicated things.
