@@ -348,6 +348,7 @@ int main(int argc, char **argv)
 	struct email_container toemails = { 0, NULL };
 	struct email_container ccemails = { 0, NULL };
 	struct email_container efromemails = { 0, NULL };
+	struct email_container dtoemails = { 0, NULL };
 	struct strlist *access_rules = NULL;
 	struct strlist *delheaders = NULL;
 	struct strlist allheaders;
@@ -355,7 +356,8 @@ int main(int argc, char **argv)
 		{ "From:", 0, NULL },
 		{ "To:", 0, NULL },
 		{ "Cc:", 0, NULL },
-		{ "Return-Path: ", 0, NULL },
+		{ "Return-Path:", 0, NULL },
+		{ "Delivered-To:", 0, NULL },
 		{ NULL, 0, NULL }
 	};
 
@@ -518,7 +520,17 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if(toemails.emaillist)
+	if(readhdrs[4].token) { /* Delivered-To: (envelope to) */
+		for(i = 0; i < readhdrs[4].valuecount; i++) {
+			find_email_adr(readhdrs[4].values[i], &dtoemails);
+		}
+	}
+
+	if(dtoemails.emaillist) {
+		recipdelim = strchr(dtoemails.emaillist[0], RECIPDELIM);
+		log_error(LOG_ARGS, "recipdelim = [%s]", recipdelim);
+	}
+	else if(toemails.emaillist)
 		recipdelim = strchr(toemails.emaillist[0], RECIPDELIM);
 	else
 		recipdelim = NULL;

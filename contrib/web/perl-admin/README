@@ -39,7 +39,8 @@ To enable access control on Apache you have to:
 Further customization:
 
 You can set two environment variables in your apache config to control the
-configuration of the mlmmj webinterface.
+configuration of the mlmmj webinterface. Remember to have mod_env loaded if
+you do this.
 
    SetEnv CONFIG_PATH /home/mlmmj/conf/config.pl
    SetEnv TUNABLES_PATH /home/mlmmj/conf/tunables.pl

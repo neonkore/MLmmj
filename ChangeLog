@@ -1,3 +1,5 @@
+ o php-user updates from Christoph Thiel
+ o Use Delivered-To: instead of To: when available
 1.0.0-RC1
  o Add web-interface. Thanks Christian Laursen for new perl-admin
  o Dump the customheaders before any Mime headers
