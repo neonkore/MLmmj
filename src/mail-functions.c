@@ -121,7 +121,13 @@ int write_mailbody_from_file(int sockfd, FILE *infile)
 	/* keep writing chunks of line (max WRITE_BUFSIZE) */
 	for(;;) {
 		bufp = buf+1;
-		if(!fgets(bufp, WRITE_BUFSIZE, infile)) break;
+		if(!fgets(bufp, WRITE_BUFSIZE, infile)) {
+			if (errno == EINTR) {
+				continue;
+			} else {
+				return errno;
+			}
+		}
 
 		/* fix "dot lines" */
 		if(full_line && (bufp[0] == '.')) {
