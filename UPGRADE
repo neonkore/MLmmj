@@ -1,4 +1,10 @@
+This applies to everyone using mlmmj > 0.7.1:
+---------------------------------------------
+
+ Don't forget to upgrade the listtexts!
+
 This applies to everyone using mlmmj > 0.5.2:
+---------------------------------------------
 
  Following directories have moved into the control/ directory since that
  is where they rightfully belong:
