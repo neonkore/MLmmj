@@ -1,3 +1,4 @@
+ o Chown option and a fix for mlmmj-make-ml.sh. Thanks Ingo Lameter
 1.0.0
  o Replace index() with strchr()
  o Add parenthesis around realloc call to make sure we alloc correctly
