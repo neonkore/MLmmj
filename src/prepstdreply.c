@@ -64,7 +64,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	myfree(tmp);
 
 	tmp = random_str();
-	retstr = concatstr(3, listdir, "/queue/", random);
+	retstr = concatstr(3, listdir, "/queue/", tmp);
 	myfree(tmp);
 	outfd = open(retstr, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
 	if(outfd < 0) {

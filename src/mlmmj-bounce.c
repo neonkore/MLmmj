@@ -161,7 +161,8 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 	myfree(probefile);
 
 	execlp(mlmmjsend, mlmmjsend,
-				"-l", "1",
+				"-l", "5",
+				"-L", listdir,
 				"-T", myaddr,
 				"-F", from,
 				"-m", queuefilename, 0);

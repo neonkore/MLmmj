@@ -418,7 +418,7 @@ int main(int argc, char **argv)
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
 	char *relayhost = NULL, *archivefilename = NULL, *tmpstr;
 	char *listctrl = NULL, *subddirname = NULL, *listdir = NULL;
-	char *mlmmjbounce = NULL, *bindir, *mailmap;
+	char *mlmmjbounce = NULL, *bindir, *mailmap, *probefile, *a;
 	DIR *subddir;
 	struct dirent *dp;
 	struct stat st;
@@ -493,10 +493,18 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	if(listctrl[0] == '1' || listctrl[0] == '2' || listctrl[0] == '3')
-		archive = 0;
+	switch(listctrl[0]) {
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+			archive = 0;
+		default:
+			break;
+	}
 
-	if(listdir)
+	if(listdir && listctrl[0] != '5')
 		listaddr = getlistaddr(listdir);
 	
 	/* initialize file with mail to send */
@@ -519,6 +527,7 @@ int main(int argc, char **argv)
 
 	switch(listctrl[0]) {
 	case '1': /* A single mail is to be sent, do nothing */
+	case '5':
 		break;
 	case '2': /* Moderators */
 		subfilename = concatstr(2, listdir, "/control/moderators");
@@ -625,6 +634,24 @@ int main(int argc, char **argv)
 			close(sockfd);
 		else
 			endsmtp(&sockfd);
+		break;
+	case '5': /* bounceprobe - handle relayhost local users bouncing*/
+		initsmtp(&sockfd, relayhost);
+		sendres = send_mail(sockfd, bounceaddr, to_addr, replyto,
+				mailmap, st.st_size, listdir, NULL);
+		endsmtp(&sockfd);
+		if(sendres) {
+			/* error, so remove the probefile */
+			tmpstr = mystrdup(to_addr);
+			a = strchr(tmpstr, '@');
+			*a = '=';
+			probefile = concatstr(4, listdir, "/bounce/", tmpstr,
+					"-probe");
+			log_error(LOG_ARGS, "probefile = [%s]", probefile);
+			unlink(probefile);
+			myfree(probefile);
+			myfree(tmpstr);
+		}
 		break;
 	default: /* normal list mail */
 		subddirname = concatstr(2, listdir, "/subscribers.d/");
