@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#ifdef USE_SYSLOG
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
 #endif
 
@@ -24,7 +24,7 @@ static void log_error_do(const char *msg, const char *file, unsigned int line)
 {
 	if (!log_name) log_name = "mlmmj-UNKNOWN";
 
-#ifdef USE_SYSLOG
+#ifdef HAVE_SYSLOG
 	static int syslog_is_open = 0;
 	if(!syslog_is_open) {
 		openlog(log_name, LOG_PID|LOG_CONS, LOG_MAIL);
