@@ -133,7 +133,7 @@ int write_mailbody_from_map(int sockfd, char *mapstart, size_t size,
 			newlinebuf[0] = '\r';
 			newlinebuf[1] = '\n';
 			len = 2;
-			if(*(next+1) == '.') {
+			if(next < (mapstart + size - 1) && *(next+1) == '.') {
 				newlinebuf[2] = '.';
 				len = 3;
 			}
