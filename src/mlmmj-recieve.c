@@ -26,7 +26,7 @@ extern char *optarg;
 
 static void print_help(const char *prg)
 {
-        printf("Usage: %s -L /path/to/chat-list [-V] [-P]\n", prg);
+        printf("Usage: %s -L /path/to/chat-list [-V] [-P] [-F]\n", prg);
 	exit(EXIT_SUCCESS);
 }
 
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 	char *infilename = NULL, *listdir = NULL, *line = NULL;
 	char *randomstr = random_str();
 	char *mlmmjprocess, *argv0 = strdup(argv[0]);
-	int fd, opt, noprocess = 0;
+	int fd, opt, noprocess = 0, nofork = 0;
 	pid_t childpid;
 	
 	log_set_name(argv[0]);
@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 	mlmmjprocess = concatstr(2, dirname(argv0), "/mlmmj-process");
 	free(argv0);
 	
-	while ((opt = getopt(argc, argv, "hPVL:")) != -1) {
+	while ((opt = getopt(argc, argv, "hPVL:F")) != -1) {
 		switch(opt) {
 		case 'h':
 			print_help(argv[0]);
@@ -53,6 +53,9 @@ int main(int argc, char **argv)
 			break;
 		case 'P':
 			noprocess = 1;
+			break;
+		case 'F':
+			nofork = 1;
 			break;
 		case 'V':
 			print_version(argv[0]);
@@ -105,12 +108,14 @@ int main(int argc, char **argv)
 	 * returning, making it susceptible to getting a SIGKILL from the
 	 * mailserver invoking mlmmj-recieve.
 	 */
-	childpid = fork();
-	if(childpid < 0)
-		log_error(LOG_ARGS, "fork() failed! Proceeding anyway");
+	if (!nofork) {
+		childpid = fork();
+		if(childpid < 0)
+			log_error(LOG_ARGS, "fork() failed! Proceeding anyway");
 	
-	if(childpid)
-		exit(EXIT_SUCCESS); /* Parent says: "bye bye kids!"*/
+		if(childpid)
+			exit(EXIT_SUCCESS); /* Parent says: "bye bye kids!"*/
+	}
 
 	execlp(mlmmjprocess, mlmmjprocess,
 				"-L", listdir,
