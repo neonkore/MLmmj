@@ -252,6 +252,15 @@ int main(int argc, char **argv)
 		free(a);
 		exit(EXIT_SUCCESS);
 	}
+	/* Below checks for bounce probes bouncing. If they do, simply remove
+	 * the probe file and exit successfully
+	 */
+	if(strncmp(number, "probe", 5) == 0) {
+		a = concatstr(4, listdir, "/bounce/", address, "-probe");
+		unlink(a);
+		free(a);
+		exit(EXIT_SUCCESS);
+	}
 	
 	/* save the filename with '=' before replacing it with '@' */
 	bfilename = concatstr(3, listdir, "/bounce/", address);
