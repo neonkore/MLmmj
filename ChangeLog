@@ -1,5 +1,5 @@
  o Make it possible to specify more than one listaddress in
-   LISTDIR/control/listaddress. The first is the "real" one.
+   LISTDIR/control/listaddress. The first one is the "real" one.
  o Make the port to connect to controlable with LISTDIR/control/smtpport
 1.2.3
  o Only allow subscription of addresses with '@' in them
