@@ -203,7 +203,7 @@ errdighdrs:
 				"-l", "7",
 				"-L", listdir,
 				"-m", queuename,
-				NULL);
+				(char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 		exit(EXIT_FAILURE);  /* It is OK to exit, as this is a child */
 	}

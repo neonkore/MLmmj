@@ -157,7 +157,7 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 				"-L", listdir,
 				"-T", myaddr,
 				"-F", from,
-				"-m", queuefilename, NULL);
+				"-m", queuefilename, (char *)NULL);
 
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 

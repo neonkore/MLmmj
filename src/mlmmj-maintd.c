@@ -319,14 +319,14 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 						"-F", from,
 						"-T", to,
 						"-R", repto,
-						"-a", NULL);
+						"-a", (char *)NULL);
 			} else {
 				execlp(mlmmjsend, mlmmjsend,
 						"-l", "1",
 						"-m", mailname,
 						"-F", from,
 						"-T", to,
-						"-a", NULL);
+						"-a", (char *)NULL);
 			}
 		}
 	}
@@ -431,7 +431,7 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 					"-m", archivefilename,
 					"-s", subnewname,
 					"-a",
-					"-D", NULL);
+					"-D", (char *)NULL);
 		}
 	}
 
@@ -573,7 +573,7 @@ int probe_bouncers(const char *listdir, const char *mlmmjbounce)
 			execlp(mlmmjbounce, mlmmjbounce,
 					"-L", listdir,
 					"-a", probefile,
-					"-p", NULL);
+					"-p", (char *)NULL);
 			log_error(LOG_ARGS, "Could not execlp %s",
 						mlmmjbounce);
 			return 1;
@@ -712,7 +712,7 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		} else {
 			execlp(mlmmjunsub, mlmmjunsub,
 					"-L", listdir,
-					"-a", address, NULL);
+					"-a", address, (char *)NULL);
 			log_error(LOG_ARGS, "Could not execlp %s",
 						mlmmjunsub);
 			return 1;
