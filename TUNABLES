@@ -8,7 +8,6 @@ variable to "true". If it's a "normal" file, the first line will be used as
 value, leaving line 2 and forward ready for commentary etc. If it's possible
 to specify several entries (one pr. line), it's marked "list".
 
-
  · closedlist			(boolean)
 
    Is the list is open or closed. If it's closed subscribtion and
@@ -16,37 +15,30 @@ to specify several entries (one pr. line), it's marked "list".
    too, so the -C option to mlmmj-sub and mlmmj-unsub is of no use with a
    closed list.
 
-
  · moderated			(boolean)
 
    If this file is present, the emailaddresses in the file listdir/moderators
    will act as moderators for the list.
-
-
 
  · tocc				(boolean)
 
    If this file is present, the list address does not have to be in the To:
    or Cc: header of the email to the list.
 
-
  · subonlypost			(boolean)
 
    When this file is present, only people who are subscribed to the list,
    are allowed to post to it. The check is made against the "From:" header.
-
 
  · prefix			(normal)
 
    The prefix for the Subject: line of mails to the list. This will alter the
    Subject: line, and add a prefix if it's not present elsewhere.
 
-
  · owner			(list)
 
    The emailaddresses in this file (1 pr. line) will get mails to
    listname+owner@listdomain.tld
-
 
  · delheaders			(list)
 
@@ -56,7 +48,6 @@ to specify several entries (one pr. line), it's marked "list".
                    Message-ID:
    Then all occurences of these headers in incoming list mail will be deleted.
    "From " and "Return-Path:" are deleted no matter what.
-
 
  · access			(list)
 

@@ -1,4 +1,4 @@
-README mlmmj-0.8.0					Jun 21th 2004
+README mlmmj-0.8.1					Jun 25th 2004
 
 This is an attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
@@ -12,7 +12,6 @@ The functionality is not vast, but slowly improving:
  · Complete requeueing functionality
  · Moderation functionality
  · Subject prefix
- · Subscribe / unsubscribe functionality (email, commandline).
  · Subscribers only posting
  · Regular expression access control
 
@@ -23,7 +22,7 @@ To use mlmmj, do the following:
 
         recipient_delimiter = +
 
-    to /etc/postfix/main.cf. In Exim it's done by adding
+    to /etc/postfix/main.cf. In Exim it can be done by adding
 
         local_part_suffix = +*
 	local_part_suffix_optional

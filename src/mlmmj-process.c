@@ -324,7 +324,7 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	int i, fd, opt, noprocess = 0, moderated = 0;
+	int i, opt, noprocess = 0, moderated = 0;
 	int hdrfd, footfd, rawmailfd, donemailfd;
 	int subonlypost = 0, addrtocc = 1, intocc = 0;
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;

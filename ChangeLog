@@ -1,4 +1,6 @@
 0.8.1
+ o Go through all open() calls and retry in case we (allthough it's extremely
+   unlikely) did get EEXIST
  o Add the option to add a To: header including the recipient emailaddress.
    NOTE that this does not remove any existing To: headers, they should be
    removed in control/delheaders
