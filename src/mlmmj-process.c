@@ -597,8 +597,7 @@ int main(int argc, char **argv)
 	if(addrtocc && !intocc) {
 		/* Don't send a mail about denial to the list, but silently
 		 * discard and exit */
-		if (strncasecmp(listaddress, fromemails.emaillist[0],
-				strlen(listaddress)) == 0) {
+		if (strcasecmp(listaddr, fromemails.emaillist[0]) == 0) {
 			myfree(listaddr);
 			unlink(donemailname);
 			myfree(donemailname);
@@ -636,8 +635,7 @@ int main(int argc, char **argv)
 	if(subonlypost) {
 		/* Don't send a mail about denial to the list, but silently
 		 * discard and exit */
-		if (strncasecmp(listaddress, fromemails.emaillist[0],
-				strlen(listaddress)) == 0) {
+		if (strcasecmp(listaddr, fromemails.emaillist[0]) == 0) {
 			myfree(listaddr);
 			unlink(donemailname);
 			myfree(donemailname);
@@ -681,8 +679,7 @@ int main(int argc, char **argv)
 	if (access_rules) {
 		/* Don't send a mail about denial to the list, but silently
 		 * discard and exit */
-		if (strncasecmp(listaddress, fromemails.emaillist[0],
-				strlen(listaddress)) == 0) {
+		if (strcasecmp(listaddr, fromemails.emaillist[0]) == 0) {
 			myfree(listaddr);
 			unlink(donemailname);
 			myfree(donemailname);
