@@ -384,7 +384,7 @@ int main(int argc, char **argv)
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
 	char *relayhost = NULL, *archivefilename = NULL, *tmpstr;
 	char *listctrl = NULL, *subddirname = NULL, *listdir = NULL;
-	char *mlmmjbounce = NULL, *argv0 = strdup(argv[0]);
+	char *mlmmjbounce = NULL, *bindir;
 	DIR *subddir;
 	FILE *subfile = NULL, *mailfile = NULL, *tmpfile;
 	struct dirent *dp;
@@ -393,8 +393,9 @@ int main(int argc, char **argv)
 	
 	log_set_name(argv[0]);
 
-	mlmmjbounce = concatstr(2, dirname(argv0), "/mlmmj-bounce");
-	free(argv0);
+	bindir = mydirname(argv[0]);
+	mlmmjbounce = concatstr(2, bindir, "/mlmmj-bounce");
+	free(bindir);
 	
 	while ((opt = getopt(argc, argv, "aVDhm:l:L:R:F:T:r:")) != -1){
 		switch(opt) {
@@ -440,9 +441,6 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	if(!listctrl && listdir && listdir[0] == '1')
-		listctrl = strdup("1");
-
 	if(!listctrl)
 		listctrl = strdup("0");
 
@@ -458,10 +456,11 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	if(listctrl[0] != '1' && listctrl[0] != '2')
-		listaddr = getlistaddr(listdir);
-	else
+	if(listctrl[0] == '1' || listctrl[0] == '2')
 		archive = 0;
+
+	if(listdir)
+		listaddr = getlistaddr(listdir);
 	
 	/* initialize file with mail to send */
 
