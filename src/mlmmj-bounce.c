@@ -189,7 +189,7 @@ int main(int argc, char **argv)
 	int opt, fd;
 	char *listdir = NULL, *address = NULL, *number = NULL;
 	char *bindir, *mlmmjsend;
-	char *mailname = NULL, *savename, *bfilename, *a, *buf;
+	char *mailname = NULL, *bfilename, *a, *buf;
 	size_t len;
 	time_t t;
 	int probe = 0;
