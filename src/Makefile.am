@@ -29,8 +29,8 @@ mlmmj_process_SOURCES = mlmmj-process.c writen.c strip_file_to_fd.c \
 
 mlmmj_subscribe_SOURCES = mlmmj-subscribe.c writen.c mylocking.c \
 			getlistaddr.c chomp.c random-int.c strgen.c \
-			subscriberfuncs.c getline.c print-version.c
+			subscriberfuncs.c readln.c print-version.c
 
-mlmmj_unsubscribe_SOURCES = mlmmj-unsubscribe.c writen.c getline.c mylocking.c\
+mlmmj_unsubscribe_SOURCES = mlmmj-unsubscribe.c writen.c readln.c mylocking.c\
 			getlistaddr.c chomp.c subscriberfuncs.c random-int.c \
 			strgen.c print-version.c

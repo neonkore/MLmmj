@@ -43,18 +43,20 @@ int main(int argc, char **argv)
 {
 	char *infilename;
 	int mailfd;
-	int opt;
+	int opt, ch, process = 1;
 	char *listdir = 0;
 	char listadr[READ_BUFSIZE];
-/*	char *scanbuf; */
 	
-	while ((opt = getopt(argc, argv, "hVL:")) != -1) {
+	while ((opt = getopt(argc, argv, "hVPL:")) != -1) {
 		switch(opt) {
 		case 'h':
 			print_help(argv[0]);
 			break;
 		case 'L':
 			listdir = optarg;
+			break;
+		case 'P':
+			process = 0;
 			break;
 		case 'V':
 			print_version(argv[0]);
@@ -86,17 +88,20 @@ int main(int argc, char **argv)
 
 	printf("%s\n", infilename);
 	
-	/* strip_file_to_fd with 0, 0, 0, 0 as last arg just saves the file */
-	strip_file_to_fd(stdin, mailfd, 0, 0, 0, 0);
+	while((ch = getc(stdin)) != EOF)
+		writen(mailfd, &ch, 1);
 
 	close(mailfd);
-	close(mailfd);
+
+	if(!process)
+		return EXIT_SUCCESS;
 
 	execlp(BINDIR"mlmmj-process", "mlmmj-process",
 				"-L", listdir,
 				"-m", infilename, 0);
 
-	fprintf(stderr, "%s:%d execlp() of "BINDIR"mlmmj-send failed: ", __FILE__, __LINE__);
+	fprintf(stderr, "%s:%d execlp() of "BINDIR"mlmmj-send failed: ",
+			__FILE__, __LINE__);
 	perror(NULL);
 	return EXIT_FAILURE;
 }

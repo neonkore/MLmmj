@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 #include "readln.h"
 
 /*! Read a line from filedescriptor fd. If bufsize-1 have been read and no

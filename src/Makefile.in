@@ -79,12 +79,12 @@ mlmmj_send_LDADD = $(LDADD)
 am_mlmmj_subscribe_OBJECTS = mlmmj-subscribe.$(OBJEXT) \
 	writen.$(OBJEXT) mylocking.$(OBJEXT) getlistaddr.$(OBJEXT) \
 	chomp.$(OBJEXT) random-int.$(OBJEXT) strgen.$(OBJEXT) \
-	subscriberfuncs.$(OBJEXT) getline.$(OBJEXT) \
+	subscriberfuncs.$(OBJEXT) readln.$(OBJEXT) \
 	print-version.$(OBJEXT)
 mlmmj_subscribe_OBJECTS = $(am_mlmmj_subscribe_OBJECTS)
 mlmmj_subscribe_LDADD = $(LDADD)
 am_mlmmj_unsubscribe_OBJECTS = mlmmj-unsubscribe.$(OBJEXT) \
-	writen.$(OBJEXT) getline.$(OBJEXT) mylocking.$(OBJEXT) \
+	writen.$(OBJEXT) readln.$(OBJEXT) mylocking.$(OBJEXT) \
 	getlistaddr.$(OBJEXT) chomp.$(OBJEXT) \
 	subscriberfuncs.$(OBJEXT) random-int.$(OBJEXT) \
 	strgen.$(OBJEXT) print-version.$(OBJEXT)
@@ -97,7 +97,7 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/checkwait_smtpreply.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/chomp.Po ./$(DEPDIR)/find_email_adr.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/getline.Po ./$(DEPDIR)/getlistaddr.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/getlistaddr.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/header_token.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/incindexfile.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/init_sockfd.Po ./$(DEPDIR)/itoa.Po \
@@ -110,8 +110,8 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/mlmmj-unsubscribe.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/mylocking.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/print-version.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/random-int.Po ./$(DEPDIR)/send_help.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/strgen.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/random-int.Po ./$(DEPDIR)/readln.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/send_help.Po ./$(DEPDIR)/strgen.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/strip_file_to_fd.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/subscriberfuncs.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/writen.Po
@@ -218,9 +218,9 @@ mlmmj_process_SOURCES = mlmmj-process.c writen.c strip_file_to_fd.c \
 
 mlmmj_subscribe_SOURCES = mlmmj-subscribe.c writen.c mylocking.c \
 			getlistaddr.c chomp.c random-int.c strgen.c \
-			subscriberfuncs.c getline.c print-version.c
+			subscriberfuncs.c readln.c print-version.c
 
-mlmmj_unsubscribe_SOURCES = mlmmj-unsubscribe.c writen.c getline.c mylocking.c\
+mlmmj_unsubscribe_SOURCES = mlmmj-unsubscribe.c writen.c readln.c mylocking.c\
 			getlistaddr.c chomp.c subscriberfuncs.c random-int.c \
 			strgen.c print-version.c
 
@@ -324,7 +324,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/checkwait_smtpreply.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chomp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/find_email_adr.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getline.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getlistaddr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/header_token.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/incindexfile.Po@am__quote@
@@ -340,6 +339,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mylocking.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/print-version.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/random-int.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/readln.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/send_help.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strgen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strip_file_to_fd.Po@am__quote@
