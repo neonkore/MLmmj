@@ -1,4 +1,4 @@
-This applies to everyone using mlmmj < 0.5.0:
+This applies to everyone using mlmmj > 0.5.0:
 ---------------------------------------------
 
  Note that listdir/subcribers is no longer used for subscribers. Instead
@@ -12,3 +12,9 @@ This applies to everyone using mlmmj < 0.5.0:
 
  A quick and dirty hack would be to simply move listdir/subscribers into
  subscribers.d/. This could lead to double subscriptions, so use with caution!
+
+This applies to everyone using mlmmj > 0.5.1:
+---------------------------------------------
+
+ listdir/requeue/ directory have to be created
+

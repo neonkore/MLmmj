@@ -42,6 +42,7 @@ To use mlmmj, do the following:
    /var/spool/mlmmj/mlmmj-test/moderation
    /var/spool/mlmmj/mlmmj-test/moderation/queue
    /var/spool/mlmmj/mlmmj-test/subscribers.d
+   /var/spool/mlmmj/mlmmj-test/requeue
 
    And creates files similar to the ones in the listtexts/ directory of the
    source distribution in /var/spool/mlmmj/text/.
