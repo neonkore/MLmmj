@@ -1,4 +1,5 @@
 1.2.0-RC2
+ o Fix uninitialized strlist
  o Add logging regular operation to mlmmj.operation.log
  o Fix the sending loop by not sending the rest of the batch in every
    iteration
