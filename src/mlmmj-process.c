@@ -210,6 +210,9 @@ static enum action do_access(struct strlist *rule_strs, struct strlist *hdrs)
 	int err;
 	enum action ret;
 
+	/* They're going in backwards later on, so loop from the end here
+	 * to get it right
+	 */
 	for (i=rule_strs->count-1; i>=0; i--) {
 		new_rule = mymalloc(sizeof(struct rule_list));
 
@@ -235,8 +238,8 @@ static enum action do_access(struct strlist *rule_strs, struct strlist *hdrs)
 		if (*rule_ptr == ' ') {
 			rule_ptr++;
 		} else if (*rule_ptr == '\0') {
-			rule_ptr--;
-			*rule_ptr = '.';
+			/* We had a single allow/deny so match everything */
+			*(--rule_ptr) = '.';
 		} else {
 			/* we must have space or end of string */
 			errno = 0;
