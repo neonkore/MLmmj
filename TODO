@@ -1,4 +1,5 @@
 Code cleanup:
+ o Make RECIPDELIM configurable (compile and/or runtime)
  o Add some more logging to mlmmj-maintd--actually we have to rethink logging a
    bit. Do we want to use our own /var/log/mlmmj
 
