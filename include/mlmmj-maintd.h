@@ -17,7 +17,7 @@ int clean_discarded(const char *listdir);
 int resend_queue(const char *listdir, const char *mlmmjsend);
 int resend_requeue(const char *listdir, const char *mlmmjsend);
 int clean_nolongerbouncing(const char *listdir);
-int probe_bouncers(const char *listdir);
+int probe_bouncers(const char *listdir, const char *mlmmjbounce);
 int unsub_bouncers(const char *listdir);
 
 #endif /* MLMMJ_MAINTD_H */

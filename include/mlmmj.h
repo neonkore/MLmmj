@@ -25,6 +25,7 @@
 			     bouncing? 43200 is 12 hours */
 #define MAINTD_SLEEP 7200 /* How long between maintenance runs when
 			     mlmmj-maintd runs daemonized? 7200s is 2 hours */
+#define MAINTD_LOGFILE "mlmmj-maintd.lastrun.log"
 
 struct mailhdr {
 	const char *token;
