@@ -197,6 +197,7 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 {
 	int sendres = 0;
 	char *bounceaddr, *addr, *index, *dirname, *addrfilename;
+	char *myarchivefilename = strdup(archivefilename);
 	FILE *addrfile;
 
 	while((addr = myfgetline(subfile))) {
@@ -213,7 +214,8 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 		}
 		if(sendres && listaddr && archivefilename) {
 			/* we failed, so save the addresses and bail */
-			index = basename(archivefilename);	
+			index = basename(myarchivefilename);	
+			free(myarchivefilename);
 			dirname = concatstr(3, listdir, "/requeue/", index);
 			free(index);
 			if(mkdir(dirname, 0750) < 0) {
@@ -417,14 +419,14 @@ int main(int argc, char **argv)
 			free(tmpstr);
 			fputs(bounceaddr, tmpfile);
 			fclose(tmpfile);
-			tmpstr = concatstr(2, mailfilename, ".rcptto");
+			tmpstr = concatstr(2, mailfilename, ".reciptto");
 			tmpfile = fopen(tmpstr, "w");
 			free(tmpstr);
 			fputs(to_addr, tmpfile);
 			fclose(tmpfile);
 			if(replyto) {
 				tmpstr = concatstr(2, mailfilename,
-						      ".replyto");
+						      ".reply-to");
 				tmpfile = fopen(tmpstr, "w");
 				free(tmpstr);
 				fputs(replyto, tmpfile);

@@ -6,7 +6,7 @@ CFLAGS = -g -Wall -pedantic -Wsign-compare
 INCLUDES = -I../include
 
 bin_PROGRAMS = mlmmj-send mlmmj-recieve mlmmj-process mlmmj-sub \
-               mlmmj-unsub mlmmj-bounce
+               mlmmj-unsub mlmmj-bounce mlmmj-maintd
 
 bin_SCRIPTS = mlmmj-make-ml.sh
 
@@ -37,5 +37,7 @@ mlmmj_unsub_SOURCES = mlmmj-unsub.c writen.c mylocking.c \
 			getlistaddr.c chomp.c subscriberfuncs.c random-int.c \
 			strgen.c print-version.c log_error.c mygetline.c
 
-mlmmj_bounce_SOURCES = mlmmj-bounce.c print-version.c log_error.c subscriberfuncs.c \
-			strgen.c random-int.c writen.c
+mlmmj_bounce_SOURCES = mlmmj-bounce.c print-version.c log_error.c \
+		       subscriberfuncs.c strgen.c random-int.c writen.c
+
+mlmmj_maintd_SOURCES = mlmmj-maintd.c print-version.c log_error.c
