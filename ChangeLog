@@ -1,3 +1,4 @@
+ o mlmmj-{,un}sub now uses mmap and friends for better performance
 0.3.2
  o Logging enhancement
  o Send on the full path to the binaries around in the program since

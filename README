@@ -57,7 +57,7 @@ That's it! You might want to go through the next steps too.
 
 4) Subscribe some people
 
-   mlmmj-subscribe -L /var/spool/mlmmj/mlmmj-test/ -a joe@domain.tld
+   mlmmj-sub -L /var/spool/mlmmj/mlmmj-test/ -a joe@domain.tld
 
    etc.
 
@@ -68,7 +68,7 @@ That's it! You might want to go through the next steps too.
    file called 'customheaders' in the list directory like this:
    $ cat /var/spool/mlmmj/mlmmj-test/customheaders
    X-Mailinglist: mlmmj-test
-   Reply-To: mlmmj-test@domain.ltd
+   Reply-To: mlmmj-test@domain.tld
 
 6) If you want every mail to have something like:
    -- 
