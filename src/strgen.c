@@ -219,8 +219,6 @@ char *cleanquotedp(const char *qpstr)
 	return retstr;
 }
 
-/* Unused for now, but lets keep it for later
-
 char *genmsgid()
 {
 	size_t len = 128;
@@ -229,12 +227,43 @@ char *genmsgid()
 
 	t = time(NULL);
 
-	snprintf(s, len-1, "<%ld-%x-mlmmj-%x@%x.plonk", t, random_int(),
-				random_int(), random_int());
+	snprintf(s, len-1, "<%ld-%x-mlmmj-%x@%x.plonk", (long int)t,
+			random_int(), random_int(), random_int());
 
 	retstr = concatstr(3, "Message-ID: ", s, ">\n");
 	myfree(s);
 	
 	return retstr;
 }
-*/
+
+char *gendatestr()
+{
+	time_t t;
+	struct tm gmttm, lttm;
+	int dayyear;
+	char *timestr;
+
+	/* 6 + 26 + ' ' + timezone which is 5 + '\n\0' == 40 */
+	timestr = (char *)malloc(40);
+	strcpy(timestr, "Date: ");
+	t = time(NULL);
+
+	ctime_r(&t, timestr + 6);
+	localtime_r(&t, &lttm);
+	gmtime_r(&t, &gmttm);
+
+	t = (((lttm.tm_hour - gmttm.tm_hour) * 60) +
+	    (lttm.tm_min - gmttm.tm_min)) * 60;
+	
+	dayyear = lttm.tm_yday - gmttm.tm_yday;
+	if(dayyear) {
+		if (dayyear == -1 || dayyear > 1)
+			t -= 24 * 60 * 60;
+		else
+			t += 24 * 60 * 60;
+	}
+	
+	snprintf(timestr+30, 40, " %+05ld\n", ((long int)t)/36);
+
+	return timestr;
+}

@@ -151,7 +151,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 {
 	int infd, outfd;
 	char *listaddr, *myfrom, *tmp, *subject, *retstr = NULL;
-	char *myreplyto, *myto, *str = NULL;
+	char *myreplyto, *myto, *str = NULL, *mydate, *mymsgid;
 
 	tmp = concatstr(3, listdir, "/text/", filename);
 	infd = open(tmp, O_RDONLY);
@@ -175,6 +175,8 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	
 	myfrom = substitute(from, listaddr, tokencount, data);
 	myto = substitute(to, listaddr, tokencount, data);
+	mydate = gendatestr();
+	mymsgid = genmsgid();
 
 	if(replyto) {
 		myreplyto = substitute(replyto, listaddr, tokencount, data);
@@ -200,8 +202,8 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		return NULL;
 	}
 
-	str = concatstr(7, "From: ", myfrom, "\nTo: ", myto, "\n", myreplyto,
-			subject);
+	str = concatstr(9, "From: ", myfrom, "\nTo: ", myto, "\n", myreplyto,
+			   mymsgid, mydate, subject);
 
 	if(writen(outfd, str, strlen(str)) < 0) {
 		log_error(LOG_ARGS, "Could not write std mail");
