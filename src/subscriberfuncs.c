@@ -19,8 +19,9 @@
 #include "subscriberfuncs.h"
 #include "mygetline.h"
 #include "log_error.h"
+#include "wrappers.h"
 
-int find_subscriber(int fd, const char *address)
+off_t find_subscriber(int fd, const char *address)
 {
 	char *start, *cur, *next;
 	struct stat st;
@@ -36,14 +37,14 @@ int find_subscriber(int fd, const char *address)
 		log_error(LOG_ARGS, "Could not mmap fd");
 		return 1;
 	}
-
+	
 	for(next = cur = start; next < start + st.st_size; next++) {
 		if(*next == '\n') {
 			len = next - cur;
 			if((strlen(address) == len) &&
 			   (strncasecmp(address, cur, len) == 0)) {
 				munmap(start, st.st_size);
-				return 0;
+				return (off_t)(cur - start);
 			}
 			cur = next + 1;
 		}
@@ -54,10 +55,10 @@ int find_subscriber(int fd, const char *address)
 		if((strlen(address) == len) &&
 		   (strncasecmp(address, cur, len) == 0)) {
 			munmap(start, st.st_size);
-			return 0;
+			return (off_t)(cur - start);
 		}
 	}
 	
 	munmap(start, st.st_size);
-	return 1;
+	return (off_t)-1;
 }
