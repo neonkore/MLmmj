@@ -167,7 +167,7 @@ int main(int argc, char **argv)
 		clean_moderation(listdir);
 		clean_discarded(listdir);
 		resend_queue(listdir);
-		resend_requeue(listdir)
+		resend_requeue(listdir);
 		probe_bouncers(listdir);
 		unsub_bouncers(listdir);
 		
