@@ -92,7 +92,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	
-	if(dumpfd2fd(STDIN_FILENO, fd) != 0) {
+	if(dumpfd2fd(fileno(stdin), fd) != 0) {
 		log_error(LOG_ARGS, "Could not recieve mail");
 		exit(EXIT_FAILURE);
 	}
