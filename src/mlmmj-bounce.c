@@ -135,8 +135,7 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 	snprintf(a, 31, "%ld", (long int)t);
 	a[31] = '\0';
 	unlink(probefile);
-	fd = open(probefile, O_WRONLY|O_TRUNC|O_CREAT|O_NOFOLLOW,
-				S_IRUSR|S_IWUSR);
+	fd = open(probefile, O_WRONLY|O_TRUNC|O_CREAT, S_IRUSR|S_IWUSR);
 	if(fd < 0)
 		log_error(LOG_ARGS, "Could not open %s", probefile);
 	else

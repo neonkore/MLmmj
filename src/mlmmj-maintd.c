@@ -34,7 +34,7 @@ static void print_help(const char *prg)
 	exit(EXIT_SUCCESS);
 }
 
-void delolder(const char *dirname, time_t than)
+int delolder(const char *dirname, time_t than)
 {
 	DIR *dir;
 	struct dirent *dp;
@@ -43,11 +43,11 @@ void delolder(const char *dirname, time_t than)
 
 	if(chdir(dirname) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
-		exit(EXIT_FAILURE);
+		return -1;
 	}
 	if((dir = opendir(dirname)) == NULL) {
 		log_error(LOG_ARGS, "Could not opendir(%s)", dirname);
-		exit(EXIT_FAILURE);
+		return -1;
 	}
 
 	while((dp = readdir(dir)) != NULL) {
@@ -62,30 +62,29 @@ void delolder(const char *dirname, time_t than)
 			unlink(dp->d_name);
 	}
 	closedir(dir);
+
+	return 0;
 }
 
 
 int clean_moderation(const char *listdir)
 {
-	char *moddirname;
+	char *moddirname = concatstr(2, listdir, "/moderation");
+	int ret = delolder(moddirname, MODREQLIFE);	
 		
-	moddirname = concatstr(2, listdir, "/moderation");
-	delolder(moddirname, MODREQLIFE);	
-			
 	free(moddirname);
 
-	return 0;
+	return ret;
 }
 
 int clean_discarded(const char *listdir)
 {
 	char *discardeddirname = concatstr(2, listdir, "/queue/discarded");
-
-	delolder(discardeddirname, DISCARDEDLIFE);
+	int ret = delolder(discardeddirname, DISCARDEDLIFE);
 
 	free(discardeddirname);
 
-	return 0;
+	return ret;
 }
 
 int discardmail(const char *old, const char *new, time_t age)
@@ -126,6 +125,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		free(dirname);
 		return 1;
 	}
+	free(dirname);
 
 	while((dp = readdir(queuedir)) != NULL) {
 		if(stat(dp->d_name, &st) < 0) {
@@ -326,8 +326,63 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 					"-s", subnewname,
 					"-a",
 					"-D", 0);
+	}
 
+	return 0;
+}
 
+int clean_nolongerbouncing(const char *listdir)
+{
+	DIR *bouncedir;
+	char *dirname = concatstr(2, listdir, "/bounce/");
+	char *filename, *probetimestr, *s;
+	int probefd;
+	time_t probetime, t;
+	struct dirent *dp;
+	struct stat st;
+	
+	if(chdir(dirname) < 0) {
+		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
+		free(dirname);
+		return 1;
+	}
+		
+	if((bouncedir = opendir(dirname)) == NULL) {
+		log_error(LOG_ARGS, "Could not opendir(%s)", dirname);
+		free(dirname);
+		return 1;
+	}
+
+	while((dp = readdir(bouncedir)) != NULL) {
+		if((strcmp(dp->d_name, "..") == 0) ||
+		   (strcmp(dp->d_name, ".") == 0))
+				continue;
+
+		if(stat(dp->d_name, &st) < 0) {
+			log_error(LOG_ARGS, "Could not stat(%s)", dp->d_name);
+			continue;
+		}
+
+		filename = strdup(dp->d_name);
+
+		if((s = strstr(filename, "-probe"))) {
+			probefd = open(filename, O_RDONLY);
+			if(probefd < 0)
+				continue;
+			probetimestr = mygetline(probefd);
+			if(probetimestr == NULL)
+				continue;
+			close(probefd);
+			chomp(probetimestr);
+			probetime = (time_t)strtol(probetimestr, NULL, 10);
+			t = time(NULL);
+			if(t - probetime > WAITPROBE) {
+				unlink(filename);
+				*s = '\0';
+				unlink(filename);
+			}
+		}
+		free(filename);
 	}
 
 	return 0;
@@ -335,16 +390,10 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 
 int probe_bouncers(const char *listdir)
 {
-#if 0
-	DIR *bouncedir;
-	struct dirent *dp;
-#endif
 
-	/* TODO: invoke mlmmj-bounce -p address for all that haven't been
-	 * probed in PROBEINTERVAL (control/probeinterval) seconds
-	 * Note that mlmmj-bounce is still missing the -p option :-)
-	 */
-	
+	/* XXX: This is too expensive to do here with an
+	 * execlp for each one ... */
+
 	return 0;
 }
 
@@ -366,7 +415,7 @@ int main(int argc, char **argv)
 {
 	int opt, daemonize = 1;
 	char *bindir, *listdir = NULL, *mlmmjsend;
-	
+
 	log_set_name(argv[0]);
 
 	while ((opt = getopt(argc, argv, "hFVL:")) != -1) {
@@ -413,6 +462,7 @@ int main(int argc, char **argv)
 		clean_discarded(listdir);
 		resend_queue(listdir, mlmmjsend);
 		resend_requeue(listdir, mlmmjsend);
+		clean_nolongerbouncing(listdir);
 		probe_bouncers(listdir);
 		unsub_bouncers(listdir);
 		

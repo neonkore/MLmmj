@@ -11,11 +11,12 @@
 
 #include <sys/types.h>
 
-void delolder(const char *dirname, time_t than);
+int delolder(const char *dirname, time_t than);
 int clean_moderation(const char *listdir);
 int clean_discarded(const char *listdir);
 int resend_queue(const char *listdir, const char *mlmmjsend);
 int resend_requeue(const char *listdir, const char *mlmmjsend);
+int clean_nolongerbouncing(const char *listdir);
 int probe_bouncers(const char *listdir);
 int unsub_bouncers(const char *listdir);
 
