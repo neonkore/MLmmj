@@ -103,7 +103,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	const char *subswitch;
 	size_t len;
 	struct stat stbuf;
-	int closedlist, nosubconfirm, tmpfd;
+	int closedlist, nosubconfirm, tmpfd, noget;
 	size_t cmdlen;
 	unsigned int ctrl;
 	
@@ -418,17 +418,18 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		exit(EXIT_FAILURE);
 		break;
 
-	/* listname+bounces-user=example.tld-INDEX@domain.tld */
+	/* listname+bounces-INDEX-user=example.tld@domain.tld */
 	case CTRL_BOUNCES:
-		bouncenr = strrchr(param, '-');
-		if (!bouncenr) { /* malformed bounce, ignore and clean up */
-			unlink(mailname);
+		bouncenr = param;
+		c = strchr(param, '-');
+		if (!c) { /* malformed bounce, ignore and clean up */
+	 		unlink(mailname);
 			exit(EXIT_SUCCESS);
 		}
-		*bouncenr++ = '\0';
+		*c++ = '\0';
 		execlp(mlmmjbounce, mlmmjbounce,
 				"-L", listdir,
-				"-a", param,
+				"-a", c,
 				"-m", mailname,
 				"-n", bouncenr, NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjbounce);
@@ -464,6 +465,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	/* listname+get-INDEX@domain.tld */
 	case CTRL_GET:
 		unlink(mailname);
+		noget = statctrl(listdir, "noget");
+		if(noget)
+			exit(EXIT_SUCCESS);
 		/* sanity check--is it all digits? */
 		for(c = param; *c != '\0'; c++) {
 			if(!isdigit((int)*c))

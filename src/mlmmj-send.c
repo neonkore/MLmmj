@@ -600,8 +600,14 @@ int main(int argc, char **argv)
 	
 	/* initialize file with mail to send */
 
-	if((mailfd = open(mailfilename, O_RDONLY)) < 0) {
+	if((mailfd = open(mailfilename, O_RDWR)) < 0) {
 	        log_error(LOG_ARGS, "Could not open '%s'", mailfilename);
+		exit(EXIT_FAILURE);
+	}
+
+	if(myexcllock(mailfd) < 0) {
+		log_error(LOG_ARGS, "Could not lock '%s'."
+				"Mail not sent!", mailfilename);
 		exit(EXIT_FAILURE);
 	}
 
@@ -868,7 +874,7 @@ int main(int argc, char **argv)
 	close(sockfd);
 	munmap(mailmap, st.st_size);
 	close(mailfd);
-	
+
 	if(archive) {
 		if(!ctrlarchive)
 			rename(mailfilename, archivefilename);
@@ -877,6 +883,10 @@ int main(int argc, char **argv)
 		myfree(archivefilename);
 	} else if(deletewhensent)
 		unlink(mailfilename);
+
+	if(myunlock(mailfd) < 0)
+		log_error(LOG_ARGS, "Could not unlock '%s'", mailfilename);
+	
 
 	return EXIT_SUCCESS;
 }
