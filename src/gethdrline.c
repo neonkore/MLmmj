@@ -6,31 +6,35 @@
  * Public License as described at http://www.gnu.org/licenses/gpl.txt
  */
 
-#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "mygetline.h"
 #include "gethdrline.h"
 #include "strgen.h"
 
-char *gethdrline(FILE *infile)
+char *gethdrline(int fd)
 {
 	char *line = NULL, *retstr = NULL, *nextline = NULL, *tmp = NULL;
-	int ch;
+	char ch;
 	
 	for(;;) {
-		line = myfgetline(infile);
+		line = mygetline(fd);
 		if(line == NULL)
 			return NULL;
-		ch = getc(infile); ungetc(ch, infile);
+		if(read(fd, &ch, 1) == (size_t)1)
+			lseek(fd, -1, SEEK_CUR);
 		if(ch == '\t' || ch == ' ') {
-			nextline = myfgetline(infile);
+			nextline = mygetline(fd);
 			tmp = retstr;
 			retstr = concatstr(3, retstr, line, nextline);
-			free(tmp); free(line); free(nextline);
+			free(tmp);
+			free(line);
+			free(nextline);
 			tmp = line = nextline = NULL;
-			ch = getc(infile); ungetc(ch, infile);
-			if(!(ch == '\t' || ch == ' '))
+			if(read(fd, &ch, 1) == (size_t)1)
+				lseek(fd, -1, SEEK_CUR);
+			if(ch != '\t' && ch != ' ')
 				return retstr;
 		} else {
 			tmp = retstr;
@@ -42,12 +46,14 @@ char *gethdrline(FILE *infile)
 	}
 }
 #if 0
+#include <stdio.h>
+
 int main(int argc, char **argv)
 {
 	char *str;
 
-	while((str = gethdrline(stdin))) {
-		printf("%s", str);
+	while((str = gethdrline(fileno(stdin)))) {
+		printf("[%s]", str);
 		free(str);
 	}
 
