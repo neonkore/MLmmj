@@ -56,7 +56,7 @@ static struct ctrl_command ctrl_commands[] = {
 int listcontrol(struct email_container *fromemails, const char *listdir,
 		const char *controladdr, const char *mlmmjsub,
 		const char *mlmmjunsub, const char *mlmmjsend,
-		const char *mlmmjbounce)
+		const char *mlmmjbounce, const char *mailname)
 {
 	char tmpstr[READ_BUFSIZE];
 	char *atsign, *recipdelimsign, *bouncenr;
@@ -204,6 +204,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		execlp(mlmmjbounce, mlmmjbounce,
 				"-L", listdir,
 				"-a", param,
+				"-m", mailname,
 				"-n", bouncenr, 0);
 		log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjbounce);
 		exit(EXIT_FAILURE);
