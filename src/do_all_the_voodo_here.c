@@ -80,30 +80,37 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 		 struct strlist *allhdrs, const char *prefix)
 {
 	char *hdrline, *subject, *unqp;
+	int hdrsadded = 0;
 
 	allhdrs->count = 0;
 	allhdrs->strs = NULL;
 
 	while((hdrline = gethdrline(infd))) {
 		/* Done with headers? Then add extra if wanted*/
-		if((strlen(hdrline) == 1) && (hdrline[0] == '\n')){
-			if(hdrfd >= 0) {
+		if((strncasecmp(hdrline, "mime", 4) == NULL) ||
+			((strlen(hdrline) == 1) && (hdrline[0] == '\n'))){
+			if(!hdrsadded && hdrfd >= 0) {
 				if(dumpfd2fd(hdrfd, outfd) < 0) {
 					log_error(LOG_ARGS, "Could not "
 						"add extra headers");
 					myfree(hdrline);
 					return -1;
-				}
-			}
-			if(writen(outfd, hdrline, strlen(hdrline)) < 0) {
-				myfree(hdrline);
-				log_error(LOG_ARGS, "Error writing hdrs.");
-				return -1;
+				} else
+					hdrsadded = 1;
 			}
 			
 			fsync(outfd);
 			myfree(hdrline);
-			break;
+			if(hdrline[0] == '\n') {
+				if(writen(outfd, hdrline, strlen(hdrline))
+						< 0) {
+					myfree(hdrline);
+					log_error(LOG_ARGS,
+							"Error writing hdrs.");
+					return -1;
+				}
+				break;
+			}
 		}
 		/* Do we want info from hdrs? Get it before it's gone */
 		if(readhdrs)

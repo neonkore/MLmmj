@@ -1,3 +1,9 @@
+1.0.0-RC1
+ o Add web-interface. Thanks Christian Laursen for new perl-admin
+ o Dump the customheaders before any Mime headers
+ o Implement +get-N functionality, so it's possible to send a mail to
+   foolist+get-101@domain.tld to retrieve mail 101 from that list. It's
+   deliberately only possible to request one mail at a time.
  o Make sure that only either root or the listdir owner can execute the
    binaries when it has something to do with lists.
  o Don't leave bounces-help@ mails lying around in queue/

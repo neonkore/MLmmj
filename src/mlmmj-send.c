@@ -444,6 +444,7 @@ static void print_help(const char *prg)
 	       "    '3' means 'resend failed list mail'\n"
 	       "    '4' means 'send to file with recipients'\n"
 	       "    '5' means 'bounceprobe'\n"
+	       "    '6' means 'single listmail to single recipient'\n"
 	       " -L: Full path to list directory\n"
 	       " -m: Full path to mail file\n"
 	       " -r: Relayhost IP address (defaults to 127.0.0.1)\n"
@@ -568,6 +569,7 @@ int main(int argc, char **argv)
 		case '3':
 		case '4':
 		case '5':
+		case '6':
 			archive = 0;
 		default:
 			break;
@@ -654,7 +656,13 @@ int main(int argc, char **argv)
 			myfree(body);
 			exit(EXIT_FAILURE);
 		}
-
+	case '6':
+		archive = 0;
+		deletewhensent = 0;
+		archivefilename = mystrdup(mailfilename);
+		bounceaddr = bounce_from_adr(to_addr, listaddr,
+						archivefilename);
+		break;
 	default: /* normal list mail -- now handled when forking */
 		break;
 	}
@@ -688,6 +696,7 @@ int main(int argc, char **argv)
 
 	switch(listctrl[0]) {
 	case '1': /* A single mail is to be sent */
+	case '6':
 		initsmtp(&sockfd, relay);
 		sendres = send_mail(sockfd, bounceaddr, to_addr, replyto,
 				mailmap, st.st_size, listdir, NULL,

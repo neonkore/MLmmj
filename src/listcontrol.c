@@ -29,6 +29,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <ctype.h>
 
 #include "mlmmj.h"
 #include "listcontrol.h"
@@ -49,6 +50,7 @@ enum ctrl_e {
 	CTRL_BOUNCES,
 	CTRL_MODERATE,
 	CTRL_HELP,
+	CTRL_GET,
 	CTRL_END  /* end marker, must be last */
 };
 
@@ -67,7 +69,8 @@ static struct ctrl_command ctrl_commands[] = {
 	{ "confunsub",   1 },
 	{ "bounces",     1 },
 	{ "moderate",    1 },
-	{ "help",        0 }
+	{ "help",        0 },
+	{ "get",         1 }
 };
 
 
@@ -78,6 +81,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 {
 	char *atsign, *recipdelimsign, *bouncenr, *tmpstr;
 	char *controlstr, *param, *conffilename, *moderatefilename;
+	char *c, *archivefilename;
 	size_t len;
 	struct stat stbuf;
 	int closedlist, tmpfd;
@@ -248,6 +252,29 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				  mlmmjsend);
 		break;
 
+	case CTRL_GET:
+		errno = 0;
+		unlink(mailname);
+		if(!param) /* malformed get, ignore silently */
+			exit(EXIT_SUCCESS);
+		else { /* sanity check--is it all digits? */
+			for(c = param; *c != '\0'; c++) {
+				if(!isdigit((int)*c))
+					exit(EXIT_SUCCESS);
+			}
+			archivefilename = concatstr(3, listdir, "/archive/",
+							param);
+			if(stat(archivefilename, &stbuf) < 0)
+				exit(EXIT_SUCCESS);
+			else
+				execlp(mlmmjsend, mlmmjsend,
+					"-T", fromemails->emaillist[0],
+					"-L", listdir,
+					"-l", "6",
+					"-m", archivefilename,
+					"-a", "-D", 0);
+		}
+		break;
 	}
 
 	unlink(mailname);
