@@ -81,8 +81,9 @@ if [ -z "$TEXTPATH" -o ! -d "$TEXTPATH" ]; then
 	echo "**NOTE** Could not copy the texts for the list"
 	echo "Please manually copy the files from the listtexts/ directory"
 	echo "in the source distribution of mlmmj."
+else
+	cp "$TEXTPATH"/* "$LISTDIR"/"text"
 fi
-cp "$TEXTPATH"/* "$LISTDIR"/"text"
 
 LISTADDRESS="$LISTNAME@$FQDN"
 echo "$LISTADDRESS" > "$LISTDIR"/"listaddress"
