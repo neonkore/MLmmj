@@ -12,13 +12,13 @@
 
 #include "mlmmj.h"
 #include "subscriberfuncs.h"
-#include "getline.h"
+#include "readln.h"
 
 int find_subscriber(int subfilefd, const char *address)
 {
 	char buf[READ_BUFSIZE];
 
-	while (get_line(buf, sizeof(buf), subfilefd)) {
+	while (readln(subfilefd, buf, sizeof(buf))) {
 		while (buf[0] && isspace(buf[strlen(buf)-1]))
 			buf[strlen(buf)-1] = '\0';
 		if (strcasecmp(buf, address) == 0)

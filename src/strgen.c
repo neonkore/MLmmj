@@ -54,26 +54,6 @@ char *headerstr(const char *headertoken, const char *str)
 	return dest;
 }
 
-char *gendirname(const char *listdir, const char *subdir, const char *filename)
-{
-	size_t len = strlen(listdir) + strlen(subdir) + strlen(filename) + 1;
-	char *dest = malloc(len);
-
-	snprintf(dest, len, "%s%s%s", listdir, subdir, filename);
-
-	return dest;
-}
-	
-char *genfilename(const char *dir, const char *file)
-{
-	size_t len = strlen(dir) + strlen(file) + 1;
-	char *dest = malloc(len);
-
-	snprintf(dest, len, "%s%s", dir, file);
-	
-	return dest;
-}
-
 char *genlistname(const char *listaddr)
 {
 	size_t len;

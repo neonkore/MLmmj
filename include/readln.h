@@ -6,11 +6,9 @@
  * Public License as described at http://www.gnu.org/licenses/gpl.txt
  */
 
-#ifndef GET_LINE_H
-#define GET_LINE_H
+#ifndef READLN_H
+#define READLN_H
 
-/* read the next line in infile, returns 0 when no more. */
+ssize_t readln(int fd, char *buf, size_t bufsize);
 
-char *get_line(char *buf,int count, int fd);
-
-#endif /* GET_LINE_H */
+#endif /* READLN_H */

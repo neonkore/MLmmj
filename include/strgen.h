@@ -12,8 +12,6 @@
 char *random_str(void);
 char *random_plus_addr(const char *addr);
 char *headerstr(const char *headertoken, const char *str);
-char *gendirname(const char *listdir, const char *subdir, const char *filename);
-char *genfilename(const char *dir, const char *file);
 char *genlistname(const char *listaddr);
 char *genlistfqdn(const char *listaddr);
 char *concatstr(int count, ...);

@@ -44,7 +44,7 @@ void confirm_sub(const char *listdir, const char *listaddr, const char *subaddr)
 	char *listname;
 	char *listfqdn;
 
-	subtextfilename = genfilename(listdir, "/text/sub-ok");
+	subtextfilename = concatstr(2, listdir, "/text/sub-ok");
 
 	if((subtextfile = fopen(subtextfilename, "r")) == NULL) {
 		log_error("Could not open text/sub-confirm\n");
@@ -57,7 +57,7 @@ void confirm_sub(const char *listdir, const char *listaddr, const char *subaddr)
 	listfqdn = genlistfqdn(listaddr);
 	randomstr = random_str();
 
-	queuefilename = gendirname(listdir, "/queue/", randomstr);
+	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
 
 	printf("%s\n", queuefilename);
 
@@ -141,7 +141,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 	randomstr = random_plus_addr(subaddr);
-	confirmfilename = gendirname(listdir, "/subconf/", randomstr);
+	confirmfilename = concatstr(3, listdir, "/subconf/", randomstr);
 
 	if((subconffile = fopen(confirmfilename, "w")) == NULL) {
 		log_error(confirmfilename);
@@ -168,7 +168,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	snprintf(fromaddr, len, "%s-bounces+confsub-%s@%s", listname,
 			randomstr, listfqdn);
 
-	subtextfilename = genfilename(listdir, "/text/sub-confirm");
+	subtextfilename = concatstr(2, listdir, "/text/sub-confirm");
 
 	if((subtextfile = fopen(subtextfilename, "r")) == NULL) {
 		log_error("Could not open text/sub-confirm\n");
@@ -178,7 +178,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	}
 	free(subtextfilename);
 
-	queuefilename = gendirname(listdir, "/queue/", randomstr);
+	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
 
 	printf("%s\n", queuefilename);
 
@@ -298,7 +298,7 @@ int main(int argc, char **argv)
 		exit(EXIT_SUCCESS);  /* XXX is this success? */
 	}
 
-	subfilename = genfilename(listdir, "/subscribers");
+	subfilename = concatstr(2, listdir, "/subscribers");
 
 	subfilefd = open(subfilename, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
 	if(subfilefd == -1) {

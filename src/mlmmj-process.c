@@ -82,10 +82,10 @@ int main(int argc, char **argv)
 	/* get the list address */
 	getlistaddr(listadr, listdir);
 
-	donemailname = gendirname(listdir, "/queue/", random_str());
+	donemailname = concatstr(3, listdir, "/queue/", random_str());
 	donemailfd = open(donemailname, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
 	while(donemailfd == -1 && errno == EEXIST) {
-		donemailname = gendirname(listdir, "/queue/", random_str());
+		donemailname = concatstr(3, listdir, "/queue/", random_str());
 		donemailfd = open(donemailname, O_RDWR|O_CREAT|O_EXCL,
 				  S_IRUSR|S_IWUSR);
 	}
@@ -103,11 +103,11 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	headerfilename = genfilename(listdir, "/customheaders");
+	headerfilename = concatstr(2, listdir, "/customheaders");
 	headerfile = fopen(headerfilename, "r");
 	free(headerfilename);
 	
-	footerfilename = genfilename(listdir, "/footer");
+	footerfilename = concatstr(2, listdir, "/footer");
 	footerfile = fopen(footerfilename, "r");
 	free(footerfilename);
 	

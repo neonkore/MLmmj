@@ -40,7 +40,7 @@ void send_help(const char *listdir, const char *emailaddr)
 
         getlistaddr(listaddr, listdir);
 
-	helpfilename = genfilename(listdir, "/text/listhelp");
+	helpfilename = concatstr(2, listdir, "/text/listhelp");
 
 	if((helpfile = fopen(helpfilename, "r")) == NULL) {
 		log_error("Could not open text/help\n");
@@ -54,7 +54,7 @@ void send_help(const char *listdir, const char *emailaddr)
 	listfqdn = genlistfqdn(listaddr);
 	randomstr = random_str();
 
-	queuefilename = gendirname(listdir, "/queue/", randomstr);
+	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
 	printf("%s\n", queuefilename);
 	
 	if((queuefile = fopen(queuefilename, "w")) == NULL) {

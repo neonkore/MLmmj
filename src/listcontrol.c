@@ -71,7 +71,7 @@ int listcontrol(const char *mailfilename, const char *listdir,
 		confstr = malloc(len);
 		snprintf(confstr, len, "%s", controlstr + 8);
 		free(controlstr);
-		conffilename = gendirname(listdir, "/subconf/", confstr);
+		conffilename = concatstr(3, listdir, "/subconf/", confstr);
 		if((tempfile = fopen(conffilename, "r"))) {
 			fgets(tmpstr, READ_BUFSIZE, tempfile);
 			fclose(tempfile);
@@ -109,7 +109,7 @@ int listcontrol(const char *mailfilename, const char *listdir,
 		confstr = malloc(len);
 		snprintf(confstr, len, "%s", controlstr + 10);
 		free(controlstr);
-		conffilename = gendirname(listdir, "/unsubconf/", confstr);
+		conffilename = concatstr(3, listdir, "/unsubconf/", confstr);
 		if((tempfile = fopen(conffilename, "r"))) {
 			fgets(tmpstr, READ_BUFSIZE, tempfile);
 			fclose(tempfile);

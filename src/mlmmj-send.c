@@ -225,7 +225,7 @@ int main(int argc, char **argv)
 	 * subscribers list. Choeger?
 	 */
 	if(listdir[0] != '1') {
-		subfilename = genfilename(listdir, "/subscribers");
+		subfilename = concatstr(2, listdir, "/subscribers");
 		if((subfile = fopen(subfilename, "r")) == NULL) {
 			log_error("Could not open subscriberfile:");
 			exit(EXIT_FAILURE);

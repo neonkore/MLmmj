@@ -69,12 +69,13 @@ int main(int argc, char **argv)
 	/* get the list address */
 	getlistaddr(listadr, listdir);
 	
-	infilename = gendirname(listdir, "/incoming/", random_str());
+	infilename = concatstr(3, listdir, "/incoming/", random_str());
 	mailfd = open(infilename, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
 	while(mailfd == -1 && errno == EEXIST) {
 		free(infilename);
-		infilename = gendirname(listdir, "/incoming/", random_str());
-		mailfd = open(infilename, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
+		infilename = concatstr(3, listdir, "/incoming/", random_str());
+		mailfd = open(infilename, O_RDWR|O_CREAT|O_EXCL,
+				S_IRUSR|S_IWUSR);
 	}
 
 	if(mailfd == -1) {

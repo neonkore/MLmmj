@@ -20,7 +20,7 @@
 #include "mlmmj-subscribe.h"
 #include "mylocking.h"
 #include "wrappers.h"
-#include "getline.h"
+#include "readln.h"
 #include "getlistaddr.h"
 #include "subscriberfuncs.h"
 #include "strgen.h"
@@ -45,7 +45,7 @@ void confirm_unsub(const char *listdir, const char *listaddr, const char *subadd
 	char *listname;
 	char *listfqdn;
 
-	subtextfilename = genfilename(listdir, "/text/unsub-ok");
+	subtextfilename = concatstr(2, listdir, "/text/unsub-ok");
 
 	if((subtextfile = fopen(subtextfilename, "r")) == NULL) {
 		log_error("Could not open text/unsub-ok\n");
@@ -58,7 +58,7 @@ void confirm_unsub(const char *listdir, const char *listaddr, const char *subadd
 	listfqdn = genlistfqdn(listaddr);
 	randomstr = random_str();
 
-	queuefilename = gendirname(listdir, "/queue/", randomstr);
+	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
 
 	printf("%s\n", queuefilename);
 
@@ -117,7 +117,7 @@ void confirm_unsub(const char *listdir, const char *listaddr, const char *subadd
 	exit(EXIT_FAILURE);
 }
 
- void generate_unsubconfirm(const char *listdir, const char *listaddr,
+void generate_unsubconfirm(const char *listdir, const char *listaddr,
 				const char *subaddr)
 {
 	size_t len;
@@ -142,7 +142,7 @@ void confirm_unsub(const char *listdir, const char *listaddr, const char *subadd
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 	randomstr = random_plus_addr(subaddr);
-	confirmfilename = gendirname(listdir, "/unsubconf/", randomstr);
+	confirmfilename = concatstr(3, listdir, "/unsubconf/", randomstr);
 
 	if((subconffile = fopen(confirmfilename, "w")) == NULL) {
 		log_error(confirmfilename);
@@ -169,7 +169,7 @@ void confirm_unsub(const char *listdir, const char *listaddr, const char *subadd
 	snprintf(fromaddr, len, "%s-bounces+confunsub-%s@%s", listname,
 			randomstr, listfqdn);
 
-	subtextfilename = genfilename(listdir, "/text/unsub-confirm");
+	subtextfilename = concatstr(2, listdir, "/text/unsub-confirm");
 
 	if((subtextfile = fopen(subtextfilename, "r")) == NULL) {
 		log_error("Could not open text/unsub-confirm\n");
@@ -179,7 +179,7 @@ void confirm_unsub(const char *listdir, const char *listaddr, const char *subadd
 	}
 	free(subtextfilename);
 
-	queuefilename = gendirname(listdir, "/queue/", randomstr);
+	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
 
 	printf("%s\n", queuefilename);
 
@@ -236,16 +236,18 @@ void confirm_unsub(const char *listdir, const char *listaddr, const char *subadd
 
 void unsubscribe(int subreadfd, int subwritefd, const char *address)
 {
-	char buf[READ_BUFSIZE];
-	char *bufres;
+	char buf[4096];
 
 	lseek(subreadfd, 0, SEEK_SET);
 	lseek(subwritefd, 0, SEEK_SET);
 
-	while((bufres = get_line(buf, READ_BUFSIZE, subreadfd))) {
-		if((strncasecmp(buf, address, strlen(address))) != 0)
+	/* XXX: readln only guarantees to have read a complete line
+	 * when the last char is a newline, so a check should be made
+	 */
+	while(readln(subreadfd, buf, sizeof(buf)) > 0)
+		if(strncasecmp(buf, address, strlen(address)) != 0)
 			writen(subwritefd, buf, strlen(buf));
-	}
+	
 	ftruncate(subwritefd, lseek(subwritefd, 0, SEEK_CUR));
 }
 
@@ -309,7 +311,7 @@ int main(int argc, char **argv)
 	/* get the list address */
 	getlistaddr(listaddr, listdir);
 
-	subreadname = genfilename(listdir, "/subscribers");
+	subreadname = concatstr(2, listdir, "/subscribers");
 
 	subread = open(subreadname, O_RDWR);
 	if(subread == -1) {
