@@ -1,3 +1,8 @@
+1.0.0-RC2
+ o Do not allow mails from <> going to the list
+ o Fix mailing to +owner again by adding missing 'break;' to switch in
+   mlmmj-send
+ o perl-admin updates from Christian Laursen
  o php-user updates from Christoph Thiel
  o Use Delivered-To: instead of To: when available
 1.0.0-RC1

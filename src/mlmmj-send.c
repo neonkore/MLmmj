@@ -656,6 +656,7 @@ int main(int argc, char **argv)
 			myfree(body);
 			exit(EXIT_FAILURE);
 		}
+		break;
 	case '6':
 		archive = 0;
 		deletewhensent = 0;

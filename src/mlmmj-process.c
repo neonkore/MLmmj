@@ -518,6 +518,11 @@ int main(int argc, char **argv)
 		for(i = 0; i < readhdrs[3].valuecount; i++) {
 			find_email_adr(readhdrs[3].values[i], &efromemails);
 		}
+		if(efromemails.emailcount == 0) {
+			efromemails.emaillist =
+				(char **)mymalloc(sizeof(char *));
+			efromemails.emaillist[0] = mystrdup("<>");
+		}
 	}
 
 	if(readhdrs[4].token) { /* Delivered-To: (envelope to) */
@@ -526,10 +531,8 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if(dtoemails.emaillist) {
+	if(dtoemails.emaillist)
 		recipdelim = strchr(dtoemails.emaillist[0], RECIPDELIM);
-		log_error(LOG_ARGS, "recipdelim = [%s]", recipdelim);
-	}
 	else if(toemails.emaillist)
 		recipdelim = strchr(toemails.emaillist[0], RECIPDELIM);
 	else
@@ -560,6 +563,19 @@ int main(int argc, char **argv)
 	}
 
 	unlink(mailfile);
+
+	if(efromemails.emailcount != 1) { /* don't send mails with <> in From
+					     to the list */
+		discardname = concatstr(3, listdir,
+				"/queue/discarded/",
+				randomstr);
+		rename(donemailname, discardname);
+		myfree(donemailname);
+		myfree(discardname);
+		myfree(randomstr);
+		/* TODO: free emailstructs */
+		exit(EXIT_SUCCESS);
+	}
 
 	listaddr = getlistaddr(listdir);
 
