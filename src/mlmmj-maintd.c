@@ -91,18 +91,35 @@ int clean_discarded(const char *listdir)
 	return 0;
 }
 
+int discardmail(const char *old, const char *new, time_t age)
+{
+	struct stat st;
+	time_t t;
+
+	stat(old, &st);
+	t = time(NULL);
+
+	if(t - st.st_mtime > age) {
+		rename(old, new);
+		return 1;
+	}
+
+	return 0;
+}
+
 int resend_queue(const char *listdir, const char *mlmmjsend)
 {
 	DIR *queuedir;
 	struct dirent *dp;
 	char *mailname, *fromname, *toname, *reptoname, *from, *to, *repto;
-	char *discardedname, *dirname = concatstr(2, listdir, "/queue/");
-	FILE *fromfile, *tofile, *f;
+	char *discardedname = NULL;
+	char *dirname = concatstr(2, listdir, "/queue/");
+	FILE *ffrom, *fto, *f;
 	size_t len;
 	pid_t pid;
-	int i;
 	struct stat st;
 	time_t t;
+	int discarded = 0;
 
 	if(chdir(dirname) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
@@ -116,54 +133,72 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 	}
 
 	while((dp = readdir(queuedir)) != NULL) {
+		if(strchr(dp->d_name, "."))
+			continue;
 		if(stat(dp->d_name, &st) < 0) {
 			log_error(LOG_ARGS, "Could not stat(%s)",dp->d_name);
 			continue;
 		}
+
 		if(!S_ISREG(st.st_mode))
 			continue;
-		mailname = strdup(dp->d_name);
-		if(strstr(dp->d_name, ".mailfrom") ||
-		   strstr(dp->d_name, ".reciptto") ||
-		   strstr(dp->d_name, ".reply-to")) {
-			mailname[len - 9] = '\0';
+
+		mailname = concatstr(3, listdir, "/queue/", dp->d_name);
+
+		fromname = concatstr(2, mailname, ".mailfrom");
+		if(stat(fromname, &st) < 0) {
+			if(errno == ENOENT) {
+				discardedname = concatstr(3,
+						listdir, "/queue/discarded/",
+						dp->d_name);
+				discarded = discardmail(mailname,
+							discardedname,
+							3600);
+			} else {
+				log_error(LOG_ARGS, "Could not stat(%s)",
+						dp->d_name);
 		}
 
-		fromname = concatstr(4, listdir, "/queue/", mailname,
-					".mailfrom");
-		toname = concatstr(4, listdir, "/queue/", mailname,
-					".reciptto");
-		reptoname = concatstr(4, listdir, "/queue/", mailname,
-					".reply-to");
+		toname = concatstr(2, mailname, ".reciptto");
+		if(!discarded && stat(toname, &st) < 0) {
+			if(errno == ENOENT) {
+				discardedname = concatstr(3,
+						listdir, "/queue/discarded/",
+						dp->d_name);
+				discarded = discardmail(mailname,
+							discardedname,
+							3600);
+			}
+		}
+		
+		reptoname = concatstr(2, mailname, ".reply-to");
 
-		fromfile = fopen(fromname, "r");
-		i = errno;
-		tofile = fopen(toname, "r");
-		if((fromfile == NULL && i == ENOENT) ||
-		    (tofile == NULL && errno == ENOENT)) {
-			unlink(fromname);
-			free(fromname);
-			unlink(toname);
-			free(toname);
-			unlink(reptoname);
-			free(reptoname);
-			stat(mailname, &st);
-			t = time(NULL);
-			/* move it to discarded if it's an hour old */
-			if(t - st.st_mtime > (time_t)3600) {
-				discardedname = concatstr(4, listdir,
-						"/queue/discarded/",
-						mailname);
-				rename(mailname, discardedname);
-				free(discardedname);
+		ffrom = fopen(fromname, "r");
+		fto = fopen(toname, "r");
+
+		if(ffrom == NULL || fto == NULL) {
+			if(discarded) {
+				unlink(fromname);
+				unlink(toname);
+				unlink(reptoname);
 			}
 			free(mailname);
+			free(fromname);
+			free(toname);
+			free(reptoname);
+			if(ffrom)
+				fclose(ffrom);
 			continue;
 		}
-		from = myfgetline(fromfile);
-		fclose(fromfile);
-		to = myfgetline(tofile);
-		fclose(tofile);
+
+		from = myfgetline(ffrom);
+		fclose(ffrom);
+		unlink(fromname);
+		free(fromname);
+		to = myfgetline(fto);
+		fclose(fto);
+		unlink(toname);
+		free(toname);
 		f = fopen(reptoname, "r");
 		if(f == NULL) {
 			free(reptoname);
@@ -171,6 +206,8 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		} else {
 			repto = myfgetline(f);
 			fclose(f);
+			unlink(reptoname);
+			free(reptoname);
 		}
 
 		pid = fork();
@@ -192,18 +229,6 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 						"-T", to,
 						"-a", 0);
 		}
-
-		if(pid > 0) {
-			unlink(fromname);
-			free(fromname);
-			unlink(toname);
-			free(toname);
-			if(repto) {
-				unlink(reptoname);
-				free(reptoname);
-			}
-		}
-	}
 
 	return 0;
 }
