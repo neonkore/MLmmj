@@ -587,10 +587,12 @@ int main(int argc, char **argv)
 					       mlmmjbounce);
 				endsmtp(newsockfd);
 				free(newsockfd);
+				fclose(subfile);
 				exit(EXIT_SUCCESS);
 			} else {
 				syslog(LOG_INFO, "%d/%d connections open",
 						conncount, MAX_CONNECTIONS);
+				fclose(subfile);
 			}
 		}
 		closedir(subddir);
@@ -605,7 +607,6 @@ int main(int argc, char **argv)
 
 		rename(mailfilename, archivefilename);
 
-		fclose(subfile);
 		free(archivefilename);
 	} else if(deletewhensent)
 		unlink(mailfilename);

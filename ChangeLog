@@ -1,3 +1,4 @@
+ o Fixed leak of subfile in mlmmj-send
 0.5.2
  o footer and customheaders are now accessed from listdir/control/ where
    they belong
