@@ -23,7 +23,7 @@ char *getlistaddr(const char *listdir)
 	char *tmpstr;
 	int listnamefd;
 
-	tmpstr = concatstr(2, listdir, "/listaddress");;
+	tmpstr = concatstr(2, listdir, "/control/listaddress");;
 	if((listnamefd = open(tmpstr, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", tmpstr);
 		exit(EXIT_FAILURE);

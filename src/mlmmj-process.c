@@ -51,7 +51,7 @@ void newmoderated(const char *listdir, const char *mailfilename,
 		exit(EXIT_FAILURE);
 	}
 	free(moderatorfilename);
-	queuefilename = concatstr(3, listdir, "/moderation/queue/", randomstr);
+	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
 	
 	if((queuefd = open(queuefilename, O_WRONLY|O_CREAT|O_EXCL,
 					S_IRUSR|S_IWUSR)) < 0) {
@@ -251,7 +251,7 @@ int main(int argc, char **argv)
 	
 	if(do_all_the_voodo_here(rawmailfd, donemailfd, hdrfd, footfd,
 				badheaders, readhdrs, subjectprefix) < 0) {
-		log_error(LOG_ARGS, "Error in do_all_the_voodo_here.");
+		log_error(LOG_ARGS, "Error in do_all_the_voodo_here");
 		exit(EXIT_FAILURE);
 	}
 
@@ -311,8 +311,6 @@ int main(int argc, char **argv)
 	if(moderated) {
 		mqueuename = concatstr(3, listdir, "/moderation/",
 				       randomstr);
-		printf("Going into moderatemode, mqueuename = [%s]\n",
-				mqueuename);
 		free(randomstr);
 		if(rename(donemailname, mqueuename) < 0) {
 			log_error(LOG_ARGS, "could not rename(%s,%s)",

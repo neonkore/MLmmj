@@ -61,7 +61,7 @@ LISTDIR="$SPOOLDIR/$LISTNAME"
 mkdir -p $LISTDIR
 
 for DIR in incoming queue queue/discarded archive text subconf unsubconf \
-	   bounce control moderation moderation/queue subscribers.d requeue
+	   bounce control moderation subscribers.d requeue
 do
 	mkdir "$LISTDIR"/"$DIR"
 done
@@ -85,7 +85,7 @@ else
 fi
 
 LISTADDRESS="$LISTNAME@$FQDN"
-echo "$LISTADDRESS" > "$LISTDIR"/"listaddress"
+echo "$LISTADDRESS" > "$LISTDIR"/control/"listaddress"
 
 MLMMJRECIEVE=`which mlmmj-recieve 2>/dev/null`
 if [ -z "$MLMMJRECIEVE" ]; then
@@ -111,11 +111,13 @@ if [ -n "$A_CREATE" ]; then
 		echo "Options was: y, Y, n or N"
 	esac
 else
+	echo
 	echo "Don't forget to add this to /etc/aliases:"
 	echo "$ALIAS"
 fi
 
-echo " ** DON'T FORGET **
+echo
+echo " ** FINAL NOTES **
 1) The mailinglist directory have to be owned by the user running the 
 mailserver (i.e. starting the binaries to work the list)
 2) To run newaliases"

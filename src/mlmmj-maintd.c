@@ -74,11 +74,6 @@ int clean_moderation(const char *listdir)
 			
 	free(moddirname);
 
-	moddirname = concatstr(2, listdir, "/moderation/queue");
-	delolder(moddirname, MODREQLIFE);	
-		
-	free(moddirname);
-		
 	return 0;
 }
 
