@@ -1,11 +1,9 @@
 Code cleanup:
- o Convert opening of write files to openrandexclrw
  o Add some more logging to mlmmj-maintd--actually we have to rethink logging a
    bit. Do we want to use our own /var/log/mlmmj
 
 Functionality items:
  o listname+get functionality
- o web interface
 
 Nice to do:
  o Convert mlmmj-sub, mlmmj-unsub and mlmmj-process (moderation) to use

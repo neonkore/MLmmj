@@ -26,7 +26,12 @@
 
 char *chomp(char *str)
 {
-	int i = strlen(str) - 1;
+	size_t i;
+
+	if(str == NULL)
+		return NULL;
+
+	i = strlen(str) - 1;
 
 	while(str[i] == '\n') {
 		str[i] = 0;

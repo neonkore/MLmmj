@@ -156,24 +156,18 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		if (closedlist) exit(EXIT_SUCCESS);
 		conffilename = concatstr(3, listdir, "/subconf/", param);
 		myfree(param);
-		if((tmpfd = open(conffilename, O_RDONLY)) > 0) {
+		if((tmpfd = open(conffilename, O_RDONLY)) >= 0) {
 			tmpstr = mygetline(tmpfd);
 			chomp(tmpstr);
 			close(tmpfd);
-			if(strcasecmp(tmpstr, fromemails->emaillist[0]) == 0) {
-				unlink(conffilename);
-				execlp(mlmmjsub, mlmmjsub,
-						"-L", listdir,
-						"-a", tmpstr,
-						"-c", 0);
-				log_error(LOG_ARGS, "execlp() of '%s' failed",
-						mlmmjsub);
-				exit(EXIT_FAILURE);
-			} else {
-				/* Not proper confirm */
-				myfree(tmpstr);
-				exit(EXIT_SUCCESS);
-			}
+			unlink(conffilename);
+			execlp(mlmmjsub, mlmmjsub,
+					"-L", listdir,
+					"-a", tmpstr,
+					"-c", 0);
+			log_error(LOG_ARGS, "execlp() of '%s' failed",
+					mlmmjsub);
+			exit(EXIT_FAILURE);
 		} else /* Not a confirm so silently ignore */
 			exit(EXIT_SUCCESS);
 		break;
@@ -198,23 +192,18 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		if (closedlist) exit(EXIT_SUCCESS);
 		conffilename = concatstr(3, listdir, "/unsubconf/", param);
 		myfree(param);
-		if((tmpfd = open(conffilename, O_RDONLY))) {
+		if((tmpfd = open(conffilename, O_RDONLY)) >= 0) {
 			tmpstr = mygetline(tmpfd);
 			close(tmpfd);
 			chomp(tmpstr);
-			if(strcasecmp(tmpstr, fromemails->emaillist[0]) == 0) {
-				unlink(conffilename);
-				execlp(mlmmjunsub, mlmmjunsub,
-						"-L", listdir,
-						"-a", tmpstr,
-						"-c", 0);
-				log_error(LOG_ARGS, "execlp() of '%s' failed",
-						    mlmmjunsub);
-				exit(EXIT_FAILURE);
-			} else {
-				myfree(tmpstr);
-				exit(EXIT_SUCCESS);
-			}
+			unlink(conffilename);
+			execlp(mlmmjunsub, mlmmjunsub,
+					"-L", listdir,
+					"-a", tmpstr,
+					"-c", 0);
+			log_error(LOG_ARGS, "execlp() of '%s' failed",
+					mlmmjunsub);
+			exit(EXIT_FAILURE);
 		} else /* Not a confirm so silently ignore */
 			exit(EXIT_SUCCESS);
 		break;

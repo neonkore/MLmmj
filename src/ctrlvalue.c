@@ -35,10 +35,13 @@
 
 char *ctrlvalue(const char *listdir, const char *ctrlstr)
 {
-	char *value = NULL;
-	char *filename = concatstr(3, listdir, "/control/", ctrlstr);
+	char *filename, *value = NULL;
 	int ctrlfd;
 
+	if(listdir == NULL)
+		return NULL;
+
+	filename = concatstr(3, listdir, "/control/", ctrlstr);
 	ctrlfd = open(filename, O_RDONLY);
 	myfree(filename);
 

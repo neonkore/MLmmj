@@ -495,7 +495,7 @@ int main(int argc, char **argv)
 		recipdelim = NULL;
 
 	if(recipdelim) {
-		owner = concatstr(2, listdir, "control/owner");
+		owner = concatstr(2, listdir, "/control/owner");
 		if(owner && strncmp(recipdelim, "+owner@", 7) == 0) {
 			unlink(donemailname);
 			execlp(mlmmjsend, mlmmjsend,

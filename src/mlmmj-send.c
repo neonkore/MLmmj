@@ -37,6 +37,10 @@
 #include <stdarg.h>
 #include <sys/mman.h>
 #include <limits.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "mlmmj-send.h"
 #include "mlmmj.h"
@@ -461,10 +465,12 @@ int main(int argc, char **argv)
 	char *listctrl = NULL, *subddirname = NULL, *listdir = NULL;
 	char *mlmmjbounce = NULL, *bindir, *mailmap, *probefile, *a;
 	char *body = NULL, *hdrs = NULL, *memmailsizestr = NULL;
+	char relay[16];
 	ssize_t memmailsize = 0;
 	DIR *subddir;
 	struct dirent *dp;
 	struct stat st;
+	struct hostent *relayent;
 
 	CHECKFULLPATH(argv[0]);
 	
@@ -642,12 +648,27 @@ int main(int argc, char **argv)
 			 mindex);
 	}
 
+	if(!relayhost) {
+		relayhost = ctrlvalue(listdir, "relayhost");
+		chomp(relayhost);
+	}
 	if(!relayhost)
-		relayhost = mystrdup(RELAYHOST);
+		strncpy(relay, RELAYHOST, sizeof(relay));
+	else {
+		relayent = gethostbyname(relayhost);
+		if(relayent == NULL) {
+			strncpy(relay, RELAYHOST, sizeof(relay));
+		} else {
+			if(inet_ntop(relayent->h_addrtype,
+				     relayent->h_addr_list[0],
+				     relay, sizeof(relay)) == NULL)
+				strncpy(relay, RELAYHOST, sizeof(relay));
+		}
+	}
 
 	switch(listctrl[0]) {
 	case '1': /* A single mail is to be sent */
-		initsmtp(&sockfd, relayhost);
+		initsmtp(&sockfd, relay);
 		sendres = send_mail(sockfd, bounceaddr, to_addr, replyto,
 				mailmap, st.st_size, listdir, NULL,
 				hdrs, hdrslen, body, bodylen);
@@ -690,7 +711,7 @@ int main(int argc, char **argv)
 		}
 		break;
 	case '2': /* Moderators */
-		initsmtp(&sockfd, relayhost);
+		initsmtp(&sockfd, relay);
 		if(send_mail_many(sockfd, bounceaddr, NULL, mailmap,
 				  st.st_size, subfd, NULL, NULL, listdir,
 				  NULL, hdrs, hdrslen, body, bodylen))
@@ -699,7 +720,7 @@ int main(int argc, char **argv)
 			endsmtp(&sockfd);
 		break;
 	case '3': /* resending earlier failed mails */
-		initsmtp(&sockfd, relayhost);
+		initsmtp(&sockfd, relay);
 		if(send_mail_many(sockfd, NULL, NULL, mailmap, st.st_size,
 				subfd, listaddr, mailfilename, listdir,
 				mlmmjbounce, hdrs, hdrslen, body, bodylen))
@@ -709,7 +730,7 @@ int main(int argc, char **argv)
 		unlink(subfilename);
 		break;
 	case '4': /* send mails to owner */
-		initsmtp(&sockfd, relayhost);
+		initsmtp(&sockfd, relay);
 		if(send_mail_many(sockfd, bounceaddr, NULL, mailmap, st.st_size,
 				subfd, listaddr, mailfilename, listdir,
 				mlmmjbounce, hdrs, hdrslen, body, bodylen))
@@ -718,7 +739,7 @@ int main(int argc, char **argv)
 			endsmtp(&sockfd);
 		break;
 	case '5': /* bounceprobe - handle relayhost local users bouncing*/
-		initsmtp(&sockfd, relayhost);
+		initsmtp(&sockfd, relay);
 		sendres = send_mail(sockfd, bounceaddr, to_addr, replyto,
 				mailmap, st.st_size, listdir, NULL,
 				hdrs, hdrslen, body, bodylen);
@@ -762,7 +783,7 @@ int main(int argc, char **argv)
 			}
 			myfree(subfilename);
 
-			initsmtp(&sockfd, relayhost);
+			initsmtp(&sockfd, relay);
 			sendres = send_mail_many(sockfd, NULL, NULL, mailmap,
 					st.st_size, subfd, listaddr,
 					archivefilename, listdir, mlmmjbounce,

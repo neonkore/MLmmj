@@ -1,4 +1,4 @@
-This applies to everyone using mlmmj > 0.7.3:
+This applies to everyone using mlmmj < 0.8.3:
 ---------------------------------------------
 
  Don't forget to upgrade the listtexts!

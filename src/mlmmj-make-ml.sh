@@ -100,7 +100,13 @@ if [ -z "$MLMMJRECIEVE" ]; then
 	MLMMJRECIEVE="/path/to/mlmmj-recieve"
 fi
 
+MLMMJMAINTD=`which mlmmj-maintd 2>/dev/null`
+if [ -z "$MLMMJRECIEVE" ]; then
+	MLMMJMAINTD="/path/to/mlmmj-maintd"
+fi
+
 ALIAS="$LISTNAME:  \"|$MLMMJRECIEVE -L $SPOOLDIR/$LISTNAME/\""
+CRONENTRY="0 */2 * * * \"$MLMMJMAINTD -L $SPOOLDIR/$LISTNAME/\""
 
 if [ -n "$A_CREATE" ]; then
 	echo "I want to add the following to your /etc/aliases file:"
@@ -123,9 +129,13 @@ else
 	echo "Don't forget to add this to /etc/aliases:"
 	echo "$ALIAS"
 fi
+echo
+echo "If you're not starting mlmmj-maintd in daemon mode,"
+echo "don't forget to add this to your crontab:"
+echo $CRONENTRY
 
 echo
 echo " ** FINAL NOTES **
 1) The mailinglist directory have to be owned by the user running the 
 mailserver (i.e. starting the binaries to work the list)
-2) To run newaliases"
+2) Run newaliases"

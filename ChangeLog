@@ -1,3 +1,14 @@
+0.8.3
+ o Have mlmmj-make-ml.sh remind people about using cron if they want
+ o Replying to the confirmation address is enough to sub/unsub, no matter what
+   address is used the second time
+ o Fix possible DoS wrt. unsubscribing. Thank you Erik Toubro Nielsen
+ o Add 'notifysub' functionality to have owner know when people sub/unsub.
+   Thank you Kenneth Vestergaard Schmidt
+ o Use Return-Path: for envelope From. Thanks Anders Johansson
+ o Specification of which relayhost to use can now be done in control/relayhost
+ o Add configure check to link against libnsl if needed.
+ o Implement our own daemon() function since we don't have daemon() on Solaris
 0.8.2
  o Make sure we don't cut of the first char of an emailaddress
  o Fix header value copying (thanks Anders Johansson)

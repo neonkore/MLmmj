@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <libgen.h>
 #include <dirent.h>
+#include <sys/wait.h>
 
 #include "mlmmj.h"
 #include "mlmmj-unsub.h"
@@ -42,6 +43,8 @@
 #include "strgen.h"
 #include "log_error.h"
 #include "memory.h"
+#include "statctrl.h"
+#include "prepstdreply.h"
 
 void confirm_unsub(const char *listdir, const char *listaddr,
 		   const char *subaddr, const char *mlmmjsend)
@@ -121,6 +124,41 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 	exit(EXIT_FAILURE);
 }
+
+void notify_unsub(const char *listdir, const char *listaddr,
+		  const char *subaddr, const char *mlmmjsend)
+{
+        char *maildata[4] = { "*LSTADDR*", NULL, "*SUBADDR*", NULL };
+        char *listfqdn, *listname, *fromaddr, *fromstr, *subject;
+        char *queuefilename = NULL;
+
+        listname = genlistname(listaddr);
+        listfqdn = genlistfqdn(listaddr);
+        maildata[1] = mystrdup(listaddr);
+        maildata[3] = mystrdup(subaddr);
+        fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
+        fromstr = concatstr(3, listname, "+owner@", listfqdn);
+        subject = concatstr(2, "Unsubscription from ", listaddr);
+        queuefilename = prepstdreply(listdir, "notifyunsub", fromstr,
+                                     fromstr, NULL, subject, 2, maildata);
+        MY_ASSERT(queuefilename)
+        myfree(listname);
+        myfree(listfqdn);
+        myfree(subject);
+        myfree(maildata[1]);
+        myfree(maildata[3]);
+        execlp(mlmmjsend, mlmmjsend,
+                        "-l", "1",
+                        "-T", fromstr,
+                        "-F", fromaddr,
+                        "-m", queuefilename, 0);
+
+        myfree(fromstr);
+
+        log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
+        exit(EXIT_FAILURE);
+}
+
 
 void generate_unsubconfirm(const char *listdir, const char *listaddr,
 			   const char *subaddr, const char *mlmmjsend)
@@ -303,14 +341,15 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	int subread, subwrite, rlock, wlock, opt, unsubres;
-	int confirmunsub = 0, unsubconfirm = 0;
+	int subread, subwrite, rlock, wlock, opt, unsubres, status;
+	int confirmunsub = 0, unsubconfirm = 0, notifysub = 0;
 	char *listaddr, *listdir = NULL, *address = NULL, *subreadname = NULL;
 	char *subwritename, *mlmmjsend, *bindir;
 	char *subddirname;
 	off_t suboff;
 	DIR *subddir;
 	struct dirent *dp;
+	pid_t pid, childpid;
 
 	CHECKFULLPATH(argv[0]);
 	
@@ -462,10 +501,37 @@ int main(int argc, char **argv)
 		myfree(subreadname);
 		myfree(subwritename);
 
-		if(confirmunsub)
-			confirm_unsub(listdir, listaddr, address, mlmmjsend);
-	}
-	closedir(subddir);
+		closedir(subddir);
+
+		if(confirmunsub) {
+			childpid = fork();
+
+			if(childpid < 0) {
+				log_error(LOG_ARGS, "Could not fork");
+				confirm_unsub(listdir, listaddr, address,
+						mlmmjsend);
+			}
+
+			if(childpid > 0) {
+				do /* Parent waits for the child */
+					pid = waitpid(childpid, &status, 0);
+				while(pid == -1 && errno == EINTR);
+			}
+
+			/* child confirms subscription */
+			if(childpid == 0)
+				confirm_unsub(listdir, listaddr, address,
+						mlmmjsend);
+		}
+        }
+
+
+        notifysub = statctrl(listdir, "notifysub");
+
+        /* Notify list owner about subscription */
+        if (notifysub)
+                notify_unsub(listdir, listaddr, address, mlmmjsend);
+
 	myfree(listaddr);
 
 	return EXIT_SUCCESS;

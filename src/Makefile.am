@@ -32,12 +32,13 @@ mlmmj_process_SOURCES = mlmmj-process.c writen.c find_email_adr.c \
 mlmmj_sub_SOURCES = mlmmj-sub.c writen.c mylocking.c \
 			getlistaddr.c chomp.c random-int.c strgen.c \
 			subscriberfuncs.c print-version.c \
-			log_error.c mygetline.c prepstdreply.c memory.c
+			log_error.c mygetline.c prepstdreply.c memory.c \
+			statctrl.c
 
 mlmmj_unsub_SOURCES = mlmmj-unsub.c writen.c mylocking.c \
 			getlistaddr.c chomp.c subscriberfuncs.c random-int.c \
 			strgen.c print-version.c log_error.c mygetline.c \
-			prepstdreply.c memory.c
+			prepstdreply.c memory.c statctrl.c
 			
 mlmmj_bounce_SOURCES = mlmmj-bounce.c print-version.c log_error.c \
 		       subscriberfuncs.c strgen.c random-int.c writen.c \

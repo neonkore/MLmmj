@@ -67,3 +67,13 @@ to specify several entries (one pr. line), it's marked "list".
    When this file is present, a To: header including the recipients
    emailaddress will be added to outgoing mail. Recommended usage is to remove
    existing To: headers with delheaders (see above) first.
+
+ · relayhost			(normal)
+
+   The host specified (IP address og domainname, both works) in this file will
+   be used for relaying the mail sent to the list. Defaults to 127.0.0.1.
+
+ · notifysub			(boolean)
+
+   If this file is present, the owner(s) will get a mail with the address of
+   someone sub/unsubscribing to a mailinglist.
