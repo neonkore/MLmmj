@@ -1,3 +1,4 @@
+0.3.4
  o Fix handling of lines which start with a dot
 0.3.3
  o Add primitive bounce handling
