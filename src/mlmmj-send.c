@@ -35,12 +35,6 @@
 
 static int conncount = 0;  /* Connection count */
 
-static void print_help(const char *prg)
-{
-	printf("Usage: %s -L /path/to/chat-list -m /path/to/mail\n", prg);
-	exit(EXIT_SUCCESS);
-}
-
 char *bounce_from_adr(const char *recipient, const char *listadr,
 		      const char *mailfilename)
 {
@@ -269,6 +263,26 @@ void sig_child(int sig)
 
 	while((pid = waitpid(-1, &stat, WNOHANG) > 0))
 		conncount--;
+}
+
+static void print_help(const char *prg)
+{
+        printf("Usage: %s [-L /path/to/list || -l listctrl] -m /path/to/mail "
+	       "[-D] [-F] [-h]\n"
+	       "       [-r] [-R] [-T] [-V]\n"
+	       " -D: Don't delete the mail after it's sent\n"
+	       " -F: What to use as MAIL FROM:\n"
+	       " -h: This help\n"
+	       " -l: List control variable:\n"
+	       "    '1' means 'send a single mail'\n"
+	       "    '2' means 'mail to moderators'\n"
+	       " -L: Full path to list directory\n"
+	       " -m: Full path to mail file\n"
+	       " -r: Relayhost (defaults to localhost)\n"
+	       " -R: What to use as Reply-To: header\n"
+	       " -T: What to use as RCPT TO:\n"
+	       " -V: Print version\n", prg);
+	exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char **argv)

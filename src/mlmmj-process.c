@@ -137,9 +137,14 @@ void newmoderated(const char *listdir, const char *mailfilename,
 
 static void print_help(const char *prg)
 {
-	        printf("Usage: %s [-P] -L /path/to/chat-list\n"
-		       "          -m mailfile\n", prg);
-		exit(EXIT_SUCCESS);
+        printf("Usage: %s -L /path/to/list -m /path/to/mail [-h] [-P] [-V]\n"
+	       " -h: This help\n"
+	       " -L: Full path to list directory\n"
+	       " -m: Full path to mail file\n"
+	       " -P: Don't execute mlmmj-send\n"
+	       " -V: Print version\n", prg);
+
+	exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char **argv)

@@ -24,15 +24,19 @@
 
 static void print_help(const char *prg)
 {
-	printf("Usage: %s [-P] -L /path/to/chat-list\n"
-		"          -a address\n"
-		"          -n message-number\n", prg);
+	printf("Usage: %s -L /path/to/list -a john=doe.org -n 12\n"
+		" -a: Address string that bounces\n"
+		" -h: This help\n"
+		" -L: Full path to list directory\n"
+		" -n: Message number in the archive\n"
+		" -V: Print version\n", prg);
+
 	exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char **argv)
 {
-	int opt, noprocess = 0;
+	int opt;
 	char *listdir = NULL, *address = NULL, *number = NULL;
 	char *filename, *bfilename, *a, *buf;
 	size_t len;
@@ -42,7 +46,7 @@ int main(int argc, char **argv)
 
 	log_set_name(argv[0]);
 
-	while ((opt = getopt(argc, argv, "hVPL:a:n:")) != -1) {
+	while ((opt = getopt(argc, argv, "hVL:a:n:")) != -1) {
 		switch(opt) {
 		case 'L':
 			listdir = optarg;
@@ -55,9 +59,6 @@ int main(int argc, char **argv)
 			break;
 		case 'h':
 			print_help(argv[0]);
-			break;
-		case 'P':
-			noprocess = 1;
 			break;
 		case 'V':
 			print_version(argv[0]);

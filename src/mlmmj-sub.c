@@ -191,12 +191,16 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 
 static void print_help(const char *prg)
 {
-	printf("Usage: %s -L /path/to/chat-list\n"
-	       "          -a someguy@somewhere.ltd\n"
-	       "          -C request mail confirmation\n"
-	       "          -c send welcome mail\n"
-	       "          -h this help\n"
-	       "          -V print version\n", prg);
+	printf("Usage: %s -L /path/to/list -a john@doe.org "
+	       "[-c] [-C] [-h] [-L] [-V]\n"
+	       " -a: Email address to subscribe \n"
+	       " -c: Send welcome mail\n"
+	       " -C: Request mail confirmation\n"
+	       " -h: This help\n"
+	       " -L: Full path to list directory\n"
+	       " -V: Print version\n"
+	       "When no options are specified, subscription silently "
+	       "happens\n", prg);
 	exit(EXIT_SUCCESS);
 }
 

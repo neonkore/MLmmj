@@ -26,7 +26,12 @@ extern char *optarg;
 
 static void print_help(const char *prg)
 {
-        printf("Usage: %s -L /path/to/chat-list [-V] [-P] [-F]\n", prg);
+        printf("Usage: %s -L /path/to/listdir [-h] [-V] [-P] [-F]\n"
+	       " -h: This help\n"
+	       " -F: Don't fork in the background\n"
+	       " -L: Full path to list directory\n"
+	       " -P: Don't execute mlmmj-process\n"
+	       " -V: Print version\n", prg);
 	exit(EXIT_SUCCESS);
 }
 
