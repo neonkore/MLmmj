@@ -426,7 +426,7 @@ int main(int argc, char **argv)
 			(delheaders->count+3) * sizeof(char *));
 	delheaders->strs[delheaders->count++] = mystrdup("From ");
 	delheaders->strs[delheaders->count++] = mystrdup("Return-Path:");
-	delheaders->strs[delheaders->count++] = NULL;
+	delheaders->strs[delheaders->count] = NULL;
 	
 	subjectprefix = ctrlvalue(listdir, "prefix");	
 	
@@ -440,7 +440,6 @@ int main(int argc, char **argv)
 	for(i = 0; i < delheaders->count; i++)
 		myfree(delheaders->strs[i]);
 	myfree(delheaders->strs);
-	myfree(delheaders);
 
 	close(rawmailfd);
 	close(donemailfd);
@@ -512,13 +511,40 @@ int main(int argc, char **argv)
 	if(recipdelim) {
 		owner = concatstr(2, listdir, "/control/owner");
 		if(owner && strncmp(recipdelim, "+owner@", 7) == 0) {
-			unlink(donemailname);
+			/* strip envelope from before resending */
+			delheaders->strs = myrealloc(delheaders->strs,
+				(delheaders->count+3) * sizeof(char *));
+			delheaders->strs[delheaders->count++] =
+				mystrdup("From ");
+			delheaders->strs[delheaders->count++] =
+				mystrdup("Return-Path:");
+			delheaders->strs[delheaders->count] = NULL;
+			if((rawmailfd = open(mailfile, O_RDONLY)) < 0) {
+				log_error(LOG_ARGS, "could not open() "
+						    "input mail file");
+				exit(EXIT_FAILURE);
+			}
+			if((donemailfd = open(donemailname,
+						O_WRONLY|O_TRUNC)) < 0) {
+				log_error(LOG_ARGS, "could not open() "
+						    "output mail file");
+				exit(EXIT_FAILURE);
+			}
+			if(do_all_the_voodo_here(rawmailfd, donemailfd, -1,
+					-1, (const char**)delheaders->strs,
+					NULL, &allheaders, NULL) < 0) {
+				log_error(LOG_ARGS, "do_all_the_voodo_here");
+				exit(EXIT_FAILURE);
+			}
+			close(rawmailfd);
+			close(donemailfd);
+			unlink(mailfile);
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "4",
 					"-F", efromemails.emaillist[0],
 					"-s", owner,
 					"-a",
-					"-m", mailfile, NULL);
+					"-m", donemailname, NULL);
 			log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsend);
 			exit(EXIT_FAILURE);
@@ -532,6 +558,8 @@ int main(int argc, char **argv)
 			    donemailname);
 		return EXIT_SUCCESS;
 	}
+
+	myfree(delheaders);
 
 	if(efromemails.emailcount != 1) { /* don't send mails with <> in From
 					     to the list */
