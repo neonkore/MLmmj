@@ -433,6 +433,11 @@ int main(int argc, char **argv)
 	}
 	
 	if(listctrl[0] != '1' && listctrl[0] != '2') {
+		/* It is safe to rename() the mail file at this point, because
+		   the child processes (who might still be running) inhirit a
+		   handle to the open file, so they don't care if it is moved
+		   or deleted. */
+
 		/* The mail now goes to the archive */
 		rename(mailfilename, archivefilename);
 
