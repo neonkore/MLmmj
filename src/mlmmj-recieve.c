@@ -57,6 +57,8 @@ int main(int argc, char **argv)
 	char *randomstr = random_str();
 	char *mlmmjprocess, *bindir;
 	int fd, opt, noprocess = 0, nofork = 0;
+	struct stat st;
+	uid_t uid;
 	pid_t childpid;
 
 	CHECKFULLPATH(argv[0]);
@@ -86,10 +88,30 @@ int main(int argc, char **argv)
 			exit(0);
 		}
 	}
+
 	if(listdir == NULL) {
 		fprintf(stderr, "You have to specify -L\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
 		exit(EXIT_FAILURE);
+	}
+
+	/* Lets make sure no random user tries to send mail to the list */
+	if(listdir) {
+		if(stat(listdir, &st) == 0) {
+			uid = getuid();
+			if(uid && uid != st.st_uid) {
+				log_error(LOG_ARGS,
+					"Have to invoke either as root "
+					"or as the user owning listdir");
+				writen(STDERR_FILENO,
+					"Have to invoke either as root "
+					"or as the user owning listdir\n", 60);
+				exit(EXIT_FAILURE);
+			}
+		} else {
+			log_error(LOG_ARGS, "Could not stat %s", listdir);
+			exit(EXIT_FAILURE);
+		}
 	}
 	
 	infilename = concatstr(3, listdir, "/incoming/", randomstr);

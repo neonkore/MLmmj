@@ -1,3 +1,6 @@
+ o Make sure that only either root or the listdir owner can execute the
+   binaries when it has something to do with lists.
+ o Don't leave bounces-help@ mails lying around in queue/
  o Remove unanchored ".*" from beginning of regexp
 0.8.3
  o Have mlmmj-make-ml.sh remind people about using cron if they want
