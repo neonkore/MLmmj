@@ -698,8 +698,9 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		}
 
 		if(childpid > 0) {
-			WRITEMAINTLOG6(5, "UNSUB: ", address, ". Bounced since",
-					bouncedata, ".\n");
+			log_oper(listdir, OPLOGFNAME, "mlmmj-maintd: %s"
+					" unsubscribed due to bouncing since"
+					" %s", address, bouncedata);
 			myfree(address);
 			myfree(bouncedata);
 			do /* Parent waits for the child */
