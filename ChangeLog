@@ -1,3 +1,5 @@
+1.2.1
+ o Introduce switches to turn off mails about posts being denied.
 1.2.0
  o Remove debug info printing
 1.2.0-RC2

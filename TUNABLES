@@ -119,3 +119,12 @@ to specify several entries (one pr. line), it's marked "list".
  · maxverprecips		(normal)
 
    How many recipients pr. mail delivered to the smtp server. Defaults to 100.
+
+ · notoccdenymails		(boolean)
+ · noaccessdenymails		(boolean)
+ · nosubonlydenymails		(boolean)
+
+   These switches turns off whether mlmmj sends out notification about postings
+   being denied due to the listaddress not being in To: or Cc: (see 'tocc'),
+   when it was rejected due to an access rule (see 'access') or whether it's a
+   subscribers only posting list (see 'subonlypost').

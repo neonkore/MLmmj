@@ -312,6 +312,7 @@ int main(int argc, char **argv)
 	int i, opt, noprocess = 0, moderated = 0;
 	int hdrfd, footfd, rawmailfd, donemailfd;
 	int subonlypost = 0, addrtocc = 1, intocc = 0;
+	int notoccdenymails = 0, noaccessdenymails = 0, nosubonlydenymails = 0;
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
 	char *randomstr = NULL, *mqueuename;
@@ -611,10 +612,14 @@ int main(int argc, char **argv)
 				intocc = 1;
 	}
 
+	notoccdenymails = statctrl(listdir, "notoccdenymails");
+	
 	if(addrtocc && !intocc) {
 		/* Don't send a mail about denial to the list, but silently
-		 * discard and exit */
-		if (strcasecmp(listaddr, fromemails.emaillist[0]) == 0) {
+		 * discard and exit. Also don't in case of it being turned off
+		 */
+		if ((strcasecmp(listaddr, fromemails.emaillist[0]) == 0) ||
+				notoccdenymails) {
 			myfree(listaddr);
 			unlink(donemailname);
 			myfree(donemailname);
@@ -641,11 +646,14 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	nosubonlydenymails = statctrl(listdir, "nosubonlydenymails");
+
 	subonlypost = statctrl(listdir, "subonlypost");
 	if(subonlypost) {
 		/* Don't send a mail about denial to the list, but silently
-		 * discard and exit */
-		if (strcasecmp(listaddr, fromemails.emaillist[0]) == 0) {
+		 * discard and exit. Do the same if it's turned off */
+		if ((strcasecmp(listaddr, fromemails.emaillist[0]) == 0)
+				|| nosubonlydenymails) {
 			myfree(listaddr);
 			unlink(donemailname);
 			myfree(donemailname);
@@ -677,12 +685,15 @@ int main(int argc, char **argv)
 		}
 	}
 
+	noaccessdenymails = statctrl(listdir, "noaccessdenymails");
+
 	access_rules = ctrlvalues(listdir, "access");
 	if (access_rules) {
 		enum action accret;
 		/* Don't send a mail about denial to the list, but silently
-		 * discard and exit */
-		if (strcasecmp(listaddr, fromemails.emaillist[0]) == 0) {
+		 * discard and exit. Also do this in case it's turned off */
+		if ((strcasecmp(listaddr, fromemails.emaillist[0]) == 0)
+				|| noaccessdenymails) {
 			myfree(listaddr);
 			unlink(donemailname);
 			myfree(donemailname);
