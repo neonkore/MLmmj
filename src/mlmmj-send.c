@@ -441,6 +441,9 @@ int send_mail_many_fd(int sockfd, const char *from, const char *replyto,
 	int res, ret, i;
 	struct strlist stl;
 
+	stl.strs = (char **)mymalloc(1 + maxverprecips * sizeof(char *));
+	stl.count = 0;
+
 	do {
 		res = getaddrsfromfd(&stl, subfd, maxverprecips);
 		if(stl.count == maxverprecips) {
@@ -696,6 +699,9 @@ int main(int argc, char **argv)
 		fprintf(stderr, "With -l 7 you need -L\n");
 		exit(EXIT_FAILURE);
 	}
+
+	stl.strs = (char **)mymalloc(1 + maxverprecips * sizeof(char *));
+	stl.count = 0;
 
 	maxverprecipsstr = ctrlvalue(listdir, "maxverprecips");
 	if(maxverprecipsstr) {
@@ -964,8 +970,6 @@ int main(int argc, char **argv)
 			exit(EXIT_FAILURE);
 		}
 
-		stl.strs = (char **)mymalloc(1 + maxverprecips * sizeof(char *));
-		stl.count = 0;
 		listname = genlistname(listaddr);	
 		listfqdn = genlistfqdn(listaddr);	
 		verpfrom = concatstr(5, listname, "+bounces-", strindex, "@",
@@ -1097,6 +1101,10 @@ int main(int argc, char **argv)
 		break;
 	}
 	
+	for(i = 0; i < stl.count; i++)
+		myfree(stl.strs[i]);
+	stl.count = 0;
+
 	myfree(hdrs);
 	myfree(body);
 	myfree(mlmmjbounce);

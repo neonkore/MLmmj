@@ -93,7 +93,7 @@ void notify_sub(const char *listdir, const char *listaddr,
 {
 	char *maildata[2] = { "newsub", NULL };
 	char *listfqdn, *listname, *fromaddr, *tostr;
-	char *queuefilename = NULL, *listtext;
+	char *queuefilename = NULL, *listtext = NULL;
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
