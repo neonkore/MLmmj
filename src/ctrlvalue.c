@@ -9,7 +9,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "strgen.h"
 #include "ctrlvalue.h"
@@ -20,14 +21,17 @@ char *ctrlvalue(const char *listdir, const char *ctrlstr)
 {
 	char *value = NULL;
 	char *filename = concatstr(3, listdir, "/control/", ctrlstr);
-	FILE *ctrlfile;
+	int ctrlfd;
 
-	ctrlfile = fopen(filename, "r");
+	ctrlfd = open(filename, O_RDONLY);
+	free(filename);
 
-	if(ctrlfile) {
-		value = myfgetline(ctrlfile);
-		chomp(value);
-	}
+	if(ctrlfd < 0)
+		return NULL;
+		
+	value = mygetline(ctrlfd);
+	close(ctrlfd);
+	chomp(value);
 
 	return value;
 }
