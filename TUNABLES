@@ -8,6 +8,12 @@ variable to "true". If it's a "normal" file, the first line will be used as
 value, leaving line 2 and forward ready for commentary etc. If it's possible
 to specify several entries (one pr. line), it's marked "list".
 
+ · listaddress			(list)
+
+   This file contains all addresses which mlmmj sees as listaddresses (see
+   tocc below). The first one is the one used as the primary one, when mlmmj
+   sends out mail.
+
  · closedlist			(boolean)
 
    Is the list is open or closed. If it's closed subscribtion and
