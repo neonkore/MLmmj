@@ -3,9 +3,9 @@ Code cleanup:
    bit. Do we want to use our own /var/log/mlmmj
 
 Functionality items:
- o listname+get functionality
+ o control/preexec and control/postexec.
 
 Nice to do:
  o Convert mlmmj-sub, mlmmj-unsub and mlmmj-process (moderation) to use
    the new prepstdreply() function.
- o Add memory debugging features ("At exit you had the following allocated")
+ o Add memory debugging features ("At exit you had the following allocated:")
