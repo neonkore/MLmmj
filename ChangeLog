@@ -1,3 +1,7 @@
+ o Rip out the ability to fork to make more than one connection to relayhost.
+   It turned out to not make any performance gain (tested with lists with
+   more than 120000 subscribers), and thus only complicated things.
+   KISS won, so it's gone.
  o mlmmj-maint now handles resends and cleanup
  o Fixed interrupted fgets() in write_mailbody_from_file()
  o Fixed leak of subfile in mlmmj-send
