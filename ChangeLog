@@ -1,3 +1,4 @@
+ o Make the Date: header RFC2822 conformant
 1.2.2
  o Make mlmmj-send work allthough no subscribers exist
  o Bring webinterfaces up to speed (Christian Laursen)
