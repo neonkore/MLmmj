@@ -1,4 +1,6 @@
 1.0.0-RC3
+ o NULL and 0 are not the same on 64-bit platforms, so fix execlp(..., 0); to
+   be execlp(..., NULL);
  o Add web-interface (PHP). Thank you Christoph Thiel
  o Have the random numbers be somewhat longer everywhere and not just somewhere
  o Move free() to where it belongs fixing problems with mlmmj-process some

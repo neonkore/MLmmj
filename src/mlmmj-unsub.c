@@ -120,7 +120,7 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 				"-l", "1",
 				"-T", subaddr,
 				"-F", fromaddr,
-				"-m", queuefilename, 0);
+				"-m", queuefilename, NULL);
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 	exit(EXIT_FAILURE);
 }
@@ -151,7 +151,7 @@ void notify_unsub(const char *listdir, const char *listaddr,
                         "-l", "1",
                         "-T", fromstr,
                         "-F", fromaddr,
-                        "-m", queuefilename, 0);
+                        "-m", queuefilename, NULL);
 
         myfree(fromstr);
 
@@ -283,7 +283,7 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 				"-T", subaddr,
 				"-F", fromaddr,
 				"-R", confirmaddr,
-				"-m", queuefilename, 0);
+				"-m", queuefilename, NULL);
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 	exit(EXIT_FAILURE);
 }

@@ -148,7 +148,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 			execlp(mlmmjsub, mlmmjsub,
 					"-L", listdir,
 					"-a", fromemails->emaillist[0],
-					"-C", 0);
+					"-C", NULL);
 			log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsub);
 			exit(EXIT_FAILURE);
 		} else /* Not a valid From: address, so we silently ignore */
@@ -168,7 +168,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 			execlp(mlmmjsub, mlmmjsub,
 					"-L", listdir,
 					"-a", tmpstr,
-					"-c", 0);
+					"-c", NULL);
 			log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsub);
 			exit(EXIT_FAILURE);
@@ -183,7 +183,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 			execlp(mlmmjunsub, mlmmjunsub,
 					"-L", listdir,
 					"-a", fromemails->emaillist[0],
-					"-C", 0);
+					"-C", NULL);
 			log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjunsub);
 			exit(EXIT_FAILURE);
@@ -204,7 +204,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 			execlp(mlmmjunsub, mlmmjunsub,
 					"-L", listdir,
 					"-a", tmpstr,
-					"-c", 0);
+					"-c", NULL);
 			log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjunsub);
 			exit(EXIT_FAILURE);
@@ -223,7 +223,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				"-L", listdir,
 				"-a", param,
 				"-m", mailname,
-				"-n", bouncenr, 0);
+				"-n", bouncenr, NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjbounce);
 		exit(EXIT_FAILURE);
 		break;
@@ -239,7 +239,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		} else {
 			execlp(mlmmjsend, mlmmjsend,
 					"-L", listdir,
-					"-m", moderatefilename, 0);
+					"-m", moderatefilename, NULL);
 			log_error(LOG_ARGS, "execlp() of %s failed", mlmmjsend);
 			exit(EXIT_FAILURE);
 		}
@@ -272,7 +272,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 					"-L", listdir,
 					"-l", "6",
 					"-m", archivefilename,
-					"-a", "-D", 0);
+					"-a", "-D", NULL);
 		}
 		break;
 	}

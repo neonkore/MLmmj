@@ -83,7 +83,7 @@ void send_help(const char *listdir, const char *emailaddr,
 				"-l", "1",
 				"-T", emailaddr,
 				"-F", fromaddr,
-				"-m", queuefilename, 0);
+				"-m", queuefilename, NULL);
 
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 	exit(EXIT_FAILURE);

@@ -180,7 +180,7 @@ void newmoderated(const char *listdir, const char *mailfilename,
 				"-l", "2",
 				"-L", listdir,
 				"-F", from,
-				"-m", queuefilename, 0);
+				"-m", queuefilename, NULL);
 
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 
@@ -550,7 +550,7 @@ int main(int argc, char **argv)
 					"-F", efromemails.emaillist[0],
 					"-s", owner,
 					"-a",
-					"-m", mailfile, 0);
+					"-m", mailfile, NULL);
 			log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsend);
 			exit(EXIT_FAILURE);
@@ -615,7 +615,7 @@ int main(int argc, char **argv)
 				"-l", "1",
 				"-T", fromemails.emaillist[0],
 				"-F", fromaddr,
-				"-m", queuefilename, 0);
+				"-m", queuefilename, NULL);
 
 		log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 		exit(EXIT_FAILURE);
@@ -650,7 +650,7 @@ int main(int argc, char **argv)
 					"-l", "1",
 					"-T", fromemails.emaillist[0],
 					"-F", fromaddr,
-					"-m", queuefilename, 0);
+					"-m", queuefilename, NULL);
 
 			log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 			exit(EXIT_FAILURE);
@@ -687,7 +687,7 @@ int main(int argc, char **argv)
 					"-l", "1",
 					"-T", fromemails.emaillist[0],
 					"-F", fromaddr,
-					"-m", queuefilename, 0);
+					"-m", queuefilename, NULL);
 
 			log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsend);
@@ -723,7 +723,7 @@ int main(int argc, char **argv)
 	
 	execlp(mlmmjsend, mlmmjsend,
 				"-L", listdir,
-				"-m", donemailname, 0);
+				"-m", donemailname, NULL);
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 
 	return EXIT_FAILURE;
