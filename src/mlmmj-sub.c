@@ -350,6 +350,7 @@ int main(int argc, char **argv)
 	off_t suboff;
 	struct stat st;
 	pid_t pid, childpid;
+	uid_t uid;
 
 	CHECKFULLPATH(argv[0]);
 
@@ -407,13 +408,14 @@ int main(int argc, char **argv)
 	}
 
 	if(changeuid) {
-		if(stat(listdir, &st) == 0) {
+		uid = getuid();
+		if(!uid && stat(listdir, &st) == 0) {
 			printf("Changing to uid %d, owner of %s.\n",
 					(int)st.st_uid, listdir);
 			if(setuid(st.st_uid) < 0) {
 				perror("setuid");
 				fprintf(stderr, "Continuing as uid %d\n",
-						(int)getuid());
+						(int)uid);
 			}
 		}
 	}
