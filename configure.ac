@@ -13,6 +13,7 @@ AC_PROG_CC
 
 # Checks for libraries.
 AC_CHECK_LIB(socket,socket)
+AC_CHECK_LIB(nsl,gethostbyname)
 
 # Checks for header files.
 AC_HEADER_STDC

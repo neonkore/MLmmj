@@ -40,7 +40,8 @@ case "$Option" in
 	exit 1
 esac
 done
-shift $(($OPTIND - 1))
+let SHIFTVAL=$OPTIND-1
+shift $SHIFTVAL
 
 if [ -z "$SPOOLDIR" ]; then
 	SPOOLDIR="$DEFAULTDIR"
