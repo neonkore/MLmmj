@@ -87,7 +87,7 @@ off_t find_subscriber(int fd, const char *address)
 	return (off_t)-1;
 }
 
-static int is_subbed_in(const char *subddirname, const char *address)
+int is_subbed_in(const char *subddirname, const char *address)
 {
 	int retval = 1, subread;
 	char *subreadname;
@@ -143,6 +143,12 @@ int is_subbed(const char *listdir, const char *address)
 		return 0;
 
 	subddirname = concatstr(2, listdir, "/digesters.d/");
+	retval = is_subbed_in(subddirname, address);
+	myfree(subddirname);
+	if (retval == 0)
+		return 0;
+
+	subddirname = concatstr(2, listdir, "/nomailsubs.d/");
 	retval = is_subbed_in(subddirname, address);
 	myfree(subddirname);
 	if (retval == 0)

@@ -65,6 +65,13 @@ struct mailhdr {
 	char **values;
 };
 
+/* Has to go here, since it's used in many places */
+enum subtype {
+	SUB_NORMAL,
+	SUB_DIGEST,
+	SUB_NOMAIL
+};
+
 void print_version(const char *prg);
 
 #define MY_ASSERT(expression) if (!(expression)) { \

@@ -472,6 +472,7 @@ int main(int argc, char **argv)
 	size_t len = 0, hdrslen, bodylen;
 	int sockfd = 0, mailfd = 0, opt, mindex, subfd, tmpfd;
 	int deletewhensent = 1, sendres, archive = 1, digest = 0;
+	int ctrlarchive;
 	char *listaddr, *mailfilename = NULL, *subfilename = NULL;
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
 	char *relayhost = NULL, *archivefilename = NULL, *tmpstr;
@@ -611,6 +612,7 @@ int main(int argc, char **argv)
 
 	addtohdr = statctrl(listdir, "addtohdr");
 	memmailsizestr = ctrlvalue(listdir, "memorymailsize");
+	ctrlarchive = statctrl(listdir, "noarchive");
 	if(memmailsizestr) {
 		memmailsize = strtol(memmailsizestr, NULL, 10);
 		myfree(memmailsizestr);
@@ -865,7 +867,10 @@ int main(int argc, char **argv)
 	close(mailfd);
 	
 	if(archive) {
-		rename(mailfilename, archivefilename);
+		if(!ctrlarchive)
+			rename(mailfilename, archivefilename);
+		else
+			unlink(mailfilename);
 		myfree(archivefilename);
 	} else if(deletewhensent)
 		unlink(mailfilename);

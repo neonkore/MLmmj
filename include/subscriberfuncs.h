@@ -25,6 +25,7 @@
 #define SUBSCRIBERFUNC_H
 
 off_t find_subscriber(int fd, const char *address);
+int is_subbed_in(const char *subddirname, const char *address);
 int is_subbed(const char *listdir, const char *address);
 
 #endif /* SUBSCRIBERFUNC_H */

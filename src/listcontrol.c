@@ -44,12 +44,16 @@
 
 enum ctrl_e {
 	CTRL_SUBSCRIBE_DIGEST,
+	CTRL_SUBSCRIBE_NOMAIL,
 	CTRL_SUBSCRIBE,
 	CTRL_CONFSUB_DIGEST,
+	CTRL_CONFSUB_NOMAIL,
 	CTRL_CONFSUB,
 	CTRL_UNSUBSCRIBE_DIGEST,
+	CTRL_UNSUBSCRIBE_NOMAIL,
 	CTRL_UNSUBSCRIBE,
 	CTRL_CONFUNSUB_DIGEST,
+	CTRL_CONFUNSUB_NOMAIL,
 	CTRL_CONFUNSUB,
 	CTRL_BOUNCES,
 	CTRL_MODERATE,
@@ -70,12 +74,16 @@ struct ctrl_command {
  * first to match correctly. */
 static struct ctrl_command ctrl_commands[] = {
 	{ "subscribe-digest",   0 },
+	{ "subscribe-nomail",   0 },
 	{ "subscribe",          0 },
 	{ "confsub-digest",     1 },
+	{ "confsub-nomail",     1 },
 	{ "confsub",            1 },
 	{ "unsubscribe-digest", 0 },
+	{ "unsubscribe-nomail", 0 },
 	{ "unsubscribe",        0 },
 	{ "confunsub-digest",   1 },
+	{ "confunsub-nomail",   1 },
 	{ "confunsub",          1 },
 	{ "bounces",            1 },
 	{ "moderate",           1 },
@@ -167,6 +175,24 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		exit(EXIT_FAILURE);
 		break;
 
+	/* listname+subscribe-nomail@domain.tld */
+	case CTRL_SUBSCRIBE_NOMAIL:
+		unlink(mailname);
+		if (closedlist)
+			exit(EXIT_SUCCESS);
+		if (!strchr(fromemails->emaillist[0], '@'))
+			/* Not a valid From: address, silently ignore */
+			exit(EXIT_SUCCESS);
+		execlp(mlmmjsub, mlmmjsub,
+				"-L", listdir,
+				"-a", fromemails->emaillist[0],
+				"-n",
+				"-C", NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+					mlmmjsub);
+		exit(EXIT_FAILURE);
+		break;
+
 	/* listname+subscribe@domain.tld */
 	case CTRL_SUBSCRIBE:
 		unlink(mailname);
@@ -203,6 +229,31 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				"-L", listdir,
 				"-a", tmpstr,
 				"-d",
+				"-c", NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+				mlmmjsub);
+		exit(EXIT_FAILURE);
+		break;
+
+	/* listname+subconf-nomail-COOKIE@domain.tld */
+	case CTRL_CONFSUB_NOMAIL:
+		unlink(mailname);
+		if (closedlist)
+			exit(EXIT_SUCCESS);
+		conffilename = concatstr(3, listdir, "/subconf/", param);
+		myfree(param);
+		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
+			/* invalid COOKIE, silently ignore */
+			exit(EXIT_SUCCESS);
+		}
+		tmpstr = mygetline(tmpfd);
+		chomp(tmpstr);
+		close(tmpfd);
+		unlink(conffilename);
+		execlp(mlmmjsub, mlmmjsub,
+				"-L", listdir,
+				"-a", tmpstr,
+				"-n",
 				"-c", NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 				mlmmjsub);
@@ -251,6 +302,24 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		exit(EXIT_FAILURE);
 		break;
 
+	/* listname+unsubscribe-nomail@domain.tld */
+	case CTRL_UNSUBSCRIBE_NOMAIL:
+		unlink(mailname);
+		if (closedlist)
+			exit(EXIT_SUCCESS);
+		if (!strchr(fromemails->emaillist[0], '@'))
+			/* Not a valid From: address, silently ignore */
+			exit(EXIT_SUCCESS);
+		execlp(mlmmjunsub, mlmmjunsub,
+				"-L", listdir,
+				"-a", fromemails->emaillist[0],
+				"-n",
+				"-C", NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+				mlmmjunsub);
+		exit(EXIT_FAILURE);
+		break;
+
 	/* listname+unsubscribe@domain.tld */
 	case CTRL_UNSUBSCRIBE:
 		unlink(mailname);
@@ -287,6 +356,31 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				"-L", listdir,
 				"-a", tmpstr,
 				"-d",
+				"-c", NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+				mlmmjunsub);
+		exit(EXIT_FAILURE);
+		break;
+
+	/* listname+unsubconf-nomail-COOKIE@domain.tld */
+	case CTRL_CONFUNSUB_NOMAIL:
+		unlink(mailname);
+		if (closedlist)
+			exit(EXIT_SUCCESS);
+		conffilename = concatstr(3, listdir, "/unsubconf/", param);
+		myfree(param);
+		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
+			/* invalid COOKIE, silently ignore */
+			exit(EXIT_SUCCESS);
+		}
+		tmpstr = mygetline(tmpfd);
+		close(tmpfd);
+		chomp(tmpstr);
+		unlink(conffilename);
+		execlp(mlmmjunsub, mlmmjunsub,
+				"-L", listdir,
+				"-a", tmpstr,
+				"-n",
 				"-c", NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 				mlmmjunsub);

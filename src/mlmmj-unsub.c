@@ -47,17 +47,26 @@
 #include "prepstdreply.h"
 
 void confirm_unsub(const char *listdir, const char *listaddr,
-		   const char *subaddr, const char *mlmmjsend, int digest)
+		   const char *subaddr, const char *mlmmjsend,
+		   enum subtype typesub)
 {
 	int subtextfd, queuefd;
 	char *buf, *subtextfilename, *randomstr, *queuefilename = NULL;
-	char *fromaddr, *listname, *listfqdn, *s1;
+	char *fromaddr, *listname, *listfqdn, *s1, *subject;
 
-	if (!digest) {
-		subtextfilename = concatstr(2, listdir, "/text/unsub-ok");
-	} else {
-		subtextfilename = concatstr(2, listdir,
-					    "/text/unsub-ok-digest");
+	switch(typesub) {
+		case SUB_NORMAL:
+			subtextfilename = concatstr(2, listdir,
+					"/text/sub-ok");
+			break;
+		case SUB_DIGEST:
+			subtextfilename = concatstr(2, listdir,
+					"/text/sub-ok-digest");
+			break;
+		case SUB_NOMAIL:
+			subtextfilename = concatstr(2, listdir,
+					"/text/sub-ok-nomail");
+			break;
 	}
 
 	if((subtextfd = open(subtextfilename, O_RDONLY)) < 0) {
@@ -89,15 +98,22 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 
 	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
 
-	if (!digest) {
-		s1 = concatstr(9, "From: ", listname, "+help@", listfqdn,
-			"\nTo: ", subaddr, "\nSubject: Goodbye from ",
-			listaddr, "\n\n");
-	} else {
-		s1 = concatstr(9, "From: ", listname, "+help@", listfqdn,
-			"\nTo: ", subaddr, "\nSubject: Goodbye from "
-			"digest of ", listaddr, "\n\n");
+	switch(typesub) {
+		case SUB_NORMAL:
+			subject = mystrdup("from ");
+			break;
+		case SUB_DIGEST:
+			subject = mystrdup("from digest of ");
+			break;
+		case SUB_NOMAIL:
+			subject = mystrdup("from nomail version of ");
+			break;
 	}
+
+	s1 = concatstr(10, "From: ", listname, "+help@", listfqdn, "\nTo: ",
+			   subaddr, "\nSubject: Goodbye ", subject, listaddr,
+			   "\n\n");
+	myfree(subject);
 
 	if(writen(queuefd, s1, strlen(s1)) < 0) {
 		log_error(LOG_ARGS, "Could not write subconffile");
@@ -137,11 +153,12 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 }
 
 void notify_unsub(const char *listdir, const char *listaddr,
-		  const char *subaddr, const char *mlmmjsend, int digest)
+		  const char *subaddr, const char *mlmmjsend,
+		  enum subtype typesub)
 {
         char *maildata[4] = { "*LSTADDR*", NULL, "*SUBADDR*", NULL };
         char *listfqdn, *listname, *fromaddr, *fromstr, *subject;
-        char *queuefilename = NULL;
+        char *queuefilename = NULL, *listtext;
 
         listname = genlistname(listaddr);
         listfqdn = genlistfqdn(listaddr);
@@ -149,30 +166,44 @@ void notify_unsub(const char *listdir, const char *listaddr,
         maildata[3] = mystrdup(subaddr);
         fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
         fromstr = concatstr(3, listname, "+owner@", listfqdn);
-	if (!digest) {
-        	subject = concatstr(2, "Unsubscription from ", listaddr);
-        	queuefilename = prepstdreply(listdir, "notifyunsub", fromstr,
-                                     fromstr, NULL, subject, 2, maildata);
-	} else {
-        	subject = concatstr(2, "Unsubscription from digest of ",
-					listaddr);
-        	queuefilename = prepstdreply(listdir, "notifyunsub-digest",
-                                     fromstr, fromstr, NULL, subject, 2,
-                                     maildata);
-	}
-        MY_ASSERT(queuefilename)
-        myfree(listname);
-        myfree(listfqdn);
-        myfree(subject);
-        myfree(maildata[1]);
-        myfree(maildata[3]);
-        execlp(mlmmjsend, mlmmjsend,
-                        "-l", "1",
-                        "-T", fromstr,
-                        "-F", fromaddr,
-                        "-m", queuefilename, NULL);
 
-        myfree(fromstr);
+	switch(typesub) {
+		case SUB_NORMAL:
+			subject = concatstr(2,
+					"Unsubscription from ", listaddr);
+			listtext = mystrdup("notifyunsub");
+			break;
+		case SUB_DIGEST:
+			subject = concatstr(2,
+					"Unsubscription from digest of ",
+					listaddr);
+			listtext = mystrdup("notifyunsub-digest");
+			break;
+		case SUB_NOMAIL:
+			subject = concatstr(2,
+					"Unsubscription from nomail of ",
+					listaddr);
+			listtext = mystrdup("notifyunsub-nomail");
+			break;
+	}
+
+	
+	queuefilename = prepstdreply(listdir, listtext, fromstr, fromstr,
+				     NULL, subject, 2, maildata);
+	MY_ASSERT(queuefilename);
+	myfree(listtext);
+	myfree(listname);
+	myfree(listfqdn);
+	myfree(subject);
+	myfree(maildata[1]);
+	myfree(maildata[3]);
+	execlp(mlmmjsend, mlmmjsend,
+			"-l", "1",
+			"-T", fromstr,
+			"-F", fromaddr,
+			"-m", queuefilename, NULL);
+
+	myfree(fromstr);
 
         log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
         exit(EXIT_FAILURE);
@@ -181,11 +212,11 @@ void notify_unsub(const char *listdir, const char *listaddr,
 
 void generate_unsubconfirm(const char *listdir, const char *listaddr,
 			   const char *subaddr, const char *mlmmjsend,
-			   int digest)
+			   enum subtype typesub)
 {
-	char *confirmaddr, *buf, *listname, *listfqdn;
+	char *confirmaddr, *buf, *listname, *listfqdn, *tmpstr;
 	char *subtextfilename, *queuefilename = NULL, *fromaddr, *s1;
-	char *randomstr = NULL, *confirmfilename = NULL;
+	char *randomstr = NULL, *confirmfilename = NULL, *subject;
 	int subconffd, subtextfd, queuefd;
 
 	listname = genlistname(listaddr);
@@ -224,18 +255,28 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 	fromaddr = concatstr(5, listname, "+bounces-confunsub-", randomstr,
 				"@", listfqdn);
 
-	if (!digest) {
-		subtextfilename = concatstr(2, listdir, "/text/unsub-confirm");
-		confirmaddr = concatstr(5, listname, "+confunsub-", randomstr,
-					"@", listfqdn);
-	} else {
-		subtextfilename = concatstr(2, listdir,
-					"/text/unsub-confirm-digest");
-		confirmaddr = concatstr(5, listname, "+confunsub-digest-",
-					randomstr, "@", listfqdn);
+	switch(typesub) {
+		case SUB_NORMAL:
+			subtextfilename = concatstr(2, listdir,
+						"/text/unsub-confirm");
+			tmpstr = mystrdup("+confunsub-");
+			break;
+		case SUB_DIGEST:
+			subtextfilename = concatstr(2, listdir,
+						"/text/unsub-confirm-digest");
+			tmpstr = mystrdup("+confunsub-digest-");
+			break;
+		case SUB_NOMAIL:
+			subtextfilename = concatstr(2, listdir,
+						"/text/unsub-confirm-nomail");
+			tmpstr = mystrdup("+confunsub-nomail-");
+			break;
 	}
 
+	confirmaddr = concatstr(5, listname, tmpstr, randomstr, "@", listfqdn);
+
 	myfree(randomstr);
+	myfree(tmpstr);
 
 	if((subtextfd = open(subtextfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", subtextfilename);
@@ -261,16 +302,21 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 		exit(EXIT_FAILURE);
 	}
 
-	if (!digest) {
-		s1 = concatstr(9, "From: ", listname, "+help@", listfqdn,
-				"\nTo: ", subaddr, "\nSubject: Confirm "
-				"unsubscribe from ", listaddr, "\n\n");
-	} else {
-		s1 = concatstr(9, "From: ", listname, "+help@", listfqdn,
-				"\nTo: ", subaddr, "\nSubject: Confirm "
-				"unsubscribe from digest of ", listaddr,
-				"\n\n");
+	switch(typesub) {
+		case SUB_NORMAL:
+			subject = mystrdup("from ");
+			break;
+		case SUB_DIGEST:
+			subject = mystrdup("from digest of ");
+			break;
+		case SUB_NOMAIL:
+			subject = mystrdup("from nomail version of ");
+			break;
 	}
+
+	s1 = concatstr(10, "From: ", listname, "+help@", listfqdn, "\nTo: ",
+			   subaddr, "\nSubject: Confirm unsubscribe ", subject,
+			   listaddr, "\n\n");
 
 	if(writen(queuefd, s1, strlen(s1)) < 0) {
 		log_error(LOG_ARGS, "Could not write subconffile");
@@ -362,13 +408,14 @@ ssize_t unsubscribe(int subreadfd, int subwritefd, const char *address)
 static void print_help(const char *prg)
 {
 	printf("Usage: %s -L /path/to/list -a john@doe.org "
-	       "[-c] [-C] [-h] [-L] [-V]\n"
+	       "[-c] [-C] [-h] [-L] [-d | -n] [-V]\n"
 	       " -a: Email address to unsubscribe \n"
 	       " -c: Send goodbye mail\n"
 	       " -C: Request mail confirmation\n"
 	       " -d: Subscribe to digest of list\n"
 	       " -h: This help\n"
 	       " -L: Full path to list directory\n"
+	       " -n: Subscribe to no mail version of list\n"
 	       " -V: Print version\n"
 	       "When no options are specified, unsubscription silently "
 	       "happens\n", prg);
@@ -377,15 +424,16 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	int subread, subwrite, rlock, wlock, opt, unsubres, status;
+	int subread, subwrite, rlock, wlock, opt, unsubres, status, nomail = 0;
 	int confirmunsub = 0, unsubconfirm = 0, notifysub = 0, digest = 0;
 	char *listaddr, *listdir = NULL, *address = NULL, *subreadname = NULL;
-	char *subwritename, *mlmmjsend, *bindir;
+	char *subwritename, *mlmmjsend, *bindir, *subdir;
 	char *subddirname;
 	off_t suboff;
 	DIR *subddir;
 	struct dirent *dp;
 	pid_t pid, childpid;
+	enum subtype typesub = SUB_NORMAL;
 
 	CHECKFULLPATH(argv[0]);
 	
@@ -395,10 +443,13 @@ int main(int argc, char **argv)
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	myfree(bindir);
 
-	while ((opt = getopt(argc, argv, "hcCdVL:a:")) != -1) {
+	while ((opt = getopt(argc, argv, "hcCdnVL:a:")) != -1) {
 		switch(opt) {
 		case 'L':
 			listdir = optarg;
+			break;
+		case 'n':
+			nomail = 1;
 			break;
 		case 'a':
 			address = optarg;
@@ -426,6 +477,17 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	if(digest && nomail) {
+		fprintf(stderr, "Specify either -d or -n, not both\n");
+		fprintf(stderr, "%s -h for help\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	if(digest)
+		typesub = SUB_DIGEST;
+	if(nomail)
+		typesub = SUB_NOMAIL;
+
 	if(confirmunsub && unsubconfirm) {
 		fprintf(stderr, "Cannot specify both -C and -c\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
@@ -435,34 +497,50 @@ int main(int argc, char **argv)
 	/* get the list address */
 	listaddr = getlistaddr(listdir);
 
+	switch(typesub) {
+		case SUB_NORMAL:
+			subdir = mystrdup("/subscribers.d/");
+			break;
+		case SUB_DIGEST:
+			subdir = mystrdup("/digesters.d/");
+			break;
+		case SUB_NOMAIL:
+			subdir = mystrdup("/nomailsubs.d/");
+			break;
+	}
+		
+	subddirname = concatstr(2, listdir, subdir);
+
+	if(is_subbed_in(subddirname, address)) {
+		/* Address is not subscribed, so exit silently */
+		myfree(subddirname);
+		myfree(subdir);
+		myfree(listaddr);
+		exit(EXIT_SUCCESS);
+	}
+
 	if(unsubconfirm)
 		generate_unsubconfirm(listdir, listaddr, address, mlmmjsend,
-				digest);
+				typesub);
 
-	if (!digest) {
-		subddirname = concatstr(2, listdir, "/subscribers.d/");
-	} else {
-		subddirname = concatstr(2, listdir, "/digesters.d/");
-	}
 	if((subddir = opendir(subddirname)) == NULL) {
 		log_error(LOG_ARGS, "Could not opendir(%s)",
 				    subddirname);
 		myfree(subddirname);
+		myfree(subdir);
+		myfree(listaddr);
 		exit(EXIT_FAILURE);
 	}
+
 	myfree(subddirname);
+
 	while((dp = readdir(subddir)) != NULL) {
 		if(!strcmp(dp->d_name, "."))
 			continue;
 		if(!strcmp(dp->d_name, ".."))
 			continue;
-		if (!digest) {
-			subreadname = concatstr(3, listdir, "/subscribers.d/",
-				dp->d_name);
-		} else {
-			subreadname = concatstr(3, listdir, "/digesters.d/",
-				dp->d_name);
-		}
+		
+		subreadname = concatstr(3, listdir, subdir, dp->d_name);
 
 		subread = open(subreadname, O_RDWR);
 		if(subread == -1) {
@@ -574,12 +652,13 @@ int main(int argc, char **argv)
 		}
         }
 
+	myfree(subdir);
 
         notifysub = statctrl(listdir, "notifysub");
 
         /* Notify list owner about subscription */
         if (notifysub)
-                notify_unsub(listdir, listaddr, address, mlmmjsend, digest);
+                notify_unsub(listdir, listaddr, address, mlmmjsend, typesub);
 
 	myfree(listaddr);
 

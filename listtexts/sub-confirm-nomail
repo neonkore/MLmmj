@@ -1,0 +1,31 @@
+Hi, this is the mlmmj program managing the mailinglist
+
+*LSTADDR*
+
+
+To confirm you want the address
+
+*SUBADDR*
+
+
+added to the nomail version of this list, please send a reply to
+
+*CNFADDR*
+
+
+You are getting this mail because of two possible scenarios:
+
+1) You want to be subscribed to the list without getting any mail from it,
+   because you have other means of reading it, and have sent an email
+   specifically to subscribe
+
+2) You have tried to post to a list that only allows posting from sub-
+   scribers. In this case simply reply to this mail, and you will be
+   able to post to the list with this emailaddress in the future
+
+Your mailer probably automatically replies to this address, when you hit
+the reply button.
+
+This confirmation serves two purposes. It tests that mail can be sent to your
+address. Second, it makes sure someone else did not try and subscribe your
+emailaddress.

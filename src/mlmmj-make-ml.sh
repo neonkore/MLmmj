@@ -67,7 +67,8 @@ LISTDIR="$SPOOLDIR/$LISTNAME"
 mkdir -p $LISTDIR
 
 for DIR in incoming queue queue/discarded archive text subconf unsubconf \
-	   bounce control moderation subscribers.d digesters.d requeue
+	   bounce control moderation subscribers.d digesters.d requeue \
+	   nomailsubs.d
 do
 	mkdir "$LISTDIR"/"$DIR"
 done

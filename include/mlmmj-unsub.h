@@ -27,10 +27,11 @@
 #include <sys/types.h>
 
 void confirm_unsub(const char *listdir, const char *listaddr,
-		   const char *subaddr, const char *mlmmj, int digest);
+		   const char *subaddr, const char *mlmmj,
+		   enum subtype typesub);
 ssize_t unsubscribe(int subreadfd, int subwritefd, const char *address);
 void generate_unsubconfirm(const char *listdir, const char *listaddr,
 			   const char *subaddr, const char *mlmmjsend,
-			   int digest);
+			   enum subtype typesub);
 
 #endif /* MLMMJ_UNSUBSCRIBE_H */
