@@ -1,22 +1,43 @@
 To use this web-interface you have to:
 
-1) Copy the files into your webroot, preferably in a sub-directory.
+1) Copy the files from the perl-admin directory of the mlmmj distribution to a
+   suitable location and point your webroot to the htdocs directory. If you
+   don't want the webinterface in the root of your website it is recommended to
+   make an alias in your web server configuration in order to keep the conf
+   directory at the same level as the htdocs directory and still outside
+   webscope.
 
-2) Change the permissions of the listdir/control directories of any list you
+2) You need to enable cgi in your apache configuration like this
+
+      Options ExecCGI
+      DirectoryIndex index.cgi
+      AddHandler cgi-script .cgi
+
+3) Change the permissions of the listdir/control directories of any list you
    want to control using the web-interface, so the web server can write in it:
 
      # chown -R wwwrun /var/spool/mlmmj/mlmmj-test/control/
 
-
 To enable access control on Apache you have to:
 
-3) Rename dot.htaccess to .htaccess.
+4) Rename dot.htaccess to .htaccess and edit the path inside the file to point
+   to a htpasswd file somewhere outside the webscope.
 
-4) Rename dot.htpasswd to .htpasswd and remove the default login (admin:mlmmj)
-   from it. Then run
+   If you don't have one already, you can create one like this
 
-     $ htpasswd .htpasswd USER
+      htpasswd -c /home/mlmmj/htpasswd USER
 
-   to add the login "USER" to the access file.
+   It will then ask you for a password for the given username.
 
 5) That is it, you are ready to use the interface.
+
+Further customization:
+
+You can set two environment variables in your apache config to control the
+configuration of the mlmmj webinterface.
+
+   SetEnv CONFIG_PATH /home/mlmmj/conf/config.pl
+   SetEnv TUNABLES_PATH /home/mlmmj/conf/tunables.pl
+
+This allows you to run several instances of the webinterface with e.g. different
+topdirs, translated to another language or with another layout.
