@@ -849,7 +849,7 @@ int run_digests(const char *listdir, const char *mlmmjsend)
 			/* index + ':' + time + '\n' + '\0' */
 			lenbuf = 20 + 1 + 20 + 2;
 			s3 = mymalloc(lenbuf);
-			lenstr = snprintf(s3, lenbuf, "%ld:%ld\n", index, t);
+			lenstr = snprintf(s3, lenbuf, "%ld:%ld\n", index, (long)t);
 			if (lenstr >= lenbuf)
 				lenstr = lenbuf - 1;
 			if (writen(fd, s3, lenstr) == -1) {
