@@ -328,12 +328,10 @@ int main(int argc, char **argv)
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	free(bindir);
 
-	if(daemonize) {
-		if(daemon(1,0) < 0) {
-			log_error(LOG_ARGS, "Could not daemonize. Only one "
-					    "maintenance run will be done.");
-			daemonize = 0;
-		}
+	if(daemon(1,0) < 0) {
+		log_error(LOG_ARGS, "Could not daemonize. Only one "
+				"maintenance run will be done.");
+		daemonize = 0;
 	}
 
 	for(;;) {
