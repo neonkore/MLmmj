@@ -43,7 +43,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 {
 	int infd, outfd;
 	size_t i;
-	char *str, *tmp, *retstr;
+	char *str, *tmp, *retstr = NULL;
 
 	tmp = concatstr(3, listdir, "/text/", filename);
 	infd = open(tmp, O_RDONLY);
@@ -63,17 +63,26 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		
 	myfree(tmp);
 
-	tmp = random_str();
-	retstr = concatstr(3, listdir, "/queue/", tmp);
-	myfree(tmp);
-	outfd = open(retstr, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
+	do {
+                tmp = random_str();
+		myfree(retstr);
+		retstr = concatstr(3, listdir, "/queue/", tmp);
+		myfree(tmp);
+
+                outfd = open(filename, O_RDWR|O_CREAT|O_EXCL,
+				       S_IRUSR|S_IWUSR);
+
+	} while ((outfd < 0) && (errno == EEXIST));
+	
 	if(outfd < 0) {
 		log_error(LOG_ARGS, "Could not open std mail %s", tmp);
+		myfree(str);
 		return NULL;
 	}
 
 	if(writen(outfd, str, strlen(str)) < 0) {
 		log_error(LOG_ARGS, "Could not write std mail");
+		myfree(str);
 		return NULL;
 	}
 	myfree(str);
@@ -86,6 +95,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 			}
 		}
 		if(writen(outfd, str, strlen(str)) < 0) {
+			myfree(str);
 			log_error(LOG_ARGS, "Could not write std mail");
 			return NULL;
 		}
