@@ -1,3 +1,4 @@
+ o mlmmj-recieve now forks before exec'ing on
  o mlmmj-{,un}sub now uses mmap and friends for better performance
 0.3.2
  o Logging enhancement
