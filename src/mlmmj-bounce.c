@@ -83,18 +83,22 @@ int main(int argc, char **argv)
 	filename = concatstr(2, listdir, "/subscribers");
 	if ((fd = open(filename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", filename);
+		free(filename); free(bfilename);
 		exit(EXIT_FAILURE);
 	}
 	suboff = find_subscriber(fd, address);
-	if(suboff == -1)
+	if(suboff == -1) {
+		free(filename); free(bfilename);
 		exit(EXIT_SUCCESS); /* Not subbed, so exit silently */
-	free(filename);
+	}
 
+	free(filename);
 
 	/* TODO make sure the file we open below is not a symlink */
 	if ((fd = open(bfilename, O_WRONLY|O_APPEND|O_CREAT,
 			S_IRUSR|S_IWUSR)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", bfilename);
+		free(filename); free(bfilename);
 		exit(EXIT_FAILURE);
 	}
 	free(bfilename);
