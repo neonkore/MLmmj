@@ -47,10 +47,8 @@ char *substitute(const char *line, const char *listaddr, size_t datacount,
 	size_t len, i;
 	
 	d1 = strchr(origline, '$');
-	if(d1)
-		d2 = strchr(d1 + 1, '$');
-	else
-		d2 = NULL;
+	if(d1 == NULL)
+		return origline;
 	
 	if(d1 && d2) {
 		len = d2 - d1;
