@@ -37,22 +37,25 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	int opt;
+	int opt, fd;
 	char *listdir = NULL, *address = NULL, *number = NULL;
-	char *bfilename, *a, *buf;
+	char *mailname = NULL, *savename, *bfilename, *a, *buf;
 	size_t len;
-	int fd;
 	time_t t;
+	struct stat st;
 
 	log_set_name(argv[0]);
 
-	while ((opt = getopt(argc, argv, "hVL:a:n:")) != -1) {
+	while ((opt = getopt(argc, argv, "hVL:a:n:m:")) != -1) {
 		switch(opt) {
 		case 'L':
 			listdir = optarg;
 			break;
 		case 'a':
 			address = optarg;
+			break;
+		case 'm':
+			mailname = optarg;
 			break;
 		case 'n':
 			number = optarg;
@@ -109,7 +112,14 @@ int main(int argc, char **argv)
 		exit(EXIT_SUCCESS); /* Not subbed, so exit silently */
 	}
 
-	/* TODO make sure the file we open below is not a symlink */
+	if(lstat(bfilename, &st) == 0) {
+		if((st.st_mode & S_IFLNK) == S_IFLNK) {
+			log_error(LOG_ARGS, "%s is a symbolic link",
+					bfilename);
+			exit(EXIT_FAILURE);
+		}
+	}
+
 	if ((fd = open(bfilename, O_WRONLY|O_APPEND|O_CREAT,
 			S_IRUSR|S_IWUSR)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", bfilename);
@@ -136,5 +146,11 @@ int main(int argc, char **argv)
 	writen(fd, buf, strlen(buf));
 	close(fd);
 
-	return EXIT_FAILURE;
+	if(mailname) {
+		savename = concatstr(2, bfilename, ".lastmsg");
+		rename(mailname, savename);
+		free(savename);
+	}
+
+	return EXIT_SUCCESS;
 }
