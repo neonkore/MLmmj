@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include "mygetline.h"
 
 char *myfgetline(FILE *infile)
@@ -45,14 +46,34 @@ char *myfgetline(FILE *infile)
 
 	}
 }
+
 char *mygetline(int fd)
 {
-	size_t i = 0, buf_size = BUFSIZE;  /* initial buffer size */
+	size_t i = 0, res, buf_size = BUFSIZE;  /* initial buffer size */
 	char *buf = malloc(buf_size);
 	char ch;
 
 	buf[0] = '\0';
-	while(read(fd, &ch, 1) > 0) {	
+	while(1) {	
+		res = read(fd, &ch, 1);
+		if(res < 0) {
+			if(errno == EINTR)
+				continue;
+			else {
+				free(buf);
+				return NULL;
+			}
+		}
+		if(res == 0) {
+			if(buf[0]) {
+				buf[i] = '\0';
+				return buf;
+			} else {
+				free(buf);
+				return NULL;
+			}
+		}
+
 		if(i == buf_size - 1) {
 			buf_size *= 2;
 			buf = realloc(buf, buf_size);
@@ -63,15 +84,8 @@ char *mygetline(int fd)
 			return buf;
 		}
 	}
-
-	if(buf[0]) {
-		buf[i] = '\0';
-		return buf;
-	}
-
-	free(buf);
-	return NULL;
 }
+
 #if 0
 int main(int argc, char **argv)
 {

@@ -126,6 +126,7 @@ int write_mailbody_from_file(int sockfd, FILE *infile)
 			     * occurred */
 		if(!fgets(bufp, WRITE_BUFSIZE, infile)) {
 			if (errno == EINTR) {
+				errno = 0;
 				continue;
 			} else {
 				return errno;
