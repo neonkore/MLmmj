@@ -1,0 +1,1 @@
+$topdir = "/var/spool/mlmmj";

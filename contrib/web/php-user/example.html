@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>mlmmj-webinterface</title>
+</head>
+<body>
+
+<p>
+<h1>subscribe</h1>
+<form action="mlmmj.php" method="post">
+<input name="mailinglist" type="hidden" value="mlmmj-test@domain.tld">
+<input name="job" type="hidden" value="subscribe">
+<input name="redirect_failure" type="hidden" value="http://www.failure.com/"> 
+<input name="redirect_success" type="hidden" value="http://www.success.com/">
+<input name="email" type="text" size="30" maxlength="254"><br>
+<input type="submit" value="Subscribe">
+</form>
+</p>
+
+<p>
+<h1>unsubscribe</h1>
+<form action="mlmmj.php" method="post">
+<input name="mailinglist" type="hidden" value="mlmmj-test@domain.tld">
+<input name="job" type="hidden" value="unsubscribe">
+<input name="redirect_failure" type="hidden" value="http://www.failure.com/">
+<input name="redirect_success" type="hidden" value="http://www.success.com/">
+<input name="email" type="text" size="30" maxlength="254"><br>
+<input type="submit" value="Unsubscribe">
+</form>
+</p>
+
+</body>
+</html>

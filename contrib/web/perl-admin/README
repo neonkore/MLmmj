@@ -1,0 +1,22 @@
+To use this web-interface you have to:
+
+1) Copy the files into your webroot, preferably in a sub-directory.
+
+2) Change the permissions of the listdir/control directories of any list you
+   want to control using the web-interface, so the web server can write in it:
+
+     # chown -R wwwrun /var/spool/mlmmj/mlmmj-test/control/
+
+
+To enable access control on Apache you have to:
+
+3) Rename dot.htaccess to .htaccess.
+
+4) Rename dot.htpasswd to .htpasswd and remove the default login (admin:mlmmj)
+   from it. Then run
+
+     $ htpasswd .htpasswd USER
+
+   to add the login "USER" to the access file.
+
+5) That is it, you are ready to use the interface.

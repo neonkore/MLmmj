@@ -1,0 +1,35 @@
+README webinterface					Jun 27th 2004
+
+Ehh, what's that?
+   The mlmmj-webinterface was created to give people the opportunity to
+{sub,unsub}scribe to your mailinglists without having to write an initial
+{sub,unsub}scribe-mail, but only completing a form.
+
+
+What are the requirements?
+   Only a webserver, that has PHP >= 3.0.8 support.
+
+
+How can I install/use the webinterface?
+   - Upload webinterface/mlmmj.php to your webserver.
+   - Have a look at webinterface/example.html and copy one or both forms
+     and put them into your website.
+   - Adjust the options to satisfy your needs:
+
+
+      The mailinglist your want to {sub,unsub}scribe to:
+      <input name="mailinglist" type="hidden" value="test@ct.kki.org">
+
+      Do you want to subscribe or unsubscribe?
+      <input name="job" type="hidden" value="subscribe">
+
+     Where do you want to redirect your user after a failure? 
+     <input name="redirect_failure" type="hidden" value="http://www.failure.com/">
+
+     What should be the success redirect?
+     <input name="redirect_success" type="hidden" value="http://www.success.com/">
+
+
+That's it - have a fun!
+
+	Christoph Thiel <ct at kki dot org>
