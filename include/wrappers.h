@@ -13,5 +13,6 @@
 
 ssize_t writen(int fd, const void *vptr, size_t n);
 int random_int(void);
+int dumpfd2fd(int infd, int outfd);
 
 #endif /* WRAPPERS_H */
