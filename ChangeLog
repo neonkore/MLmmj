@@ -1,3 +1,6 @@
+1.0.0-RC4
+ o Fix brown paper bag bug not allowing enough space for the new better random
+   strings introduced in RC3 so subscribe and unsubscribe works again.
 1.0.0-RC3
  o NULL and 0 are not the same on 64-bit platforms, so fix execlp(..., 0); to
    be execlp(..., NULL);

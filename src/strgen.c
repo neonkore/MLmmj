@@ -35,7 +35,7 @@
 
 char *random_str()
 {
-	size_t len = 32;
+	size_t len = 128;
 	char *dest = mymalloc(len);
 
 	snprintf(dest, len, "%X%X", random_int(), random_int());
@@ -45,7 +45,7 @@ char *random_str()
 
 char *random_plus_addr(const char *addr)
 {
-	size_t len = strlen(addr) + 16;
+	size_t len = strlen(addr) + 128;
 	char *dest = mymalloc(len);
 	char *atsign;
 	char *tmpstr;
