@@ -36,7 +36,6 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 	char *bufres, *subtextfilename, *randomstr, *queuefilename;
 	char *fromstr, *tostr, *subjectstr, *fromaddr, *helpaddr;
 	char *listname, *listfqdn;
-	size_t len;
 
 	subtextfilename = concatstr(2, listdir, "/text/unsub-ok");
 
@@ -63,13 +62,9 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 	}
 	free(randomstr);
 
-	len = strlen(listname) + strlen(listfqdn) + strlen("+help@") + 1;
-	helpaddr = malloc(len);
-	snprintf(helpaddr, len, "%s+help@%s", listname, listfqdn);
+	helpaddr = concatstr(3, listname, "+help@", listfqdn);
 
-	len += strlen("-bounces");
-	fromaddr = malloc(len);
-	snprintf(fromaddr, len, "%s-bounces+help@%s", listname, listfqdn);
+	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
 
 	fromstr = headerstr("From: ", helpaddr);
 	fputs(fromstr, queuefile);
@@ -107,7 +102,6 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 void generate_unsubconfirm(const char *listdir, const char *listaddr,
 			   const char *subaddr, const char *mlmmjsend)
 {
-	size_t len;
 	char buf[READ_BUFSIZE];
 	char *confirmaddr, *bufres, *listname, *listfqdn, *confirmfilename;
 	char *subtextfilename, *queuefilename, *fromaddr, *randomstr;
@@ -128,21 +122,13 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 	fputs(subaddr, subconffile);
 	fclose(subconffile);
 	free(confirmfilename);
+	helpaddr = concatstr(3, listname, "+help@", listfqdn);
 
-	len = strlen(listname) + strlen(listfqdn) + strlen("+help@") + 1;
-	helpaddr = malloc(len);
-	snprintf(helpaddr, len, "%s+help@%s", listname, listfqdn);
+	confirmaddr = concatstr(5, listname, "+confunsub-", randomstr, "@",
+			           listfqdn);
 
-	len = strlen(listname) + strlen(listfqdn) + strlen("+confunsub") 
-				+ strlen(subaddr) + 20;
-	confirmaddr = malloc(len);
-	snprintf(confirmaddr, len, "%s+confunsub-%s@%s", listname, randomstr,
-							listfqdn);
-
-	len += strlen("-bounces");
-	fromaddr = malloc(len);
-	snprintf(fromaddr, len, "%s-bounces+confunsub-%s@%s", listname,
-			randomstr, listfqdn);
+	fromaddr = concatstr(5, listname, "+bounces-confunsub-", randomstr,
+				"@", listfqdn);
 
 	subtextfilename = concatstr(2, listdir, "/text/unsub-confirm");
 
@@ -195,7 +181,7 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 	fclose(queuefile);
 
 	execlp(mlmmjsend, mlmmjsend,
-				"-L", "1",
+				"-l", "1",
 				"-T", subaddr,
 				"-F", fromaddr,
 				"-R", confirmaddr,
@@ -212,7 +198,7 @@ int unsubscribe(int subreadfd, int subwritefd, const char *address)
 	size_t len = strlen(address) + 1; /* + 1 for the '\n' */
 
 	if(suboff == -1)
-		return 0; /* Did not find subscriber */
+		return 1; /* Did not find subscriber */
 
 	if(fstat(subreadfd, &st) < 0) {
 		log_error(LOG_ARGS, "Could not stat fd");
@@ -235,7 +221,7 @@ int unsubscribe(int subreadfd, int subwritefd, const char *address)
 static void print_help(const char *prg)
 {
 	printf("Usage: %s -L /path/to/chat-list\n"
-	       "          -a someguy@somewhere.ltd\n"
+	       "          -a someguy@somewhere.tld\n"
 	       "          -C request mail confirmation\n"
 	       "          -c send goodbye mail\n"
 	       "          -h this help\n"
@@ -245,10 +231,9 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	int subread, subwrite, rlock, wlock, opt;
+	int subread, subwrite, rlock, wlock, opt, unsubres;
 	int confirmunsub = 0, unsubconfirm = 0;
-	char listaddr[READ_BUFSIZE];
-	char *listdir = NULL, *address = NULL, *subreadname = NULL;
+	char *listaddr, *listdir = NULL, *address = NULL, *subreadname = NULL;
 	char *subwritename, *mlmmjsend, *argv0 = strdup(argv[0]);
 	off_t suboff;
 	
@@ -292,7 +277,7 @@ int main(int argc, char **argv)
 	}
 
 	/* get the list address */
-	getlistaddr(listaddr, listdir);
+	listaddr = getlistaddr(listdir);
 
 	subreadname = concatstr(2, listdir, "/subscribers");
 	subwritename = concatstr(2, listdir, "/subscribers.new");
@@ -342,7 +327,10 @@ int main(int argc, char **argv)
 	if(unsubconfirm)
 		generate_unsubconfirm(listdir, listaddr, address, mlmmjsend);
 	else
-		unsubscribe(subread, subwrite, address);
+		unsubres = unsubscribe(subread, subwrite, address);
+
+	if(unsubres == 0)
+		unlink(subreadname);
 	
 	if(rename(subwritename, subreadname) < 0) {
 		log_error(LOG_ARGS, "Could not rename '%s' to '%s'",

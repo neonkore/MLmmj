@@ -1,0 +1,22 @@
+Hello,
+
+Someone send a mail for moderation to:
+
+*LISTADDR*
+
+
+To accept it send a mail to
+
+*MODERATEADDR*
+
+
+Your mailer probably automatically replies to this address, when you hit
+the reply button. If you don't want it sent to the list, simply ignore this
+mail.
+
+The following moderators have recieved this mail:
+
+*MODERATORS*
+
+
+--- below this line the first 100 lines of the mail up for moderation --->

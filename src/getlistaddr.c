@@ -10,31 +10,34 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+
 #include "getlistaddr.h"
 #include "chomp.h"
 #include "log_error.h"
+#include "mygetline.h"
+#include "strgen.h"
 
-#define MAXLISTNAMELEN 1024
-
-char *getlistaddr(char *listaddrdeststr, const char *listdir)
+char *getlistaddr(const char *listdir)
 {
-	size_t len;
 	char *tmpstr;
 	FILE *listnamefile;
 
-	len = strlen(listdir) + strlen("/listaddress") + 1;
-	tmpstr = malloc(len);
-
-	snprintf(tmpstr, len, "%s/listaddress", listdir);
+	tmpstr = concatstr(2, listdir, "/listaddress");;
 	if((listnamefile = fopen(tmpstr, "r")) == NULL) {
 		log_error(LOG_ARGS, "Could not open '%s'", tmpstr);
 		exit(EXIT_FAILURE);
 	}
-
-	fgets(listaddrdeststr, MAXLISTNAMELEN, listnamefile);
-	chomp(listaddrdeststr);
-
-	fclose(listnamefile);
 	free(tmpstr);
-	return listaddrdeststr;
+
+	tmpstr = myfgetline(listnamefile);
+
+	if(!tmpstr){
+		log_error(LOG_ARGS, "FATAL. Could not get listaddress");
+		exit(EXIT_FAILURE);
+	}
+
+	chomp(tmpstr);
+	fclose(listnamefile);
+
+	return tmpstr;
 }

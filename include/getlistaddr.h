@@ -9,6 +9,6 @@
 #ifndef GETLISTADDR_H
 #define GETLISTADDR_H
 
-char *getlistaddr(char *listaddrdeststr, const char *listdir);
+char *getlistaddr(const char *listdir);
 
 #endif /* GETLISTADDR_H */

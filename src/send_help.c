@@ -23,13 +23,13 @@ void send_help(const char *listdir, const char *emailaddr,
 	       const char *mlmmjsend)
 {
 	FILE *helpfile, *queuefile;
-	char buf[READ_BUFSIZE], listaddr[READ_BUFSIZE];
-	char *bufres, *helpaddr, *fromaddr, *fromstr, *tostr;
+	char buf[READ_BUFSIZE];
+	char *listaddr, *bufres, *helpaddr, *fromaddr, *fromstr, *tostr;
 	char *subjectstr, *helpfilename, *queuefilename, *listname;
 	char *randomstr, *listfqdn;
 	size_t len;
 
-        getlistaddr(listaddr, listdir);
+        listaddr = getlistaddr(listdir);
 
 	helpfilename = concatstr(2, listdir, "/text/listhelp");
 

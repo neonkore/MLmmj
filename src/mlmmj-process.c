@@ -25,6 +25,114 @@
 #include "strgen.h"
 #include "do_all_the_voodo_here.h"
 #include "log_error.h"
+#include "mygetline.h"
+#include "statctrl.h"
+
+void newmoderated(const char *listdir, const char *mailfilename,
+		  const char *mlmmjsend)
+{
+	char *to, *from, *subject, *fqdn, *listname, *replyto;
+	char *buf, *moderatorfilename, *listaddr = getlistaddr(listdir);
+	char *queuefilename, *moderatorsfilename, *randomstr = random_str();
+	char *mailbasename = basename(strdup(mailfilename));
+	FILE *moderatorfile, *queuefile, *moderatorsfile, *mailfile;
+	size_t count = 0;
+	
+	printf("mailfilename = [%s], mailbasename = [%s]\n", mailfilename,
+			                                     mailbasename);
+
+	fqdn = genlistfqdn(listaddr);
+	listname = genlistname(listaddr);
+	moderatorfilename = concatstr(2, listdir, "/text/moderation");
+	if((moderatorfile = fopen(moderatorfilename, "r")) == NULL) {
+		log_error(LOG_ARGS, "Could not open text/moderation");
+		free(moderatorfilename);
+		exit(EXIT_FAILURE);
+	}
+	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
+	printf("%s\n", queuefilename);
+	
+	if((queuefile = fopen(queuefilename, "w")) == NULL) {
+		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
+		free(queuefilename);
+		free(randomstr);
+		exit(EXIT_FAILURE);
+	}
+	free(randomstr);
+
+	moderatorsfilename = concatstr(2, listdir, "/moderators");
+	if((moderatorsfile = fopen(moderatorsfilename, "r")) == NULL) {
+		log_error(LOG_ARGS, "Could not open '%s'", moderatorsfilename);
+		free(queuefilename);
+		free(moderatorsfilename);
+		fclose(queuefile);
+		exit(EXIT_FAILURE);
+	}
+	free(moderatorfilename);
+
+	if((mailfile = fopen(mailfilename, "r")) == NULL) {
+		log_error(LOG_ARGS, "Could not open '%s'", mailfilename);
+		free(queuefilename);
+		free(moderatorsfilename);
+		fclose(queuefile);
+		exit(EXIT_FAILURE);
+	}
+
+	fputs("From: ", queuefile);
+	from = concatstr(3, listname, "+owner@", fqdn);
+	fputs(from, queuefile);
+	fputc('\n', queuefile);
+	to = concatstr(5, "To: ", listname, "-moderators@", fqdn, "\n");
+	fputs(to, queuefile);
+	free(to);
+	replyto = concatstr(7, "Reply-To: ", listname, "+moderate-",
+			       mailbasename, "@", fqdn, "\n");
+	fputs(replyto, queuefile);
+	free(replyto);
+	subject = concatstr(3, "Subject: Moderation needed for ", listaddr,
+			       "\n\n");
+	fputs(subject, queuefile);
+	free(subject);
+	
+	while((buf = myfgetline(moderatorfile))) {
+		if(strncmp(buf, "*LISTADDR*", 10) == 0) {
+			fputs(listaddr, queuefile);
+		} else if(strncmp(buf, "*MODERATEADDR*", 14) == 0) {
+			fputs(listname, queuefile);
+			fputs("+moderate-", queuefile);
+			fputs(mailbasename, queuefile);
+			fputc('@', queuefile);
+			fputs(fqdn, queuefile);
+		} else if(strncmp(buf, "*MODERATORS*", 12) == 0) {
+			free(buf);
+			while((buf = myfgetline(moderatorsfile))) {
+				fputs(buf, queuefile);
+				free(buf);
+				buf = NULL;
+			}
+		} else
+			fputs(buf, queuefile);
+		free(buf);
+	}
+	fclose(moderatorfile);
+	while((buf = myfgetline(mailfile)) && count < 100) {
+		fputc(' ', queuefile);
+		fputs(buf, queuefile);
+		free(buf);
+		count++;
+	}
+	fclose(queuefile);
+
+	execlp(mlmmjsend, mlmmjsend,
+				"-l", "2",
+				"-L", listdir,
+				"-F", from,
+				"-m", queuefilename, 0);
+
+	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
+
+	exit(EXIT_FAILURE);
+}
 
 static void print_help(const char *prg)
 {
@@ -35,10 +143,10 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	int fd, opt, i, noprocess = 0;
+	int fd, opt, noprocess = 0, moderated = 0;
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
-	char *randomstr = random_str();
+	char *randomstr = random_str(), *basename, *mqueuename;
 	char *mlmmjsend, *mlmmjsub, *mlmmjunsub, *mlmmjbounce;
 	char *argv0 = strdup(argv[0]);
 	FILE *headerfile, *footerfile, *rawmailfile, *donemailfile;
@@ -47,6 +155,7 @@ int main(int argc, char **argv)
 	struct mailhdr readhdrs[] = {
 		{ "To:", NULL },
 		{ "Cc:", NULL },
+		{ "From:", NULL },
 		{ NULL, NULL }
 	};
 
@@ -80,7 +189,7 @@ int main(int argc, char **argv)
 			break;
 		case 'V':
 			print_version(argv[0]);
-			exit(0);
+			exit(EXIT_SUCCESS);
 		}
 	}
 	if(listdir == NULL || mailfile == NULL) {
@@ -89,8 +198,9 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	donemailname = concatstr(3, listdir, "/queue/", randomstr);
+	basename = strdup(randomstr);
 	free(randomstr);
+	donemailname = concatstr(3, listdir, "/queue/", basename);
 	fd = open(donemailname, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
 	while(fd == -1 && errno == EEXIST) {
 		free(donemailname);
@@ -158,6 +268,7 @@ int main(int argc, char **argv)
 #endif
 	}
 
+
 	if(strchr(toemails.emaillist[0], RECIPDELIM)) {
 #if 0
 		log_error(LOG_ARGS, "listcontrol(%s, %s, %s, %s, %s, %s, %s)\n", donemailname, listdir, toemails.emaillist[0], mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
@@ -166,6 +277,30 @@ int main(int argc, char **argv)
 			    mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
 		return EXIT_SUCCESS;
 	}
+
+	moderated = statctrl(listdir, "moderated");
+
+	if(moderated) {
+		mqueuename = concatstr(3, listdir, "/moderation/queue/",
+				       basename);
+		printf("Going into moderatemode, mqueuename = [%s]\n",
+				mqueuename);
+		free(basename);
+		if(rename(donemailname, mqueuename) < 0) {
+			printf("could not rename(%s,%s)\n", 
+					    donemailname, mqueuename);
+			perror("rename");
+			log_error(LOG_ARGS, "could not rename(%s,%s)", 
+					    donemailname, mqueuename);
+			free(donemailname);
+			free(mqueuename);
+			exit(EXIT_FAILURE);
+		}
+		free(donemailname);
+		newmoderated(listdir, mqueuename, mlmmjsend);
+		return EXIT_SUCCESS;
+	}
+
 
 	if(noprocess) {
 		free(donemailname);

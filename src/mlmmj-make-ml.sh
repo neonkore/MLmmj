@@ -75,6 +75,15 @@ if [ -z "$FQDN" ]; then
 	FQDN=`domainname`
 fi
 
+echo -n "The path to the directory with the texts for the list? [] : "
+read TEXTPATH
+if [ -z "$TEXTPATH" -o ! -d "$TEXTPATH" ]; then
+	echo "**NOTE** Could not copy the texts for the list"
+	echo "Please manually copy the files from the listtexts/ directory"
+	echo "in the source distribution of mlmmj."
+fi
+cp "$TEXTPATH"/* "$LISTDIR"/"text"
+
 LISTADDRESS="$LISTNAME@$FQDN"
 echo "$LISTADDRESS" > "$LISTDIR"/"listaddress"
 
@@ -105,85 +114,6 @@ else
 	echo "Don't forget to add this to /etc/aliases:"
 	echo "$ALIAS"
 fi
-
-echo "Hi, this is the mlmmj program managing the mailinglist
-
-*LSTADDR*
-
-
-To confirm you want the address
-
-*SUBADDR*
-
-
-added to this list, please send a reply to
-
-*CNFADDR*
-
-
-Your mailer probably automatically replies to this address, when you hit
-the reply button.
-
-This confirmation serves two purposes. It tests that mail can be sent to your
-address. Second, it makes sure someone else did not try and subscribe your
-emailaddress." > $SPOOLDIR/$LISTNAME/text/sub-confirm
-
-echo "WELCOME! You have been subscribed to the
-
-*LSTADDR*
-
-
-mailinglist." > $SPOOLDIR/$LISTNAME/text/sub-ok
-
-echo "Hi, this is the mlmmj program managing the mailinglist
-
-*LSTADDR*
-
-
-To confirm you want the address
-
-*SUBADDR*
-
-
-removed from this list, please send a reply to
-
-*CNFADDR*
-
-
-Your mailer probably automatically replies to this address, when you hit
-the reply button.
-
-If you're not subscribed with this list, you will recieve no reply. You can
-see in the From header of a mail to the mailinglist which mail you're sub-
-scribed with." > $SPOOLDIR/$LISTNAME/text/unsub-confirm
-
-
-echo "GOODBYE! You have been removed from the
-
-*LSTADDR*
-
-
-mailinglist." > $SPOOLDIR/$LISTNAME/text/unsub-ok
-
-echo "Hello,
-
-There exists the following options:
-
-    To unsubscribe send a mail to
-
-    *UNSUBADDR*
-
-
-    To subscribe send a mail to
-
-    *SUBADDR*
-
-
-    For this help send a mail to
-
-    *HLPADDR*
-
-Mails can have any subject and any body." > $SPOOLDIR/$LISTNAME/text/listhelp
 
 echo " ** DON'T FORGET **
 1) The mailinglist directory have to be owned by the user running the 

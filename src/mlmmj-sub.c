@@ -34,7 +34,6 @@ void confirm_sub(const char *listdir, const char *listaddr,
 	char *bufres, *subtextfilename, *randomstr, *queuefilename;
 	char *fromstr, *tostr, *subjectstr, *fromaddr, *helpaddr;
 	char *listname, *listfqdn;
-	size_t len;
 
 	subtextfilename = concatstr(2, listdir, "/text/sub-ok");
 
@@ -61,13 +60,9 @@ void confirm_sub(const char *listdir, const char *listaddr,
 	}
 	free(randomstr);
 
-	len = strlen(listname) + strlen(listfqdn) + strlen("+help@") + 1;
-	helpaddr = malloc(len);
-	snprintf(helpaddr, len, "%s+help@%s", listname, listfqdn);
+	helpaddr = concatstr(3, listname, "+help@", listfqdn);
 
-	len += strlen("-bounces");
-	fromaddr = malloc(len);
-	snprintf(fromaddr, len, "%s-bounces+help@%s", listname, listfqdn);
+	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
 
 	fromstr = headerstr("From: ", helpaddr);
 	fputs(fromstr, queuefile);
@@ -110,7 +105,6 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	char *confirmaddr, *bufres, *listname, *listfqdn, *confirmfilename;
 	char *subtextfilename, *queuefilename, *fromaddr, *randomstr;
 	char *tostr, *fromstr, *helpaddr, *subjectstr;
-	size_t len;
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
@@ -127,20 +121,13 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	fclose(subconffile);
 	free(confirmfilename);
 
-	len = strlen(listname) + strlen(listfqdn) + strlen("+help@") + 1;
-	helpaddr = malloc(len);
-	snprintf(helpaddr, len, "%s+help@%s", listname, listfqdn);
+	helpaddr = concatstr(3, listname, "+help@", listfqdn);
 
-	len = strlen(listname) + strlen(listfqdn) + strlen("+confsub") 
-				+ strlen(subaddr) + 20;
-	confirmaddr = malloc(len);
-	snprintf(confirmaddr, len, "%s+confsub-%s@%s", listname, randomstr,
-							listfqdn);
+	confirmaddr = concatstr(5, listname, "+confsub-", randomstr, "@",
+			           listfqdn);
 
-	len += strlen("-bounces");
-	fromaddr = malloc(len);
-	snprintf(fromaddr, len, "%s-bounces+confsub-%s@%s", listname,
-			randomstr, listfqdn);
+	fromaddr = concatstr(5, listname, "+bounces-confsub-", randomstr,
+				"@", listfqdn);
 
 	subtextfilename = concatstr(2, listdir, "/text/sub-confirm");
 
@@ -193,7 +180,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	fclose(queuefile);
 
 	execlp(mlmmjsend, mlmmjsend,
-				"-L", "1",
+				"-l", "1",
 				"-T", subaddr,
 				"-F", fromaddr,
 				"-R", confirmaddr,
@@ -215,8 +202,7 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	char listaddr[READ_BUFSIZE];
-	char *listdir = NULL, *address = NULL, *subfilename = NULL;
+	char *listaddr, *listdir = NULL, *address = NULL, *subfilename = NULL;
 	char *mlmmjsend, *argv0 = strdup(argv[0]);
 	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock;
 	size_t len;
@@ -262,7 +248,7 @@ int main(int argc, char **argv)
 	}
 
 	/* get the list address */
-	getlistaddr(listaddr, listdir);
+	listaddr = getlistaddr(listdir);
 	if(strncasecmp(listaddr, address, strlen(listaddr)) == 0) {
 		printf("Cannot subscribe the list address to the list\n");
 		exit(EXIT_SUCCESS);  /* XXX is this success? */

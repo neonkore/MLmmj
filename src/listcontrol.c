@@ -30,7 +30,7 @@ int listcontrol(const char *mailfilename, const char *listdir,
 {
 	char tmpstr[READ_BUFSIZE];
 	char *atsign, *recipdelimsign, *tokenvalue, *confstr, *bouncenr;
-	char *controlstr, *conffilename;
+	char *controlstr, *conffilename, *moderatefilename;
 	FILE *mailfile, *tempfile;
 	struct email_container fromemails;
 	struct stat stbuf;
@@ -123,7 +123,8 @@ int listcontrol(const char *mailfilename, const char *listdir,
 						"-L", listdir,
 						"-a", tmpstr,
 						"-c", 0);
-				log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjunsub);
+				log_error(LOG_ARGS, "execlp() of '%s' failed",
+						    mlmmjunsub);
 				exit(EXIT_FAILURE);
 			} else {
 				exit(EXIT_SUCCESS);
@@ -133,7 +134,7 @@ int listcontrol(const char *mailfilename, const char *listdir,
 	} else if(strncasecmp(controlstr, "bounces-", 8) == 0) {
 		controlstr += 8;
 		bouncenr = strrchr(controlstr, '-');
-		if (!bouncenr) exit(EXIT_SUCCESS);  /* malformed bounce, ignore */
+		if (!bouncenr) exit(EXIT_SUCCESS); /* malformed bounce, ignore */
 		*bouncenr++ = '\0';
 #if 0
 		log_error(LOG_ARGS, "bounce, bounce, bounce email=[%s] nr=[%s]", controlstr, bouncenr);
@@ -143,6 +144,23 @@ int listcontrol(const char *mailfilename, const char *listdir,
 				"-a", controlstr,
 				"-n", bouncenr, 0);
 		log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjbounce);
+		exit(EXIT_FAILURE);
+	} else if(strncasecmp(controlstr, "moderate-", 9) == 0) {
+		controlstr += 9;
+		moderatefilename = concatstr(3, listdir, "/moderation/queue/",
+						       controlstr);
+		controlstr -= 9;
+		free(controlstr);
+		if(stat(moderatefilename, &stbuf) < 0) {
+			free(moderatefilename);
+			exit(EXIT_SUCCESS); /* just exit, no mail to moderate */
+		} else {
+			execlp(mlmmjsend, mlmmjsend,
+					"-L", listdir,
+					"-m", moderatefilename, 0);
+			log_error(LOG_ARGS, "execlp() of %s failed", mlmmjsend);
+			exit(EXIT_FAILURE);
+		}
 	} else if(strncasecmp(controlstr, "help", 4) == 0) {
 		printf("Help wanted!\n");
 		free(controlstr);

@@ -164,15 +164,16 @@ int main(int argc, char **argv)
 	size_t len = 0;
 	int sockfd = 0, opt, mindex, retval = 0;
 	FILE *subfile = NULL, *mailfile = NULL;
-	char listadr[READ_BUFSIZE], buf[READ_BUFSIZE];
+	char *listadr, buf[READ_BUFSIZE];
 	char *mailfilename = NULL, *subfilename = NULL, *listdir = NULL;
 	char *replyto = NULL, *bounce_adr = NULL, *to_addr = NULL;
 	char *bufres, *relayhost = NULL, *archivefilename = NULL;
+	char *listctrl = NULL;
 	int deletewhensent = 1;
 	
 	log_set_name(argv[0]);
 
-	while ((opt = getopt(argc, argv, "VDhm:L:R:F:T:r:")) != -1){
+	while ((opt = getopt(argc, argv, "VDhm:l:L:R:F:T:r:")) != -1){
 		switch(opt) {
 		case 'D':
 			deletewhensent = 0;
@@ -182,6 +183,9 @@ int main(int argc, char **argv)
 			break;
 		case 'h':
 			print_help(argv[0]);
+			break;
+		case 'l':
+			listctrl = optarg;
 			break;
 		case 'L':
 			listdir = optarg;
@@ -200,21 +204,36 @@ int main(int argc, char **argv)
 			break;
 		case 'V':
 			print_version(argv[0]);
-			exit(0);
+			exit(EXIT_SUCCESS);
 		}
 	}
 
-	if(mailfilename == 0 || listdir == 0) {
-		fprintf(stderr, "You have to specify -L and -m\n");
+	if(mailfilename == NULL || (listdir == NULL && listctrl == NULL)) {
+		fprintf(stderr, "You have to specify -m and -L or -l\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
-	/* get the list address */
-	if(listdir[0] == '1' && (bounce_adr == 0 || to_addr == 0))
-		fprintf(stderr, "With -L 1 you need -F and -T\n");
 
-	if(listdir[0] != '1')
-		getlistaddr(listadr, listdir);
+	if(!listctrl && listdir && listdir[0] == '1')
+		listctrl = strdup("1");
+
+	if(!listctrl)
+		listctrl = strdup("0");
+
+	
+	/* get the list address */
+	if(listctrl[0] == '1' && (bounce_adr == NULL || to_addr == NULL)) {
+		fprintf(stderr, "With -l 1 you need -F and -T\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if((listctrl[0] == '2' && listdir == NULL)) {
+		fprintf(stderr, "With -l 2 you need -L\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if(listctrl[0] != '1' && listctrl[0] != '2')
+		listadr = getlistaddr(listdir);
 	
 	/* initialize file with mail to send */
 
@@ -228,21 +247,34 @@ int main(int argc, char **argv)
 	else
 		init_sockfd(&sockfd, RELAYHOST);
 	
-	/* XXX: Here is the subscribers unrolled and mails are sent.
-	 * A more intelligent generic solution will be implemented
-	 * later, so we can get LDAP, SQL etc. support for the 
-	 * subscribers list. Choeger?
-	 */
-	if(listdir[0] != '1') {
+	switch(listctrl[0]) {
+	case '1': /* A single mail is to be sent, do nothing */
+		break;
+	case '2': /* Moderators */
+		subfilename = concatstr(2, listdir, "/moderators");
+		if((subfile = fopen(subfilename, "r")) == NULL) {
+			log_error(LOG_ARGS, "Could not open '%s':",
+					    subfilename);
+			free(subfilename);
+			/* No moderators is no error. Could be the sysadmin
+			 * likes to do it manually.
+			 */
+			exit(EXIT_SUCCESS);
+		}
+		break;
+	default: /* normal list mail */
 		subfilename = concatstr(2, listdir, "/subscribers");
 		if((subfile = fopen(subfilename, "r")) == NULL) {
-			log_error(LOG_ARGS, "Could not open subscriberfile:");
+			log_error(LOG_ARGS, "Could not open '%s':",
+					    subfilename);
+			free(subfilename);
 			exit(EXIT_FAILURE);
 		}
+		break;
 	}
 
 	/* initialize the archive filename */
-	if(listdir[0] != '1') {
+	if(listctrl[0] != '1' && listctrl[0] != '2') {
 		mindex = incindexfile((const char *)listdir, 1);
 		len = strlen(listdir) + 9 + 20;
 		archivefilename = malloc(len);
@@ -262,17 +294,27 @@ int main(int argc, char **argv)
 		/* FIXME: quit and tell admin to configure correctly */
 	}
 
-	if(listdir[0] != '1') {
+	/* FIXME: use myfgetline instead! */
+	switch(listctrl[0]) {
+	case '1': /* A single mail is to be sent */
+		send_mail(sockfd, bounce_adr, to_addr, replyto, mailfile);
+		break;
+	case '2': /* Moderators */
+		while((bufres = fgets(buf, READ_BUFSIZE, subfile))) {
+			chomp(buf);
+			send_mail(sockfd, bounce_adr, buf, 0, mailfile);
+		}
+		break;
+	default: /* normal list mail */
 		while((bufres = fgets(buf, READ_BUFSIZE, subfile))) {
 			chomp(buf);
 			bounce_adr = bounce_from_adr(buf, listadr,
 					archivefilename);
-
 			send_mail(sockfd, bounce_adr, buf, 0, mailfile);
 			free(bounce_adr);
 		}
-	} else
-		send_mail(sockfd, bounce_adr, to_addr, replyto, mailfile);
+		break;
+	}
 
 	write_quit(sockfd);
 	if((checkwait_smtpreply(sockfd, MLMMJ_QUIT)) != 0) {
@@ -280,7 +322,7 @@ int main(int argc, char **argv)
 			  "We close the socket anyway though\n");
 	}
 
-	if(listdir[0] != '1') {
+	if(listctrl[0] != '1' && listctrl[0] != '2') {
 		/* The mail now goes to the archive */
 		rename(mailfilename, archivefilename);
 
