@@ -572,12 +572,18 @@ int main(int argc, char **argv)
 			free(subfilename);
 
 			initsmtp(&sockfd, relayhost);
-			if(send_mail_many(sockfd, NULL, NULL, mailfile, subfile,
-					listaddr, archivefilename, listdir,
-					mlmmjbounce))
+			sendres = send_mail_many(sockfd, NULL, NULL, mailfile,
+					subfile, listaddr, archivefilename,
+					listdir, mlmmjbounce);
+			if (sendres) {
+				/* If send_mail_many() failed we close the
+				 * connection to the mail server in a brutal
+				 * manner, because we could be in any state
+				 * (DATA for instance). */
 				close(sockfd);
-			else
+			} else {
 				endsmtp(&sockfd);
+			}
 			fclose(subfile);
 		}
 		closedir(subddir);
