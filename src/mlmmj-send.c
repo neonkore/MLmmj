@@ -285,10 +285,33 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 {
 	int sendres = 0, addrfd;
 	char *bounceaddr, *addr, *index, *dirname, *addrfilename;
+	char *start, *cur, *next;
+	struct stat st;
 	size_t len;
 
-	while((addr = mygetline(subfd))) {
-		chomp(addr);
+	if(fstat(subfd, &st) < 0) {
+		log_error(LOG_ARGS, "Could not stat subfd");
+		return -1;
+	}
+
+	start = mmap(0, st.st_size, PROT_READ, MAP_SHARED, subfd, 0);
+	if(start == MAP_FAILED) {
+		log_error(LOG_ARGS, "Could not mmap subfd");
+		return -1;
+	}
+
+	for(next = cur = start; next < start + st.st_size; next++) {
+		if(*next == '\n' || next == start + st.st_size - 1) {
+			len = next - cur;
+			if(next == start + st.st_size - 1)
+				len++;
+			addr = malloc(len + 1);
+			strncpy(addr, cur, len);
+			addr[len] = '\0';
+			cur = next + 1;
+		} else
+			continue;
+
 		if(from)
 			sendres = send_mail(sockfd, from, addr, replyto,
 					    mailmap, mailsize, listdir, NULL);
@@ -310,7 +333,7 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 						    "be requeued.", dirname);
 				free(dirname);
 				free(addr);
-				return 1;
+				return -1;
 			}
 			addrfilename = concatstr(2, dirname, "/subscribers");
 			free(dirname);
@@ -321,7 +344,7 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 						    addrfilename);
 				free(addrfilename);
 				free(addr);
-				return 1;
+				return -1;
 			} else { /* dump the remaining addresses */
 				do {
 					/* Dirty hack to add newline. */
@@ -341,7 +364,7 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 			free(addrfilename);
 			close(addrfd);
 
-			return 1;
+			return -1;
 		}
 	}
 	return 0;
