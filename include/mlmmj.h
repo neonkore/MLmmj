@@ -15,6 +15,7 @@
 #define READ_BUFSIZE 2048
 #define RECIPDELIM '+'
 #define MAX_CONNECTIONS 3 /* How many max connections to relayhost */
+#define WAITSLEEP 1000
 
 struct mailhdr {
 	const char *token;

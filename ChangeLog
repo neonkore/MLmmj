@@ -1,3 +1,5 @@
+ o Added WAITTIME (time to sleep before checking if we should spawn another
+   mlmmj-send process) option in mlmmj.h
  o Fixed error handling in mlmmj-unsub if we can not open subscribers.d/
 0.5.0
  o Use a subscribers.d/ directory for several subscribers files. mlmmj-send

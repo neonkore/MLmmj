@@ -404,7 +404,7 @@ int main(int argc, char **argv)
 			free(subfilename);
 
 			while((conncount >= MAX_CONNECTIONS))
-				usleep(100);
+				usleep(WAITSLEEP);
 
 			childpid = fork();
 			if(childpid < 0)
