@@ -1,3 +1,4 @@
+1.0.0
  o Fix dumping of addresses to requeue
  o Make the time an address can bounce before unsubscribed configurable with
    listdir/control/bouncelife

@@ -1,4 +1,4 @@
-README mlmmj-1.0.0-RC4					Sep 1st 2004
+README mlmmj-1.0.0					Sep 9th 2004
 
 This is an attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
@@ -30,9 +30,12 @@ To use mlmmj, do the following:
 	local_part_suffix_optional
 
     to the "userforward:" and the "localuser:" router in /etc/exim/exim.conf,
-    and also add "local_part_suffix = +*" to the system_aliases function.
+    and also add "local_part_suffix = +*" to the system_aliases function. Also
+    make sure that exim will add the envelope from in the Return-Path: header.
 
-    There is a nice FAQ explaining here: http://faqs.org/faqs/mail/addressing/
+    There is a nice FAQ explaining recipient delimiter configuration here:
+
+    http://faqs.org/faqs/mail/addressing/
 
  2) Create the mailinglist.  There's a script, mlmmj-make-ml.sh, that will make
     a mailinglist for mlmmj. It is highly recommended to use this script to make
@@ -62,7 +65,7 @@ To use mlmmj, do the following:
  3) Make the changes to your mailserver aliases that came as output from
     mlmmj-make-ml.sh. Following the example above they will look like this:
 
-    mlmmj-test:     | "/usr/bin/mlmmj-recieve -L /var/spool/mlmmj/mlmmj-test"
+    mlmmj-test:     "|/usr/bin/mlmmj-recieve -L /var/spool/mlmmj/mlmmj-test"
 
     NOTE: Don't forget newaliases.
 
@@ -77,17 +80,13 @@ To use mlmmj, do the following:
 
     You need one entry for each list or a wrapper script added once in crontab.
 
-That's it! You might want to go through the next steps too.
+That's it! You probably want to go through the next steps too.
 
  5) Subscribe some people
 
     /usr/bin/mlmmj-sub -L /var/spool/mlmmj/mlmmj-test/ -a joe@domain.tld
 
     etc.
-
-    NOTE: Don't forget to ensure correct permissions on the subscribers.d/
-    directory and files in there, if you don't perform all list actions as the
-    user that writes mail.
 
  6) If you want custom headers like X-Mailinglist, Reply-To: etc. just add a
     file called 'customheaders' in the list control/ directory like this:
@@ -113,8 +112,6 @@ That's it! You might want to go through the next steps too.
 10) Have a look at the file TUNABLES for runtime configurable things.
 
 Tunables in include/mlmmj.h:
- · If you want to use something else than localhost for your maildelivery you
-   have to change RELAYHOST.
  · There's some time intervals for how mlmmj-maintd operates. I've choosen
    non-strict defaults, so depending on your BOFH rate you might want to tweak.
    The defaults should be good for most people though.
