@@ -1,10 +1,11 @@
- o bounce-handling:
-   · parse of bouncefiles
-   · probe emails
-   · handle of help-bounces
+ o Convert mlmmj-sub, mlmmj-unsub and mlmmj-process (moderation) to use
+   the new and shiny prepstdreply() function.
+ o Add some more logging to mlmmj-maintd
+
+Functionality items:
  o owner functionality
  o listname+get functionality
- o mlmmj-maintenance (in progress)
+ o web interface
 
 An ever ongoing TODO is we need someone to run it all through valgrind or
 similar and plug all memory and fd leaks etc.

@@ -1,3 +1,8 @@
+0.7.0
+ o Add a macro to make sure mlmmj binaries are invoked with full path
+ o Add the function to mlmmj-maintd to unsubscribe people who've been bouncing
+   for BOUNCELIFE (default 432000 sec, 5 days) time. This completes
+   the bouncehandling of mlmmj. SIC!
  o Add logging to mlmmj-maintd. mlmmj-maintd.lastrun.log in the listdir
    always has the log of the last run.
  o Make mlmmj-bounce capable of sending probes
