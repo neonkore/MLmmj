@@ -70,8 +70,9 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+#if 0
 	log_error(LOG_ARGS, "[%s] [%s] [%s]", listdir, address, number);
-
+#endif
 	/* save the filename with '=' before replacing it with '@' */
 	bfilename = concatstr(3, listdir, "/bounce/", address);
 
