@@ -29,7 +29,8 @@ To use mlmmj, do the following:
         local_part_suffix = +*
 	local_part_suffix_optional
 
-    to the "userforward:" and the "localuser:" router in /etc/exim/exim.conf.
+    to the "userforward:" and the "localuser:" router in /etc/exim/exim.conf,
+    and also add "local_part_suffix = +*" to the system_aliases function.
 
     There is a nice FAQ explaining here: http://faqs.org/faqs/mail/addressing/
 

@@ -732,8 +732,8 @@ int main(int argc, char **argv)
 	int opt, daemonize = 1;
 	char *bindir, *listdir = NULL, *mlmmjsend, *mlmmjbounce, *mlmmjunsub;
 	char *logstr, *logname, *random;
-	char uidstr[16];
 	struct stat st;
+	uid_t uid;
 
 	CHECKFULLPATH(argv[0]);
 
@@ -768,17 +768,34 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	if(stat(listdir, &st) < 0) {
-		log_error(LOG_ARGS, "Could not stat listdir '%s'", listdir);
-		exit(EXIT_FAILURE);
+	/* sanity check since maintd should be invoked as root so it can
+	 * setuid or as the owner of listdir */
+
+	if(listdir) {
+		if(stat(listdir, &st) == 0) {
+			uid = getuid();
+			if(uid && uid != st.st_uid) {
+				log_error(LOG_ARGS,
+					"Have to invoke either as root "
+					"or as the user owning listdir");
+				writen(STDERR_FILENO,
+					"Have to invoke either as root "
+					"or as the user owning listdir\n", 60);
+				exit(EXIT_FAILURE);
+			}
+		} else {
+			log_error(LOG_ARGS, "Could not stat %s", listdir);
+			exit(EXIT_FAILURE);
+		}
 	}
 
-	chown(logname, st.st_uid, st.st_gid);
+	if(uid == 0) { /* We're root. chown the logfile and setuid */
+		chown(logname, st.st_uid, st.st_gid);
 
-	snprintf(uidstr, sizeof(uidstr), "%d", (int)st.st_uid);
-	if(setuid(st.st_uid) < 0) {
-		log_error(LOG_ARGS, "Could not setuid listdir owner");
-		exit(EXIT_FAILURE);
+		if(setuid(st.st_uid) < 0) {
+			log_error(LOG_ARGS, "Could not setuid listdir owner");
+			exit(EXIT_FAILURE);
+		}
 	}
 	
 	bindir = mydirname(argv[0]);

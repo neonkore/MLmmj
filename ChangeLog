@@ -1,3 +1,5 @@
+ o Also make sanity check in mlmmj-maintd to ensure it's invoke either
+   as root or as listdir owner
 1.0.0-RC4
  o Fix brown paper bag bug not allowing enough space for the new better random
    strings introduced in RC3 so subscribe and unsubscribe works again.
