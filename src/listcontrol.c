@@ -15,7 +15,6 @@
 #include <sys/stat.h>
 
 #include "mlmmj.h"
-#include "header_token.h"
 #include "listcontrol.h"
 #include "find_email_adr.h"
 #include "strgen.h"

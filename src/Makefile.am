@@ -23,7 +23,7 @@ mlmmj_recieve_SOURCES = mlmmj-recieve.c writen.c random-int.c strgen.c \
 mlmmj_process_SOURCES = mlmmj-process.c writen.c find_email_adr.c \
 			incindexfile.c itoa.c getlistaddr.c chomp.c \
 			mylocking.c listcontrol.c random-int.c strgen.c \
-			header_token.c print-version.c send_help.c \
+			print-version.c send_help.c \
 			do_all_the_voodo_here.c mygetline.c gethdrline.c \
 			log_error.c statctrl.c ctrlvalue.c dumpfd2fd.c
 
