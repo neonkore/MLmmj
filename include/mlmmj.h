@@ -27,7 +27,8 @@
 
 struct mailhdr {
 	const char *token;
-	char *value;
+	int valuecount;
+	char **values;
 };
 
 void print_version(const char *prg);
