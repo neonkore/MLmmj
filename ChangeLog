@@ -1,3 +1,4 @@
+ o Cleanup and reimplementation of several functions that needed it badly
 0.3.1
  o Add BINDIR (mortenp)
  o Fix retstruct->emaillist initialize (mortenp)
