@@ -16,6 +16,14 @@
 #define RECIPDELIM '+'
 #define MAX_CONNECTIONS 3 /* How many max connections to relayhost */
 #define WAITSLEEP 1000
+#define MODREQLIFE 604800 /* How long time will moderation requests be kept?
+			   * 604800s is 7 days */
+#define BOUNCELIFE 432000 /* How long time can addresses bounce before
+			     unsubscription happens? 432000s is 5 days */
+#define PROBEINTERVAL 43200 /* How often is an address probed if it still
+			       bounces? 43200s is 12 hours */
+#define MAINTD_SLEEP 3600 /* How long between maintenance runs when
+			     mlmmj-maintd runs daemonized? 3600s is 1 hour */
 
 struct mailhdr {
 	const char *token;
