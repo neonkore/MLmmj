@@ -1,5 +1,7 @@
+1.1.1-RC2
+ o It's ok to log to a symbolic link to somewhere else
  o Add Message-Id: and Date: headers to mail from mlmmj
- o Make log_oper() varargs capable, thanks Rob Holland
+ o Make log_oper() varargs capable (Rob Holland)
 1.1.1-RC1
  o Never discard anything from LISTDIR/queue/, let the admin be able to judge
  o Grab the lock when sending a mail to make sure noone does bad things
