@@ -1,0 +1,40 @@
+.TH mlmmj-bounce "1" "September 2004" mlmmj-bounce
+.SH NAME
+mlmmj-bounce \- bounce handling utility for mlmmj
+.SH SYNOPSIS
+.B mlmmj-bounce
+\fI-L /path/to/list -a john=doe.org \fR[\fI-n num | -p\fR]
+.HP
+\fB\-a\fR: Address string that bounces
+.HP
+\fB\-h\fR: This help
+.HP
+\fB\-L\fR: Full path to list directory
+.HP
+\fB\-n\fR: Message number in the archive that bounced
+.HP
+\fB\-p\fR: Send out a probe
+.HP
+\fB\-V\fR: Print version
+.SH DESCRIPTION
+mlmmj-bounce is used to handle mails that are bouncing. When a mail arrives to
+the system, mlmmj-bounce will register in <listdir>/bounce/<addrstring> info
+about which number that bounced at what time. An example of such a line could
+be:
+.LP
+109:1094409801 # Sun Sep  5 20:43:21 2004
+
+The above shows that message number 109 bounced 1094409801 seconds after epoch
+which is in human date stamps is Sunday September 5th 20:43:21 2004.
+
+The last bounce mail recieved to the address is saved in <listdir>/bounce/<addrstring>.lastmsg.
+
+When the \fB\-p\fR option is used it sends out a probe email including info
+that it's a bounce probe and a list of the bounced message numbers. The
+existance of a <listdir>/bounce/<addrstring>.probe file indicates that a probe have been sent out.
+.SH AUTHORS
+This manual page was written by the following persons:
+.HP
+Søren Boll Overgaard <boll@debian.org> (based on html2man output)
+.HP
+Mads Martin Jørgensen <mmj@mmj.dk>

@@ -1,0 +1,35 @@
+.TH mlmmj-maintd "1" "September 2004" mlmmj-maintd
+.SH NAME
+mlmmj-maintd \- maintenance for mlmmj maintained lists
+.SH SYNOPSIS
+.B mlmmj-maintd
+\fI-L /path/to/listdir \fR[\fI-F\fR]
+.HP
+\fB\-L\fR: Full path to list directory
+.HP
+\fB\-F\fR: Don't fork, performing one maintenance run only.
+.SH DESCRIPTION
+This is the program doing the maintenance for an mlmmj based mailing list. It
+will unsubscribe people who have bounced for long enough, send out bounce
+probes, resend mails that couldn't be delivered to relayhost, clean out stale
+requests for e.g. subscription, resend list mails and clean up leftover files
+etc.
+
+It will run as a daemon, unless the \fB\-F\fR switch is specified, in which
+case it just runs once.  The \fB\-F\fR  option should be used when one wants to
+avoid running another daemon, and use e.g. cron to control it instead. In case
+cron is used, mlmmj-maintd should be run every 2 hours or so. An example
+crontab entry:
+
+.LP
+0 */2 * * * /usr/bin/mlmmj-maintd -F -L /path/to/list
+.SH BUGS
+It's not yet possible to tell mlmmj-maintd to perform maintenance on all
+lists (directories) in a directory yet. It's a high priority TODO item, so
+expect it soonish.
+.SH AUTHORS
+This manual page was written by the following persons:
+.HP
+Søren Boll Overgaard <boll@debian.org> (based on html2man output)
+.HP
+Mads Martin Jørgensen <mmj@mmj.dk>

@@ -1,0 +1,34 @@
+.TH mlmmj-unsub "1" "September 2004" mlmmj-unsub
+.SH NAME
+mlmmj-unsub \- manual page for mlmmj-unsub
+.SH SYNOPSIS
+.B mlmmj-sub
+\fI-L /path/to/list -a john@doe.org \fR[\fI-c\fR | \fI-C\fR] [\fI-h\fR]
+[\fI-V\fR]
+.HP
+\fB\-a\fR: Email address to unsubscribe
+.HP
+\fB\-c\fR: Send goodbye mail
+.HP
+\fB\-C\fR: Request mail confirmation
+.HP
+\fB\-h\fR: This help
+.HP
+\fB\-L\fR: Full path to list directory
+.HP
+\fB\-V\fR: Print version
+.SH DESCRIPTION
+This utility is used to unsubscribe people from the specified mailinglist. It
+will remove the specified email address from every file in the
+<listdir>/subscribers.d/ directory.
+
+When neither \fB\-c\fR nor \fB\-C\fR are specified, unsubscription silently
+happens.
+.SH "SEE ALSO"
+mlmmj-sub(1)
+.SH AUTHORS
+This manual page was written by the following persons:
+.HP
+Søren Boll Overgaard <boll@debian.org> (based on html2man output)
+.HP
+Mads Martin Jørgensen <mmj@mmj.dk>

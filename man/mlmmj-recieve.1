@@ -1,0 +1,41 @@
+.TH mlmmj-recieve "1" "September 2004" mlmmj-recieve
+.SH NAME
+mlmmj-recieve \- recieve mails for an mlmmj managed mailinglist
+.SH SYNOPSIS
+.B mlmmj-recieve
+\fI-L /path/to/listdir \fR[\fI-h\fR] [\fI-V\fR] [\fI-P\fR] [\fI-F\fR]
+.HP
+\fB\-h\fR: This help
+.HP
+\fB\-F\fR: Don't fork in the background (debugging only)
+.HP
+\fB\-L\fR: Full path to list directory
+.HP
+\fB\-P\fR: Don't execute mlmmj-process (debugging only)
+.HP
+\fB\-V\fR: Print version
+.SH DESCRIPTION
+The mlmmj-recieve binary is the one specified in the mailserver configuration
+file (aliases file), which writes the mail to the <listdir>/incoming directory
+and invokes mlmmj-process unless the \fB\-P\fR option is specified. On systems
+using mailservers supporting the \fB/etc/aliases\fR file, a line to activate
+an mlmmj managed mailinglist would look like this:
+.LP
+list: "|/usr/bin/mlmmj-recieve -L /var/spool/mlmmj/list/"
+
+It's very important to specify the full path to the binary, or the mailinglist
+will not function.
+
+When the \fB\-F\fR option is used, it will not fork in the background. The
+reason it forks is that if delivery of a mail takes longer time than the mail
+server will allow a command to be idle before presumed dead, the mail server
+would kill it.
+
+.SH "SEE ALSO"
+mlmmj-process(1)
+.SH AUTHORS
+This manual page was written by the following persons:
+.HP
+Søren Boll Overgaard <boll@debian.org> (based on html2man output)
+.HP
+Mads Martin Jørgensen <mmj@mmj.dk>

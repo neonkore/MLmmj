@@ -1,0 +1,40 @@
+.TH mlmmj-sub "1" "September 2004" mlmmj-sub
+.SH NAME
+mlmmj-sub \- subscribe address to a mailinglist run by mlmmj
+.SH SYNOPSIS
+.B mlmmj-sub
+\fI-L /path/to/list -a john@doe.org \fR[\fI-c\fR | \fI-C\fR] [\fI-h\fR]
+[\fI-U\fR] [\fI-V\fR]
+.HP
+\fB\-a\fR: Email address to subscribe
+.HP
+\fB\-c\fR: Send welcome mail
+.HP
+\fB\-C\fR: Request mail confirmation
+.HP
+\fB\-h\fR: This help
+.HP
+\fB\-L\fR: Full path to list directory
+.HP
+\fB\-U\fR: Don't switch to the user id of the listdir owner
+.HP
+\fB\-V\fR: Print version
+.SH DESCRIPTION
+This utility is used to subscribe people to the specified mailinglist. It will
+write the email address in a file with the name of the beginning letter of the
+email address getting subscribed in the <listdir>/subscribers.d/ directory.
+
+Unless the \fB\-U\fR switch is used it will switch its user id to the user id
+owning the list directory. This is done to make sure that new files created are
+having correct permissions.
+
+When neither \fB\-c\fR nor \fB\-C\fR are specified, subscription silently
+happens.
+.SH "SEE ALSO"
+mlmmj-unsub(1), setuid(2)
+.SH AUTHORS
+This manual page was written by the following persons:
+.HP
+Søren Boll Overgaard <boll@debian.org> (based on html2man output)
+.HP
+Mads Martin Jørgensen <mmj@mmj.dk>

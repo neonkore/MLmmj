@@ -1,0 +1,67 @@
+.TH mlmmj-send "1" "September 2004" mlmmj-send
+.SH NAME
+mlmmj-send \- send mail to a mailinglist or similar
+.SH SYNOPSIS
+.B mlmmj-send
+[\fI-L\fR /path/to/list | \fI-l\fR listctrl] \fI\-m\fR /path/to/mail
+[\fI-a\fR] [\fI-D\fR] [\fI-F\fR] [\fI-h\fR] [\fI-r\fR] [\fI-R\fR] [\fI-s\fR]
+[\fI-T\fR] [\fI-V\fR]
+.HP
+\fB\-a\fR: Don't archive the mail
+.HP
+\fB\-D\fR: Don't delete the mail after it's sent
+.HP
+\fB\-F\fR: What to use as MAIL FROM:
+.HP
+\fB\-h\fR: This help
+.HP
+\fB\-l\fR: List control variable.
+.HP
+\fB\-L\fR: Full path to list directory
+.HP
+\fB\-m\fR: Full path to mail file
+.HP
+\fB\-r\fR: Relayhost IP address (defaults to 127.0.0.1)
+.HP
+\fB\-R\fR: What to use as Reply-To: header
+.HP
+\fB\-s\fR: Subscribers file name
+.HP
+\fB\-T\fR: What to use as RCPT TO:
+.HP
+\fB\-V\fR: Print version
+.SH DESCRIPTION
+This binary is used to send all kinds of mail to mlmmj managed mailinglists,
+but can potentially be used standalone for sending mails.
+
+The only option that is not self explanatory is the \fB\-l\fR list control
+option:
+.IP
+\&'1' means 'send a single mail'
+
+This is used together with \fB\-F\fR and \fB\-T\fR to send one mail to one
+recipient.
+
+\&'2' means 'mail to moderators'
+
+Used for sending mails to the moderators of a list.
+
+\&'3' means 'resend failed list mail'
+
+\&'4' means 'send to file with recipients'
+
+\&'5' means 'bounceprobe'
+
+\&'6' means 'single listmail to single recipient'
+
+.SH BUGS
+This manual page is very scarce documentation of the mlmmj-send binary. The
+reason for this is that it's really not supposed to be used by any human, but
+only supposed to be invoked from other mlmmj binaries. So in case more
+documentation is needed, please read the source.
+.SH AUTHORS
+This manual page was written by the following persons:
+.HP
+Søren Boll Overgaard <boll@debian.org> (based on html2man output)
+.HP
+Mads Martin Jørgensen <mmj@mmj.dk>
