@@ -50,7 +50,8 @@ void newmoderated(const char *listdir, const char *mailfilename,
 		free(moderatorfilename);
 		exit(EXIT_FAILURE);
 	}
-	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
+	queuefilename = concatstr(4, listdir, "/queue/", randomstr,
+				  ".moderaterequest");
 	printf("%s\n", queuefilename);
 	
 	if((queuefile = fopen(queuefilename, "w")) == NULL) {

@@ -289,10 +289,10 @@ int main(int argc, char **argv)
 {
 	size_t len = 0;
 	int sockfd = 0, opt, mindex;
-	FILE *subfile = NULL, *mailfile = NULL;
+	FILE *subfile = NULL, *mailfile = NULL, *tmpfile;
 	char *listaddr, *mailfilename = NULL, *subfilename = NULL;
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
-	char *relayhost = NULL, *archivefilename = NULL;
+	char *relayhost = NULL, *archivefilename = NULL, *tmpstr;
 	char *listctrl = NULL, *subddirname = NULL, *listdir = NULL;
 	int deletewhensent = 1, *newsockfd, sendres;
 	DIR *subddir;
@@ -407,9 +407,30 @@ int main(int argc, char **argv)
 		initsmtp(&sockfd, relayhost);
 		sendres = send_mail(sockfd, bounceaddr, to_addr,
 				replyto, mailfile);
-		if(sendres) /* error, so keep it in the queue */
-			deletewhensent = 0;
 		endsmtp(&sockfd);
+		if(sendres) {
+			/* error, so keep it in the queue */
+			deletewhensent = 0;
+			/* dump date we want when resending */
+			tmpstr = concatstr(2, mailfilename, ".mailfrom");
+			tmpfile = fopen(tmpstr, "w");
+			free(tmpstr);
+			fputs(bounceaddr, tmpfile);
+			fclose(tmpfile);
+			tmpstr = concatstr(2, mailfilename, ".rcptto");
+			tmpfile = fopen(tmpstr, "w");
+			free(tmpstr);
+			fputs(to_addr, tmpfile);
+			fclose(tmpfile);
+			if(replyto) {
+				tmpstr = concatstr(2, mailfilename,
+						      ".replyto");
+				tmpfile = fopen(tmpstr, "w");
+				free(tmpstr);
+				fputs(replyto, tmpfile);
+				fclose(tmpfile);
+			}
+		}
 		break;
 	case '2': /* Moderators */
 		initsmtp(&sockfd, relayhost);
