@@ -1,3 +1,5 @@
+ o Implement -d option for mlmmj-maintd to be able to supply it with a directory
+   containing several listdirs, where mlmmj-maintd then will run maintenance
  o Chown option and a fix for mlmmj-make-ml.sh. Thanks Ingo Lameter
 1.0.0
  o Replace index() with strchr()

@@ -3,7 +3,9 @@
 mlmmj-maintd \- maintenance for mlmmj maintained lists
 .SH SYNOPSIS
 .B mlmmj-maintd
-\fI-L /path/to/listdir \fR[\fI-F\fR]
+[\fI-F\fR] \fI[-d\fR | \fI-L\fR] /path/to/dir
+.HP
+\fB\-d\fR: Full path to directory with lists
 .HP
 \fB\-L\fR: Full path to list directory
 .HP
@@ -15,6 +17,12 @@ probes, resend mails that couldn't be delivered to relayhost, clean out stale
 requests for e.g. subscription, resend list mails and clean up leftover files
 etc.
 
+If a directory containing several lists exists, the \fB\-d\fR can be used to
+specify this, making mlmmj-maintd perform a maintenance run in every listdir
+below the specified one.
+
+Only either \fB\-d\fR or \fB\-L\fR can be specified at the same time.
+
 It will run as a daemon, unless the \fB\-F\fR switch is specified, in which
 case it just runs once.  The \fB\-F\fR  option should be used when one wants to
 avoid running another daemon, and use e.g. cron to control it instead. In case
@@ -23,10 +31,6 @@ crontab entry:
 
 .LP
 0 */2 * * * /usr/bin/mlmmj-maintd -F -L /path/to/list
-.SH BUGS
-It's not yet possible to tell mlmmj-maintd to perform maintenance on all
-lists (directories) in a directory yet. It's a high priority TODO item, so
-expect it soonish.
 .SH AUTHORS
 This manual page was written by the following persons:
 .HP

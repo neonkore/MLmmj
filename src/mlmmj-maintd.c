@@ -47,12 +47,15 @@ static int maintdlogfd = -1;
 
 static void print_help(const char *prg)
 {
-	printf("Usage: %s -L /path/to/listdir [-F]\n"
-	       " -L: Full path to list directory\n"
+	printf("Usage: %s [-L | -d] /path/to/dir [-F]\n"
+	       " -d: Full path to directory with listdirs\n"
+	       "     Use this to run maintenance on all list directories\n"
+	       "     in that directory.\n"
+	       " -L: Full path to one list directory\n"
 	       " -F: Don't fork, performing one maintenance run only.\n"
 	       "     This option should be used when one wants to\n"
-	       "     avoid running another daemon, and use e.g."
-	       "     cron to control it instead.\n", prg);
+	       "     avoid running another daemon, and use e.g. "
+	       "cron to control it instead.\n", prg);
 	exit(EXIT_SUCCESS);
 }
 
@@ -737,20 +740,113 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 	return 0;
 }
 
+void do_maintenance(const char *listdir, const char *mlmmjsend,
+		    const char *mlmmjbounce, const char *mlmmjunsub)
+{
+	char *random, *logname, *logstr;
+	struct stat st;
+	int maintdlogfd;
+	uid_t uid = getuid();
+
+	if(!listdir)
+		return;
+	
+	if(stat(listdir, &st) < 0) {
+		log_error(LOG_ARGS, "Could not stat(%s) "
+				    "No maintenance run performed.", listdir);
+		return;
+	}
+	
+	if(uid == 0) { /* We're root. Do something about it.*/
+		if(setuid(st.st_uid) < 0) {
+			log_error(LOG_ARGS, "Could not setuid listdir owner.");
+			return;
+		}
+	} else if(uid != st.st_uid) {
+		log_error(LOG_ARGS,
+				"User ID not equal to the ID of %s. No "
+				"maintenance run performed.", listdir);
+		return;
+	}
+
+	if(chdir(listdir) < 0) {
+		log_error(LOG_ARGS, "Could not chdir(%s). "
+				    "No maintenance run performed.", listdir);
+		return;
+	}
+
+	random = random_str();
+	logname = concatstr(3, listdir, "/maintdlog-", random);
+	myfree(random);
+
+	maintdlogfd = open(logname, O_WRONLY|O_EXCL|O_CREAT, S_IRUSR|S_IWUSR);
+	if(maintdlogfd < 0) {
+		log_error(LOG_ARGS, "Could not open %s", logname);
+		myfree(logname);
+		return;
+	}
+
+	WRITEMAINTLOG4(3, "clean_moderation(", listdir, ");\n");
+	clean_moderation(listdir);
+
+	WRITEMAINTLOG4(3, "clean_discarded(", listdir, ");\n");
+	clean_discarded(listdir);
+
+	WRITEMAINTLOG4(3, "clean_subconf(", listdir, ");\n");
+	clean_subconf(listdir);
+
+	WRITEMAINTLOG4(3, "clean_unsubconf(", listdir, ");\n");
+	clean_unsubconf(listdir);
+
+	WRITEMAINTLOG6(5, "resend_queue(", listdir, ", ", mlmmjsend,
+			");\n");
+	resend_queue(listdir, mlmmjsend);
+
+	WRITEMAINTLOG6(5, "resend_requeue(", listdir, ", ", mlmmjsend,
+			");\n");
+	resend_requeue(listdir, mlmmjsend);
+
+	WRITEMAINTLOG4(3, "clean_nolongerbouncing(", listdir, ");\n");
+	clean_nolongerbouncing(listdir);
+
+	WRITEMAINTLOG6(5, "unsub_bouncers(", listdir, ", ",
+			mlmmjunsub, ");\n");
+	unsub_bouncers(listdir, mlmmjunsub);
+
+	WRITEMAINTLOG6(5, "probe_bouncers(", listdir, ", ",
+			mlmmjbounce, ");\n");
+	probe_bouncers(listdir, mlmmjbounce);
+
+	close(maintdlogfd);
+
+	logstr = concatstr(3, listdir, "/", MAINTD_LOGFILE);
+
+	if(rename(logname, logstr) < 0)
+		log_error(LOG_ARGS, "Could not rename(%s,%s)",
+				logname, logstr);
+
+	myfree(logname);
+	myfree(logstr);
+}
+
 int main(int argc, char **argv)
 {
-	int opt, daemonize = 1;
+	int opt, daemonize = 1, ret;
 	char *bindir, *listdir = NULL, *mlmmjsend, *mlmmjbounce, *mlmmjunsub;
-	char *logstr, *logname, *random;
+	char *dirlists = NULL, *s;
 	struct stat st;
-	uid_t uid;
+	struct dirent *dp;
+	DIR *dirp;
 
 	CHECKFULLPATH(argv[0]);
 
 	log_set_name(argv[0]);
 
-	while ((opt = getopt(argc, argv, "hFVL:")) != -1) {
+	while ((opt = getopt(argc, argv, "hFVLd:")) != -1) {
 		switch(opt) {
+		case 'd':
+			dirlists = optarg;
+			break;
 		case 'F':
 			daemonize = 0;
 			break;
@@ -762,117 +858,94 @@ int main(int argc, char **argv)
 			break;
 		case 'V':
 			print_version(argv[0]);
-			exit(0);
+			exit(EXIT_SUCCESS);
 		}
 	}
 
-	if(listdir == NULL) {
-		fprintf(stderr, "You have to specify -L\n");
+	if(listdir == NULL && dirlists == NULL) {
+		fprintf(stderr, "You have to specify -d or -L\n");
+		fprintf(stderr, "%s -h for help\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+	
+	if(listdir && dirlists) {
+		fprintf(stderr, "You have to specify either -d or -L\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
-	if(chdir(listdir) < 0) {
-		log_error(LOG_ARGS, "Could not chdir(%s), exiting. "
-				    "No maintenance performed.", listdir);
-		exit(EXIT_FAILURE);
-	}
-
-	/* sanity check since maintd should be invoked as root so it can
-	 * setuid or as the owner of listdir */
-
-	if(listdir) {
-		if(stat(listdir, &st) == 0) {
-			uid = getuid();
-			if(uid && uid != st.st_uid) {
-				log_error(LOG_ARGS,
-					"Have to invoke either as root "
-					"or as the user owning listdir");
-				writen(STDERR_FILENO,
-					"Have to invoke either as root "
-					"or as the user owning listdir\n", 60);
-				exit(EXIT_FAILURE);
-			}
-		} else {
-			log_error(LOG_ARGS, "Could not stat %s", listdir);
-			exit(EXIT_FAILURE);
-		}
-	}
-
-	if(uid == 0) { /* We're root. chown the logfile and setuid */
-		chown(logname, st.st_uid, st.st_gid);
-
-		if(setuid(st.st_uid) < 0) {
-			log_error(LOG_ARGS, "Could not setuid listdir owner");
-			exit(EXIT_FAILURE);
-		}
-	}
-	
 	bindir = mydirname(argv[0]);
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	mlmmjbounce = concatstr(2, bindir, "/mlmmj-bounce");
 	mlmmjunsub = concatstr(2, bindir, "/mlmmj-unsub");
 	myfree(bindir);
 
-	if(daemonize && (mydaemon(listdir) < 0)) {
+	if(daemonize) {
+		if(listdir)
+			ret = mydaemon(listdir);
+		else
+			ret = mydaemon(dirlists);
+	}
+
+	if(daemonize && ret < 0) {
 		log_error(LOG_ARGS, "Could not daemonize. Only one "
 				"maintenance run will be done.");
 		daemonize = 0;
 	}
 
-	for(;;) {
-		random = random_str();
-		logname = concatstr(3, listdir, "/maintdlog-", random);
-		myfree(random);
-		maintdlogfd = open(logname, O_WRONLY|O_EXCL|O_CREAT,
-					S_IRUSR|S_IWUSR);
-		if(maintdlogfd < 0) {
-			myfree(logname);
-			log_error(LOG_ARGS, "Could not open maintenance logfile");
+	while(1) {
+		if(listdir) {
+			do_maintenance(listdir, mlmmjsend, mlmmjbounce,
+					mlmmjunsub);
+			continue;
+		}
+
+		if((dirp = opendir(dirlists)) == NULL) {
+			log_error(LOG_ARGS, "Could not opendir(%s).",
+					dirlists);
+			myfree(mlmmjbounce);
+			myfree(mlmmjsend);
+			myfree(mlmmjunsub);
 			exit(EXIT_FAILURE);
 		}
-	
-		WRITEMAINTLOG4(3, "clean_moderation(", listdir, ");\n");
-		clean_moderation(listdir);
 
-		WRITEMAINTLOG4(3, "clean_discarded(", listdir, ");\n");
-		clean_discarded(listdir);
+		while((dp = readdir(dirp)) != NULL) {
+			if((strcmp(dp->d_name, "..") == 0) ||
+					(strcmp(dp->d_name, ".") == 0))
+				continue;
+			
+			listdir = concatstr(3, dirlists, "/", dp->d_name);
 
-		WRITEMAINTLOG4(3, "clean_subconf(", listdir, ");\n");
-		clean_subconf(listdir);
+			if(stat(listdir, &st) < 0) {
+				log_error(LOG_ARGS, "Could not stat(%s)",
+						listdir);
+				myfree(listdir);
+				continue;
+			}
 
-		WRITEMAINTLOG4(3, "clean_unsubconf(", listdir, ");\n");
-		clean_unsubconf(listdir);
+			if(!S_ISDIR(st.st_mode)) {
+				myfree(listdir);
+				continue;
+			}
 
-		WRITEMAINTLOG6(5, "resend_queue(", listdir, ", ", mlmmjsend,
-							");\n");
-		resend_queue(listdir, mlmmjsend);
+			s = concatstr(2, listdir, "/control/listaddress");
+			ret = stat(s, &st);
+			myfree(s);
 
-		WRITEMAINTLOG6(5, "resend_requeue(", listdir, ", ", mlmmjsend,
-							");\n");
-		resend_requeue(listdir, mlmmjsend);
+			if(ret < 0) { /* If ret < 0 it's not a listdir */
+				myfree(listdir);
+				continue;
+			}
 
-		WRITEMAINTLOG4(3, "clean_nolongerbouncing(", listdir, ");\n");
-		clean_nolongerbouncing(listdir);
+			do_maintenance(listdir, mlmmjsend, mlmmjbounce,
+					mlmmjunsub);
 
-		WRITEMAINTLOG6(5, "unsub_bouncers(", listdir, ", ",
-							mlmmjunsub, ");\n");
-		unsub_bouncers(listdir, mlmmjunsub);
-		
-		WRITEMAINTLOG6(5, "probe_bouncers(", listdir, ", ",
-							mlmmjbounce, ");\n");
-		probe_bouncers(listdir, mlmmjbounce);
+			myfree(listdir);
+		}
 
-		close(maintdlogfd);
-		logstr = concatstr(3, listdir, "/", MAINTD_LOGFILE);
-		if(rename(logname, logstr) < 0)
-			log_error(LOG_ARGS, "Could not rename(%s,%s)",
-						logname, logstr);
+		closedir(dirp);
 
-		myfree(logname);
-		myfree(logstr);
-
-		if(daemonize == 0)
+		if(!daemonize)
 			break;
 		else
 			sleep(MAINTD_SLEEP);
