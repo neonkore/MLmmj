@@ -33,6 +33,8 @@
 			   * 604800s is 7 days */
 #define DISCARDEDLIFE 604800 /* How long time will discarded mails be kept?
 			      * 604800s is 7 days */
+#define CONFIRMLIFE 604800 /* How long time will (un)sub confirmations be kept?
+			    * 604800s is 7 days */
 #define BOUNCELIFE 432000 /* How long time can addresses bounce before
 			     unsubscription happens? 432000s is 5 days */
 #define WAITPROBE 43200   /* How long do we wait for a bounce of the probe
