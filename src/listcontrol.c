@@ -22,10 +22,11 @@
 
 int listcontrol(const char *mailfilename, const char *listdir,
 		const char *controladdr, const char *mlmmjsub,
-		const char *mlmmjunsub, const char *mlmmjsend)
+		const char *mlmmjunsub, const char *mlmmjsend,
+		const char *mlmmjbounce)
 {
 	char tmpstr[READ_BUFSIZE];
-	char *atsign, *recipdelimsign, *tokenvalue, *confstr;
+	char *atsign, *recipdelimsign, *tokenvalue, *confstr, *bouncenr;
 	char *controlstr, *conffilename;
 	FILE *mailfile, *tempfile;
 	struct email_container fromemails;
@@ -119,6 +120,17 @@ int listcontrol(const char *mailfilename, const char *listdir,
 			}
 		} else /* Not a confirm so silently ignore */
 			exit(EXIT_SUCCESS);
+	} else if(strncasecmp(controlstr, "bounce-", 7) == 0) {
+		controlstr += 7;
+		bouncenr = strrchr(controlstr, '-');
+		if (!bouncenr) exit(EXIT_SUCCESS);  /* malformed bounce, ignore */
+		*bouncenr++ = '\0';
+		log_error(LOG_ARGS, "bounce, bounce, bounce email=[%s] nr=[%s]", controlstr, bouncenr);
+		execlp(mlmmjbounce, mlmmjbounce,
+				"-L", listdir,
+				"-a", controlstr,
+				"-n", bouncenr, 0);
+		log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjbounce);
 	} else if(strncasecmp(controlstr, "help", 4) == 0) {
 		printf("Help wanted!\n");
 		free(controlstr);

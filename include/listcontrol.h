@@ -11,6 +11,7 @@
 
 int listcontrol(const char *mailfilename, const char *listdir,
 		const char *controladdr, const char *mlmmjsub,
-		const char *mlmmjunsub, const char *mlmmjsend);
+		const char *mlmmjunsub, const char *mlmmjsend,
+		const char *mlmmjbounce);
 
 #endif /* LISTCONTROL_H */

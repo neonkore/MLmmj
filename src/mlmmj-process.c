@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
 	char *randomstr = random_str();
-	char *mlmmjsend, *mlmmjsub, *mlmmjunsub;
+	char *mlmmjsend, *mlmmjsub, *mlmmjunsub, *mlmmjbounce;
 	char *argv0 = strdup(argv[0]);
 	FILE *headerfile, *footerfile, *rawmailfile, *donemailfile;
 	struct email_container toemails = { 0, NULL };
@@ -50,6 +50,8 @@ int main(int argc, char **argv)
 		{ NULL, NULL }
 	};
 
+	log_set_name(argv[0]);
+
 	mlmmjsend = concatstr(2, dirname(argv0), "/mlmmj-send");
 	free(argv0);
 	argv0 = strdup(argv[0]);
@@ -57,6 +59,9 @@ int main(int argc, char **argv)
 	free(argv0);
 	argv0 = strdup(argv[0]);
 	mlmmjunsub = concatstr(2, dirname(argv0), "/mlmmj-unsub");
+	free(argv0);
+	argv0 = strdup(argv[0]);
+	mlmmjbounce = concatstr(2, dirname(argv0), "/mlmmj-bounce");
 	free(argv0);
 	
 	while ((opt = getopt(argc, argv, "hVPm:L:")) != -1) {
@@ -152,11 +157,11 @@ int main(int argc, char **argv)
 	}
 
 	if(strchr(toemails.emaillist[0], RECIPDELIM)) {
-		printf("listcontrol(%s, %s, %s, %s, %s, %s)\n", donemailname,
+		printf("listcontrol(%s, %s, %s, %s, %s, %s, %s)\n", donemailname,
 				listdir, toemails.emaillist[0], mlmmjsub,
-				mlmmjunsub, mlmmjsend);
+				mlmmjunsub, mlmmjsend, mlmmjbounce);
 		listcontrol(donemailname, listdir, toemails.emaillist[0],
-			    mlmmjsub, mlmmjunsub, mlmmjsend);
+			    mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
 		return EXIT_SUCCESS;
 	}
 
