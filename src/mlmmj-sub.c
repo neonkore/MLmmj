@@ -405,15 +405,19 @@ int main(int argc, char **argv)
 	}
 	suboff = find_subscriber(subfilefd, address);
 	if(suboff == -1) {
-		if(subconfirm)
+		if(subconfirm) {
+			close(subfilefd);
+			unlink(sublockname);
 			generate_subconfirm(listdir, listaddr, address,
 					    mlmmjsend, typesub);
-		else {
+		} else {
 			lseek(subfilefd, 0L, SEEK_END);
 			len = strlen(address);
 			address[len] = '\n';
 			writen(subfilefd, address, len + 1);
 			address[len] = 0;
+			close(subfilefd);
+			unlink(sublockname);
 		}
 	} else {
 		close(subfilefd);
