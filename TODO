@@ -3,6 +3,8 @@ Code cleanup:
    bit. Do we want to use our own /var/log/mlmmj
 
 Functionality items:
+ o Move subject into the text files, so we can make the lists any language we
+   want.
  o control/preexec and control/postexec.
 
 Nice to do:
