@@ -1,3 +1,5 @@
+ o In case of listname+bounces-INDEX use the DSN (RFC1891) to extract
+   the bouncing address
  o Fix usage of a zero sized control/verp string
  o Make the Date: header RFC2822 conformant
 1.2.2

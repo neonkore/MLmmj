@@ -32,6 +32,8 @@
 #include <time.h>
 #include <dirent.h>
 #include <sys/mman.h>
+#include <string.h>
+#include <ctype.h>
 
 #include "getlistaddr.h"
 #include "mlmmj.h"
@@ -43,6 +45,8 @@
 #include "chomp.h"
 #include "prepstdreply.h"
 #include "memory.h"
+#include "find_email_adr.h"
+#include "gethdrline.h"
 
 char *fetchindexes(const char *bouncefile)
 {
@@ -164,6 +168,49 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 	exit(EXIT_FAILURE);
 }
 
+char *dsnparseaddr(const char *mailname)
+{
+	int fd, indsn = 0, i;
+	char *line, *linedup, *search, *addr = NULL;
+	struct email_container emails;
+
+	fd = open(mailname, O_RDONLY);
+	if(fd < 0) {
+		log_error(LOG_ARGS, "Could not open bounceindexfile %s",
+				mailname);
+		return NULL;
+	}
+
+	while((line = gethdrline(fd))) {
+		linedup = mystrdup(line);
+		for(i = 0; line[i]; i++)
+			linedup[i] = tolower(line[i]);
+		search = strstr(linedup, "message/delivery-status");
+		myfree(linedup);
+		if(search)
+			indsn = 1;
+		if(indsn) {
+			i = strncasecmp(line, "Final-Recipient:", 16);
+			if(i == 0) {
+				find_email_adr(line, &emails);
+				if(emails.emailcount > 0) {
+					addr = mystrdup(emails.emaillist[0]);
+					for(i = 0; i < emails.emailcount; i++)
+						myfree(emails.emaillist[i]);
+					myfree(emails.emaillist);	
+				} else {
+					addr = NULL;
+				}
+				myfree(line);
+				return addr;
+			}
+		}
+		myfree(line);
+	}
+	
+	return NULL;
+}
+
 static void print_help(const char *prg)
 {
 	printf("Usage: %s -L /path/to/list -a john=doe.org [-n num | -p]\n"
@@ -179,7 +226,7 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	int opt, fd;
+	int opt, fd, dsnbounce = 0;
 	char *listdir = NULL, *address = NULL, *number = NULL;
 	char *bindir, *mlmmjsend, *savename;
 	char *mailname = NULL, *bfilename, *a, *buf;
@@ -197,13 +244,16 @@ int main(int argc, char **argv)
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	myfree(bindir);
 
-	while ((opt = getopt(argc, argv, "hVL:a:n:m:p")) != -1) {
+	while ((opt = getopt(argc, argv, "hdVL:a:n:m:p")) != -1) {
 		switch(opt) {
 		case 'L':
 			listdir = optarg;
 			break;
 		case 'a':
 			address = optarg;
+			break;
+		case 'd':
+			dsnbounce = 1;
 			break;
 		case 'm':
 			mailname = optarg;
@@ -223,8 +273,10 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if(listdir == NULL || address == NULL || (number == NULL && probe == 0)) {
-		fprintf(stderr, "You have to specify -L, -a and -n or -p\n");
+	if(listdir == NULL || (address == NULL && dsnbounce == 0)
+				|| (number == NULL && probe == 0)) {
+		fprintf(stderr,
+			"You have to specify -L, -a or -d and -n or -p\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
@@ -247,7 +299,17 @@ int main(int argc, char **argv)
 			exit(EXIT_FAILURE);
 		}
 	}
-	
+
+	if(dsnbounce) {
+		address = dsnparseaddr(mailname);
+		if(address == NULL) {
+			/* not parseable, so unlink and clean up */
+			if(mailname)
+				unlink(mailname);
+			exit(EXIT_SUCCESS);
+		}
+	}
+			
 	if(number != NULL && probe != 0) {
 		fprintf(stderr, "You can only specify one of -n or -p\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);

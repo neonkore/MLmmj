@@ -453,9 +453,15 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	case CTRL_BOUNCES:
 		bouncenr = param;
 		c = strchr(param, '-');
-		if (!c) { /* malformed bounce, ignore and clean up */
-	 		unlink(mailname);
-			exit(EXIT_SUCCESS);
+		if (!c) { /* Exec with dsn parsing, since the addr is missing */
+			execlp(mlmmjbounce, mlmmjbounce,
+					"-L", listdir,
+					"-m", mailname,
+					"-n", bouncenr,
+					"-d", (char *)NULL);
+			log_error(LOG_ARGS, "execlp() of '%s' failed",
+					mlmmjbounce);
+			exit(EXIT_FAILURE);
 		}
 		*c++ = '\0';
 		execlp(mlmmjbounce, mlmmjbounce,
