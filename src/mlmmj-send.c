@@ -382,6 +382,7 @@ static void print_help(const char *prg)
 	       " -l: List control variable:\n", prg);
 	printf("    '1' means 'send a single mail'\n"
 	       "    '2' means 'mail to moderators'\n"
+	       "    '3' means 'resend failed list mail'\n"
 	       " -L: Full path to list directory\n"
 	       " -m: Full path to mail file\n"
 	       " -r: Relayhost (defaults to localhost)\n"
@@ -502,7 +503,7 @@ int main(int argc, char **argv)
 	case '1': /* A single mail is to be sent, do nothing */
 		break;
 	case '2': /* Moderators */
-		subfilename = concatstr(2, listdir, "/moderators");
+		subfilename = concatstr(2, listdir, "/control/moderators");
 		if((subfd = open(subfilename, O_RDONLY)) < 0) {
 			log_error(LOG_ARGS, "Could not open '%s':",
 					    subfilename);

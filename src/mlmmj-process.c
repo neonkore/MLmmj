@@ -51,18 +51,8 @@ void newmoderated(const char *listdir, const char *mailfilename,
 		exit(EXIT_FAILURE);
 	}
 	free(moderatorfilename);
-	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
-	
-	if((queuefd = open(queuefilename, O_WRONLY|O_CREAT|O_EXCL,
-					S_IRUSR|S_IWUSR)) < 0) {
-		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
-		free(queuefilename);
-		free(randomstr);
-		exit(EXIT_FAILURE);
-	}
-	free(randomstr);
 
-	moderatorsfilename = concatstr(2, listdir, "/moderators");
+	moderatorsfilename = concatstr(2, listdir, "/control/moderators");
 	if((moderatorsfd = open(moderatorsfilename, O_RDONLY)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", moderatorsfilename);
 		free(queuefilename);
@@ -79,6 +69,17 @@ void newmoderated(const char *listdir, const char *mailfilename,
 		close(queuefd);
 		exit(EXIT_FAILURE);
 	}
+
+	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
+	
+	if((queuefd = open(queuefilename, O_WRONLY|O_CREAT|O_EXCL,
+					S_IRUSR|S_IWUSR)) < 0) {
+		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
+		free(queuefilename);
+		free(randomstr);
+		exit(EXIT_FAILURE);
+	}
+	free(randomstr);
 
 	from = concatstr(3, listname, "+owner@", fqdn);
 	s1 = concatstr(15, "From: ", from, "\nTo: ", listname, "-moderators@",

@@ -23,6 +23,7 @@
 #include "log_error.h"
 #include "statctrl.h"
 #include "mygetline.h"
+#include "chomp.h"
 
 enum ctrl_e {
 	CTRL_SUBSCRIBE,
@@ -121,6 +122,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	switch (ctrl) {
 
 	case CTRL_SUBSCRIBE:
+		unlink(mailname);
 		if (closedlist) exit(EXIT_SUCCESS);
 		if(strchr(fromemails->emaillist[0], '@')) {
 			execlp(mlmmjsub, mlmmjsub,
@@ -134,14 +136,15 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		break;
 
 	case CTRL_CONFSUB:
+		unlink(mailname);
 		if (closedlist) exit(EXIT_SUCCESS);
 		conffilename = concatstr(3, listdir, "/subconf/", param);
 		free(param);
 		if((tmpfd = open(conffilename, O_RDONLY)) > 0) {
 			tmpstr = mygetline(tmpfd);
+			chomp(tmpstr);
 			close(tmpfd);
-			if(strncasecmp(tmpstr, fromemails->emaillist[0],
-						strlen(tmpstr)) == 0) {
+			if(strcasecmp(tmpstr, fromemails->emaillist[0]) == 0) {
 				unlink(conffilename);
 				execlp(mlmmjsub, mlmmjsub,
 						"-L", listdir,
@@ -160,6 +163,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		break;
 
 	case CTRL_UNSUBSCRIBE:
+		unlink(mailname);
 		if (closedlist) exit(EXIT_SUCCESS);
 		if(strchr(fromemails->emaillist[0], '@')) {
 			execlp(mlmmjunsub, mlmmjunsub,
@@ -174,14 +178,15 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		break;
 
 	case CTRL_CONFUNSUB:
+		unlink(mailname);
 		if (closedlist) exit(EXIT_SUCCESS);
 		conffilename = concatstr(3, listdir, "/unsubconf/", param);
 		free(param);
 		if((tmpfd = open(conffilename, O_RDONLY))) {
 			tmpstr = mygetline(tmpfd);
 			close(tmpfd);
-			if(strncasecmp(tmpstr, fromemails->emaillist[0],
-						strlen(tmpstr)) == 0) {
+			chomp(tmpstr);
+			if(strcasecmp(tmpstr, fromemails->emaillist[0]) == 0) {
 				unlink(conffilename);
 				execlp(mlmmjunsub, mlmmjunsub,
 						"-L", listdir,
@@ -213,6 +218,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	case CTRL_MODERATE:
 		/* TODO Add accept/reject parameter to moderate */
+		unlink(mailname);
 		moderatefilename = concatstr(3, listdir, "/moderation/", param);
 		free(param);
 		if(stat(moderatefilename, &stbuf) < 0) {
@@ -228,13 +234,15 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		break;
 
 	case CTRL_HELP:
-		printf("Help wanted!\n");
+		unlink(mailname);
 		if(strchr(fromemails->emaillist[0], '@'))
 			send_help(listdir, fromemails->emaillist[0],
 				  mlmmjsend);
 		break;
 
 	}
+
+	unlink(mailname);
 
 	return 0;
 }

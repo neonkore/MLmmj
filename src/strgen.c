@@ -19,10 +19,10 @@
 
 char *random_str()
 {
-	size_t len = 16;
+	size_t len = 32;
 	char *dest = malloc(len);
 
-	snprintf(dest, len, "%d", random_int());
+	snprintf(dest, len, "%X%X", random_int(), random_int());
 
 	return dest;
 }

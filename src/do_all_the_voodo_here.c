@@ -68,9 +68,9 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 	while((hdrline = gethdrline(infd))) {
 		/* Done with headers? Then add extra if wanted*/
 		if((strlen(hdrline) == 1) && (hdrline[0] == '\n')){
-			if(hdrfd) {
+			if(hdrfd >= 0) {
 				if(dumpfd2fd(hdrfd, outfd) < 0) {
-					log_error(LOG_ARGS, "Could not"
+					log_error(LOG_ARGS, "Could not "
 						"add extra headers");
 					free(hdrline);
 					return -1;
@@ -119,7 +119,7 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 	}
 
 	/* No more, lets add the footer if one */
-	if(footfd)
+	if(footfd >= 0)
 		if(dumpfd2fd(footfd, outfd) < 0) {
 			log_error(LOG_ARGS, "Error when adding footer");
 			return -1;

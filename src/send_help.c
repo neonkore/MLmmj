@@ -62,8 +62,8 @@ void send_help(const char *listdir, const char *emailaddr,
 
 	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
 
-	s1 = concatstr(11, "From: ", listname, "+owner@", listfqdn, "\n"
-			"To: ", emailaddr, "\n", "Subject: Help for ",
+	s1 = concatstr(9, "From: ", listname, "+owner@", listfqdn,
+			"\nTo: ", emailaddr, "\nSubject: Help for ",
 			listaddr, "\n\n");
 
 	if(writen(queuefd, s1, strlen(s1)) < 0) {
