@@ -47,4 +47,4 @@ to specify several entries pr. line, it's marked "list".
                    Received:
                    Message-ID:
    Then all occurences of these headers in incoming list mail will be deleted.
-
+   "From " and "Return-Path:" are deleted no matter what.
