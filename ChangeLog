@@ -1,3 +1,9 @@
+ o Fix bug with queuefilename containing all kinds og chars when sending
+   standard mails
+ o Let mlmmj-send be capable of handling relayhost local users bounce probes
+   bouncing.
+ o Don't litter the queuedirectory with files when rejecting mails (the
+   maintenance daemon would take care of it, but lets be nice)
 0.8.0
  o Added regular expression based access control.
  o Added wrappers for malloc(), realloc(), free() and strdup(), so we can
