@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <unistd.h>
+#include <netdb.h>
 
 #include "strgen.h"
 #include "wrappers.h"
@@ -111,5 +113,16 @@ char *concatstr(int count, ...)
         va_end(arg);
 
         return retstr;
+}
+
+char *hostnamestr()
+{
+        struct hostent *hostlookup;
+        char hostname[1024];
+
+        gethostname(hostname, sizeof(hostname) - 1);
+        hostlookup = gethostbyname(hostname);
+
+        return strdup(hostlookup->h_name);
 }
 

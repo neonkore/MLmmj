@@ -161,6 +161,7 @@ int send_mail(int sockfd, const char *from, const char *to,
 int initsmtp(int *sockfd, const char *relayhost)
 {
 	int retval = 0;
+	char *myhostname = hostnamestr();
 	
 	init_sockfd(sockfd, relayhost);
 	
@@ -169,7 +170,8 @@ int initsmtp(int *sockfd, const char *relayhost)
 			  "We continue and hope for the best\n");
 		/* FIXME: Queue etc. */
 	}	
-	write_helo(*sockfd, relayhost);
+	write_helo(*sockfd, myhostname);
+	free(myhostname);
 	if((checkwait_smtpreply(*sockfd, MLMMJ_HELO)) != 0) {
 		log_error(LOG_ARGS, "Error with HELO\n"
 			  "We continue and hope for the best\n");

@@ -29,7 +29,7 @@ int checkwait_smtpreply(int sockfd, int replytype)
 	} while(smtpreply[len-1] != '\n' && timer < LOOP_WAIT);
 
 	smtpreply[len] = 0;
-#if MLMMJ_DEBUG
+#if 0
 	printf("replytype = [%d], smtpreply = [%s]\n", replytype, smtpreply);
 #endif
 	if(timer > LOOP_WAIT) {
@@ -37,47 +37,40 @@ int checkwait_smtpreply(int sockfd, int replytype)
 		return -1;
 	}
 
+	printf("%s", smtpreply);
+
 	switch(replytype) {
 	case MLMMJ_CONNECT:
 		if(smtpreply[0] != '2' && smtpreply[1] != '2')
 			return MLMMJ_CONNECT;
-		printf("Connected: ok\n");
 		break;
 	case MLMMJ_HELO:
 		if(smtpreply[0] != '2' && smtpreply[1] != '5')
 			return MLMMJ_HELO;
-		printf("HELO: ok\n");
 		break;
 	case MLMMJ_FROM:
 		if(smtpreply[0] != '2' && smtpreply[1] != '5')
 			return MLMMJ_FROM;
-		printf("MAIL FROM: ok\n");
 		break;
 	case MLMMJ_RCPTTO:
 		if(smtpreply[0] != '2' && smtpreply[1] != '5')
 			return MLMMJ_RCPTTO;
-		printf("RCPT TO: ok\n");
-
 		break;
 	case MLMMJ_DATA:
 		if(smtpreply[0] != '3' && smtpreply[1] != '5')
 			return MLMMJ_DATA;
-		printf("DATA: ok 35x\n");
 		break;
 	case MLMMJ_DOT:
 		if(smtpreply[0] != '2' && smtpreply[1] != '5')
 			return MLMMJ_DOT;
-		printf("Mail queued: ok\n");
 		break;
 	case MLMMJ_QUIT:
 		if(smtpreply[0] != '2' && smtpreply[1] != '2')
 			return MLMMJ_QUIT;
-		printf("Closed connection\n");
 		break;
 	case MLMMJ_RSET:
 		if(smtpreply[0] != '2' && smtpreply[1] != '5')
 			return MLMMJ_RSET;
-		printf("RSET: ok");
 		break;
 	default:
 		break;
