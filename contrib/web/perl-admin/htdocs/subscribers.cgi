@@ -45,7 +45,7 @@ my $tpl = new CGI::FastTemplate($templatedir);
 my $q = new CGI;
 $list = $q->param("list");
 my $subscribe = $q->param("subscribe");
-my $unsubscribe = $q->param("unsubscribe");
+my $update = $q->param("update");
 
 die "no list specified" unless $list;
 die "non-existent list" unless -d("$topdir/$list");
@@ -59,27 +59,56 @@ my $subscribers;
 
 if (defined $subscribe) {
 	my $email = $q->param("email");
+	my $subscriber = $q->param("subscriber");
+	my $digester = $q->param("digester");
+	my $nomailsub = $q->param("nomailsub");
 	if ($email =~ /^[a-z0-9\.\-_\@]+$/i) {
-		system "$mlmmjsub -L $topdir/$list -a $email -U";
-		if (is_subscribed($email)) {
-			$action = "$email has been subscribed.";
-		} else {
-			$action = "$email was not subscribed.";
+		if ($subscriber) {
+			system "$mlmmjsub -L $topdir/$list -a $email -U";
 		}
+		if ($digester) {
+			system "$mlmmjsub -L $topdir/$list -a $email -Ud";
+		}
+		if ($nomailsub) {
+			system "$mlmmjsub -L $topdir/$list -a $email -Un";
+		}
+		$action = "$email has been subscribed.";
 	} else {
 		$action = '"'.encode_entities($email).'" is not a valid email address.';
 	}
-} elsif (defined $unsubscribe) {
+} elsif (defined $update) {
 	my $maxid = $q->param("maxid");
+	$subscribers = get_subscribers();
 	for (my $i = 0; $i < $maxid; ++$i) {
 		my $email = $q->param("email$i");
 		if (defined $email) {
 			if ($email =~ /^[a-z0-9\.\-_\@]+$/i) {
-				system "$mlmmjunsub -L $topdir/$list -a $email";
-				if (!is_subscribed($email)) {
-					$action .= "$email has been unsubscribed.<br>\n";
-				} else {
-					$action .= "$email was not unsubscribed.<br>\n";
+				my $updated = 0;
+
+				my @actions = ();
+
+				push @actions, {oldstatus => exists $subscribers->{$email}->{subscriber},
+								newstatus => defined $q->param("subscriber$i"),
+								action => ''};
+				push @actions, {oldstatus => exists $subscribers->{$email}->{digester},
+								newstatus => defined $q->param("digester$i"),
+								action => '-d'};
+				push @actions, {oldstatus => exists $subscribers->{$email}->{nomailsub},
+								newstatus => defined $q->param("nomailsub$i"),
+								action => '-n'};
+
+				for my $action (@actions) {
+					if ($action->{oldstatus} && !$action->{newstatus}) {
+						system "$mlmmjunsub -L $topdir/$list -a $email $action->{action}";
+						$updated = 1;
+					} elsif (!$action->{oldstatus} && $action->{newstatus}) {
+						system "$mlmmjsub -L $topdir/$list -a $email $action->{action}";
+						$updated = 1;
+					}
+				}
+
+				if ($updated) {
+					$action .= "Subscription for $email has been updated.<br>\n";
 				}
 			} else {
 				$action .= '"'.encode_entities($email).'" is not a valid email address.'."<br>\n";
@@ -92,17 +121,21 @@ $tpl->assign(ACTION => $action);
 
 $subscribers = get_subscribers();
 
-for (my $i = 0; $i < @$subscribers; ++$i) {
-	$tpl->assign(EMAIL => $subscribers->[$i],
-				 ID => $i);
+my $i = 0;
+for my $address (sort keys %$subscribers) {
+	$tpl->assign(EMAIL => $address,
+				 ID => $i++,
+				 SCHECKED => $subscribers->{$address}->{subscriber} ? 'checked' : '',
+				 DCHECKED => $subscribers->{$address}->{digester} ? 'checked' : '',
+				 NCHECKED => $subscribers->{$address}->{nomailsub} ? 'checked' : '');
 	$tpl->parse(ROWS => '.row');
 }
-if (@$subscribers == 0) {
+if (keys %$subscribers == 0) {
 	$tpl->assign(ROWS => '');
 }
 
 $tpl->assign(LIST => encode_entities($list),
-			 MAXID => scalar(@$subscribers));
+			 MAXID => scalar(keys %$subscribers));
 
 print "Content-type: text/html\n\n";
 
@@ -110,48 +143,27 @@ $tpl->parse(CONTENT => "main");
 $tpl->print;
 
 sub get_subscribers {
-	my @subscribers = ();
+	my %subscribers = ();
 
-	opendir (DIR, "$topdir/$list/subscribers.d") or die "Couldn't read dir $topdir/$list/subscribers.d: $!";
-	my @files = grep(/^.$/, readdir(DIR));
-	closedir DIR;
-	for my $file (@files) {
-		my $filename = "$topdir/$list/subscribers.d/$file";
-		if (-f $filename) {
-			open (FILE, $filename) or die "Couldn't open $filename for reading: $!";
-			while (<FILE>) {
-				chomp;
-				push @subscribers, $_;
-			}
-			close FILE;
-		}
+	my @subscribers = `/usr/local/bin/mlmmj-list -L $topdir/$list`;
+	my @digesters = `/usr/local/bin/mlmmj-list -L $topdir/$list -d`;
+	my @nomailsubs = `/usr/local/bin/mlmmj-list -L $topdir/$list -n`;
+
+	chomp @subscribers;
+	chomp @digesters;
+	chomp @nomailsubs;
+
+	for my $address (@subscribers) {
+		$subscribers{$address}->{subscriber} = 1;
 	}
 
-	@subscribers = sort @subscribers;
-
-	return \@subscribers;
-}
-
-sub is_subscribed {
-	my ($email) = @_;
-
-	opendir (DIR, "$topdir/$list/subscribers.d") or die "Couldn't read dir $topdir/$list/subscribers.d: $!";
-	my @files = grep(/^.$/, readdir(DIR));
-	closedir DIR;
-
-	for my $file (@files) {
-		my $filename = "$topdir/$list/subscribers.d/$file";
-		if (-f $filename) {
-			open (FILE, $filename) or die "Couldn't open $filename for reading: $!";
-			while (<FILE>) {
-				chomp;
-				if ($email eq $_) {
-					return 1;
-				}
-			}
-			close FILE;
-		}
+	for my $address (@digesters) {
+		$subscribers{$address}->{digester} = 1;
 	}
 
-	return 0;
+	for my $address (@nomailsubs) {
+		$subscribers{$address}->{nomailsub} = 1;
+	}
+
+	return \%subscribers;
 }

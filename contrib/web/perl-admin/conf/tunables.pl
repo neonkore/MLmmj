@@ -1,6 +1,9 @@
 mlmmj_boolean("closedlist",
 			  "Closed list",
-			  "If this option is set, subscribtion and unsubscription via mail is disabled.");
+			  "If the list is open or closed. If it's closed subscription ".
+			  "and unsubscription via mail is disabled. Also note that ".
+			  "confirmation is disabled too, so the -C option to mlmmj-sub ".
+			  "and mlmmj-unsub is of no use with a closed list.");
 
 mlmmj_boolean("nosubconfirm",
 			  "No subscribe confirmation",
@@ -37,6 +40,13 @@ mlmmj_list("owner",
 		   "Owner",
 		   "The emailaddresses in this list will get mails to ".encode_entities($list)."+owner");
 
+mlmmj_list("customheaders",
+		   "Custom headers",
+		   "These headers are added to every mail coming through. This is ".
+		   "the place you want to add Reply-To: header in case you want ".
+		   "such. ".
+		   "If a header should not occur twice in the mail it should be listed in the 'Delete headers' box too.");
+
 mlmmj_list("delheaders",
 		   "Delete headers",
 		   "In this file is specified *ONE* headertoken to match pr. line. ".
@@ -57,13 +67,32 @@ mlmmj_string("memorymailsize",
 
 mlmmj_string("relayhost",
 			 "Relay host",
-			 "The host specified (IP address og domainname, both works) in this file will be used for relaying the mail sent to the list. ".
+			 "The host specified (IP address or domainname, both works) in this file will be used for relaying the mail sent to the list. ".
 			 "Defaults to 127.0.0.1.");
 
 mlmmj_boolean("notifysub",
 			  "Notify subscribers",
 			  "If this option is set, the owner(s) will get a mail with the address of someone sub/unsubscribing to a mailinglist.");
+
+mlmmj_string("digestinterval",
+			 "Digest interval",
+			 "This option specifies how many seconds will pass before the ".
+			 "next digest is sent. Defaults to 604800 seconds, which is 7 ".
+			 "days.");
+
+mlmmj_string("digestmaxmails",
+			 "Max. digest mails",
+			 "This option specifies how many mails can accumulate before ".
+			 "digest sending is triggered. Defaults to 50 mails, meaning ".
+			 "that if 50 mails arrive to the list before digestinterval have ".
+			 "passed, the digest is delivered.");
+
 mlmmj_string("bouncelife",
-			  "Bouncing lifetime",
-			  "Here is specified for how long time in seconds an address can bounce before it's unsubscribed. Defaults ".
-			  "to 432000 seconds, which is 5 days.");
+			 "Bouncing lifetime",
+			 "Here is specified for how long time in seconds an address can bounce before it's unsubscribed. Defaults ".
+			 "to 432000 seconds, which is 5 days.");
+
+mlmmj_boolean("noarchive",
+			  "No archive",
+			  "If this option is set, the mails won't be saved in the ".
+			  "archive but simply deleted");

@@ -1,10 +1,13 @@
 <html><head><title>mlmmj config</title></head><body>
 <h1>mlmmj config</h1>
+<p>
+<a href="index.cgi">Index</a> | <a href="subscribers.cgi?list=$LIST">Subscribers</a>
+</p>
 <form method="post" action="save.cgi">
 <input type="hidden" name="list" value="$LIST">
 <table border="1">
 $ROWS
 </table>
-<input type="submit" name="submit" />
+<input type="submit" name="submit" value="Update configuration" />
 </form>
 </body></html>

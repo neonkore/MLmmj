@@ -1,7 +1,7 @@
 <html><head><title>mlmmj subscribers</title></head><body>
 <h1>mlmmj subscribers</h1>
 <p>
-<a href="index.cgi">Index</a> | <a href="subscribers.cgi?list=$LIST">Reload subscriber list</a>
+<a href="index.cgi">Index</a> | <a href="subscribers.cgi?list=$LIST">Reload subscriber list</a> | <a href="edit.cgi?list=$LIST">Configure</a>
 </p>
 <p>
 $ACTION
@@ -9,11 +9,18 @@ $ACTION
 <form action="subscribers.cgi" method="post">
 <input type="hidden" name="list" value="$LIST">
 <input type="hidden" name="maxid" value="$MAXID">
-<p>Add subscriber: <input type="text" name="email"> <input type="submit" name="subscribe" value="Subscribe"></p>
+<table><tr><td rowspan="4" valign="top">Add subscriber:&nbsp;&nbsp;</td>
+<td>Email address: <input type="text" name="email"></td></tr>
+<tr><td>Normal subscriber: <input type="checkbox" name="subscriber" value="1" checked></td></tr>
+<tr><td>Digest subscriber: <input type="checkbox" name="digester" value="1"></td></tr>
+<tr><td>No-mail subscriber: <input type="checkbox" name="nomailsub" value="1"></td></tr>
+<tr><td>&nbsp;</td><td><input type="submit" name="subscribe" value="Subscribe"></td></tr>
+</table>
+<hr>
 <table border="1">
-<tr><th>Email address</th><th>Unsubscribe</th></tr>
+<tr><th>Email address</th><th>Normal subscriber</th><th>Digest subscriber</th><th>No-mail subscriber</th></tr>
 $ROWS
 </table>
-<p><input type="submit" name="unsubscribe" value="Unsubscribe selected"></p>
+<p><input type="submit" name="update" value="Update subscriptions"></p>
 </form>
 </body></html>
