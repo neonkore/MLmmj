@@ -1,3 +1,4 @@
+0.7.2
  o Make it possible to only let subscribers post
  o Implement feature to deny posts where the listaddress is not in To: or
    Cc:. Enabled pr. default, but can be disabled by touching control/tocc
