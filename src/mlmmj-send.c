@@ -35,36 +35,47 @@ static void print_help(const char *prg)
 	exit(EXIT_SUCCESS);
 }
 
-char *bounce_from_adr(char *bounce_adr, const char *from, const
-		char *listadr, const char *mailfilename)
+static char *bounce_from_adr(char *recipient, char *listadr, char *mailfilename)
 {
-	char *tmp;
-	char *i;
-	char indexstr[20];
-	int j, k;
+	char *bounce_adr;
+	char *indexstr, *listdomain, *a;
+	size_t len;
 
-	for(j = strlen(mailfilename)-1, k = 0; mailfilename[j] != '/'; j--, k++)
-		indexstr[k] = mailfilename[j];
-	indexstr[k] = 0;
-	
-	reversestr(indexstr);
+	indexstr = strrchr(mailfilename, '/');
+	if (!indexstr) indexstr = mailfilename;
 
-	tmp = malloc(strlen(from) + 1);
-	memcpy(tmp, from, strlen(from) + 1);
-	i = index(tmp, '@');
-	*i = '=';
-	i = index(listadr, '@');
+	recipient = strdup(recipient);
+	if (!recipient) {
+		return NULL;
+	}
+	a = strchr(recipient, '@');
+	if (a) *a = '=';
 
-	memcpy(bounce_adr, listadr, i - listadr);
-	strncat(bounce_adr, "-bounces", 8);
-	bounce_adr[strlen(bounce_adr)] = RECIPDELIM;
-	strncat(bounce_adr, tmp, strlen(tmp));
-	bounce_adr[strlen(bounce_adr)] = '-';
-	bounce_adr[strlen(bounce_adr)+1] = 0;
-	strncat(bounce_adr, indexstr, strlen(indexstr));
-	strncat(bounce_adr, i, strlen(i));
-	free(tmp);
+	listadr = strdup(listadr);
+	if (!listadr) {
+		free(recipient);
+		return NULL;
+	}
 
+	listdomain = strchr(listadr, '@');
+	if (!listdomain) {
+		free(recipient);
+		free(listadr);
+	}
+	*listdomain++ = '\0';
+
+	// 11 = "-bounces" + RECIPDELIM + "@" + NUL
+	len = strlen(listadr) + strlen(recipient) + strlen(listdomain) + 11;
+	bounce_adr = malloc(len);
+	if (!bounce_adr) {
+		free(recipient);
+		free(listadr);
+		return NULL;
+	}
+	snprintf(bounce_adr, len, "%s-bounces%c%s@%s", listadr, RECIPDELIM, recipient, listdomain);
+
+	free(recipient);
+	free(listadr);
 	return bounce_adr;
 }
 
@@ -255,10 +266,7 @@ int main(int argc, char **argv)
 	if(listdir[0] != '1') {
 		while((bufres = fgets(buf, READ_BUFSIZE, subfile))) {
 			chomp(buf);
-			len = strlen(buf) + strlen(listadr) + 256;
-			bounce_adr = malloc(len);
-			memset(bounce_adr, 0, len);
-			bounce_from_adr(bounce_adr, buf, listadr,
+			bounce_adr = bounce_from_adr(buf, listadr,
 					archivefilename);
 
 			send_mail(sockfd, bounce_adr, buf, 0, mailfile);
