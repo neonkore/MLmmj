@@ -30,7 +30,8 @@ void init_sockfd(int *sockfd, const char *relayhost)
 	addr.sin_port = htons(25);
 	len = sizeof(addr);
 	if(connect(*sockfd, (struct sockaddr *)&addr, len) == -1) {
-		log_error(LOG_ARGS, "Could not connect");
+		log_error(LOG_ARGS, "Could not connect to %s, "
+				    "exiting ... ", relayhost);
 		exit(EXIT_FAILURE);
 	}
 }

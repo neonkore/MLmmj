@@ -18,6 +18,7 @@
 #include <dirent.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <libgen.h>
 
 #include "mlmmj-send.h"
 #include "mlmmj.h"
@@ -105,63 +106,45 @@ char *bounce_from_adr(const char *recipient, const char *listadr,
 int send_mail(int sockfd, const char *from, const char *to,
 	      const char *replyto, FILE *mailfile)
 {
-	int retval;
+	int retval = 0;
 
 	if((retval = write_mail_from(sockfd, from)) != 0) {
 		log_error(LOG_ARGS, "Could not write MAIL FROM\n");
-		/* FIXME: Queue etc.*/
-		write_rset(sockfd);
 		return retval;
 	}
 	if((retval = checkwait_smtpreply(sockfd, MLMMJ_FROM)) != 0) {
 		log_error(LOG_ARGS, "Wrong MAIL FROM:\n");
-		write_rset(sockfd);
-		/* FIXME: Queue etc.*/
 		return retval;
 	}
 
 	if((retval = write_rcpt_to(sockfd, to)) != 0) {
 		log_error(LOG_ARGS, "Could not write RCPT TO:\n");
-		/* FIXME: Queue etc.*/
-		write_rset(sockfd);
 		return retval;
 	}
 	if((retval = checkwait_smtpreply(sockfd, MLMMJ_RCPTTO)) != 0) {
 		log_error(LOG_ARGS, "Wrong RCPT TO:\n");
-		write_rset(sockfd);
-		/* FIXME: Queue etc.*/
 		return retval;
 	}
 	if((retval = write_data(sockfd)) != 0) {
 		log_error(LOG_ARGS, "Could not write DATA\b");
-		write_rset(sockfd);
-		/* FIXME: Queue etc.*/
 		return retval;
 	}
 	if((retval = checkwait_smtpreply(sockfd, MLMMJ_DATA)) != 0) {
 		log_error(LOG_ARGS, "Mailserver not ready for DATA\n");
-		write_rset(sockfd);
-		/* FIXME: Queue etc.*/
 		return retval;
 	}
 	if(replyto)
 		if((retval = write_replyto(sockfd, replyto)) != 0) {
 			log_error(LOG_ARGS, "Could not write reply-to addr.\n");
-			write_rset(sockfd);
-			/* FIXME: Queue etc.*/
 			return retval;
 		}
 	if((retval = write_mailbody_from_file(sockfd, mailfile)) != 0) {
 		log_error(LOG_ARGS, "Could not write mailbody\n");
-		write_rset(sockfd);
-		/* FIXME: Queue etc.*/
 		return retval;
 	}
 
 	if((retval = write_dot(sockfd)) != 0) {
 		log_error(LOG_ARGS, "Could not write <CR><LF>.<CR><LF>\n");
-		write_rset(sockfd);
-		/* FIXME: Queue etc.*/
 		return retval;
 	}
 
@@ -169,8 +152,6 @@ int send_mail(int sockfd, const char *from, const char *to,
 		log_error(LOG_ARGS, "Mailserver did not ack end of mail.\n"
 				"<CR><LF>.<CR><LF> was written, to no"
 				"avail\n");
-		write_rset(sockfd);
-		/* FIXME: Queue etc.*/
 		return retval;
 	}
 
@@ -216,21 +197,65 @@ int endsmtp(int *sockfd)
 
 int send_mail_many(int sockfd, const char *from, const char *replyto,
 		   FILE *mailfile, FILE *subfile, const char *listaddr,
-		   const char *archivefilename)
+		   const char *archivefilename, const char *listdir)
 {
-	char *bounceaddr, *addr;
+	int sendres = 0;
+	char *bounceaddr, *addr, *index, *dirname, *addrfilename;
+	FILE *addrfile;
 
 	while((addr = myfgetline(subfile))) {
 		chomp(addr);
 		if(from)
-			send_mail(sockfd, from, addr, replyto, mailfile);
+			sendres = send_mail(sockfd, from, addr, replyto,
+					    mailfile);
 		else {
 			bounceaddr = bounce_from_adr(addr, listaddr,
 						     archivefilename);
-			send_mail(sockfd, bounceaddr, addr, replyto, mailfile);
+			sendres = send_mail(sockfd, bounceaddr, addr, replyto,
+				  mailfile);
 			free(bounceaddr);
 		}
-		free(addr);
+		if(sendres && listaddr && archivefilename) {
+			/* we failed, so save the addresses and bail */
+			index = basename(archivefilename);	
+			dirname = concatstr(3, listdir, "/requeue/", index);
+			free(index);
+			if(mkdir(dirname, 0750) < 0) {
+				log_error(LOG_ARGS, "Could not mkdir(%s) for "
+						    "requeueing. Mail cannot "
+						    "be requeued.", dirname);
+				free(dirname);
+				free(addr);
+				return 1;
+			}
+			free(dirname);
+			addrfilename = concatstr(2, dirname, "/subscribers");
+			addrfile = fopen(addrfilename, "w");
+			if(addrfile == NULL) {
+				log_error(LOG_ARGS, "Could not create %s",
+						    addrfilename);
+				free(addrfilename);
+				free(addr);
+				return 1;
+			} else { /* dump the remaining addresses */
+				do {
+					if(fputs(addr, addrfile) < 0)
+						log_error(LOG_ARGS,
+							"Could not add [%s] "
+							"to requeue address "
+							"file.", addr);
+					fputc('\n', addrfile);
+					free(addr);
+					addr = myfgetline(subfile);
+				} while(addr);
+			}
+			
+			free(addr);
+			free(addrfilename);
+			fclose(addrfile);
+
+			return 1;
+		}
 	}
 	return 0;
 }	
@@ -253,7 +278,7 @@ int main(int argc, char **argv)
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
 	char *relayhost = NULL, *archivefilename = NULL;
 	char *listctrl = NULL, *subddirname = NULL, *listdir = NULL;
-	int deletewhensent = 1, *newsockfd;
+	int deletewhensent = 1, *newsockfd, sendres;
 	DIR *subddir;
 	struct dirent *dp;
 	pid_t childpid;
@@ -364,13 +389,16 @@ int main(int argc, char **argv)
 	switch(listctrl[0]) {
 	case '1': /* A single mail is to be sent */
 		initsmtp(&sockfd, relayhost);
-		send_mail(sockfd, bounceaddr, to_addr, replyto, mailfile);
+		sendres = send_mail(sockfd, bounceaddr, to_addr,
+				replyto, mailfile);
+		if(sendres) /* error, so keep it in the queue */
+			deletewhensent = 0;
 		endsmtp(&sockfd);
 		break;
 	case '2': /* Moderators */
 		initsmtp(&sockfd, relayhost);
 		send_mail_many(sockfd, bounceaddr, NULL, mailfile, subfile,
-			       NULL, NULL);
+			       NULL, NULL, listdir);
 		endsmtp(&sockfd);
 		break;
 	default: /* normal list mail */
@@ -419,7 +447,7 @@ int main(int argc, char **argv)
 				initsmtp(newsockfd, relayhost);
 				send_mail_many(*newsockfd, NULL, NULL,
 					       mailfile, subfile, listaddr,
-					       archivefilename);
+					       archivefilename, listdir);
 				endsmtp(newsockfd);
 				free(newsockfd);
 				exit(EXIT_SUCCESS);
@@ -434,11 +462,10 @@ int main(int argc, char **argv)
 	
 	if(listctrl[0] != '1' && listctrl[0] != '2') {
 		/* It is safe to rename() the mail file at this point, because
-		   the child processes (who might still be running) inhirit a
+		   the child processes (who might still be running) inherit a
 		   handle to the open file, so they don't care if it is moved
 		   or deleted. */
 
-		/* The mail now goes to the archive */
 		rename(mailfilename, archivefilename);
 
 		fclose(subfile);
