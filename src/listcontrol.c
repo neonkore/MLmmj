@@ -11,6 +11,7 @@
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -21,6 +22,7 @@
 #include "send_help.h"
 #include "log_error.h"
 #include "statctrl.h"
+#include "mygetline.h"
 
 enum ctrl_e {
 	CTRL_SUBSCRIBE,
@@ -57,13 +59,11 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		const char *mlmmjunsub, const char *mlmmjsend,
 		const char *mlmmjbounce, const char *mailname)
 {
-	char tmpstr[READ_BUFSIZE];
-	char *atsign, *recipdelimsign, *bouncenr;
+	char *atsign, *recipdelimsign, *bouncenr, *tmpstr;
 	char *controlstr, *param, *conffilename, *moderatefilename;
-	FILE *tempfile;
 	size_t len;
 	struct stat stbuf;
-	int closedlist;
+	int closedlist, tmpfd;
 	size_t cmdlen;
 	unsigned int ctrl;
 	
@@ -137,9 +137,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		if (closedlist) exit(EXIT_SUCCESS);
 		conffilename = concatstr(3, listdir, "/subconf/", param);
 		free(param);
-		if((tempfile = fopen(conffilename, "r"))) {
-			fgets(tmpstr, READ_BUFSIZE, tempfile);
-			fclose(tempfile);
+		if((tmpfd = open(conffilename, O_RDONLY)) > 0) {
+			tmpstr = mygetline(tmpfd);
+			close(tmpfd);
 			if(strncasecmp(tmpstr, fromemails->emaillist[0],
 						strlen(tmpstr)) == 0) {
 				unlink(conffilename);
@@ -152,6 +152,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				exit(EXIT_FAILURE);
 			} else {
 				/* Not proper confirm */
+				free(tmpstr);
 				exit(EXIT_SUCCESS);
 			}
 		} else /* Not a confirm so silently ignore */
@@ -176,9 +177,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		if (closedlist) exit(EXIT_SUCCESS);
 		conffilename = concatstr(3, listdir, "/unsubconf/", param);
 		free(param);
-		if((tempfile = fopen(conffilename, "r"))) {
-			fgets(tmpstr, READ_BUFSIZE, tempfile);
-			fclose(tempfile);
+		if((tmpfd = open(conffilename, O_RDONLY))) {
+			tmpstr = mygetline(tmpfd);
+			close(tmpfd);
 			if(strncasecmp(tmpstr, fromemails->emaillist[0],
 						strlen(tmpstr)) == 0) {
 				unlink(conffilename);
@@ -190,6 +191,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 						    mlmmjunsub);
 				exit(EXIT_FAILURE);
 			} else {
+				free(tmpstr);
 				exit(EXIT_SUCCESS);
 			}
 		} else /* Not a confirm so silently ignore */
