@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
+#include <dirent.h>
 
 #include "mlmmj.h"
 #include "strgen.h"
@@ -38,11 +39,10 @@ int main(int argc, char **argv)
 {
 	int opt;
 	char *listdir = NULL, *address = NULL, *number = NULL;
-	char *filename, *bfilename, *a, *buf;
+	char *bfilename, *a, *buf;
 	size_t len;
 	int fd;
 	time_t t;
-	off_t suboff;
 
 	log_set_name(argv[0]);
 
@@ -74,33 +74,46 @@ int main(int argc, char **argv)
 #if 0
 	log_error(LOG_ARGS, "[%s] [%s] [%s]", listdir, address, number);
 #endif
+
+	/* check if it's sub/unsub requests bouncing, and in that case
+	 * simply remove the confirmation file. Variablenames address and
+	 * number are a bit misleading in this case due to the different
+	 * construction of the sub/unsub confirmation From header.
+	 */
+	if(strncmp(address, "confsub-", 8) == 0) {
+		a = concatstr(5, listdir, "/subconf/", address + 8, "-",
+				number);
+		unlink(a);
+		free(a);
+		exit(EXIT_SUCCESS);
+	}
+	if(strncmp(address, "confunsub-", 10) == 0) {
+		a = concatstr(5, listdir, "/unsubconf/", address + 10, "-",
+				number);
+		unlink(a);
+		free(a);
+		exit(EXIT_SUCCESS);
+	}
+	
 	/* save the filename with '=' before replacing it with '@' */
 	bfilename = concatstr(3, listdir, "/bounce/", address);
 
 	a = strchr(address, '=');
-	if (!a) exit(EXIT_SUCCESS);  /* ignore malformed address */
+	if (!a)
+		exit(EXIT_SUCCESS);  /* ignore malformed address */
 	*a = '@';
 
 	/* make sure it's a subscribed address */
-	filename = concatstr(2, listdir, "/subscribers");
-	if ((fd = open(filename, O_RDONLY)) < 0) {
-		log_error(LOG_ARGS, "Could not open '%s'", filename);
-		free(filename); free(bfilename);
-		exit(EXIT_FAILURE);
-	}
-	suboff = find_subscriber(fd, address);
-	if(suboff == -1) {
-		free(filename); free(bfilename);
+	if(is_subbed(listdir, address)) {
+		free(bfilename);
 		exit(EXIT_SUCCESS); /* Not subbed, so exit silently */
 	}
-
-	free(filename);
 
 	/* TODO make sure the file we open below is not a symlink */
 	if ((fd = open(bfilename, O_WRONLY|O_APPEND|O_CREAT,
 			S_IRUSR|S_IWUSR)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", bfilename);
-		free(filename); free(bfilename);
+		free(bfilename);
 		exit(EXIT_FAILURE);
 	}
 	free(bfilename);
