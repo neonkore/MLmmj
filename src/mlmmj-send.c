@@ -809,7 +809,7 @@ int main(int argc, char **argv)
 		break;
 	case '7':
 		digest = 1;
-		archivefilename = mystrdup("digest");
+		archivefilename = "digest";
 		/* fall through */
 	default: /* normal list mail */
 		if (!digest) {
@@ -863,6 +863,8 @@ int main(int argc, char **argv)
 	
 	myfree(hdrs);
 	myfree(body);
+	myfree(mlmmjbounce);
+	close(sockfd);
 	munmap(mailmap, st.st_size);
 	close(mailfd);
 	
