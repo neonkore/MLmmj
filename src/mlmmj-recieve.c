@@ -20,6 +20,8 @@
 #include "mygetline.h"
 #include "strgen.h"
 
+#include "log_error.c"
+
 extern char *optarg;
 
 static void print_help(const char *prg)
@@ -68,8 +70,7 @@ int main(int argc, char **argv)
 	}
 
 	if(fd < 0) {
-		fprintf(stderr, "%s:%d could not get fd in %s: ",
-				__FILE__, __LINE__, infilename);
+		log_error("could not create mail file in incoming directory");
 		free(infilename);
 		exit(EXIT_FAILURE);
 	}
@@ -89,13 +90,10 @@ int main(int argc, char **argv)
 		exit(EXIT_SUCCESS);
 	}
 
-	execlp("mlmmj-process", "mlmmj-process",
+	execlp(BINDIR"mlmmj-process", "mlmmj-process",
 				"-L", listdir,
 				"-m", infilename, 0);
-
-	fprintf(stderr, "%s:%d execlp() of mlmmj-process failed: ",
-			__FILE__, __LINE__);
-	perror(NULL);
+	log_error("execlp() of "BINDIR"mlmmj-process failed");
 
 	return EXIT_FAILURE;
 }

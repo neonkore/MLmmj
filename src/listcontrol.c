@@ -61,8 +61,7 @@ int listcontrol(const char *mailfilename, const char *listdir,
 					"-L", listdir,
 					"-a", fromemails.emaillist[0],
 					"-C", 0);
-			fprintf(stderr, "%s:%d execlp() of "BINDIR"mlmmj-subscribe failed: ", __FILE__, __LINE__);
-			perror(NULL);
+			log_error("execlp() of "BINDIR"mlmmj-subscribe failed");
 			exit(EXIT_FAILURE);
 		} else /* Not a valid From: address, so we silently ignore */
 			exit(EXIT_SUCCESS);
@@ -78,12 +77,13 @@ int listcontrol(const char *mailfilename, const char *listdir,
 			if(strncasecmp(tmpstr, fromemails.emaillist[0],
 						strlen(tmpstr)) == 0) {
 				unlink(conffilename);
-				execlp(BINDIR"mlmmj-subscribe", "mlmmj-subscribe",
+				execlp(BINDIR"mlmmj-subscribe",
+						"mlmmj-subscribe",
 						"-L", listdir,
 						"-a", tmpstr,
 						"-c", 0);
-				fprintf(stderr, "%s:%d execlp() of "BINDIR"mlmmj-subscribe failed: ", __FILE__, __LINE__);
-				perror(NULL);
+				log_error("execlp() of "BINDIR"mlmmj-subscribe"
+					" failed");
 				exit(EXIT_FAILURE);
 			} else {
 				/* Not proper confirm */
@@ -98,9 +98,8 @@ int listcontrol(const char *mailfilename, const char *listdir,
 					"-L", listdir,
 					"-a", fromemails.emaillist[0],
 					"-C", 0);
-			fprintf(stderr, "%s:%d execlp() of "BINDIR"mlmmj-unsubscribe "
-					"failed: ", __FILE__, __LINE__);
-			perror(NULL);
+			log_error("execlp() of "BINDIR"mlmmj-unsubscribe"
+				" failed");
 			exit(EXIT_FAILURE);
 		} else /* Not a valid From: address, so we silently ignore */
 			exit(EXIT_SUCCESS);
@@ -116,14 +115,13 @@ int listcontrol(const char *mailfilename, const char *listdir,
 			if(strncasecmp(tmpstr, fromemails.emaillist[0],
 						strlen(tmpstr)) == 0) {
 				unlink(conffilename);
-				execlp(BINDIR"mlmmj-unsubscribe", "mlmmj-unsubscribe",
+				execlp(BINDIR"mlmmj-unsubscribe",
+						"mlmmj-unsubscribe",
 						"-L", listdir,
 						"-a", tmpstr,
 						"-c", 0);
-				fprintf(stderr, "%s:%d execlp() of "
-						BINDIR"mlmmj-unsubscribe failed: ",
-						__FILE__, __LINE__);
-				perror(NULL);
+				log_error("execlp() of "
+					BINDIR"mlmmj-unsubscribe failed");
 				exit(EXIT_FAILURE);
 			} else {
 				exit(EXIT_SUCCESS);

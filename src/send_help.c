@@ -115,7 +115,6 @@ void send_help(const char *listdir, const char *emailaddr)
 				"-T", emailaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, 0);
-	fprintf(stderr, "%s:%d execlp() of "BINDIR"mlmmj-send failed: ", __FILE__, __LINE__);
-	perror(NULL);
+	log_error("execlp() of "BINDIR"mlmmj-send failed");
 	exit(EXIT_FAILURE);
 }

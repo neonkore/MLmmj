@@ -24,6 +24,8 @@
 #include "strgen.h"
 #include "do_all_the_voodo_here.h"
 
+#include "log_error.c"
+
 static void print_help(const char *prg)
 {
 	        printf("Usage: %s [-P] -L /path/to/chat-list\n"
@@ -84,15 +86,13 @@ int main(int argc, char **argv)
 	
 	if(fd == -1) {
 		free(donemailname);
-		fprintf(stderr, "%s:%d could not get fd in %s: ",
-                                __FILE__, __LINE__, donemailname);
+		log_error("could not create mail file in queue directory");
 		exit(EXIT_FAILURE);
 	}
 
 	if((donemailfile = fdopen(fd, "w")) == NULL) {
 		free(donemailname);
-		fprintf(stderr, "%s:%d could not fdopen",
-				__FILE__, __LINE__);
+		log_error("could not fdopen() output mail file");
 		exit(EXIT_FAILURE);
 	}
 
@@ -100,8 +100,7 @@ int main(int argc, char **argv)
 
 	if((rawmailfile = fopen(mailfile, "r")) == NULL) {
 		free(donemailname);
-		fprintf(stderr, "%s:%d could not open %s: ",
-                                __FILE__, __LINE__, mailfile);
+		log_error("could not fopen() input mail file");
 		exit(EXIT_FAILURE);
 	}
 
@@ -157,8 +156,7 @@ int main(int argc, char **argv)
 	execlp(BINDIR"mlmmj-send", "mlmmj-send",
 				"-L", listdir,
 				"-m", donemailname, 0);
-	fprintf(stderr, "%s:%d execlp() of mlmmj-send failed: ",
-			__FILE__, __LINE__);
-	perror(NULL);
+	log_error("execlp() of mlmmj-send failed");
+
 	return EXIT_FAILURE;
 }

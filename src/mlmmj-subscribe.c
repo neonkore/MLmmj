@@ -111,8 +111,7 @@ void confirm_sub(const char *listdir, const char *listaddr, const char *subaddr)
 				"-T", subaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, 0);
-	fprintf(stderr, "%s:%d execlp() of "BINDIR"mlmmj-send failed: ", __FILE__, __LINE__);
-	perror(NULL);
+	log_error("execlp() of "BINDIR"mlmmj-send");
 	exit(EXIT_FAILURE);
 }
 
@@ -228,8 +227,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 				"-F", fromaddr,
 				"-R", confirmaddr,
 				"-m", queuefilename, 0);
-	fprintf(stderr, "%s:%d execlp() of "BINDIR"mlmmj-send failed: ", __FILE__, __LINE__);
-	perror(NULL);
+	log_error("execlp() of "BINDIR"mlmmj-send failed");
 	exit(EXIT_FAILURE);
 }
 

@@ -15,6 +15,7 @@
 #include "mlmmj.h"
 #include "wrappers.h"
 
+#include "log_error.c"
 
 char *strip_headers(char *buf, const char **headers)
 {
@@ -84,7 +85,7 @@ void strip_file_to_fd(FILE *in, int out_fd, const char **headers_to_strip,
 			if(buf[0]) {
 				bytes_written = writen(out_fd, buf, strlen(buf));
 				if(bytes_written == -1) {
-					perror(":error writing to fd");
+					log_error("error writing to fd");
 					exit(EXIT_FAILURE);
 				}
 			}

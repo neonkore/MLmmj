@@ -19,6 +19,8 @@
 #include "incindexfile.h"
 #include "itoa.h"
 
+#include "log_error.c"
+
 #define INTBUF_SIZE 32
 
 int incindexfile(const char *listdir, int incflag)
@@ -39,14 +41,14 @@ int incindexfile(const char *listdir, int incflag)
 	fd = open(indexfilename, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
 
 	if(fd == -1) {
-		perror("Error opening index file:");
+		log_error("Error opening index file");
 		exit(EXIT_FAILURE);
 	}
 
 	lock = myexcllock(fd);
 	
 	if(lock) {
-		perror("Error locking index file:");
+		log_error("Error locking index file");
 		close(fd);
 		exit(EXIT_FAILURE);
 	}
