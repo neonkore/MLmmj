@@ -336,8 +336,8 @@ int main(int argc, char **argv)
 	struct email_container toemails = { 0, NULL };
 	struct email_container ccemails = { 0, NULL };
 	struct email_container efromemails = { 0, NULL };
-	struct strlist *access_rules;
-	struct strlist *delheaders;
+	struct strlist *access_rules = NULL;
+	struct strlist *delheaders = NULL;
 	struct strlist allheaders;
 	struct mailhdr readhdrs[] = {
 		{ "From:", 0, NULL },
