@@ -49,8 +49,6 @@ void confirm_sub(const char *listdir, const char *listaddr,
 
 	queuefilename = concatstr(3, listdir, "/queue/", randomstr);
 
-	printf("%s\n", queuefilename);
-
 	if((queuefd = open(queuefilename, O_WRONLY|O_CREAT|O_EXCL,
 					S_IRUSR|S_IWUSR)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
