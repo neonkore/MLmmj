@@ -34,7 +34,7 @@ int write_helo(int sockfd, const char *hostname)
 		return errno;
 	snprintf(helo, len, "HELO %s\r\n", hostname);
 	len = strlen(helo);
-#ifdef MLMMJ_DEBUG
+#if 0
 	fprintf(stderr, "\nwrite_helo, helo = [%s]\n", helo);
 #endif
 	bytes_written = writen(sockfd, helo, len);
@@ -177,7 +177,7 @@ int write_custom_line(int sockfd, const char *line)
 	
 	snprintf(customline, len, "%s\r\n", line);
 	len = strlen(customline);
-#ifdef MLMMJ_DEBUG
+#if 0
 	fprintf(stderr, "write_custom_line = [%s]\n", customline);
 	fprintf(stderr, "strlen(customline) = [%d]\n", strlen(customline));
 #endif
