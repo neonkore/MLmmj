@@ -89,6 +89,7 @@ sub mlmmj_list {
 
 	if (defined $value && $value !~ /^\s*$/) {
 		$value .= "\n" if $value !~ /\n$/;
+		$value =~ s/\s*\r?\n/\n/g;
 		open (FILE, ">$file") or die "Couldn't open $file for writing: $!";
 		print FILE $value;
 		close FILE;

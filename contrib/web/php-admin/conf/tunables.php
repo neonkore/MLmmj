@@ -79,6 +79,11 @@ mlmmj_string("relayhost",
 	     "this file will be used for relaying the mail sent to the list. ".
 	     "Defaults to 127.0.0.1.");
 
+mlmmj_string("smtpport",
+	     "SMTP port",
+	     "In this file a port other than port 25 for connecting to the ".
+	     "relayhost can be specified.");
+
 mlmmj_boolean("notifysub",
 	      "Notify subscribers",
 	      "If this option is set, the owner(s) will get a mail with the ".
