@@ -349,6 +349,7 @@ int main(int argc, char **argv)
 	struct email_container ccemails = { 0, NULL };
 	struct email_container efromemails = { 0, NULL };
 	struct email_container dtoemails = { 0, NULL };
+	struct email_container *whichto;
 	struct strlist *access_rules = NULL;
 	struct strlist *delheaders = NULL;
 	struct strlist allheaders;
@@ -536,9 +537,14 @@ int main(int argc, char **argv)
 	}
 
 	if(dtoemails.emaillist)
-		recipdelim = strchr(dtoemails.emaillist[0], RECIPDELIM);
+		whichto = &dtoemails;
 	else if(toemails.emaillist)
-		recipdelim = strchr(toemails.emaillist[0], RECIPDELIM);
+		whichto = &toemails;
+	else
+		whichto = NULL;
+
+	if(whichto && whichto->emaillist && whichto->emaillist[0])
+		recipdelim = strchr(whichto->emaillist[0], RECIPDELIM);
 	else
 		recipdelim = NULL;
 
@@ -560,7 +566,7 @@ int main(int argc, char **argv)
 		log_error(LOG_ARGS, "listcontrol(from, %s, %s, %s, %s, %s, %s)\n", listdir, toemails.emaillist[0], mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
 #endif
 		unlink(mailfile);
-		listcontrol(&fromemails, listdir, toemails.emaillist[0],
+		listcontrol(&fromemails, listdir, whichto->emaillist[0],
 			    mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce,
 			    donemailname);
 		return EXIT_SUCCESS;
