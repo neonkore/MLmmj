@@ -112,7 +112,7 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 
 	from = concatstr(5, listname, "+bounces-", myaddr, "-probe@", listfqdn);
 
-	a = strchr(myaddr, '=');
+	a = strrchr(myaddr, '=');
 	if (!a) {
 		myfree(myaddr);
 		myfree(from);
@@ -306,7 +306,7 @@ int main(int argc, char **argv)
 	/* save the filename with '=' before replacing it with '@' */
 	bfilename = concatstr(3, listdir, "/bounce/", address);
 
-	a = strchr(address, '=');
+	a = strrchr(address, '=');
 	if (!a)
 		exit(EXIT_SUCCESS);  /* ignore malformed address */
 	*a = '@';
