@@ -651,15 +651,20 @@ int main(int argc, char **argv)
 	subonlypost = statctrl(listdir, "subonlypost");
 	if(subonlypost) {
 		/* Don't send a mail about denial to the list, but silently
-		 * discard and exit. Do the same if it's turned off */
-		if ((strcasecmp(listaddr, fromemails.emaillist[0]) == 0)
-				|| nosubonlydenymails) {
+		 * discard and exit. */
+		if (strcasecmp(listaddr, fromemails.emaillist[0]) == 0) {
 			myfree(listaddr);
 			unlink(donemailname);
 			myfree(donemailname);
 			exit(EXIT_SUCCESS);
 		}
 		if(is_subbed(listdir, fromemails.emaillist[0]) != 0) {
+			if(nosubonlydenymails) {
+				myfree(listaddr);
+				unlink(donemailname);
+				myfree(donemailname);
+				exit(EXIT_SUCCESS);
+			}
 			listname = genlistname(listaddr);
 			listfqdn = genlistfqdn(listaddr);
 			maildata[1] = fromemails.emaillist[0];
