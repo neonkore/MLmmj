@@ -28,15 +28,22 @@
 /* XXX this is not finished */
 void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 {
-	char *myaddr, *from, *randomstr, *a, *line;
-	char *textfilename, *queuefilename;
+	char *myaddr, *from, *randomstr, *a, *line, *textfilename;
+	char *queuefilename, *listaddr, *listfqdn, *listname;
+	char *fromstr, *tostr, *subjectstr;
 	int textfd, queuefd;
 	ssize_t n;
 
 	myaddr = strdup(addr);
 	MY_ASSERT(myaddr);
 
-	from = concatstr(3, "LISTNAME+bounces-", myaddr, "-probe@DOMAIN.TLD");
+	listaddr = getlistaddr(listdir);
+	chomp(listaddr);
+
+	listname = genlistname(listaddr);
+	listfqdn = genlistfqdn(listaddr);
+
+	from = concatstr(3, listname, "+bounces-", myaddr, "-probe@", listfqdn);
 
 	a = strchr(myaddr, '=');
 	if (!a) {
@@ -46,15 +53,6 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 		exit(EXIT_FAILURE);
 	}
 	*a = '@';
-
-	textfilename = concatstr(2, listdir, "/text/probe");
-	if((textfd = open(textfilename, O_RDONLY)) < 0) {
-		log_error(LOG_ARGS, "Could not open '%s'", textfilename);
-		free(textfilename);
-		free(myaddr);
-		exit(EXIT_FAILURE);
-	}
-	free(textfilename);
 
 	queuefilename = NULL;
 	do {

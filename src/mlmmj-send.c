@@ -365,6 +365,7 @@ int send_mail_many(int sockfd, const char *from, const char *replyto,
 
 			return -1;
 		}
+		free(addr);
 	}
 	return 0;
 }	
