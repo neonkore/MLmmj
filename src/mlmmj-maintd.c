@@ -113,7 +113,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 	DIR *queuedir;
 	struct dirent *dp;
 	char *mailname, *fromname, *toname, *reptoname, *from, *to, *repto;
-	char *discardedname = NULL;
+	char *discardedname = NULL, *ch;
 	char *dirname = concatstr(2, listdir, "/queue/");
 	FILE *ffrom, *fto, *f;
 	pid_t pid;
@@ -133,9 +133,6 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 	}
 
 	while((dp = readdir(queuedir)) != NULL) {
-		if(strchr(dp->d_name, '.'))
-			continue;
-
 		if(stat(dp->d_name, &st) < 0) {
 			log_error(LOG_ARGS, "Could not stat(%s)",dp->d_name);
 			continue;
@@ -143,6 +140,17 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 
 		if(!S_ISREG(st.st_mode))
 			continue;
+
+		if(strchr(dp->d_name, '.')) {
+			mailname = strdup(dp->d_name);
+			ch = strchr(mailname, '.');
+			*ch = '\0';
+			if(stat(mailname, &st) < 0)
+				if(errno == ENOENT)
+					unlink(dp->d_name);
+			free(mailname);
+			continue;
+		}
 
 		mailname = concatstr(3, listdir, "/queue/", dp->d_name);
 
@@ -328,7 +336,7 @@ int main(int argc, char **argv)
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	free(bindir);
 
-	if(daemon(1,0) < 0) {
+	if(daemonize && daemon(1,0) < 0) {
 		log_error(LOG_ARGS, "Could not daemonize. Only one "
 				"maintenance run will be done.");
 		daemonize = 0;
