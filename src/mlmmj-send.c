@@ -290,13 +290,13 @@ int send_mail(int sockfd, const char *from, const char *to,
 	return 0;
 }
 
-int initsmtp(int *sockfd, const char *relayhost)
+int initsmtp(int *sockfd, const char *relayhost, unsigned short port)
 {
 	int retval = 0;
 	char *reply = NULL;
 	char *myhostname = hostnamestr();
 	
-	init_sockfd(sockfd, relayhost);
+	init_sockfd(sockfd, relayhost, port);
 	
 	if((reply = checkwait_smtpreply(*sockfd, MLMMJ_CONNECT)) != NULL) {
 		log_error(LOG_ARGS, "No proper greeting to our connect"
@@ -600,7 +600,7 @@ int main(int argc, char **argv)
 	char *mlmmjbounce = NULL, *bindir, *mailmap, *probefile, *a;
 	char *body = NULL, *hdrs = NULL, *memmailsizestr = NULL, *verp = NULL;
 	char relay[16], *listname, *listfqdn, *verpfrom, *maxverprecipsstr;
-	char strindex[32], *reply;
+	char strindex[32], *reply, *strport;
 	ssize_t memmailsize = 0;
 	DIR *subddir;
 	struct dirent *dp;
@@ -608,6 +608,7 @@ int main(int argc, char **argv)
 	struct hostent *relayent;
 	uid_t uid;
 	struct strlist stl;
+	unsigned short smtpport = 25;
 
 	CHECKFULLPATH(argv[0]);
 	
@@ -863,11 +864,14 @@ int main(int argc, char **argv)
 				strncpy(relay, RELAYHOST, sizeof(relay));
 		}
 	}
+	strport = ctrlvalue(listdir, "smtpport");
+	if(strport)
+		smtpport = (unsigned short)atol(strport);
 
 	switch(listctrl[0]) {
 	case '1': /* A single mail is to be sent */
 	case '6':
-		initsmtp(&sockfd, relay);
+		initsmtp(&sockfd, relay, smtpport);
 		sendres = send_mail(sockfd, bounceaddr, to_addr, replyto,
 				mailmap, st.st_size, listdir, NULL,
 				hdrs, hdrslen, body, bodylen);
@@ -910,7 +914,7 @@ int main(int argc, char **argv)
 		}
 		break;
 	case '2': /* Moderators */
-		initsmtp(&sockfd, relay);
+		initsmtp(&sockfd, relay, smtpport);
 		if(send_mail_many_fd(sockfd, bounceaddr, NULL, mailmap,
 				     st.st_size, subfd, NULL, NULL, listdir,
 				     NULL, hdrs, hdrslen, body, bodylen))
@@ -919,7 +923,7 @@ int main(int argc, char **argv)
 			endsmtp(&sockfd);
 		break;
 	case '3': /* resending earlier failed mails */
-		initsmtp(&sockfd, relay);
+		initsmtp(&sockfd, relay, smtpport);
 		if(send_mail_many_fd(sockfd, NULL, NULL, mailmap, st.st_size,
 				subfd, listaddr, mailfilename, listdir,
 				mlmmjbounce, hdrs, hdrslen, body, bodylen))
@@ -929,7 +933,7 @@ int main(int argc, char **argv)
 		unlink(subfilename);
 		break;
 	case '4': /* send mails to owner */
-		initsmtp(&sockfd, relay);
+		initsmtp(&sockfd, relay, smtpport);
 		if(send_mail_many_fd(sockfd, bounceaddr, NULL, mailmap,
 				st.st_size, subfd, listaddr, mailfilename,
 				listdir, mlmmjbounce, hdrs, hdrslen, body,
@@ -939,7 +943,7 @@ int main(int argc, char **argv)
 			endsmtp(&sockfd);
 		break;
 	case '5': /* bounceprobe - handle relayhost local users bouncing*/
-		initsmtp(&sockfd, relay);
+		initsmtp(&sockfd, relay, smtpport);
 		sendres = send_mail(sockfd, bounceaddr, to_addr, replyto,
 				mailmap, st.st_size, listdir, NULL,
 				hdrs, hdrslen, body, bodylen);
@@ -999,7 +1003,7 @@ int main(int argc, char **argv)
 		}
 		
 		if(verp) {
-			initsmtp(&sockfd, relay);
+			initsmtp(&sockfd, relay, smtpport);
 			if(write_mail_from(sockfd, verpfrom, verp)) {
 				log_error(LOG_ARGS,
 						"Could not write MAIL FROM\n");
@@ -1034,7 +1038,7 @@ int main(int argc, char **argv)
 				res = getaddrsfromfd(&stl, subfd,
 						maxverprecips);
 				if(stl.count == maxverprecips) {
-					initsmtp(&sockfd, relay);
+					initsmtp(&sockfd, relay, smtpport);
 					if(verp) {
 						sendres = send_mail_verp(
 								sockfd, &stl,
@@ -1072,7 +1076,7 @@ int main(int argc, char **argv)
 
 		}
 		if(stl.count) {
-			initsmtp(&sockfd, relay);
+			initsmtp(&sockfd, relay, smtpport);
 			if(verp) {
 				sendres = send_mail_verp(sockfd, &stl, mailmap,
 						st.st_size, verpfrom, listdir,

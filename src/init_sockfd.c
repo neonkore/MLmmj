@@ -32,11 +32,10 @@
 #include "init_sockfd.h"
 #include "log_error.h"
 
-void init_sockfd(int *sockfd, const char *relayhost)
+void init_sockfd(int *sockfd, const char *relayhost, unsigned short port)
 {
 	int len;
 	struct sockaddr_in addr;
-	u_short port = 25;
 
 	if (getenv("MLMMJ_TESTING")) {
 		relayhost = "127.0.0.1";

@@ -24,6 +24,6 @@
 #ifndef INIT_SOCKFD_H
 #define INIT_SOCKFD_H
 
-void init_sockfd(int *sockfd, const char *relayhost);
+void init_sockfd(int *sockfd, const char *relayhost, unsigned short port);
 
 #endif /* INIT_SOCKFD_H */
