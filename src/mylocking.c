@@ -49,6 +49,9 @@ int myunlock(int fd)
 	struct flock locktype;
 
 	locktype.l_type = F_UNLCK;
+	locktype.l_whence = SEEK_SET;
+	locktype.l_start = 0;
+	locktype.l_len = 0;
 	do {
 		myunlock = fcntl(fd, F_SETLKW, &locktype);
 	} while(myunlock < 0 && errno == EINTR);
