@@ -252,17 +252,88 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 
 int resend_requeue(const char *listdir, const char *mlmmjsend)
 {
-#if 0
 	DIR *queuedir;
 	struct dirent *dp;
-#endif
+	char *dirname = concatstr(2, listdir, "/requeue/");
+	char *archivefilename, *subfilename, *subnewname;
+	struct stat st;
+	pid_t pid;
+	time_t t;
 
-	/* TODO: Go through all mails sitting in requeue/ and send the mail in the
-	 * archive marked by the directory name in requeue/ to the people in
-	 * the file subscribers sitting in the same dir.
-	 * IMPORTANT: do not forget to *not* archive and *not* delete when
-	 * sent.
-	 */
+	if(chdir(dirname) < 0) {
+		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
+		free(dirname);
+		return 1;
+	}
+		
+	if((queuedir = opendir(dirname)) == NULL) {
+		log_error(LOG_ARGS, "Could not opendir(%s)", dirname);
+		free(dirname);
+		return 1;
+	}
+
+	while((dp = readdir(queuedir)) != NULL) {
+		if((strcmp(dp->d_name, "..") == 0) ||
+			(strcmp(dp->d_name, ".") == 0))
+				continue;
+
+		if(stat(dp->d_name, &st) < 0) {
+			log_error(LOG_ARGS, "Could not stat(%s)",dp->d_name);
+			continue;
+		}
+
+		if(!S_ISDIR(st.st_mode))
+			continue;
+
+		/* Remove old empty directories */
+		t = time(NULL);
+		if(t - st.st_mtime > (time_t)3600)
+			if(rmdir(dp->d_name) == 0)
+				continue;
+
+		archivefilename = concatstr(3, listdir, "/archive/",
+						dp->d_name);
+		if(stat(archivefilename, &st) < 0) {
+			/* Might be it's just not moved to the archive
+			 * yet because it's still getting sent, so just
+			 * continue
+			 */
+			free(archivefilename);
+			continue;
+		}
+		subfilename = concatstr(3, dirname, dp->d_name, "/subscribers");
+		if(stat(subfilename, &st) < 0) {
+			log_error(LOG_ARGS, "Could not stat(%s)", subfilename);
+			free(archivefilename);
+			free(subfilename);
+			continue;
+		}
+
+		subnewname = concatstr(2, subfilename, ".resending");
+
+		if(rename(subfilename, subnewname) < 0) {
+			log_error(LOG_ARGS, "Could not rename(%s, %s)",
+						subfilename, subnewname);
+			free(archivefilename);
+			free(subfilename);
+			free(subnewname);
+			continue;
+		}
+		free(subfilename);
+		
+		pid = fork();
+
+		if(pid == 0)
+			execlp(mlmmjsend, mlmmjsend,
+					"-l", "3",
+					"-L", listdir,
+					"-m", archivefilename,
+					"-s", subnewname,
+					"-a",
+					"-D", 0);
+
+
+	}
 
 	return 0;
 }

@@ -108,7 +108,7 @@ int bouncemail(const char *listdir, const char *mlmmjbounce, const char *from)
 
 	if((c = strchr(myfrom, '@')) == NULL) {
 		free(myfrom);
-		return 0; /* Success when mailformed 'from' */
+		return 0; /* Success when malformed 'from' */
 	}
 	*c = '\0';
 	num = strrchr(myfrom, '-');
@@ -358,20 +358,21 @@ static void print_help(const char *prg)
 {
         printf("Usage: %s [-L /path/to/list || -l listctrl] -m /path/to/mail "
 	       "[-a] [-D] [-F]\n"
-	       "       [-h] [-r] [-R] [-T] [-V]\n"
+	       "       [-h] [-r] [-R] [-s] [-T] [-V]\n"
 	       " -a: Don't archive the mail\n"
 	       " -D: Don't delete the mail after it's sent\n"
 	       " -F: What to use as MAIL FROM:\n"
 	       " -h: This help\n"
-	       " -l: List control variable:\n"
-	       "    '1' means 'send a single mail'\n"
+	       " -l: List control variable:\n", prg);
+	printf("    '1' means 'send a single mail'\n"
 	       "    '2' means 'mail to moderators'\n"
 	       " -L: Full path to list directory\n"
 	       " -m: Full path to mail file\n"
 	       " -r: Relayhost (defaults to localhost)\n"
 	       " -R: What to use as Reply-To: header\n"
+	       " -s: Subscribers file name\n"
 	       " -T: What to use as RCPT TO:\n"
-	       " -V: Print version\n", prg);
+	       " -V: Print version\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -397,7 +398,7 @@ int main(int argc, char **argv)
 	mlmmjbounce = concatstr(2, bindir, "/mlmmj-bounce");
 	free(bindir);
 	
-	while ((opt = getopt(argc, argv, "aVDhm:l:L:R:F:T:r:")) != -1){
+	while ((opt = getopt(argc, argv, "aVDhm:l:L:R:F:T:r:s:")) != -1){
 		switch(opt) {
 		case 'a':
 			archive = 0;
@@ -425,6 +426,9 @@ int main(int argc, char **argv)
 			break;
 		case 'R':
 			replyto = optarg;
+			break;
+		case 's':
+			subfilename = optarg;
 			break;
 		case 'T':
 			to_addr = optarg;
@@ -456,7 +460,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	if(listctrl[0] == '1' || listctrl[0] == '2')
+	if(listctrl[0] == '1' || listctrl[0] == '2' || listctrl[0] == '3')
 		archive = 0;
 
 	if(listdir)
@@ -484,6 +488,13 @@ int main(int argc, char **argv)
 			exit(EXIT_SUCCESS);
 		}
 		break;
+	case '3': /* resending earlier failed mails */
+		if((subfile = fopen(subfilename, "r")) == NULL) {
+			log_error(LOG_ARGS, "Could not open '%s':",
+					    subfilename);
+			exit(EXIT_FAILURE);
+		}
+
 	default: /* normal list mail -- now handled when forking */
 		break;
 	}
@@ -535,6 +546,13 @@ int main(int argc, char **argv)
 		send_mail_many(sockfd, bounceaddr, NULL, mailfile, subfile,
 			       NULL, NULL, listdir, NULL);
 		endsmtp(&sockfd);
+		break;
+	case '3': /* resending earlier failed mails */
+		initsmtp(&sockfd, relayhost);
+		send_mail_many(sockfd, NULL, NULL, mailfile, subfile,
+				listaddr, mailfilename, listdir, mlmmjbounce);
+		endsmtp(&sockfd);
+		unlink(subfilename);
 		break;
 	default: /* normal list mail */
 		subddirname = concatstr(2, listdir, "/subscribers.d/");
@@ -589,11 +607,8 @@ int main(int argc, char **argv)
 				free(newsockfd);
 				fclose(subfile);
 				exit(EXIT_SUCCESS);
-			} else {
-				syslog(LOG_INFO, "%d/%d connections open",
-						conncount, MAX_CONNECTIONS);
+			} else
 				fclose(subfile);
-			}
 		}
 		closedir(subddir);
 		break;
