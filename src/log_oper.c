@@ -49,7 +49,7 @@ int log_oper(const char *prefix, const char *basename, const char *fmt, ...)
 	va_list ap;
 	size_t i;
 
-	logfilename = concatstr(2, prefix, basename);
+	logfilename = concatstr(3, prefix, "/", basename);
 	statres = lstat(logfilename, &st);
 	if(statres < 0 && errno != ENOENT) {
 		log_error(LOG_ARGS, "Could not stat logfile %s", logfilename);
