@@ -38,33 +38,49 @@
 #include "wrappers.h"
 #include "memory.h"
 
-int log_oper(const char *logfilename, const char *str)
+int log_oper(const char *prefix, const char *basename, const char *str)
 {
 	int fd;
-	char ct[26], *logstr;
+	char ct[26], *logstr, *logfilename, *tmp;
 	struct stat st;
 	time_t t;
 
+	logfilename = concatstr(2, prefix, basename);
 	if(lstat(logfilename, &st) < 0 && errno != ENOENT) {
 		log_error(LOG_ARGS, "Could not stat logfile %s", logfilename);
+		myfree(logfilename);
 		return -1;
 	} else if((st.st_mode & S_IFMT) == S_IFLNK) {
 		log_error(LOG_ARGS, "%s is a symbolic link, not opening",
 					logfilename);
+		myfree(logfilename);
 		return -1;
+	}
+	
+	if(st.st_size > (size_t)524288) {
+		tmp = concatstr(2, logfilename, ".rotated");
+		if(rename(logfilename, tmp) < 0) {
+			log_error(LOG_ARGS, "Could not rename %s,%s",
+					logfilename, tmp);
+		myfree(tmp);
+		}
 	}
 	
 	fd = open(logfilename, O_RDWR|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR);
 	if(fd < 0) {
 		log_error(LOG_ARGS, "Could not open %s", logfilename);
+		myfree(logfilename);
 		return -1;
 	}
 
 	if((time(&t) == (time_t)-1) || (ctime_r(&t, ct) == NULL))
 		strncpy(ct, "Unknown time", sizeof(ct));
+	else
+		ct[24] = '\0';
 
 	if(myexcllock(fd) < 0) {
 		log_error(LOG_ARGS, "Could not lock %s", logfilename);
+		myfree(logfilename);
 		return -1;
 	}
 
@@ -72,10 +88,8 @@ int log_oper(const char *logfilename, const char *str)
 	if(writen(fd, logstr, strlen(logstr)) < 0)
 		log_error(LOG_ARGS, "Could not write to %s", logfilename);
 	
-	if(myunlock(fd) < 0)
-		log_error(LOG_ARGS, "Could not unlock %s", logfilename);
-
 	close(fd);
+	myfree(logfilename);
 	myfree(logstr);
 	
 	return 0;

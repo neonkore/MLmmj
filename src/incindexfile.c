@@ -79,8 +79,7 @@ int incindexfile(const char *listdir)
 	lseek(fd, 0, SEEK_SET);
 	writen(fd, intbuf, strlen(intbuf));
 
-	myunlock(fd);
-	close(fd);
+	close(fd); /* Lock is also released */
 	myfree(indexfilename);
 
 	return index;
