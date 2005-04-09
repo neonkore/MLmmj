@@ -4,12 +4,11 @@ Hi, this is the mlmmj program managing the mailinglist
 
 $listaddr$
 
-Some messages to you could not be delivered. If you're getting this
+Some messages to you could not be delivered. If you're seeing this
 message it means things are back to normal, and it's merely for your
 information.
 
-Here is the index(es) of the messages that bounced in the attempt of
-delivering them to you:
+Here is the list of the bounced messages:
 
 $bouncenumbers$
 

@@ -2,29 +2,29 @@ Subject: Commands available for $listaddr$
 
 Hello,
 
-There exists the following options:
+The following options are available:
 
-To unsubscribe send a mail to:
+To unsubscribe send a message to:
 
 $listunsubaddr$
 
-To subscribe to the digest of this list send a mail to:
+To subscribe to the digest of this list send a message to:
 
 $digestsubaddr$
 
-To subscribe to the nomail version of this list send a mail to:
+To subscribe to the "nomail" version of this list send a message to:
 
 $nomailsubaddr$
 
-The nomail version of a list means that you are reckognized as a
-subscriber, but will not get any mails to the list. Useful when it's
+The nomail version of a list means that you are reccognized as a
+subscriber, but will not get any messages to the list. This is useful when it's
 necessary to post from several emailaddresses to a subscribers only list.
 
-For retrieval of message number N in the archive send a mail to
+For retrieval of message number N in the archive send a message to
 
 $listgetN$
 
-To send a mail to the list owner, send a mail to:
+To contact the list owner, send a message to:
 
 $listowner$
 

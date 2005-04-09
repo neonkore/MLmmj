@@ -14,10 +14,10 @@ $confaddr$
 
 This confirmation serves two purposes. It tests that mail can be sent to
 your address. Secondly it makes sure someone else did not try and
-subscribe your emailaddress without you wanting it.
+subscribe your emailaddress without your permission.
 
-Your mailer probably automatically replies to the confirmation address,
-when you hit the reply button.
+Your mailer may automatically reply to the confirmation address when you hit
+the reply button.
 
 The subject and the body of the mail can be anything.
 

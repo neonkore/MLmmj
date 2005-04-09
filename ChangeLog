@@ -1,3 +1,5 @@
+ o Michael Fleming corrected some spelling / grammatical errors and made
+   occasional minor clarifications in the english list texts.
  o Add README.sendmail from Andrea Barisani
  o Add README.exim4 from Jakob Hirsch
  o Skip addresses without a @ when sending

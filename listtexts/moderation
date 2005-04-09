@@ -2,20 +2,20 @@ Subject: Moderation needed for $listaddr$
 
 Hello,
 
-Someone send a mail for moderation to:
+Someone has submitted a message for moderation to:
 
 $listaddr$
 
-To accept it send a mail to
+To accept it send a message to:
 
 $moderateaddr$
 
 Your mailer probably automatically replies to this address, when you hit
 the reply button. If you don't want it sent to the list, simply ignore this
-mail.
+message.
 
-The following moderators have recieved this mail:
+The following moderators have received this mail:
 
 $moderators$
 
---- below this line the first 100 lines of the mail up for moderation --->
+--- below this line the first 100 lines of the message up for moderation --->
