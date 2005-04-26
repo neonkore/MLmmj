@@ -70,6 +70,11 @@ void send_list(const char *listdir, const char *emailaddr,
 		exit(EXIT_FAILURE);
 	}
 
+	if(lseek(fd, 0, SEEK_END) < 0) {
+		log_error(LOG_ARGS, "Could not seek to send of file");
+		exit(EXIT_FAILURE);
+	}
+
 	dirp = opendir(subdir);
 	if(dirp == NULL) {
 		fprintf(stderr, "Could not opendir(%s);\n", subdir);
@@ -95,6 +100,8 @@ void send_list(const char *listdir, const char *emailaddr,
 		close(subfd);
 		myfree(fileiter);
 	}
+
+	writen(fd, "\n-- \n  end of list mail\n", 23);
 
 	close(fd);
 	closedir(dirp);
