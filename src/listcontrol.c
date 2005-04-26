@@ -36,12 +36,14 @@
 #include "find_email_adr.h"
 #include "strgen.h"
 #include "send_help.h"
+#include "send_list.h"
 #include "log_error.h"
 #include "statctrl.h"
 #include "mygetline.h"
 #include "chomp.h"
 #include "memory.h"
 #include "log_oper.h"
+#include "ctrlvalues.h"
 
 enum ctrl_e {
 	CTRL_SUBSCRIBE_DIGEST,
@@ -60,6 +62,7 @@ enum ctrl_e {
 	CTRL_MODERATE,
 	CTRL_HELP,
 	CTRL_GET,
+	CTRL_LIST,
 	CTRL_END  /* end marker, must be last */
 };
 
@@ -87,7 +90,8 @@ static struct ctrl_command ctrl_commands[] = {
 	{ "bounces",            1 },
 	{ "moderate",           1 },
 	{ "help",               0 },
-	{ "get",                1 }
+	{ "get",                1 },
+	{ "list",               0 }
 };
 
 
@@ -102,9 +106,10 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	const char *subswitch;
 	size_t len;
 	struct stat stbuf;
-	int closedlist, nosubconfirm, tmpfd, noget;
+	int closedlist, nosubconfirm, tmpfd, noget, i;
 	size_t cmdlen;
 	unsigned int ctrl;
+	struct strlist *owners;
 	
 	/* A closed list doesn't allow subscribtion and unsubscription */
 	closedlist = statctrl(listdir, "closedlist");
@@ -530,6 +535,16 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsend);
 		exit(EXIT_FAILURE);
+		break;
+
+	/* listname+list@domain.tld */
+	case CTRL_LIST:
+		unlink(mailname);
+		owners = ctrlvalues(listdir, "owner");
+		for(i = 0; i < owners->count; i++)
+			if(strcmp(fromemails->emaillist[0],
+						owners->strs[i]) == 0)
+				send_list(listdir, owners->strs[i], mlmmjsend);
 		break;
 	}
 

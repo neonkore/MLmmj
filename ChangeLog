@@ -1,3 +1,6 @@
+1.2.5
+ o Make listname+list send the list of regular subscribers to the owner who
+   requested it.
  o Michael Fleming corrected some spelling / grammatical errors and made
    occasional minor clarifications in the english list texts.
  o Add README.sendmail from Andrea Barisani
