@@ -101,7 +101,7 @@ void send_list(const char *listdir, const char *emailaddr,
 		myfree(fileiter);
 	}
 
-	writen(fd, "\n-- \n  end of list mail\n", 23);
+	writen(fd, "\n-- \nend of output\n", 19);
 
 	close(fd);
 	closedir(dirp);
