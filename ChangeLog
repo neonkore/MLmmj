@@ -1,3 +1,5 @@
+ o In case of a succesful DSN parse, we werent deleting the mail, and thus
+   littering the queue
  o When sending moderated mails, rename them so that they wont be moderated
    again while sending
 1.2.5
