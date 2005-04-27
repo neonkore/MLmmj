@@ -1,3 +1,5 @@
+ o When sending moderated mails, rename them so that they wont be moderated
+   again while sending
 1.2.5
  o Make listname+list send the list of regular subscribers to the owner who
    requested it.

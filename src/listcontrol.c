@@ -102,7 +102,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 {
 	char *atsign, *recipdelimsign, *bouncenr, *tmpstr;
 	char *controlstr, *param, *conffilename, *moderatefilename;
-	char *c, *archivefilename;
+	char *c, *archivefilename, *sendfilename;
 	const char *subswitch;
 	size_t len;
 	struct stat stbuf;
@@ -483,16 +483,25 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		/* TODO Add accept/reject parameter to moderate */
 		unlink(mailname);
 		moderatefilename = concatstr(3, listdir, "/moderation/", param);
+		sendfilename = concatstr(2, moderatefilename, ".sending");
 		myfree(param);
+
 		if(stat(moderatefilename, &stbuf) < 0) {
 			myfree(moderatefilename);
 			exit(EXIT_SUCCESS); /* just exit, no mail to moderate */
 		}
+		/* Rename it to avoid mail being sent twice */
+		if(rename(moderatefilename, sendfilename) < 0) {
+			log_error(LOG_ARGS, "Could not rename to .sending");
+			exit(EXIT_FAILURE);
+		}
+
 		log_oper(listdir, OPLOGFNAME, "%s moderated %s",
 				fromemails->emaillist[0], moderatefilename);
+		myfree(moderatefilename);
 		execlp(mlmmjsend, mlmmjsend,
 				"-L", listdir,
-				"-m", moderatefilename, (char *)NULL);
+				"-m", sendfilename, (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsend);
 		exit(EXIT_FAILURE);
