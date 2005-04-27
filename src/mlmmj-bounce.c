@@ -302,12 +302,14 @@ int main(int argc, char **argv)
 
 	if(dsnbounce) {
 		address = dsnparseaddr(mailname);
-		if(address == NULL) {
-			/* not parseable, so unlink and clean up */
-			if(mailname)
-				unlink(mailname);
+
+		/* Delete the mailfile, no need for it anymore */
+		if(mailname)
+			unlink(mailname);
+
+		if(address == NULL)
 			exit(EXIT_SUCCESS);
-		}
+
 		a = strrchr(address, '@');
 		*a = '=';
 	}
