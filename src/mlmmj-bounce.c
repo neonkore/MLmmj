@@ -340,12 +340,16 @@ int main(int argc, char **argv)
 		a = concatstr(3, listdir, "/subconf/", address);
 		unlink(a);
 		myfree(a);
+		if(mailname)
+			unlink(mailname);
 		exit(EXIT_SUCCESS);
 	}
 	if(strcmp(number, "confunsub") == 0) {
 		a = concatstr(3, listdir, "/unsubconf/", address);
 		unlink(a);
 		myfree(a);
+		if(mailname)
+			unlink(mailname);
 		exit(EXIT_SUCCESS);
 	}
 	/* Below checks for bounce probes bouncing. If they do, simply remove
