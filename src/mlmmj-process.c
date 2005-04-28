@@ -1,4 +1,4 @@
-/* Copyright (C) 2002, 2003, 2004 Mads Martin Joergensen <mmj at mmj.dk>
+/* Copyright (C) 2003, 2003, 2004 Mads Martin Joergensen <mmj at mmj.dk>
  *
  * $Id$
  *
@@ -473,18 +473,6 @@ int main(int argc, char **argv)
 		for(i = 0; i < readhdrs[0].valuecount; i++) {
 			find_email_adr(readhdrs[0].values[i], &fromemails);
 		}
-		if(fromemails.emailcount != 1) { /* discard malformed mail */
-			discardname = concatstr(3, listdir,
-						"/queue/discarded/",
-						randomstr);
-			rename(mailfile, discardname);
-			unlink(donemailname);
-			myfree(donemailname);
-			myfree(discardname);
-			myfree(randomstr);
-			/* TODO: free emailstructs */
-			exit(EXIT_SUCCESS);
-		}
 	}
 
 	if(readhdrs[1].token) { /* To: addresses */
@@ -582,6 +570,19 @@ int main(int argc, char **argv)
 			    mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce,
 			    donemailname);
 		return EXIT_SUCCESS;
+	}
+
+	/* discard malformed mail with invalid From: */
+	if(fromemails.emailcount != 1) { 
+		discardname = concatstr(3, listdir,
+				"/queue/discarded/", randomstr);
+		rename(mailfile, discardname);
+		unlink(donemailname);
+		myfree(donemailname);
+		myfree(discardname);
+		myfree(randomstr);
+		/* TODO: free emailstructs */
+		exit(EXIT_SUCCESS);
 	}
 
 	myfree(delheaders);

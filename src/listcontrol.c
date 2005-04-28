@@ -165,6 +165,14 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 		}
 	}
+	
+	/* Only allow mails with bad From: header to be bounce mails */
+	if(fromemails->emailcount != 1 && ctrl != CTRL_BOUNCES) {
+		log_error(LOG_ARGS, "Discarding mail with invalid From: "
+				"which was not a bounce");
+		unlink(mailname);
+		exit(EXIT_SUCCESS);
+	}
 
 	switch (ctrl) {
 
