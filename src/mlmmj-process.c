@@ -419,6 +419,7 @@ int main(int argc, char **argv)
 	log_error(LOG_ARGS, "donemailname = [%s]\n", donemailname);
 #endif
 	if((rawmailfd = open(mailfile, O_RDONLY)) < 0) {
+		unlink(donemailname);
 		myfree(donemailname);
 		log_error(LOG_ARGS, "could not open() input mail file");
 		exit(EXIT_FAILURE);
