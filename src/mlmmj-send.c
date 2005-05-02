@@ -644,6 +644,7 @@ int main(int argc, char **argv)
 	uid_t uid;
 	struct strlist stl;
 	unsigned short smtpport = 25;
+	struct sigaction sigact;
 
 	CHECKFULLPATH(argv[0]);
 	
@@ -654,7 +655,10 @@ int main(int argc, char **argv)
 	myfree(bindir);
 	
 	/* install signal handler for SIGTERM */
-	if(signal(SIGTERM, catch_sig_term) == SIG_ERR)
+	sigact.sa_handler = catch_sig_term;
+	sigact.sa_flags = 0;
+	sigemptyset(&sigact.sa_mask);
+	if(sigaction(SIGTERM, &sigact, NULL) < 0)
 		log_error(LOG_ARGS, "Could not install SIGTERM handler!");
 
 	while ((opt = getopt(argc, argv, "aVDhm:l:L:R:F:T:r:s:")) != -1){
