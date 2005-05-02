@@ -69,9 +69,7 @@ static int gotsigterm = 0;
 
 void catch_sig_term(int sig)
 {
-	/* We should only get SIGTERM here, but better safe than sorry */
-	if(sig == SIGTERM)
-		gotsigterm = 1;
+	gotsigterm = 1;
 }
 
 char *bounce_from_adr(const char *recipient, const char *listadr,
