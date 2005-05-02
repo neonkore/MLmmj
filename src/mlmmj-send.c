@@ -41,6 +41,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <signal.h>
 
 #include "mlmmj.h"
 #include "mlmmj-send.h"
@@ -64,6 +65,14 @@
 static int addtohdr = 0;
 static int prepmailinmem = 0;
 static int maxverprecips = MAXVERPRECIPS;
+static int gotsigterm = 0;
+
+void catch_sig_term(int sig)
+{
+	/* We should only get SIGTERM here, but better safe than sorry */
+	if(sig == SIGTERM)
+		gotsigterm = 1;
+}
 
 char *bounce_from_adr(const char *recipient, const char *listadr,
 		      const char *mailfilename)
@@ -374,6 +383,11 @@ int send_mail_verp(int sockfd, struct strlist *addrs, char *mailmap,
 		return MLMMJ_FROM;
 	}
 	for(i = 0; i < addrs->count; i++) {
+		if(gotsigterm) {
+			log_error(LOG_ARGS, "TERM signal recieved, "
+					"shutting down.");
+			return -1;
+		}
 		if(strchr(addrs->strs[i], '@') == NULL) {
 			errno = 0;
 			log_error(LOG_ARGS, "No @ in address, ignoring %s",
@@ -573,8 +587,9 @@ int send_mail_many_list(int sockfd, const char *from, const char *replyto,
 				  hdrs, hdrslen, body, bodylen);
 			myfree(bounceaddr);
 		}
-		if(res && listaddr && archivefilename) {
-			/* we failed, so save the addresses and bail */
+		if((res || gotsigterm) && listaddr && archivefilename) {
+			/* we failed or got a SIGTERM, so save the addresses
+			 * and bail */
 			index = mybasename(archivefilename);
 			return requeuemail(listdir, index, addrs, i);
 		}
@@ -640,6 +655,10 @@ int main(int argc, char **argv)
 	mlmmjbounce = concatstr(2, bindir, "/mlmmj-bounce");
 	myfree(bindir);
 	
+	/* install signal handler for SIGTERM */
+	if(signal(SIGTERM, catch_sig_term) == SIG_ERR)
+		log_error(LOG_ARGS, "Could not install SIGTERM handler!");
+
 	while ((opt = getopt(argc, argv, "aVDhm:l:L:R:F:T:r:s:")) != -1){
 		switch(opt) {
 		case 'a':
