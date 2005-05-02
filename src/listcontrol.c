@@ -101,7 +101,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		const char *mlmmjbounce, const char *mailname)
 {
 	char *atsign, *recipdelimsign, *bouncenr, *tmpstr;
-	char *controlstr, *param, *conffilename, *moderatefilename;
+	char *controlstr, *param = NULL, *conffilename, *moderatefilename;
 	char *c, *archivefilename, *sendfilename;
 	const char *subswitch;
 	size_t len;

@@ -368,12 +368,19 @@ int main(int argc, char **argv)
 	bfilename = concatstr(3, listdir, "/bounce/", address);
 
 	a = strrchr(address, '=');
-	if (!a)
+	if (!a) {
+		if(mailname)
+			unlink(mailname);
 		exit(EXIT_SUCCESS);  /* ignore malformed address */
+	}
 	*a = '@';
 
 	/* make sure it's a subscribed address */
 	if(is_subbed(listdir, address)) {
+		log_error(LOG_ARGS, "%s is bouncing but not subscribed?",
+				address);
+		if(mailname)
+			unlink(mailname);
 		myfree(bfilename);
 		exit(EXIT_SUCCESS); /* Not subbed, so exit silently */
 	}

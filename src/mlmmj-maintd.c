@@ -85,7 +85,8 @@ static int mydaemon(const char *rootdir)
 	else if (pid)
 		exit(EXIT_SUCCESS); /* parent says bye bye */
 
-	chdir(rootdir);
+	if(chdir(rootdir) < 0)
+		log_error(LOG_ARGS, "Could not chdir(%s)", rootdir);
 
 	i = sysconf(_SC_OPEN_MAX);
 	if(i < 0)

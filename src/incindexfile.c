@@ -66,7 +66,7 @@ int incindexfile(const char *listdir)
 		return 0;
 	}
 
-	read(fd, intbuf, INTBUF_SIZE);
+	readn(fd, intbuf, INTBUF_SIZE);
 	for(i=0; i<sizeof(intbuf); i++) {
 		if(intbuf[i] < '0' || intbuf[i] > '9') {
 			intbuf[i] = '\0';

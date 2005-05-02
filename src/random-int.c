@@ -26,6 +26,8 @@
 #include <unistd.h>
 #include <time.h>
 
+#include "wrappers.h"
+
 int random_int()
 {
 	unsigned int seed;
@@ -39,13 +41,13 @@ int random_int()
 		devrandom = open("/dev/random", O_RDONLY);
 
 	if (devrandom >= 0) {
-		read(devrandom, &ch, 1);
+		readn(devrandom, &ch, 1);
 		seed ^= ch;
-		read(devrandom, &ch, 1);
+		readn(devrandom, &ch, 1);
 		seed ^= ch << 8;
-		read(devrandom, &ch, 1);
+		readn(devrandom, &ch, 1);
 		seed ^= ch << 16;
-		read(devrandom, &ch, 1);
+		readn(devrandom, &ch, 1);
 		seed ^= ch << 24;
 		close(devrandom);
 	}
