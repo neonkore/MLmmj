@@ -209,9 +209,11 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 	struct dirent *dp;
 	char *mailname, *fromname, *toname, *reptoname, *from, *to, *repto;
 	char *ch, *dirname = concatstr(2, listdir, "/queue/");
+	char *bouncelifestr;
 	pid_t childpid, pid;
 	struct stat st;
 	int fromfd, tofd, fd, discarded = 0, status;
+	time_t t, bouncelife = 0;
 
 	if(chdir(dirname) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
@@ -290,6 +292,21 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 			close(fd);
 			unlink(reptoname);
 			myfree(reptoname);
+		}
+
+		/* before we try again, check and see if it's old */
+		bouncelifestr = ctrlvalue(listdir, "bouncelife");
+		if(bouncelifestr) {
+			bouncelife = atol(bouncelifestr);
+			myfree(bouncelifestr);
+		}
+		if(bouncelife == 0)
+			bouncelife = BOUNCELIFE;
+
+		t = time(NULL);
+		if(t - st.st_mtime > bouncelife) {
+			unlink(mailname);
+			continue;
 		}
 
 		childpid = fork();
