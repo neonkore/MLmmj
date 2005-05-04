@@ -69,6 +69,7 @@ static int gotsigterm = 0;
 
 void catch_sig_term(int sig)
 {
+	fprintf(stderr, "inside catch_sig_term");
 	gotsigterm = 1;
 }
 
@@ -573,6 +574,13 @@ int send_mail_many_list(int sockfd, const char *from, const char *replyto,
 					addr);
 			continue;
 		}
+		if(gotsigterm && listaddr && archivefilename) {
+			/* we got SIGTERM, so save the addresses and bail */
+			log_error(LOG_ARGS, "TERM signal recieved, "
+						"shutting down.");
+			index = mybasename(archivefilename);
+			return requeuemail(listdir, index, addrs, i);
+		}
 		if(from) {
 			res = send_mail(sockfd, from, addr, replyto,
 					    mailmap, mailsize, listdir, NULL,
@@ -585,9 +593,8 @@ int send_mail_many_list(int sockfd, const char *from, const char *replyto,
 				  hdrs, hdrslen, body, bodylen);
 			myfree(bounceaddr);
 		}
-		if((res || gotsigterm) && listaddr && archivefilename) {
-			/* we failed or got a SIGTERM, so save the addresses
-			 * and bail */
+		if(res && listaddr && archivefilename) {
+			/* we failed, so save the addresses and bail */
 			index = mybasename(archivefilename);
 			return requeuemail(listdir, index, addrs, i);
 		}
@@ -656,8 +663,8 @@ int main(int argc, char **argv)
 	
 	/* install signal handler for SIGTERM */
 	sigact.sa_handler = catch_sig_term;
-	sigact.sa_flags = 0;
 	sigemptyset(&sigact.sa_mask);
+	sigact.sa_flags = 0;
 	if(sigaction(SIGTERM, &sigact, NULL) < 0)
 		log_error(LOG_ARGS, "Could not install SIGTERM handler!");
 
