@@ -69,7 +69,6 @@ static int gotsigterm = 0;
 
 void catch_sig_term(int sig)
 {
-	fprintf(stderr, "inside catch_sig_term");
 	gotsigterm = 1;
 }
 
