@@ -1,3 +1,5 @@
+1.2.6
+ o Add notification mail when subbed people try to sub (Jakob Hirsch)
  o Install SIGTERM handler in mlmmj-send to allow it to shut down gracefully
  o Also remove mails when it's a bounce from a person not subbed
  o Introduce read() wrapper (Stevens)

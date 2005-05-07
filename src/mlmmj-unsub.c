@@ -284,6 +284,34 @@ static void print_help(const char *prg)
 	exit(EXIT_SUCCESS);
 }
 
+void generate_notsubscribed(const char *listdir, const char *listaddr,
+			    const char *subaddr, const char *mlmmjsend)
+{
+	char *queuefilename, *fromaddr, *listname, *listfqdn;
+
+	listname = genlistname(listaddr);
+	listfqdn = genlistfqdn(listaddr);
+
+	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
+
+	myfree(listname);
+	myfree(listfqdn);
+
+	queuefilename = prepstdreply(listdir, "unsub-notsubscribed",
+				     "$helpaddr$", subaddr, NULL, 0, NULL);
+	MY_ASSERT(queuefilename);
+
+	execlp(mlmmjsend, mlmmjsend,
+				"-l", "1",
+				"-T", subaddr,
+				"-F", fromaddr,
+				"-m", queuefilename, (char *)NULL);
+
+	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
+	exit(EXIT_FAILURE);
+}
+
+
 int main(int argc, char **argv)
 {
 	int subread, subwrite, rlock, wlock, opt, unsubres, status, nomail = 0;
@@ -400,9 +428,13 @@ int main(int argc, char **argv)
 	}
 
 	if(is_subbed_in(subddirname, address)) {
-		/* Address is not subscribed, so exit silently */
+		/* Address is not subscribed */
 		myfree(subddirname);
 		myfree(listaddr);
+
+		printf("%s is not subscribed to %s.\n", address, listaddr);
+		generate_notsubscribed(listdir, listaddr, address, mlmmjsend);
+
 		exit(EXIT_SUCCESS);
 	}
 

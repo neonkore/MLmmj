@@ -1,4 +1,5 @@
-README.exim4                                                   March 16th 2005
+
+README.exim4                                                     May 6th 2005
 
 
 This is a step-by-step guide to run mlmmj with Exim4.
@@ -33,6 +34,8 @@ mlmmj_router:
   require_files = MLMMJ_HOME/${lc::$local_part}/index
   local_part_suffix = +*
   local_part_suffix_optional
+  headers_remove = Delivered-To
+  headers_add = Delivered-To: $local_part$local_part_suffix@$domain
   transport = mlmmj_transport
 
 

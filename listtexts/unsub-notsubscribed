@@ -1,0 +1,17 @@
+Subject: Not subscribed to $listaddr$
+
+Hi, this is the mlmmj program managing the mailinglist
+
+$listaddr$
+
+You are not subscribed to this list, so you cannot unsubscribe.
+
+
+To subscribe send a message to:
+
+$listsubaddr$
+
+And for help send a message to:
+
+$helpaddr$
+
