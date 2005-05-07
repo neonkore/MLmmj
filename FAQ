@@ -3,5 +3,8 @@ A: They send a mail to listname+subscribe@domain.tld or
    listname+unsubscribe@domain.tld. So if we had a list called jokes@humour.org
    people would send a mail to jokes+subscribe@humour.org to subscribe and
    jokes+unsubscribe@humour.org to unsubscribe
-Q: Why is this FAQ so small?
-A: Because noone submitted Q and A's for it
+
+Q: Why is my queue/ in the listdirectory filled with files with cryptip names
+   such as '4b35160eee7f63d' '287e3509509e4577' and '49123e175f68fcbc'
+A: mlmmj had a tendency of leaking files in the queue/ in the past. They're
+   safe to delete as long as they're not accompanied by .from and .rcptto files

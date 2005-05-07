@@ -1,16 +1,10 @@
 Code cleanup:
  o Make RECIPDELIM configurable (compile and/or runtime)
  o Add some more logging to mlmmj-maintd--actually we have to rethink logging a
-   bit. Do we want to use our own /var/log/mlmmj
+   bit. We want to log everything to syslog/mlmmj.
 
 Functionality items:
- o Make mlmmj-maintd capable of running maintenance on all listdirs in a
-   directory
- o Move subject into the text files, so we can make the lists any language we
-   want.
  o control/preexec and control/postexec.
 
 Nice to do:
- o Convert mlmmj-sub, mlmmj-unsub and mlmmj-process (moderation) to use
-   the new prepstdreply() function.
  o Add memory debugging features ("At exit you had the following allocated:")

@@ -1,0 +1,20 @@
+Subject: Nicht eingetragen auf $listaddr$
+
+Hi, hier ist das mlmmj Programm, das die Mailingliste 
+
+$listaddr$
+
+verwaltet.
+
+Sie sind nicht auf dieser Liste eingetragen, deshalb koennen sie
+sich auch nicht austragen.
+
+
+Um sich einzutragen, senden sie eine Mail an:
+
+$listsubaddr$
+
+Um Hilfe zu bekommen, senden sie eine Mail an:
+
+$helpaddr$
+
