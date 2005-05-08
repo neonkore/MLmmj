@@ -1,8 +1,9 @@
 
-README.exim4                                                     May 6th 2005
+README.exim4                                                      May 7th 2005
 
 
-This is a step-by-step guide to run mlmmj with Exim4.
+This is a step-by-step guide to run mlmmj with Exim4. The most current version
+of this can be found on http://plonk.de/sw/mlmmj/README.exim4.
 
 
 
@@ -10,8 +11,10 @@ Notes:
 - We assume that you have a user and group called mlmmj to use with mlmmj
 - The exim user needs read access rights to mlmmj's spool directory and its
   subdirectories
-- Existence of mailing lists is automatically checked and you don't need to
-  put anything into your aliases file
+- Existence of mailing lists is automatically checked ($listdir/index) and you
+  don't need to put anything into your aliases file
+- If you want VERP to be done by your MTA, follow the instructions below and
+  put an empty file named verp into the control directory of your lists
 
 
 1. In the main configuration section:
@@ -25,7 +28,13 @@ domainlist mlmmj_domains = list.your.domain
 domainlist relay_to_domains = other.domain : +mlmmj_domains
 
 
-3. In the routers section (before the dnslookup router, preferably at the
+3. mlmmj is barely interested in delay warnings, so add this in the main
+configuration:
+
+delay_warning_condition = ${if match_domain{$domain}{+mlmmj_domains}{no}{yes}}
+
+
+4. In the routers section (before the dnslookup router, preferably at the
 beginning):
 
 mlmmj_router:
@@ -39,8 +48,30 @@ mlmmj_router:
   transport = mlmmj_transport
 
 
-4. Somewhere in the transports section (change the path of mlmmj-recieve if you
-don't use the default location):
+If you want VERP to be done by your MTA, also add this:
+
+verp_router:
+  driver = dnslookup
+  # we only consider messages sent in through loopback
+  condition = ${if eq{$sender_host_address}{127.0.0.1}{yes}{no}}
+  # we do not do this for traffic going to the local machine
+  domains = !+mlmmj_domains : !+local_domains
+  ignore_target_hosts = <; 0.0.0.0; 127.0.0.0/8; ::1/128; fe80::/10; ff00::/8
+  # only the un-VERPed bounce addresses are handled
+  senders = \N^.+\+bounces-\d+@.+\N
+  transport = verp_smtp
+
+
+To prevent temporary errors for not-existing lists, add !+mlmmj_domains to the
+domains condition of the dnslookup router:
+
+dnslookup:
+  driver = dnslookup
+  domains = !+mlmmj_domains : !+local_domains
+[...]
+
+5. Somewhere in the transports section. (Change the path of mlmmj-recieve if you
+don't use the default location!):
 
 mlmmj_transport:
   driver = pipe
@@ -51,8 +82,21 @@ mlmmj_transport:
   current_directory = MLMMJ_HOME
   command = /usr/local/bin/mlmmj-recieve -F -L MLMMJ_HOME/${lc::$local_part}
 
+If you want VERP to be done by your MTA, also add this:
 
-5. Test your setup with
+verp_smtp:
+  driver = smtp
+  # put recipient address into return_path
+  return_path = \
+    ${local_part:$return_path}-$original_local_part=$original_domain@${domain:$return_path}
+  # must restrict to one recipient at a time
+  max_rcpt = 1
+  # Errors-To: may carry old return_path
+  headers_remove = Errors-To
+  headers_add = Errors-To: $return_path
+
+
+6. Test your setup with
 
 $ exim -bt mlmmj-test@your.list.domain
 mlmmj-test@your.list.domain

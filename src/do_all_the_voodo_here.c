@@ -81,6 +81,7 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 {
 	char *hdrline, *subject, *unqp;
 	int hdrsadded = 0;
+	int subject_present = 0;
 
 	allhdrs->count = 0;
 	allhdrs->strs = NULL;
@@ -89,6 +90,8 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 		/* Done with headers? Then add extra if wanted*/
 		if((strncasecmp(hdrline, "mime", 4) == 0) ||
 			((strlen(hdrline) == 1) && (hdrline[0] == '\n'))){
+
+			/* add extra headers */
 			if(!hdrsadded && hdrfd >= 0) {
 				if(dumpfd2fd(hdrfd, outfd) < 0) {
 					log_error(LOG_ARGS, "Could not "
@@ -100,7 +103,20 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 			}
 			
 			fsync(outfd);
+
+			/* end of headers, write single LF */ 
 			if(hdrline[0] == '\n') {
+				/* but first add Subject if none is present
+				 * and a prefix is defined */
+				if (prefix && !subject_present)
+				{
+					subject = concatstr(3, "Subject: ", 
+								prefix, "\n");
+					writen(outfd, subject, strlen(subject));
+					myfree(subject);
+					subject_present = 1;
+				}
+
 				if(writen(outfd, hdrline, strlen(hdrline))
 						< 0) {
 					myfree(hdrline);
@@ -137,6 +153,7 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 					myfree(subject);
 					myfree(hdrline);
 					myfree(unqp);
+					subject_present = 1;
 					continue;
 				}
 				myfree(unqp);
