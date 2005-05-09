@@ -38,27 +38,16 @@ char *checkwait_smtpreply(int sockfd, int replytype)
 {
 	size_t len = 0;
 	char smtpreply[RFC_REPLY_SIZE + 1];
-	int timer = 0;
 
 	smtpreply[RFC_REPLY_SIZE] = '\0';
 
 	do {
-		if(replytype != MLMMJ_QUIT && timer > 10) {
-			usleep(USEC_WAIT);
-			timer++;
-		}
 		len += read(sockfd, (smtpreply+len), RFC_REPLY_SIZE - len);
-	} while(smtpreply[len-1] != '\n' && timer < LOOP_WAIT);
+	} while(smtpreply[len - 1] != '\n' || len >= RFC_REPLY_SIZE);
 
 	smtpreply[len] = '\0';
 #if 0
 	printf("replytype = [%d], smtpreply = [%s]\n", replytype, smtpreply);
-#endif
-	if(timer > LOOP_WAIT) {
-		printf("Timed out in waiting for reply--will try later\n");
-		return (char *)-1;
-	}
-#if 0
 	fprintf(stderr, "%s", smtpreply);
 #endif
 
@@ -66,40 +55,40 @@ char *checkwait_smtpreply(int sockfd, int replytype)
 	 * easy for us to extend it later on if needed.
 	 */
 	switch(replytype) {
-	case MLMMJ_CONNECT:
-		if(smtpreply[0] != '2' || smtpreply[1] != '2')
-			return mystrdup(smtpreply);
-		break;
-	case MLMMJ_HELO:
-		if(smtpreply[0] != '2' || smtpreply[1] != '5')
-			return mystrdup(smtpreply);
-		break;
-	case MLMMJ_FROM:
-		if(smtpreply[0] != '2' || smtpreply[1] != '5')
-			return mystrdup(smtpreply);
-		break;
-	case MLMMJ_RCPTTO:
-		if(smtpreply[0] != '2' || smtpreply[1] != '5')
-			return mystrdup(smtpreply);
-		break;
-	case MLMMJ_DATA:
-		if(smtpreply[0] != '3' || smtpreply[1] != '5')
-			return mystrdup(smtpreply);
-		break;
-	case MLMMJ_DOT:
-		if(smtpreply[0] != '2' || smtpreply[1] != '5')
-			return mystrdup(smtpreply);
-		break;
-	case MLMMJ_QUIT:
-		if(smtpreply[0] != '2' || smtpreply[1] != '2')
-			return mystrdup(smtpreply);
-		break;
-	case MLMMJ_RSET:
-		if(smtpreply[0] != '2' || smtpreply[1] != '5')
-			return mystrdup(smtpreply);
-		break;
-	default:
-		break;
+		case MLMMJ_CONNECT:
+			if(smtpreply[0] != '2' || smtpreply[1] != '2')
+				return mystrdup(smtpreply);
+			break;
+		case MLMMJ_HELO:
+			if(smtpreply[0] != '2' || smtpreply[1] != '5')
+				return mystrdup(smtpreply);
+			break;
+		case MLMMJ_FROM:
+			if(smtpreply[0] != '2' || smtpreply[1] != '5')
+				return mystrdup(smtpreply);
+			break;
+		case MLMMJ_RCPTTO:
+			if(smtpreply[0] != '2' || smtpreply[1] != '5')
+				return mystrdup(smtpreply);
+			break;
+		case MLMMJ_DATA:
+			if(smtpreply[0] != '3' || smtpreply[1] != '5')
+				return mystrdup(smtpreply);
+			break;
+		case MLMMJ_DOT:
+			if(smtpreply[0] != '2' || smtpreply[1] != '5')
+				return mystrdup(smtpreply);
+			break;
+		case MLMMJ_QUIT:
+			if(smtpreply[0] != '2' || smtpreply[1] != '2')
+				return mystrdup(smtpreply);
+			break;
+		case MLMMJ_RSET:
+			if(smtpreply[0] != '2' || smtpreply[1] != '5')
+				return mystrdup(smtpreply);
+			break;
+		default:
+			break;
 	}
 
 	return NULL;
