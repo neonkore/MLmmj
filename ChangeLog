@@ -1,3 +1,6 @@
+1.2.6.1
+ o Make sure the fromaddr is correct on sub-subscribed mails
+ o Don't add an empty subject if there was one present
 1.2.6
  o If prefix but no Subject: header is present, add one (Jakob Hirsch)
  o Add notification mail when subbed people try to sub (Jakob Hirsch)

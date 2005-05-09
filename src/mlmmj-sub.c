@@ -240,23 +240,25 @@ static void print_help(const char *prg)
 	exit(EXIT_SUCCESS);
 }
 
-void generate_subscribed(const char *listdir, const char *listaddr,
-			 const char *subaddr, const char *mlmmjsend)
+void generate_subscribed(const char *listdir, const char *subaddr,
+		const char *mlmmjsend)
 {
-	char *queuefilename, *fromaddr, *listname, *listfqdn;
+	char *queuefilename, *fromaddr, *listname, *listfqdn, *listaddr;
 
+	listaddr = getlistaddr(listdir);
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 
 	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
 
-	myfree(listname);
-	myfree(listfqdn);
-
 	queuefilename = prepstdreply(listdir, "sub-subscribed", "$helpaddr$",
 				     subaddr, NULL, 0, NULL);
 	MY_ASSERT(queuefilename);
 
+	myfree(listaddr);
+	myfree(listname);
+	myfree(listfqdn);
+	
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
 				"-T", subaddr,
@@ -459,7 +461,7 @@ int main(int argc, char **argv)
 		myfree(sublockname);
 
 		printf("%s is already subscribed to %s.\n", address, listaddr);
-		generate_subscribed(listdir, listaddr, address, mlmmjsend);
+		generate_subscribed(listdir, address, mlmmjsend);
 		
 		return EXIT_SUCCESS;
 	}

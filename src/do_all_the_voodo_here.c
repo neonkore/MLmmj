@@ -142,6 +142,7 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 		/* Add Subject: prefix if wanted */
 		if(prefix) {
 			if(strncasecmp(hdrline, "Subject:", 8) == 0) {
+				subject_present = 1;
 				unqp = cleanquotedp(hdrline + 8);
 				if(strstr(hdrline + 8, prefix) == NULL &&
 				   strstr(unqp, prefix) == NULL) {
