@@ -434,7 +434,6 @@ int main(int argc, char **argv)
 		myfree(subddirname);
 		myfree(listaddr);
 
-		printf("%s is not subscribed to %s.\n", address, listaddr);
 		generate_notsubscribed(listdir, address, mlmmjsend);
 
 		exit(EXIT_SUCCESS);
