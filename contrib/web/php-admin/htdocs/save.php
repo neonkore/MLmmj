@@ -68,6 +68,10 @@ function mlmmj_list($name, $nicename, $text)
     
 }
 
+// Perl's encode_entities (to be able to use tunables.pl)
+function encode_entities($str) { return htmlentities($str); }
+
+
 $tpl = new FastTemplate($templatedir);
 
 $list = $HTTP_POST_VARS["list"];
@@ -81,7 +85,11 @@ die("non-existent list");
 $tpl->define(array("main" => "save.html"));
 $tpl->assign(array("LIST" => htmlentities($list)));
 
-require("../conf/tunables.php");
+$handle = fopen("../conf/tunables.pl", "r");
+$tunables = fread($handle, filesize("../conf/tunables.pl"));
+fclose($handle);
+
+eval($tunables);
 
 $tpl->parse("MAIN","main");
 $tpl->FastPrint("MAIN");
