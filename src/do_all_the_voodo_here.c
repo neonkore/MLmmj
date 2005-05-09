@@ -154,7 +154,6 @@ int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
 					myfree(subject);
 					myfree(hdrline);
 					myfree(unqp);
-					subject_present = 1;
 					continue;
 				}
 				myfree(unqp);
