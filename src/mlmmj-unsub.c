@@ -284,22 +284,24 @@ static void print_help(const char *prg)
 	exit(EXIT_SUCCESS);
 }
 
-void generate_notsubscribed(const char *listdir, const char *listaddr,
-			    const char *subaddr, const char *mlmmjsend)
+void generate_notsubscribed(const char *listdir, const char *subaddr,
+		const char *mlmmjsend)
 {
-	char *queuefilename, *fromaddr, *listname, *listfqdn;
+	char *queuefilename, *fromaddr, *listname, *listfqdn, *listaddr;
 
+	listaddr = getlistaddr(listdir);
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 
 	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
 
-	myfree(listname);
-	myfree(listfqdn);
-
 	queuefilename = prepstdreply(listdir, "unsub-notsubscribed",
 				     "$helpaddr$", subaddr, NULL, 0, NULL);
 	MY_ASSERT(queuefilename);
+
+	myfree(listaddr);
+	myfree(listname);
+	myfree(listfqdn);
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
@@ -433,7 +435,7 @@ int main(int argc, char **argv)
 		myfree(listaddr);
 
 		printf("%s is not subscribed to %s.\n", address, listaddr);
-		generate_notsubscribed(listdir, listaddr, address, mlmmjsend);
+		generate_notsubscribed(listdir, address, mlmmjsend);
 
 		exit(EXIT_SUCCESS);
 	}
