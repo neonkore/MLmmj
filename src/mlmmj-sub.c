@@ -460,7 +460,6 @@ int main(int argc, char **argv)
 		unlink(sublockname);
 		myfree(sublockname);
 
-		printf("%s is already subscribed to %s.\n", address, listaddr);
 		generate_subscribed(listdir, address, mlmmjsend);
 		
 		return EXIT_SUCCESS;
