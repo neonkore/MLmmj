@@ -43,7 +43,7 @@ char *checkwait_smtpreply(int sockfd, int replytype)
 
 	do {
 		len += read(sockfd, (smtpreply+len), RFC_REPLY_SIZE - len);
-	} while(smtpreply[len - 1] != '\n');
+	} while(smtpreply[len - 1] != '\n' && len <= RFC_REPLY_SIZE);
 
 	smtpreply[len] = '\0';
 #if 0
