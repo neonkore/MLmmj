@@ -246,7 +246,6 @@ char *gendatestr()
 
 	/* 6 + 26 + ' ' + timezone which is 5 + '\n\0' == 40 */
 	timestr = (char *)malloc(40);
-	strcpy(timestr, "Date: ");
 	t = time(NULL);
 
 	localtime_r(&t, &lttm);
@@ -311,7 +310,7 @@ char *gendatestr()
 	}
 
 	
-	snprintf(timestr, 40, "Date: %s, %02d %s %d %d:%d:%d %+05d\n",
+	snprintf(timestr, 40, "Date: %s, %02d %s %04d %02d:%02d:%02d %+05d\n",	
 			weekday, lttm.tm_mday, month, lttm.tm_year + 1900,
 			lttm.tm_hour, lttm.tm_min, lttm.tm_sec, ((int)t)/36);
 
