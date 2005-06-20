@@ -927,8 +927,13 @@ int main(int argc, char **argv)
 		if(sendres) {
 			/* error, so keep it in the queue */
 			deletewhensent = 0;
-			/* dump date we want when resending */
+			/* dump data we want when resending first check
+			 * if it already exists. In that case continue */
 			tmpstr = concatstr(2, mailfilename, ".mailfrom");
+			if(stat(tmpstr, &st) == 0) {
+				myfree(tmpstr);
+				break;
+			}
 			tmpfd = open(tmpstr, O_WRONLY|O_CREAT|O_TRUNC,
 						S_IRUSR|S_IWUSR);
 			myfree(tmpstr);
@@ -938,6 +943,10 @@ int main(int argc, char **argv)
 			}
 			close(tmpfd);
 			tmpstr = concatstr(2, mailfilename, ".reciptto");
+			if(stat(tmpstr, &st) == 0) {
+				myfree(tmpstr);
+				break;
+			}
 			tmpfd = open(tmpstr, O_WRONLY|O_CREAT|O_TRUNC,
 						S_IRUSR|S_IWUSR);
 			myfree(tmpstr);
@@ -949,6 +958,10 @@ int main(int argc, char **argv)
 			if(replyto) {
 				tmpstr = concatstr(2, mailfilename,
 						      ".reply-to");
+				if(stat(tmpstr, &st) == 0) {
+					myfree(tmpstr);
+					break;
+				}
 				tmpfd = open(tmpstr, O_WRONLY|O_CREAT|O_TRUNC,
 							S_IRUSR|S_IWUSR);
 				myfree(tmpstr);

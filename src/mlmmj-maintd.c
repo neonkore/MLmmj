@@ -212,7 +212,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 	char *bouncelifestr;
 	pid_t childpid, pid;
 	struct stat st;
-	int fromfd, tofd, fd, discarded = 0, status;
+	int fromfd, tofd, fd, status, err = 0;
 	time_t t, bouncelife = 0;
 
 	if(chdir(dirname) < 0) {
@@ -229,8 +229,10 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 	myfree(dirname);
 
 	while((dp = readdir(queuedir)) != NULL) {
-		if(stat(dp->d_name, &st) < 0) {
-			log_error(LOG_ARGS, "Could not stat(%s)",dp->d_name);
+		mailname = concatstr(3, listdir, "/queue/", dp->d_name);
+
+		if(stat(mailname, &st) < 0) {
+			log_error(LOG_ARGS, "Could not stat(%s)", mailname);
 			continue;
 		}
 
@@ -238,49 +240,51 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 			continue;
 
 		if(strchr(dp->d_name, '.')) {
-			mailname = mystrdup(dp->d_name);
-			ch = strchr(mailname, '.');
+			ch = strrchr(mailname, '.');
 			*ch = '\0';
-			if(stat(mailname, &st) < 0)
-				if(errno == ENOENT)
-					unlink(dp->d_name);
+			if(stat(mailname, &st) < 0) {
+				if(errno == ENOENT) {
+					*ch = '.';
+					unlink(mailname);
+				}
+			}
 			myfree(mailname);
 			continue;
 		}
-
-		mailname = concatstr(3, listdir, "/queue/", dp->d_name);
 
 		fromname = concatstr(2, mailname, ".mailfrom");
 		toname = concatstr(2, mailname, ".reciptto");
 		reptoname = concatstr(2, mailname, ".reply-to");
 
 		fromfd = open(fromname, O_RDONLY);
+		if(fromfd < 0)
+			err = errno;
 		tofd = open(toname, O_RDONLY);
 
-		if(fromfd < 0 || tofd < 0) {
-			if(discarded) {
-				unlink(fromname);
-				unlink(toname);
-				unlink(reptoname);
-			}
+		if((fromfd < 0 && err == ENOENT) ||
+		   (tofd < 0 && errno == ENOENT)) {
+			unlink(mailname);
+			unlink(fromname);
+			unlink(toname);
+			unlink(reptoname);
 			myfree(mailname);
 			myfree(fromname);
 			myfree(toname);
 			myfree(reptoname);
 			if(fromfd >= 0)
 				close(fromfd);
+			if(tofd >= 0)
+				close(tofd);
 			continue;
 		}
 
 		from = mygetline(fromfd);
 		chomp(from);
 		close(fromfd);
-		unlink(fromname);
 		myfree(fromname);
 		to = mygetline(tofd);
 		chomp(to);
 		close(tofd);
-		unlink(toname);
 		myfree(toname);
 		fd = open(reptoname, O_RDONLY);
 		if(fd < 0) {
@@ -290,7 +294,6 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 			repto = mygetline(fd);
 			chomp(repto);
 			close(fd);
-			unlink(reptoname);
 			myfree(reptoname);
 		}
 

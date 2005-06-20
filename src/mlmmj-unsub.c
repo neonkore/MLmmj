@@ -269,7 +269,7 @@ ssize_t unsubscribe(int subreadfd, int subwritefd, const char *address)
 static void print_help(const char *prg)
 {
 	printf("Usage: %s -L /path/to/list -a john@doe.org "
-	       "[-c] [-C] [-h] [-L] [-d | -n] [-V]\n"
+	       "[-c] [-C] [-h] [-L] [-d | -n] [-s] [-V]\n"
 	       " -a: Email address to unsubscribe \n"
 	       " -c: Send goodbye mail\n"
 	       " -C: Request mail confirmation\n"
@@ -277,6 +277,7 @@ static void print_help(const char *prg)
 	       " -h: This help\n"
 	       " -L: Full path to list directory\n"
 	       " -n: Subscribe to no mail version of list\n"
+	       " -s: Don't send a mail to the address if not subscribed\n"
 	       " -U: Don't switch to the user id of the listdir owner\n"
 	       " -V: Print version\n"
 	       "When no options are specified, unsubscription silently "
@@ -319,6 +320,7 @@ int main(int argc, char **argv)
 	int subread, subwrite, rlock, wlock, opt, unsubres, status, nomail = 0;
 	int confirmunsub = 0, unsubconfirm = 0, notifysub = 0, digest = 0;
 	int changeuid = 1, groupwritable = 0, sublock, sublockfd;
+	int nogennotsubscribed = 0;
 	char *listaddr, *listdir = NULL, *address = NULL, *subreadname = NULL;
 	char *subwritename, *mlmmjsend, *bindir, *subdir;
 	char *subddirname, *sublockname;
@@ -338,7 +340,7 @@ int main(int argc, char **argv)
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	myfree(bindir);
 
-	while ((opt = getopt(argc, argv, "hcCdnVUL:a:")) != -1) {
+	while ((opt = getopt(argc, argv, "hcCdnVUL:a:s")) != -1) {
 		switch(opt) {
 		case 'L':
 			listdir = optarg;
@@ -360,6 +362,9 @@ int main(int argc, char **argv)
 			break;
 		case 'h':
 			print_help(argv[0]);
+			break;
+		case 's':
+			nogennotsubscribed = 1;
 			break;
 		case 'U':
 			changeuid = 0;
@@ -434,7 +439,9 @@ int main(int argc, char **argv)
 		myfree(subddirname);
 		myfree(listaddr);
 
-		generate_notsubscribed(listdir, address, mlmmjsend);
+		if(!nogennotsubscribed) {
+			generate_notsubscribed(listdir, address, mlmmjsend);
+		}
 
 		exit(EXIT_SUCCESS);
 	}

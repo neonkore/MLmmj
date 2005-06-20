@@ -225,7 +225,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 static void print_help(const char *prg)
 {
 	printf("Usage: %s -L /path/to/list -a john@doe.org "
-	       "[-c] [-C] [-h]\n       [-L] [-d | -n] [-U] [-V]\n"
+	       "[-c] [-C] [-h]\n       [-L] [-d | -n] [-s] [-U] [-V]\n"
 	       " -a: Email address to subscribe \n"
 	       " -c: Send welcome mail\n"
 	       " -C: Request mail confirmation\n"
@@ -233,6 +233,7 @@ static void print_help(const char *prg)
 	       " -h: This help\n"
 	       " -L: Full path to list directory\n"
 	       " -n: Subscribe to no mail version of list\n"
+	       " -s: Don't send a mail to the subscriber if already subscribed\n"
 	       " -U: Don't switch to the user id of the listdir owner\n"
 	       " -V: Print version\n"
 	       "When no options are specified, subscription silently "
@@ -276,7 +277,7 @@ int main(int argc, char **argv)
 	char *sublockname;
 	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock, notifysub;
 	int changeuid = 1, status, digest = 0, nomail = 0;
-	int groupwritable = 0, sublock, sublockfd;
+	int groupwritable = 0, sublock, sublockfd, nogensubscribed = 0;
 	size_t len;
 	off_t suboff;
 	struct stat st;
@@ -292,7 +293,7 @@ int main(int argc, char **argv)
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	myfree(bindir);
 
-	while ((opt = getopt(argc, argv, "hcCdnVUL:a:")) != -1) {
+	while ((opt = getopt(argc, argv, "hcCdnsVUL:a:")) != -1) {
 		switch(opt) {
 		case 'a':
 			address = optarg;
@@ -314,6 +315,9 @@ int main(int argc, char **argv)
 			break;
 		case 'n':
 			nomail = 1;
+			break;
+		case 's':
+			nogensubscribed = 1;
 			break;
 		case 'U':
 			changeuid = 0;
@@ -460,7 +464,8 @@ int main(int argc, char **argv)
 		unlink(sublockname);
 		myfree(sublockname);
 
-		generate_subscribed(listdir, address, mlmmjsend);
+		if(!nogensubscribed)
+			generate_subscribed(listdir, address, mlmmjsend);
 		
 		return EXIT_SUCCESS;
 	}

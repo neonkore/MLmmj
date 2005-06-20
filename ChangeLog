@@ -1,3 +1,9 @@
+1.2.8
+ o Make sure the resend of queue files will not loop indefinately
+ o Make Date: header RFC2822 compliant (Jakob Hirsch)
+ o Add -s switch to mlmmj-{,un}sub to control whether or not to send a mail
+   telling about already subscribed, or not subscribed when trying to
+   subscribe or unsubscribe (Christian Laursen)
 1.2.7
  o Remove old superflous cruft in the smtpreply reader function, making
    mlmmj-send not segfault in rare cases when SIGTERM was sent
