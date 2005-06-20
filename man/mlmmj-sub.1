@@ -20,6 +20,8 @@ mlmmj-sub \- subscribe address to a mailinglist run by mlmmj
 .HP
 \fB\-n\fR: Subscribe to nomail version of the list
 .HP
+\fB\-s\fR: Don't send a mail to the subscriber if already subscribed
+.HP
 \fB\-U\fR: Don't switch to the user id of the listdir owner
 .HP
 \fB\-V\fR: Print version
@@ -36,6 +38,9 @@ The nomail version of the list is a list version where people are subscribed
 like usual, but they won't recieve any postings to the list. This is useful for
 people who read the mailinglist through a news gateway, but want to be able to
 post to the list.
+
+Normally a mail is sent to the subscriber if the address is already subscribed
+to the list. If the \fB\-s\fR switch is used such a mail will not be sent.
 
 When neither \fB\-c\fR nor \fB\-C\fR are specified, subscription silently
 happens.

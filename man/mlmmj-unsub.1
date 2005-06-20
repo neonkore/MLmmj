@@ -20,11 +20,23 @@ mlmmj-unsub \- manual page for mlmmj-unsub
 .HP
 \fB\-n\fR: Unsubscribe from the nomail version of the list
 .HP
+\fB\-s\fR: Don't send a mail to the address if not subscribed
+.HP
+\fB\-U\fR: Don't switch to the user id of the listdir owner
+.HP
 \fB\-V\fR: Print version
 .SH DESCRIPTION
 This utility is used to unsubscribe people from the specified mailinglist. It
 will remove the specified email address from every file in the
 <listdir>/subscribers.d/ directory.
+
+Unless the \fB\-U\fR switch is used it will switch its user id to the user id
+owning the list directory. This is done to make sure that new files created are
+having correct permissions.
+
+Normally a mail is sent to the person being unsubscribed if the address is not
+subscribed to the list. If the \fB\-s\fR switch is used such a mail will not be
+sent.
 
 When neither \fB\-c\fR nor \fB\-C\fR are specified, unsubscription silently
 happens.
