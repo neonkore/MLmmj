@@ -332,7 +332,6 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 			      pid = waitpid(childpid, &status, 0);
 			while(pid == -1 && errno == EINTR);
 		} else {
-			closedir(queuedir);
 			if(repto) {
 				execlp(mlmmjsend, mlmmjsend,
 						"-l", "1",
@@ -444,7 +443,6 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 			      pid = waitpid(childpid, &status, 0);
 			while(pid == -1 && errno == EINTR);
 		} else {
-			closedir(queuedir);
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "3",
 					"-L", listdir,
