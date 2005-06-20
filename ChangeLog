@@ -1,5 +1,5 @@
 1.2.8
- o Make sure the resend of requeue files will not loop indefinately
+ o Don't closedir() before done (GOOD spotting Christian Laursen)
  o Make sure the resend of queue files will not loop indefinately
  o Make Date: header RFC2822 compliant (Jakob Hirsch)
  o Add -s switch to mlmmj-{,un}sub to control whether or not to send a mail
