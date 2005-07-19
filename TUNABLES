@@ -17,9 +17,7 @@ to specify several entries (one pr. line), it's marked "list".
  · closedlist			(boolean)
 
    Is the list is open or closed. If it's closed subscribtion and
-   unsubscription via mail is disabled. Also note that confirmation is disabled
-   too, so the -C option to mlmmj-sub and mlmmj-unsub is of no use with a
-   closed list.
+   unsubscription via mail is disabled.
 
  · moderated			(boolean)
 
