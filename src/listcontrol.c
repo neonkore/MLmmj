@@ -44,6 +44,7 @@
 #include "memory.h"
 #include "log_oper.h"
 #include "ctrlvalues.h"
+#include "subscriberfuncs.h"
 
 enum ctrl_e {
 	CTRL_SUBSCRIBE_DIGEST,
@@ -106,7 +107,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	const char *subswitch;
 	size_t len;
 	struct stat stbuf;
-	int closedlist, nosubconfirm, tmpfd, noget, i;
+	int closedlist, nosubconfirm, tmpfd, noget, i, subonlyget = 0;
 	size_t cmdlen;
 	unsigned int ctrl;
 	struct strlist *owners;
@@ -241,8 +242,6 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	/* listname+subconf-digest-COOKIE@domain.tld */
 	case CTRL_CONFSUB_DIGEST:
 		unlink(mailname);
-		if (closedlist)
-			exit(EXIT_SUCCESS);
 		conffilename = concatstr(3, listdir, "/subconf/", param);
 		myfree(param);
 		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
@@ -268,8 +267,6 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	/* listname+subconf-nomail-COOKIE@domain.tld */
 	case CTRL_CONFSUB_NOMAIL:
 		unlink(mailname);
-		if (closedlist)
-			exit(EXIT_SUCCESS);
 		conffilename = concatstr(3, listdir, "/subconf/", param);
 		myfree(param);
 		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
@@ -295,8 +292,6 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	/* listname+subconf-COOKIE@domain.tld */
 	case CTRL_CONFSUB:
 		unlink(mailname);
-		if (closedlist)
-			exit(EXIT_SUCCESS);
 		conffilename = concatstr(3, listdir, "/subconf/", param);
 		myfree(param);
 		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
@@ -532,6 +527,10 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		noget = statctrl(listdir, "noget");
 		if(noget)
 			exit(EXIT_SUCCESS);
+		subonlyget = statctrl(listdir, "subonlyget");
+		if(subonlyget)
+			if(is_subbed(listdir, fromemails->emaillist[0]) != 0)
+				exit(EXIT_SUCCESS);
 		/* sanity check--is it all digits? */
 		for(c = param; *c != '\0'; c++) {
 			if(!isdigit((int)*c))

@@ -1,3 +1,7 @@
+ o Make it possible to confirm subscription even though it's a closedlist.
+   It makes sense to be able to confirm a request submitted by the sysadmin
+   on the commandline
+ o Add 'subonlyget' tunable which makes +get-N only work for subscribers
 1.2.8
  o Don't closedir() before done (GOOD spotting Christian Laursen)
  o Make sure the resend of queue files will not loop indefinately
