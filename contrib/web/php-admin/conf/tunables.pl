@@ -105,6 +105,10 @@ mlmmj_boolean("noget",
 			  "No get",
 			  "If this option is set, listname+get-INDEX is turned off.");
 
+mlmmj_boolean("subonlyget",
+			  "Subscribers only get",
+			  "If this option is set, retrieving old posts with +get-N is only possible for subscribers.");
+
 mlmmj_boolean("notoccdenymails",
 			  "No To: Cc: deny mails",
 			  "This switch turns off whether mlmmj sends out notification about postings ".
