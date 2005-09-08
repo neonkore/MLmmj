@@ -122,7 +122,7 @@ $tpl->assign(ACTION => $action);
 $subscribers = get_subscribers();
 
 my $i = 0;
-for my $address (sort keys %$subscribers) {
+for my $address (sort {lc $a cmp lc $b} keys %$subscribers) {
 	$tpl->assign(EMAIL => $address,
 				 ID => $i++,
 				 SCHECKED => $subscribers->{$address}->{subscriber} ? 'checked' : '',
