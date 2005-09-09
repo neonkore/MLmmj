@@ -277,9 +277,8 @@ int main(int argc, char **argv)
 	char *sublockname;
 	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock, notifysub;
 	int changeuid = 1, status, digest = 0, nomail = 0;
-	int groupwritable = 0, sublock, sublockfd, nogensubscribed = 0;
+	int groupwritable = 0, sublock, sublockfd, nogensubscribed = 0, subbed;
 	size_t len;
-	off_t suboff;
 	struct stat st;
 	pid_t pid, childpid;
 	uid_t uid;
@@ -364,7 +363,20 @@ int main(int argc, char **argv)
 		exit(EXIT_SUCCESS);  /* XXX is this success? */
 	}
 
-	subddirname = concatstr(2, listdir, "/subscribers.d");
+	switch(typesub) {
+		default:
+		case SUB_NORMAL:
+			subdir = "/subscribers.d/";
+			break;
+		case SUB_DIGEST:
+			subdir = "/digesters.d/";
+			break;
+		case SUB_NOMAIL:
+			subdir = "/nomailsubs.d/";
+			break;
+	}
+
+	subddirname = concatstr(2, listdir, subdir);
 	if (stat(subddirname, &st) == 0) {
 		if(st.st_mode & S_IWGRP) {
 			groupwritable = S_IRGRP|S_IWGRP;
@@ -389,19 +401,6 @@ int main(int argc, char **argv)
 	chstr[0] = address[0];
 	chstr[1] = '\0';
 	
-	switch(typesub) {
-		default:
-		case SUB_NORMAL:
-			subdir = "/subscribers.d/";
-			break;
-		case SUB_DIGEST:
-			subdir = "/digesters.d/";
-			break;
-		case SUB_NOMAIL:
-			subdir = "/nomailsubs.d/";
-			break;
-	}
-		
 	subfilename = concatstr(3, listdir, subdir, chstr);
 
 	sublockname = concatstr(5, listdir, subdir, ".", chstr, ".lock");
@@ -438,8 +437,8 @@ int main(int argc, char **argv)
 		myfree(sublockname);
 		exit(EXIT_FAILURE);
 	}
-	suboff = find_subscriber(subfilefd, address);
-	if(suboff == -1) {
+	subbed = is_subbed_in(subddirname, address);
+	if(subbed) {
 		if(subconfirm) {
 			close(subfilefd);
 			close(sublockfd);

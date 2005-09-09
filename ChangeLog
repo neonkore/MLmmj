@@ -1,3 +1,5 @@
+ o Use is_subbed_in instead of find_subscriber when subscribing people
+   (Christian Laursen)
  o Make it possible to confirm subscription even though it's a closedlist.
    It makes sense to be able to confirm a request submitted by the sysadmin
    on the commandline
