@@ -5,6 +5,7 @@
 
 VERSION="0.1"
 DEFAULTDIR="/var/spool/mlmmj"
+ALIASFILE=/etc/aliases
 
 USAGE="mlmmj-make-ml "$VERSION"
 "$0" [OPTIONS]
@@ -12,7 +13,7 @@ USAGE="mlmmj-make-ml "$VERSION"
 -h	display this help text
 -L	the name of the mailinglist
 -s	your spool directory if not "$DEFAULTDIR"
--a	create the needed entrys in your /etc/aliases file
+-a	create the needed entrys in your $ALIASFILE file
 -z	nuffn for now
 -c	chown the spool dir"
 
@@ -123,14 +124,14 @@ ALIAS="$LISTNAME:  \"|$MLMMJRECIEVE -L $SPOOLDIR/$LISTNAME/\""
 CRONENTRY="0 */2 * * * \"$MLMMJMAINTD -F -L $SPOOLDIR/$LISTNAME/\""
 
 if [ -n "$A_CREATE" ]; then
-	echo "I want to add the following to your /etc/aliases file:"
+	echo "I want to add the following to your $ALIASFILE file:"
 	echo "$ALIAS"
 
 	echo -n "is this ok? [y/N] : "
 	read OKIDOKI
 	case $OKIDOKI in
 		y|Y)
-		echo "$ALIAS" >> /etc/aliases
+		echo "$ALIAS" >> $ALIASFILE
 		;;
 		n|N)
 		exit 0
@@ -140,7 +141,7 @@ if [ -n "$A_CREATE" ]; then
 	esac
 else
 	echo
-	echo "Don't forget to add this to /etc/aliases:"
+	echo "Don't forget to add this to $ALIASFILE:"
 	echo "$ALIAS"
 fi
 

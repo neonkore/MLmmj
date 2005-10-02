@@ -38,6 +38,7 @@
 #include "wrappers.h"
 #include "memory.h"
 #include "getlistaddr.h"
+#include "mlmmj.h"
 
 char *substitute(const char *line, const char *listaddr, size_t datacount,
 		 char **data)
@@ -181,7 +182,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	if(replyto) {
 		myreplyto = substitute(replyto, listaddr, tokencount, data);
 		tmp = concatstr(3, "Reply-To: ", myreplyto, "\n");
-		free(myreplyto);
+		myfree(myreplyto);
 		myreplyto = tmp;
 	} else
 		myreplyto = NULL;
