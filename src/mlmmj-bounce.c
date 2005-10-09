@@ -36,6 +36,7 @@
 #include <ctype.h>
 
 #include "getlistaddr.h"
+#include "getlistdelim.h"
 #include "mlmmj.h"
 #include "strgen.h"
 #include "wrappers.h"
@@ -101,7 +102,7 @@ char *fetchindexes(const char *bouncefile)
 void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 {
 	char *myaddr, *from, *a, *indexstr, *queuefilename, *listaddr;
-	char *listfqdn, *listname, *probefile;
+	char *listfqdn, *listname, *probefile, *listdelim=getlistdelim(listdir);
 	char *maildata[] = { "bouncenumbers", NULL };
 	int fd;
 	time_t t;
@@ -112,9 +113,11 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 
-	from = concatstr(5, listname, "+bounces-probe-", myaddr, "@", listfqdn);
+	from = concatstr(6, listname, listdelim, "bounces-probe-", myaddr, "@",
+			 listfqdn);
 
 	myfree(listaddr);
+	myfree(listdelim);
 	myfree(listfqdn);
 	myfree(listname);
 

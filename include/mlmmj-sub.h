@@ -27,10 +27,10 @@
 #include <mlmmj.h>
 
 void confirm_sub(const char *listdir, const char *listaddr,
-		 const char *subaddr, const char *mlmmjsend,
-		 enum subtype typesub);
+		 const char *listdelim, const char *subaddr,
+		 const char *mlmmjsend, enum subtype typesub);
 void generate_subconfirm(const char *listdir, const char *listadr,
-		const char *subaddr, const char *mlmmjsend,
-		enum subtype typesub);
+		const char *listdelim, const char *subaddr,
+		const char *mlmmjsend, enum subtype typesub);
 
 #endif /* MLMMJ_SUBSCRIBE_H */

@@ -1,4 +1,4 @@
-/* Copyright (C) 2004 Mads Martin Joergensen <mmj at mmj.dk>
+/* Copyright 2005 Joel Aelwyn <joel@lightbearer.com>
  *
  * $Id$
  *
@@ -21,15 +21,9 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef PREPSTDREPLY_H
-#define PREPSTDREPLY_H
+#ifndef GETLISTDELIM_H
+#define GETLISTDELIM_H
 
-char *substitute(const char *line, const char *listaddr, const char *listdelim,
-		 size_t datacount, char **data);
-char *substitute_one(const char *line, const char *listaddr,
-		 const char *listdelim, size_t datacount, char **data);
-char *prepstdreply(const char *listdir, const char *filename, const char *from,
-		   const char *to, const char *replyto, size_t tokencount,
-		   char **data);
+char *getlistdelim(const char *listdir);
 
-#endif /* PREPSTDREPLY_H */
+#endif /* GETLISTDELIM_H */

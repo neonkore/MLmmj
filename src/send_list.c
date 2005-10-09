@@ -34,6 +34,7 @@
 #include "send_list.h"
 #include "strgen.h"
 #include "getlistaddr.h"
+#include "getlistdelim.h"
 #include "log_error.h"
 #include "chomp.h"
 #include "wrappers.h"
@@ -44,18 +45,20 @@
 void send_list(const char *listdir, const char *emailaddr,
 	       const char *mlmmjsend)
 {
-	char *queuefilename, *listaddr, *listname, *listfqdn, *fromaddr;
-	char *subdir, *fileiter;
+	char *queuefilename, *listaddr, *listdelim, *listname, *listfqdn;
+	char *fromaddr, *subdir, *fileiter;
 	DIR *dirp;
 	struct dirent *dp;
 	int fd, subfd;
 
 	listaddr = getlistaddr(listdir);
+	listdelim = getlistdelim(listdir);
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 	subdir = concatstr(2, listdir, "/subscribers.d/");
 
-	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
+	fromaddr = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
+	myfree(listdelim);
 
 	queuefilename = prepstdreply(listdir, "listsubs", "$listowner$",
 					emailaddr, NULL, 0, NULL);

@@ -38,6 +38,7 @@
 #include "mylocking.h"
 #include "wrappers.h"
 #include "getlistaddr.h"
+#include "getlistdelim.h"
 #include "strgen.h"
 #include "subscriberfuncs.h"
 #include "log_error.h"
@@ -47,15 +48,15 @@
 #include "memory.h"
 
 void confirm_sub(const char *listdir, const char *listaddr,
-		const char *subaddr, const char *mlmmjsend,
-		enum subtype typesub)
+		const char *listdelim, const char *subaddr,
+		const char *mlmmjsend, enum subtype typesub)
 {
 	char *queuefilename, *fromaddr, *listname, *listfqdn, *listtext;
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 
-	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
+	fromaddr = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
 
 	myfree(listname);
 	myfree(listfqdn);
@@ -88,8 +89,8 @@ void confirm_sub(const char *listdir, const char *listaddr,
 }
 
 void notify_sub(const char *listdir, const char *listaddr,
-		const char *subaddr, const char *mlmmjsend,
-		enum subtype typesub)
+		const char *listdelim, const char *subaddr,
+		const char *mlmmjsend, enum subtype typesub)
 {
 	char *maildata[2] = { "newsub", NULL };
 	char *listfqdn, *listname, *fromaddr, *tostr;
@@ -100,8 +101,8 @@ void notify_sub(const char *listdir, const char *listaddr,
 
 	maildata[1] = mystrdup(subaddr);
 	
-	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
-	tostr = concatstr(3, listname, "+owner@", listfqdn);
+	fromaddr = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
+	tostr = concatstr(4, listname, listdelim, "owner@", listfqdn);
 	
 	myfree(listname);
 	myfree(listfqdn);
@@ -135,8 +136,8 @@ void notify_sub(const char *listdir, const char *listaddr,
 }
 
 void generate_subconfirm(const char *listdir, const char *listaddr,
-			 const char *subaddr, const char *mlmmjsend,
-			 enum subtype typesub)
+			 const char *listdelim, const char *subaddr,
+			 const char *mlmmjsend, enum subtype typesub)
 {
 	int subconffd;
 	char *confirmaddr, *listname, *listfqdn, *confirmfilename = NULL;
@@ -177,26 +178,27 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 
 	close(subconffd);
 
-	fromaddr = concatstr(5, listname, "+bounces-confsub-", randomstr,
-				"@", listfqdn);
+	fromaddr = concatstr(6, listname, listdelim, "bounces-confsub-",
+				randomstr, "@", listfqdn);
 	
 	switch(typesub) {
 		default:
 		case SUB_NORMAL:
 			listtext = mystrdup("sub-confirm");
-			tmpstr = mystrdup("+confsub-");
+			tmpstr = mystrdup("confsub-");
 			break;
 		case SUB_DIGEST:
 			listtext = mystrdup("sub-confirm-digest");
-			tmpstr = mystrdup("+confsub-digest-");
+			tmpstr = mystrdup("confsub-digest-");
 			break;
 		case SUB_NOMAIL:
 			listtext = mystrdup("sub-confirm-nomail");
-			tmpstr = mystrdup("+confsub-nomail-");
+			tmpstr = mystrdup("confsub-nomail-");
 			break;
 	}
 
-	confirmaddr = concatstr(5, listname, tmpstr, randomstr, "@", listfqdn);
+	confirmaddr = concatstr(6, listname, listdelim, tmpstr, randomstr, "@",
+				listfqdn);
 
 	myfree(randomstr);
 	myfree(tmpstr);
@@ -245,12 +247,14 @@ void generate_subscribed(const char *listdir, const char *subaddr,
 		const char *mlmmjsend)
 {
 	char *queuefilename, *fromaddr, *listname, *listfqdn, *listaddr;
+	char *listdelim = getlistdelim(listdir);
 
 	listaddr = getlistaddr(listdir);
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 
-	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
+	fromaddr = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
+	myfree(listdelim);
 
 	queuefilename = prepstdreply(listdir, "sub-subscribed", "$helpaddr$",
 				     subaddr, NULL, 0, NULL);
@@ -272,9 +276,9 @@ void generate_subscribed(const char *listdir, const char *subaddr,
 
 int main(int argc, char **argv)
 {
-	char *listaddr, *listdir = NULL, *address = NULL, *subfilename = NULL;
-	char *mlmmjsend, *bindir, chstr[2], *subdir, *subddirname = NULL;
-	char *sublockname;
+	char *listaddr, *listdelim, *listdir = NULL, *address = NULL;
+	char *subfilename = NULL, *mlmmjsend, *bindir, chstr[2], *subdir;
+	char *subddirname = NULL, *sublockname;
 	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock, notifysub;
 	int changeuid = 1, status, digest = 0, nomail = 0;
 	int groupwritable = 0, sublock, sublockfd, nogensubscribed = 0, subbed;
@@ -438,14 +442,15 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	subbed = is_subbed_in(subddirname, address);
+	listdelim = getlistdelim(listdir);
 	if(subbed) {
 		if(subconfirm) {
 			close(subfilefd);
 			close(sublockfd);
 			unlink(sublockname);
 			myfree(sublockname);
-			generate_subconfirm(listdir, listaddr, address,
-					    mlmmjsend, typesub);
+			generate_subconfirm(listdir, listaddr, listdelim,
+					    address, mlmmjsend, typesub);
 		} else {
 			lseek(subfilefd, 0L, SEEK_END);
 			len = strlen(address);
@@ -478,8 +483,8 @@ int main(int argc, char **argv)
 
 		if(childpid < 0) {
 			log_error(LOG_ARGS, "Could not fork");
-			confirm_sub(listdir, listaddr, address, mlmmjsend,
-					typesub);
+			confirm_sub(listdir, listaddr, listdelim, address,
+					mlmmjsend, typesub);
 		}
 		
 		if(childpid > 0) {
@@ -490,17 +495,19 @@ int main(int argc, char **argv)
 
 		/* child confirms subscription */
 		if(childpid == 0)
-			confirm_sub(listdir, listaddr, address, mlmmjsend,
-					typesub);
+			confirm_sub(listdir, listaddr, listdelim, address,
+					mlmmjsend, typesub);
 	}
 
 	notifysub = statctrl(listdir, "notifysub");
 
 	/* Notify list owner about subscription */
 	if (notifysub)
-		notify_sub(listdir, listaddr, address, mlmmjsend, typesub);
+		notify_sub(listdir, listaddr, listdelim, address, mlmmjsend,
+				typesub);
 
 	myfree(listaddr);
+	myfree(listdelim);
 
 	return EXIT_SUCCESS;
 }

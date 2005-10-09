@@ -1,3 +1,5 @@
+1.2.9
+ o Make recipient delimiter configurable per list. SIC! (Joel Aelwyn)
  o Use is_subbed_in instead of find_subscriber when subscribing people
    (Christian Laursen)
  o Make it possible to confirm subscription even though it's a closedlist.

@@ -34,6 +34,7 @@
 #include "strgen.h"
 #include "find_email_adr.h"
 #include "getlistaddr.h"
+#include "getlistdelim.h"
 #include "log_error.h"
 #include "chomp.h"
 #include "wrappers.h"
@@ -44,13 +45,16 @@
 void send_help(const char *listdir, const char *emailaddr,
 	       const char *mlmmjsend)
 {
-	char *queuefilename, *listaddr, *listname, *listfqdn, *fromaddr;
+	char *queuefilename, *listaddr, *listdelim, *listname, *listfqdn;
+	char *fromaddr;
 
 	listaddr = getlistaddr(listdir);
+	listdelim = getlistdelim(listdir);
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
 
-	fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
+	fromaddr = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
+	myfree(listdelim);
 
 	queuefilename = prepstdreply(listdir, "listhelp", "$listowner$",
 					emailaddr, NULL, 0, NULL);

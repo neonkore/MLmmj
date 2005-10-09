@@ -146,3 +146,8 @@ to specify several entries (one pr. line), it's marked "list".
 
    In this file a port other than port 25 for connecting to the relayhost
    can be specified.
+
+ · delimiter			(normal)
+
+   This specifies what to use as recipient delimiter for the list.
+   Default is "+".

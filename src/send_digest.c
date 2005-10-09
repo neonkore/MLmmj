@@ -36,6 +36,7 @@
 #include "strgen.h"
 #include "memory.h"
 #include "getlistaddr.h"
+#include "getlistdelim.h"
 #include "wrappers.h"
 
 
@@ -45,7 +46,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	int i, fd, archivefd, status, hdrfd;
 	char buf[45];
 	char *tmp, *queuename = NULL, *archivename, *fromstr;
-	char *boundary, *listaddr, *listname, *listfqdn;
+	char *boundary, *listaddr, *listdelim, *listname, *listfqdn;
 	pid_t childpid, pid;
 
 	if (addr) {
@@ -90,7 +91,11 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 		snprintf(buf, sizeof(buf), " (%d-%d)", firstindex, lastindex);
 	}
 
-	fromstr = concatstr(5, "From: ", listname, "+help@", listfqdn, "\n");
+	listdelim = getlistdelim(listdir);
+	fromstr = concatstr(6, "From: ", listname, listdelim, "help@", listfqdn,
+			    "\n");
+	myfree(listdelim);
+
 	tmp = concatstr(6, "MIME-Version: 1.0"
 			    "\nContent-Type: multipart/" DIGESTMIMETYPE "; "
 			    "boundary=", boundary,

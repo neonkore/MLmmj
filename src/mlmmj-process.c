@@ -37,6 +37,7 @@
 #include "find_email_adr.h"
 #include "incindexfile.h"
 #include "getlistaddr.h"
+#include "getlistdelim.h"
 #include "listcontrol.h"
 #include "strgen.h"
 #include "do_all_the_voodo_here.h"
@@ -71,7 +72,7 @@ void newmoderated(const char *listdir, const char *mailfilename,
 		  const char *mlmmjsend)
 {
 	char *from, *listfqdn, *listname, *moderators = NULL;
-	char *buf, *replyto, *listaddr = getlistaddr(listdir);
+	char *buf, *replyto, *listaddr = getlistaddr(listdir), *listdelim;
 	char *queuefilename = NULL, *moderatorsfilename;
 	char *mailbasename = mybasename(mailfilename), *tmp, *to;
 	int queuefd, moderatorsfd, mailfd;
@@ -106,15 +107,17 @@ void newmoderated(const char *listdir, const char *mailfilename,
 
 	close(moderatorsfd);
 
-	replyto = concatstr(5, listname, "+moderate-", mailbasename, "@",
-			    listfqdn);
+	listdelim = getlistdelim(listdir);
+	replyto = concatstr(6, listname, listdelim, "moderate-", mailbasename,
+			    "@", listfqdn);
 
 	maildata[1] = replyto;
 	maildata[3] = moderators;
 
-	from = concatstr(3, listname, "+owner@", listfqdn);
-	to = concatstr(3, listname, "-moderators@", listfqdn);
+	from = concatstr(4, listname, listdelim, "owner@", listfqdn);
+	to = concatstr(3, listname, "-moderators@", listfqdn); /* FIXME JFA: Should this be converted? Why, why not? */
 
+	myfree(listdelim);
 	myfree(listname);
 	myfree(listfqdn);
 
@@ -318,9 +321,9 @@ int main(int argc, char **argv)
 	char *footerfilename = NULL, *donemailname = NULL;
 	char *randomstr = NULL, *mqueuename;
 	char *mlmmjsend, *mlmmjsub, *mlmmjunsub, *mlmmjbounce;
-	char *bindir, *subjectprefix, *discardname, *listaddr;
+	char *bindir, *subjectprefix, *discardname, *listaddr, *listdelim;
 	char *listfqdn, *listname, *fromaddr;
-	char *queuefilename, *recipdelim, *owner = NULL;
+	char *queuefilename, *recipextra, *owner = NULL;
 	char *maildata[2] = { "posteraddr", NULL };
 	struct stat st;
 	uid_t uid;
@@ -512,14 +515,18 @@ int main(int argc, char **argv)
 	else
 		whichto = NULL;
 
-	if(whichto && whichto->emaillist && whichto->emaillist[0])
-		recipdelim = strchr(whichto->emaillist[0], RECIPDELIM);
-	else
-		recipdelim = NULL;
+	listdelim = getlistdelim(listdir);
+	if(whichto && whichto->emaillist && whichto->emaillist[0]){
+		recipextra = strstr(whichto->emaillist[0], listdelim);
+		if (recipextra)
+			recipextra += strlen(listdelim);
+	} else
+		recipextra = NULL;
+	myfree(listdelim);
 
-	if(recipdelim) {
+	if(recipextra) {
 		owner = concatstr(2, listdir, "/control/owner");
-		if(owner && strncmp(recipdelim, "+owner@", 7) == 0) {
+		if(owner && strncmp(recipextra, "owner@", 6) == 0) {
 			/* strip envelope from before resending */
 			delheaders->count = 0;
 			delheaders->strs = NULL;
@@ -643,13 +650,16 @@ int main(int argc, char **argv)
 			myfree(donemailname);
 			exit(EXIT_SUCCESS);
 		}
+		listdelim = getlistdelim(listdir);
 		listname = genlistname(listaddr);
 		listfqdn = genlistfqdn(listaddr);
-		fromaddr = concatstr(3, listname, "+bounces-help@", listfqdn);
+		fromaddr = concatstr(4, listname, listdelim, "bounces-help@",
+				     listfqdn);
 		queuefilename = prepstdreply(listdir, "notintocc",
 					"$listowner$", fromemails.emaillist[0],
 					NULL, 0, NULL);
 		MY_ASSERT(queuefilename)
+		myfree(listdelim);
 		myfree(listname);
 		myfree(listfqdn);
 		unlink(donemailname);
@@ -683,16 +693,18 @@ int main(int argc, char **argv)
 				myfree(donemailname);
 				exit(EXIT_SUCCESS);
 			}
+			listdelim = getlistdelim(listdir);
 			listname = genlistname(listaddr);
 			listfqdn = genlistfqdn(listaddr);
 			maildata[1] = fromemails.emaillist[0];
-			fromaddr = concatstr(3, listname, "+bounces-help@",
-					listfqdn);
+			fromaddr = concatstr(4, listname, listdelim,
+					"bounces-help@", listfqdn);
 			queuefilename = prepstdreply(listdir, "subonlypost",
 					"$listowner$", fromemails.emaillist[0],
 					NULL, 1, maildata);
 			MY_ASSERT(queuefilename)
 			myfree(listaddr);
+			myfree(listdelim);
 			myfree(listname);
 			myfree(listfqdn);
 			unlink(donemailname);
@@ -724,16 +736,18 @@ int main(int argc, char **argv)
 				myfree(donemailname);
 				exit(EXIT_SUCCESS);
 			}
+			listdelim = getlistdelim(listdir);
 			listname = genlistname(listaddr);
 			listfqdn = genlistfqdn(listaddr);
-			fromaddr = concatstr(3, listname, "+bounces-help@",
-					listfqdn);
+			fromaddr = concatstr(4, listname, listdelim,
+					"bounces-help@", listfqdn);
 			queuefilename = prepstdreply(listdir, "access",
 							"$listowner$",
 							fromemails.emaillist[0],
 							NULL, 0, NULL);
 			MY_ASSERT(queuefilename)
 			myfree(listaddr);
+			myfree(listdelim);
 			myfree(listname);
 			myfree(listfqdn);
 			unlink(donemailname);

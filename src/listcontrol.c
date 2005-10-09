@@ -34,6 +34,7 @@
 #include "mlmmj.h"
 #include "listcontrol.h"
 #include "find_email_adr.h"
+#include "getlistdelim.h"
 #include "strgen.h"
 #include "send_help.h"
 #include "send_list.h"
@@ -101,7 +102,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		const char *mlmmjunsub, const char *mlmmjsend,
 		const char *mlmmjbounce, const char *mailname)
 {
-	char *atsign, *recipdelimsign, *bouncenr, *tmpstr;
+	char *atsign, *recipdelimsign, *listdelim, *bouncenr, *tmpstr;
 	char *controlstr, *param = NULL, *conffilename, *moderatefilename;
 	char *c, *archivefilename, *sendfilename;
 	const char *subswitch;
@@ -121,7 +122,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	else
 		subswitch = "-C";
 	
-	recipdelimsign = index(controladdr, RECIPDELIM);
+	listdelim = getlistdelim(listdir);
+	recipdelimsign = strstr(controladdr, listdelim);
 	MY_ASSERT(recipdelimsign);
 	atsign = index(controladdr, '@');
 	MY_ASSERT(atsign);
@@ -129,7 +131,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	controlstr = mymalloc(len);
 	MY_ASSERT(controlstr);
-	snprintf(controlstr, len, "%s", recipdelimsign + 1);
+	snprintf(controlstr, len, "%s", recipdelimsign + strlen(listdelim));
+	myfree(listdelim);
 
 #if 0
 	log_error(LOG_ARGS, "controlstr = [%s]\n", controlstr);

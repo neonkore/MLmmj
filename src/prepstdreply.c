@@ -39,15 +39,16 @@
 #include "memory.h"
 #include "getlistaddr.h"
 #include "mlmmj.h"
+#include "getlistdelim.h"
 
-char *substitute(const char *line, const char *listaddr, size_t datacount,
-		 char **data)
+char *substitute(const char *line, const char *listaddr, const char *listdelim,
+		 size_t datacount, char **data)
 {
 	char *s1, *s2;
 
-	s1 = substitute_one(line, listaddr, datacount, data);
+	s1 = substitute_one(line, listaddr, listdelim, datacount, data);
 	while(s1) {
-		s2 = substitute_one(s1, listaddr, datacount, data);
+		s2 = substitute_one(s1, listaddr, listdelim, datacount, data);
 		if(s2) {
 			myfree(s1);
 			s1 = s2;
@@ -58,8 +59,8 @@ char *substitute(const char *line, const char *listaddr, size_t datacount,
 	return mystrdup(line);
 }
 
-char *substitute_one(const char *line, const char *listaddr, size_t datacount,
-		     char **data)
+char *substitute_one(const char *line, const char *listaddr,
+		     const char *listdelim, size_t datacount, char **data)
 {
 	char *fqdn, *listname, *d1, *d2, *token, *value = NULL;
 	char *retstr, *origline;
@@ -96,31 +97,35 @@ char *substitute_one(const char *line, const char *listaddr, size_t datacount,
 		value = mystrdup(listaddr);
 		goto concatandreturn;
 	} else if(strcmp(token, "listowner") == 0) {
-		value = concatstr(3, listname, "+owner@", fqdn);
+		value = concatstr(4, listname, listdelim, "owner@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "helpaddr") == 0) {
-		value = concatstr(3, listname, "+help@", fqdn);
+		value = concatstr(4, listname, listdelim, "help@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "listgetN") == 0) {
-		value = concatstr(3, listname, "+get-N@", fqdn);
+		value = concatstr(4, listname, listdelim, "get-N@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "listunsubaddr") == 0) {
-		value = concatstr(3, listname, "+unsubscribe@", fqdn);
+		value = concatstr(4, listname, listdelim, "unsubscribe@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "digestunsubaddr") == 0) {
-		value = concatstr(3, listname, "+unsubscribe-digest@", fqdn);
+		value = concatstr(4, listname, listdelim,
+				  "unsubscribe-digest@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "nomailunsubaddr") == 0) {
-		value = concatstr(3, listname, "+unsubscribe-nomail@", fqdn);
+		value = concatstr(4, listname, listdelim,
+				  "unsubscribe-nomail@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "listsubaddr") == 0) {
-		value = concatstr(3, listname, "+subscribe@", fqdn);
+		value = concatstr(4, listname, listdelim, "subscribe@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "digestsubaddr") == 0) {
-		value = concatstr(3, listname, "+subscribe-digest@", fqdn);
+		value = concatstr(4, listname, listdelim, "subscribe-digest@",
+				  fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "nomailsubaddr") == 0) {
-		value = concatstr(3, listname, "+subscribe-nomail@", fqdn);
+		value = concatstr(4, listname, listdelim, "subscribe-nomail@",
+				  fqdn);
 		goto concatandreturn;
 	}
 	if(data) {
@@ -151,7 +156,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		   char **data)
 {
 	int infd, outfd;
-	char *listaddr, *myfrom, *tmp, *subject, *retstr = NULL;
+	char *listaddr, *listdelim, *myfrom, *tmp, *subject, *retstr = NULL;
 	char *myreplyto, *myto, *str = NULL, *mydate, *mymsgid;
 
 	tmp = concatstr(3, listdir, "/text/", filename);
@@ -163,6 +168,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	}
 
 	listaddr = getlistaddr(listdir);
+	listdelim = getlistdelim(listdir);
 
 	tmp = mygetline(infd);
 	if(strncasecmp(tmp, "Subject:", 8) != 0) {
@@ -170,17 +176,19 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 				"standard subject");
 		subject = mystrdup("mlmmj administrativa\n");
 	} else
-		subject = substitute(tmp, listaddr, tokencount, data);
+		subject = substitute(tmp, listaddr, listdelim, tokencount,
+				     data);
 
 	myfree(tmp);
 	
-	myfrom = substitute(from, listaddr, tokencount, data);
-	myto = substitute(to, listaddr, tokencount, data);
+	myfrom = substitute(from, listaddr, listdelim, tokencount, data);
+	myto = substitute(to, listaddr, listdelim, tokencount, data);
 	mydate = gendatestr();
 	mymsgid = genmsgid();
 
 	if(replyto) {
-		myreplyto = substitute(replyto, listaddr, tokencount, data);
+		myreplyto = substitute(replyto, listaddr, listdelim,
+				       tokencount, data);
 		tmp = concatstr(3, "Reply-To: ", myreplyto, "\n");
 		myfree(myreplyto);
 		myreplyto = tmp;
@@ -200,6 +208,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	if(outfd < 0) {
 		log_error(LOG_ARGS, "Could not open std mail %s", retstr);
 		myfree(str);
+		myfree(listdelim);
 		return NULL;
 	}
 
@@ -209,6 +218,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	if(writen(outfd, str, strlen(str)) < 0) {
 		log_error(LOG_ARGS, "Could not write std mail");
 		myfree(str);
+		myfree(listdelim);
 		return NULL;
 	}
 
@@ -216,10 +226,11 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 
 	while((str = mygetline(infd))) {
 		tmp = str;
-		str = substitute(tmp, listaddr, tokencount, data);
+		str = substitute(tmp, listaddr, listdelim, tokencount, data);
 		myfree(tmp);
 		if(writen(outfd, str, strlen(str)) < 0) {
 			myfree(str);
+			myfree(listdelim);
 			log_error(LOG_ARGS, "Could not write std mail");
 			return NULL;
 		}
