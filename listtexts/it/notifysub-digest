@@ -1,0 +1,10 @@
+Soggetto: $newsub$ iscritto al sommario di $listaddr$
+
+Ciao, sono mlmmj, il programma che gestisce la mailing list
+
+$listaddr$
+
+Il seguente indirizzo e' stato iscritto al sommario della mailing list:
+
+$newsub$
+

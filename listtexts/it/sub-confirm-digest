@@ -1,0 +1,24 @@
+Soggetto: conferma d'iscrizione al sommario di $listaddr$
+
+Ciao, sono mlmmj, il programma che gestisce la mailing list
+
+$listaddr$
+
+Per confermare l'iscrizione alla sommario della lista
+
+$subaddr$
+
+per cortesia rispondi a
+
+$confaddr$
+
+La conferma dell'iscrizione ha due scopi. Il primo e' quello
+di assicurare che l'indirizzo con cui ti sei iscritto sia valido,
+secondariamente essa evita che qualcun altro possa iscrivere
+il tuo indirizzo email senza il tuo permesso.
+
+Il tuo client di posta elettronica probabilmente replica automaticamente
+all'indirizzo di cui sopra, quando premi il pulsante "rispondi".
+
+Il soggetto ed il corpo della mail possono essere vuoti.
+

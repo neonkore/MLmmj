@@ -1,0 +1,32 @@
+Subject: Órdenes disponibles para $listaddr$
+
+Hola,
+
+éstas son las opciones disponibles:
+
+Para borrarse de la lista envíe un mensaje a:
+
+$listunsubaddr$
+
+Para suscribirse a la compilación (digest) de esta lista, envíe un mensaje a:
+
+$digestsubaddr$
+
+Para suscribirse a la versión sin correo («nomail») de esta lista, envíe un
+mensaje a:
+
+$nomailsubaddr$
+
+La versión «sin correo» de una lista significa que se le reconoce como 
+suscriptor, pero no recibirá ningún mensaje de la lista.  Esto resulta útil 
+cuando es necesario escribir desde varias direcciones de correo a una lista 
+sólo para suscriptores.
+
+Para recuperar el mensaje número N del archivo, envíe un mensaje a:
+
+$listgetN$
+
+Para contactar con el encargado de la lista, envíe un mensaje a:
+
+$listowner$
+

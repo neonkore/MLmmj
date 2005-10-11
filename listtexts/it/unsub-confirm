@@ -1,0 +1,22 @@
+Soggetto: conferma la deiscrizione da $listaddr$
+
+Ciao, sono mlmmj, il programma che gestisce la mailing list
+
+$listaddr$
+
+Per confermare la deiscrizione dalla lista dell'indirizzo
+
+$subaddr$
+
+per cortesia rispondi a
+
+$confaddr$
+
+Il tuo client di posta elettronica probabilmente replica automaticamente
+all'indirizzo di cui sopra, quando premi il pulsante "rispondi".
+
+Il soggetto ed il corpo della mail possono essere vuoti.
+
+Se vuoi sapere con quale indirizzo sei iscritto, controlla il valore
+dell'header "Return-Path" di un qualunque messaggio della mailing list.
+

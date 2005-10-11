@@ -1,5 +1,8 @@
 1.2.9
+ o Add spanish listtext translations (Enrique Matías Sánchez)
  o Make recipient delimiter configurable per list. SIC! (Joel Aelwyn)
+ o Added italian list texts translation. A thanks to Andrea Barisani, he has
+   checked italian texts. (Filippo F. Fadda)
  o Use is_subbed_in instead of find_subscriber when subscribing people
    (Christian Laursen)
  o Make it possible to confirm subscription even though it's a closedlist.

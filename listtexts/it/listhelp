@@ -1,0 +1,35 @@
+Soggetto: comandi disponibili per $listaddr$
+
+Ciao,
+
+le seguenti opzioni sono disponibili:
+
+Per deiscriverti manda un messaggio a:
+
+$listunsubaddr$
+
+Per iscriverti al sommario della lista, manda un messaggio a:
+
+$digestsubaddr$
+
+Per iscriverti alla versione "nomail" della lista, manda un messaggio a:
+
+$nomailsubaddr$
+
+L'iscrizione alla versione "nomail" della lista, ti permette di mandare messaggi
+alla lista, ma di non ricevere messaggio alcuno dalla stessa. Essa si rivela utile
+quando e' necessario mandare messaggi alla lista utilizzando differenti indirizzi email.
+
+Per ricevere il messaggio numero N memorizzato nell'archivio, ammesso che esista un
+archivio per la lista, puoi mandare un messaggio a:
+
+$listgetN$
+
+Per ripescare il messaggio numero N dall'archivio, manda un messaggio a:
+
+$listgetN$
+
+Per contattare il proprietario della lista, manda un messaggio a:
+
+$listowner$
+

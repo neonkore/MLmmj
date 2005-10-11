@@ -1,0 +1,23 @@
+Soggetto: moderazione necessaria per $listaddr$
+
+Ciao,
+
+qualcuno ha inoltrato un messaggio, che deve essere moderato, a:
+
+$listaddr$
+
+Per accettarlo, manda un messaggio a:
+
+$moderateaddr$
+
+Il tuo client di posta elettronica probabilmente replica automaticamente
+all'indirizzo di cui sopra, quando premi il pulsante "rispondi".
+Se non vuoi che il messaggio venga inoltrato a tutti iscritti della lista,
+semplicemente ignora questa mail.
+
+I seguenti moderatori hanno ricevuto questa mail:
+
+$moderators$
+
+--- sotto questa linea le prime 100 righe del messaggio inoltrato per la moderazione --->
+

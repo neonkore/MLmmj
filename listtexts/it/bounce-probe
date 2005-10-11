@@ -1,0 +1,14 @@
+Soggetto: Messaggi da $listaddr$ per te sono stati respinti
+
+Ciao, sono mlmmj, il programma che gestisce la mailing list
+
+$listaddr$
+
+Alcuni messaggi a te diretti potrebbero non esserti arrivati.
+Se tu stai leggendo questo messaggio, significa che le cose sono tornate normali.
+Questa comunicazione giunge a solo titolo informativo.
+
+Nel seguito l'elenco dei messaggi respinti:
+
+$bouncenumbers$
+

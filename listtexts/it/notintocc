@@ -1,0 +1,18 @@
+Soggetto: messaggi indirizzati a $listaddr$ sono vietati
+
+Ciao, sono mlmmj, il programma che gestisce la mailing list
+
+$listaddr$
+
+Io sono spiacente di informarti che il tuo messaggio non puo' essere
+inoltrato alla lista.
+
+Per mandare un messaggio alla lista, l'indirizzo della stessa deve
+essere presente nel campo A: o Cc: (in inglese To: e Cc:).
+
+Se tu sei un amministratore di una lista di mlmmj , tu dovresti sapere
+che questo comportamento puo' essere cambiato attraverso il file di controllo
+della lista 'tocc'.
+
+Grazie.
+

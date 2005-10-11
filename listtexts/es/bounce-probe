@@ -1,0 +1,14 @@
+Subject: Algunos mensajes para usted de $listaddr$ han rebotado
+
+Hola, éste el programa mlmmj que gestiona la lista de distribución
+
+$listaddr$
+
+No se han podido entregar algunos mensajes para usted.  Si puede ver
+este mensaje, eso quiere decir que las cosas han vuelto a la normalidad
+y por tanto cumple sólo un propósito informativo.
+
+Ésta es la lista de mensajes rebotados:
+
+$bouncenumbers$
+

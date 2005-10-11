@@ -1,0 +1,17 @@
+Subject: Mensajes a $listaddr$ denegados
+
+Hola, 
+éste el programa mlmmj a cargo de la lista de distribución
+
+$listaddr$
+
+Desgraciadamente no ha sido posible entregar su mensaje a la lista.
+
+Para poder enviar mensajes a la lista, la dirección de la lista debe
+aparecer en las cabeceras Para: (To:) o Cc: del mensaje.
+
+Si usted administra alguna lista gestionada con mlmmj, debería saber que puede 
+cambiar este comportamiento tocando el fichero de control 'tocc'.
+
+Gracias.
+

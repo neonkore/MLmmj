@@ -1,0 +1,20 @@
+Subject: Se precisa moderación para $listaddr$
+
+Hola,
+alguien ha enviado un mensaje que require moderación a:
+
+$listaddr$
+
+Para aceptarlo, envíe un mensaje a:
+
+$moderateaddr$
+
+Su programa de correo probablemente responda automáticamente a esta dirección 
+si pulsa el botón para contestar.  Si no quiere que el mensaje sea enviado a 
+la lista, simplemente ignore este mensaje.
+
+Han recibido este mensaje los siguientes moderadores:
+
+$moderators$
+
+--- bajo esta línea tiene las primeras 100 líneas del mensaje a moderar --->

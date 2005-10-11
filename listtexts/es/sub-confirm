@@ -1,0 +1,24 @@
+Subject: Confirme la suscripción a $listaddr$
+
+Hola, 
+éste el programa mlmmj que gestiona la lista de distribución
+
+$listaddr$
+
+Para confirmar que desea agregar la dirección:
+
+$subaddr$
+
+a esta lista, conteste a:
+
+$confaddr$
+
+Esta confirmación sirve para dos propósitos.  Comprueba que se puede enviar 
+correo a su dirección.  En segundo lugar, se asegura de que no hubo alguien 
+que intentó suscribir su dirección sin su consentimiento.
+
+Probablemente su cliente de correo responda automáticamente a la dirección de
+confirmación si pulsa el botón Contestar.
+
+El asunto y el cuerpo del mensaje pueden ser cualquier cosa.
+

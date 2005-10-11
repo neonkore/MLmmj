@@ -1,0 +1,20 @@
+Soggetto: $listaddr$ e' una lista per soli iscritti
+
+Ciao, sono mlmmj, il programma che gestisce la mailing list
+
+$listaddr$
+
+Tu hai tentato di mandare un messaggio alla lista da questo indirizzo:
+
+$posteraddr$
+
+Ma l'indirizzo di cui sopra non risulta iscritto alla lista e soltanto
+gli iscritti possono inoltrare messaggi alla lista stessa.
+
+If tu ritieni di esserti iscritto correttamente, allora per cortesia
+verifica l'email che compare nel messaggio di benvenuto, oppure
+controlla gli header di un qualunque messaggio della mailing list.
+
+Se vuoi mandare messaggi alla lista da più di un indirizzo email, puoi
+iscrivere eventuali altri indirizzi alla versione nomail della lista.
+
