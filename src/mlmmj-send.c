@@ -1219,7 +1219,12 @@ int main(int argc, char **argv)
 
 	if(archive) {
 		if(!ctrlarchive) {
-			rename(mailfilename, archivefilename);
+			if(rename(mailfilename, archivefilename) < 0) {
+				log_error(LOG_ARGS,
+						"Could not rename(%s,%s);",
+						mailfilename,
+						archivefilename);
+			}
 		} else {
 			unlink(mailfilename);
 		}
