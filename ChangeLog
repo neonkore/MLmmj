@@ -1,4 +1,5 @@
 1.2.9
+ o Make the email address check case-insensitive. (Neale Pickett)
  o Add spanish listtext translations (Enrique Matías Sánchez)
  o Make recipient delimiter configurable per list. SIC! (Joel Aelwyn)
  o Added italian list texts translation. A thanks to Andrea Barisani, he has

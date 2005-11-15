@@ -1,75 +1,229 @@
-/* Copyright (C) 2002, 2003 Mads Martin Joergensen <mmj at mmj.dk>
+/* Some crap from BSD mail to parse email addresses.
  *
- * $Id$
+ * Neale Pickett <neale@woozle.org> stole these functions from FreeBSD
+ * ports, and reformatted them to use mlmmj's coding style.  The
+ * original functions (skip_comment and skin) had the following
+ * copyright notice:
+ */
+
+/*
+ * Copyright (c) 1980, 1993
+ *	The Regents of the University of California.  All rights reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *	This product includes software developed by the University of
+ *	California, Berkeley and its contributors.
+ * 4. Neither the name of the University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  */
 
 #include <string.h>
-#include <strings.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "find_email_adr.h"
 #include "memory.h"
 
+/*
+ * Start of a "comment".
+ * Ignore it.
+ */
+static char *
+skip_comment(char *cp)
+{
+	int nesting = 1;
+
+	for (; nesting > 0 && *cp; cp++) {
+		switch (*cp) {
+			case '\\':
+				if (cp[1])
+					cp++;
+				break;
+			case '(':
+				nesting++;
+				break;
+			case ')':
+				nesting--;
+				break;
+		}
+	}
+	return (cp);
+}
+
+/*
+ * Skin an arpa net address according to the RFC 822 interpretation
+ * of "host-phrase."
+ */
+static char *skin(char *name)
+{
+	char *nbuf, *bufend, *cp, *cp2;
+	int c, gotlt, lastsp;
+
+	if (name == NULL)
+		return (NULL);
+
+	/* We assume that length(input) <= length(output) */
+	nbuf = mymalloc(strlen(name) + 1);
+
+	if (strchr(name, '(') == NULL && strchr(name, '<') == NULL
+	    && strchr(name, ' ') == NULL) {
+		strcpy(nbuf, name);
+		return (nbuf);
+	}
+
+	gotlt = 0;
+	lastsp = 0;
+	bufend = nbuf;
+	for (cp = name, cp2 = bufend; (c = *cp++) != '\0'; ) {
+		switch (c) {
+		case '(':
+			cp = skip_comment(cp);
+			lastsp = 0;
+			break;
+
+		case '"':
+			/*
+			 * Start of a "quoted-string".
+			 * Copy it in its entirety.
+			 */
+			while ((c = *cp) != '\0') {
+				cp++;
+				if (c == '"')
+					break;
+				if (c != '\\')
+					*cp2++ = c;
+				else if ((c = *cp) != '\0') {
+					*cp2++ = c;
+					cp++;
+				}
+			}
+			lastsp = 0;
+			break;
+
+		case ' ':
+			if (cp[0] == 'a' && cp[1] == 't' && cp[2] == ' ')
+				cp += 3, *cp2++ = '@';
+			else
+			if (cp[0] == '@' && cp[1] == ' ')
+				cp += 2, *cp2++ = '@';
+			else
+				lastsp = 1;
+			break;
+
+		case '<':
+			cp2 = bufend;
+			gotlt++;
+			lastsp = 0;
+			break;
+
+		case '>':
+			if (gotlt) {
+				gotlt = 0;
+				while ((c = *cp) != '\0' && c != ',') {
+					cp++;
+					if (c == '(')
+						cp = skip_comment(cp);
+					else if (c == '"')
+						while ((c = *cp) != '\0') {
+							cp++;
+							if (c == '"')
+								break;
+							if (c == '\\' && *cp != '\0')
+								cp++;
+						}
+				}
+				lastsp = 0;
+				break;
+			}
+			/* FALLTHROUGH */
+
+		default:
+			if (lastsp) {
+				lastsp = 0;
+				*cp2++ = ' ';
+			}
+			*cp2++ = c;
+			if (c == ',' && *cp == ' ' && !gotlt) {
+				*cp2++ = ' ';
+				while (*++cp == ' ')
+					;
+				lastsp = 0;
+				bufend = cp2;
+			}
+		}
+	}
+	*cp2 = '\0';
+
+	nbuf = (char *)myrealloc(nbuf, strlen(nbuf) + 1);
+	return (nbuf);
+}
+
+
 struct email_container *find_email_adr(const char *str,
 		struct email_container *retstruct)
 {
-	size_t len;
-	char *index_atsign;
-	char *tempstr = mystrdup(str);
-	char *c, *first_char = NULL, *last_char = NULL;
-	
-	index_atsign = strchr(tempstr, '@');
-	while(index_atsign) {
-		c = index_atsign;
-		retstruct->emailcount++;
-		while(c >= tempstr && *c != '<' && *c != ' ' && *c != ','
-				&& *c != ';' && *c != '(' && *c != '[' &&
-				*c >= 32 && *c != '{') {
-			c--;
-		}
-		first_char = ++c;
-		c = index_atsign;
-		while(*c != '>' && *c != ' ' && *c != ',' && *c != ';'
-				&& *c != ')' && *c != ']' && *c >= 32
-				&& *c != '}' && *c != 0) {
-			c++;
-		}
-		last_char = --c;
+	char *p;
+	char *s;
 
-		len = last_char - first_char + 2;
-		
-		retstruct->emaillist = (char **)realloc(retstruct->emaillist,
-				sizeof(char *) * retstruct->emailcount);
-		retstruct->emaillist[retstruct->emailcount-1] =
-				(char *)mymalloc(len + 1);
-		snprintf(retstruct->emaillist[retstruct->emailcount-1], len,
-			 "%s", first_char);
-#if 0
-		log_error(LOG_ARGS, "find_email_adr POST, [%s]\n",
-				retstruct->emaillist[retstruct->emailcount-1]);
-#endif
-		*index_atsign = 'A'; /* Clear it so we don't find it again */
-		index_atsign = strchr(tempstr, '@');
+	s = (char *)mymalloc(strlen(str) + 1);
+	strcpy(s, str);
+
+	p = s;
+	while(p) {
+		char *adr;
+		char *cur;
+
+		cur = p;
+		p = strchr(p, ',');
+		if (p) {
+			/* If there's a comma, replace it with a NUL, so
+			 * cur will only have one address in it. */
+			*p = '\0';
+			p += 1;
+		}
+
+		while(cur && ((' ' == *cur) ||
+			    ('\t' == *cur) ||
+			    ('\r' == *cur) ||
+			    ('\n' == *cur))) {
+			cur += 1;
+		}
+		if ('\0' == *cur) {
+			continue;
+		}
+
+		adr = skin(cur);
+		if (adr) {
+			retstruct->emailcount++;
+			retstruct->emaillist = (char **)myrealloc(retstruct->emaillist,
+					  sizeof(char *) * retstruct->emailcount);
+			retstruct->emaillist[retstruct->emailcount-1] = adr;
+		}
 	}
-	myfree(tempstr);
+
+	myfree(s);
+
 	return retstruct;
 }

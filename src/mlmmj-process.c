@@ -619,7 +619,7 @@ int main(int argc, char **argv)
 		for(i = 0; i < toemails.emailcount; i++) {
 			for(j = 0; j < alternates->count; j++) {
 				chomp(alternates->strs[j]);
-				if(strcmp(alternates->strs[j],
+				if(strcasecmp(alternates->strs[j],
 					toemails.emaillist[i]) == 0)
 					intocc = 1;
 			}
@@ -627,7 +627,7 @@ int main(int argc, char **argv)
 		for(i = 0; i < ccemails.emailcount; i++) {
 			for(j = 0; j < alternates->count; j++) {
 				chomp(alternates->strs[j]);
-				if(strcmp(alternates->strs[j],
+				if(strcasecmp(alternates->strs[j],
 					ccemails.emaillist[i]) == 0)
 					intocc = 1;
 			}
