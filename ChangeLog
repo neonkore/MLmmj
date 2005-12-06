@@ -1,5 +1,5 @@
 1.2.9
- o Make find_email_adr() more robust (BSD mail)
+ o Make find_email_adr() more robust (BSD, Neale Pickett)
  o Make the email address check case-insensitive. (Neale Pickett)
  o Add spanish listtext translations (Enrique Matías Sánchez)
  o Make recipient delimiter configurable per list. SIC! (Joel Aelwyn)
