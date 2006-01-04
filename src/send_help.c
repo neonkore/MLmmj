@@ -69,6 +69,7 @@ void send_help(const char *listdir, const char *emailaddr,
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
+				"-L", listdir,
 				"-T", emailaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, (char *)NULL);

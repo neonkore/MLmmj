@@ -335,6 +335,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 			if(repto) {
 				execlp(mlmmjsend, mlmmjsend,
 						"-l", "1",
+						"-L", listdir,
 						"-m", mailname,
 						"-F", from,
 						"-T", to,
@@ -343,6 +344,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 			} else {
 				execlp(mlmmjsend, mlmmjsend,
 						"-l", "1",
+						"-L", listdir,
 						"-m", mailname,
 						"-F", from,
 						"-T", to,

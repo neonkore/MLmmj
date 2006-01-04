@@ -81,6 +81,7 @@ void confirm_sub(const char *listdir, const char *listaddr,
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
+				"-L", listdir,
 				"-T", subaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, (char *)NULL);
@@ -127,6 +128,7 @@ void notify_sub(const char *listdir, const char *listaddr,
 	myfree(maildata[1]);
 	execlp(mlmmjsend, mlmmjsend,
 			"-l", "1",
+			"-L", listdir,
 			"-T", tostr,
 			"-F", fromaddr,
 			"-m", queuefilename, (char *)NULL);
@@ -217,6 +219,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
+				"-L", listdir,
 				"-T", subaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, (char *)NULL);
@@ -266,6 +269,7 @@ void generate_subscribed(const char *listdir, const char *subaddr,
 	
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
+				"-L", listdir,
 				"-T", subaddr,
 				"-F", fromaddr,
 				"-m", queuefilename, (char *)NULL);

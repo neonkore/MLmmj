@@ -562,6 +562,7 @@ int main(int argc, char **argv)
 					efromemails.emaillist[0]);
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "4",
+					"-L", listdir,
 					"-F", efromemails.emaillist[0],
 					"-s", owner,
 					"-a",
@@ -666,6 +667,7 @@ int main(int argc, char **argv)
 		myfree(donemailname);
 		execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
+				"-L", listdir,
 				"-T", fromemails.emaillist[0],
 				"-F", fromaddr,
 				"-m", queuefilename, (char *)NULL);
@@ -755,6 +757,7 @@ int main(int argc, char **argv)
 			myfree(randomstr);
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "1",
+					"-L", listdir,
 					"-T", fromemails.emaillist[0],
 					"-F", fromaddr,
 					"-m", queuefilename, (char *)NULL);
