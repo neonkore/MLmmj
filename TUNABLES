@@ -19,6 +19,10 @@ to specify several entries (one pr. line), it's marked "list".
    Is the list is open or closed. If it's closed subscribtion and
    unsubscription via mail is disabled.
 
+ · closedlistsub		(boolean)
+
+   Closed for subscription. Unsubscription is possible.
+
  · moderated			(boolean)
 
    If this file is present, the emailaddresses in the file
