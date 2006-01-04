@@ -108,13 +108,17 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	const char *subswitch;
 	size_t len;
 	struct stat stbuf;
-	int closedlist, nosubconfirm, tmpfd, noget, i, subonlyget = 0;
+	int closedlist, nosubconfirm, tmpfd, noget, i, closedlistsub,
+	    subonlyget = 0;
 	size_t cmdlen;
 	unsigned int ctrl;
 	struct strlist *owners;
 	
 	/* A closed list doesn't allow subscribtion and unsubscription */
 	closedlist = statctrl(listdir, "closedlist");
+
+	/* A closed list "sub" only dissallows subscription, not unsub. */
+	closedlistsub = statctrl(listdir, "closedlistsub");
 
 	nosubconfirm = statctrl(listdir, "nosubconfirm");
 	if(nosubconfirm)
@@ -183,7 +187,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	/* listname+subscribe-digest@domain.tld */
 	case CTRL_SUBSCRIBE_DIGEST:
 		unlink(mailname);
-		if (closedlist)
+		if (closedlist || closedlistsub)
 			exit(EXIT_SUCCESS);
 		if (!strchr(fromemails->emaillist[0], '@'))
 			/* Not a valid From: address, silently ignore */
@@ -204,7 +208,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	/* listname+subscribe-nomail@domain.tld */
 	case CTRL_SUBSCRIBE_NOMAIL:
 		unlink(mailname);
-		if (closedlist)
+		if (closedlist || closedlistsub)
 			exit(EXIT_SUCCESS);
 		if (!strchr(fromemails->emaillist[0], '@'))
 			/* Not a valid From: address, silently ignore */
@@ -225,7 +229,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	/* listname+subscribe@domain.tld */
 	case CTRL_SUBSCRIBE:
 		unlink(mailname);
-		if (closedlist)
+		if (closedlist || closedlistsub)
 			exit(EXIT_SUCCESS);
 		if (!strchr(fromemails->emaillist[0], '@'))
 			/* Not a valid From: address, silently ignore */
