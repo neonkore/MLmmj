@@ -1,0 +1,23 @@
+Subject: Potvrdte prihlaseni do konference $listaddr$
+
+Ahoj, tady je program mlmmj zpravujici emailovou konferenci
+
+$listaddr$
+
+Pro potvrzeni pridani adresy 
+
+$subaddr$
+
+do 'digest' verze konference, prosim poslete odpoved na
+
+$confaddr$
+
+Toto potvrzeni sleduje dva ucely. Testuje, jestli mail z konference muze
+dorazit na vasi adresu a zaroven se testuje, zda nekdo jiny nezkousi pridat
+vasi adresu do konference bez vaseho vedomi.
+
+Vas emailovy klient by mel automaticky odpovedet na potvrzujici adresu, kdyz
+pouzijete funkci odpovedet.
+
+Predmet a telo zpravy nemusi nic obsahovat.
+

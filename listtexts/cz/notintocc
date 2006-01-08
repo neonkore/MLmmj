@@ -1,0 +1,12 @@
+Subject: Odeslani zpravy na adresu $listaddr$ bylo odmitnuto
+
+Ahoj, tady je program mlmmj zpravujici emailovou konferenci
+
+$listaddr$
+
+Je mi lito, ale vase zprava nemuze byt dorucena do konference.
+
+Adresa konference musi byt obsazena bud v To: nebo v Cc: casti hlavicky
+emailu.
+
+Dekuji.

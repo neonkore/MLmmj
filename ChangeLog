@@ -1,3 +1,4 @@
+ o Add czech listtexts (Lukas Hluze)
  o Make non list emails (subconf, moderation etc.) also honor relayhost
    and smtpport
  o Add tunable to be able to close for subscription only (closedlistsub)

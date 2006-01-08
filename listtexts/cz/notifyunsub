@@ -1,0 +1,10 @@
+Subject: adresa $oldsub$ byla odhlasena z konference $listaddr$
+
+Ahoj, tady je program mlmmj zpravujici emailovou konferenci
+
+$listaddr$
+
+Nasledujici adresa byla odhlasena z emailove konference:
+
+$oldsub$
+

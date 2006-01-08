@@ -1,0 +1,13 @@
+Subject: Zpravy poslane z $listaddr$ k vam se vraceji
+
+Ahoj, tady je program mlmmj, ktery zpravuje emailovou konferenci
+
+$listaddr$
+
+Nektere zpravy vam nemohly byt doruceny. Pokud vam dosla tato zprava, tak to
+znamena, ze vse je jiz v poradku a tento mail je pouze pro Vasi informaci.
+
+Tady je seznam vracenych zprav:
+
+$bouncenumbers$
+

@@ -1,0 +1,32 @@
+Subject: Mozne prikazy pro konferenci $listaddr$
+
+Ahoj,
+
+dostupne jsou nasledujici moznosti:
+
+Pro odhlaseni zasli zpravu na:
+
+$listunsubaddr$
+
+Pro prihlaseni k 'digest' verzi konference zasli zpravu na:
+
+$digestsubaddr$
+
+Pro prihlaseni k 'nomail' verzi konference zasli zpravu na:
+
+$nomailsubaddr$
+
+'Nomail' verze konference
+Tato verze konference znamena, ze jste rozeznan jako clen konference, 
+ale na tuto adresu nechodi zadne prispevky z konference. Tato verze je
+uzitecna, kdyz je potreba posilat prispevky z vice adres do konference, 
+do ktere mohou prispevky posilat jen prihlaseni.
+
+Pro vyzvednuti zpravy cislo N z archivu zasli zpravu na:
+
+$listgetN$
+
+Pro kontaktovani vlastnika konference zasli zpravu na:
+
+$listowner$
+

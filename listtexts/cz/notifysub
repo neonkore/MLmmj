@@ -1,0 +1,10 @@
+Subject: adresa $newsub$ byla prihlasena do konference $listaddr$
+
+Ahoj, tady je program mlmmj zpravujici emailovou konferenci
+
+$listaddr$
+
+Nasledujici adresa byla prihlasena do emailove konference:
+
+$newsub$
+

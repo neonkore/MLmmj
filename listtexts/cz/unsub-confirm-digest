@@ -1,0 +1,22 @@
+Subject: Potrzeni odhlaseni z 'digest' verze konference $listaddr$
+
+Ahoj, tady je program mlmmj, ktery spravuje emailovou konferenci
+
+$listaddr$
+
+Pro potvrzeni, ze chcete adresu
+
+$subaddr$
+
+odstranit z konference, poslete prosim odpoved na
+
+$confaddr$
+
+Vas emailovy klient by mel automaticky odpovedet na potvrzujici adresu, kdyz
+pouzijete funkci odpovedet.
+
+Pokud nejste prihlaseni do teto konference, neobdrzite zadnou odpoved.
+
+V hlavicce zpravy na radku s 'Return-Path' muzete videt adresu, se kterou
+jste prihlaseni do konference.
+
