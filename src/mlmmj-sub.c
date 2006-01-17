@@ -32,6 +32,7 @@
 #include <fcntl.h>
 #include <libgen.h>
 #include <sys/wait.h>
+#include <ctype.h>
 
 #include "mlmmj.h"
 #include "mlmmj-sub.h"
@@ -282,9 +283,9 @@ int main(int argc, char **argv)
 {
 	char *listaddr, *listdelim, *listdir = NULL, *address = NULL;
 	char *subfilename = NULL, *mlmmjsend, *bindir, chstr[2], *subdir;
-	char *subddirname = NULL, *sublockname;
+	char *subddirname = NULL, *sublockname, *lowcaseaddr;
 	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock, notifysub;
-	int changeuid = 1, status, digest = 0, nomail = 0;
+	int changeuid = 1, status, digest = 0, nomail = 0, i = 0;
 	int groupwritable = 0, sublock, sublockfd, nogensubscribed = 0, subbed;
 	size_t len;
 	struct stat st;
@@ -363,6 +364,15 @@ int main(int argc, char **argv)
 		fprintf(stderr, "%s -h for help\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
+
+	/* Make the address lowercase */
+	lowcaseaddr = mystrdup(address);
+	i = 0;
+	while(lowcaseaddr[i]) {
+		lowcaseaddr[i] = tolower(lowcaseaddr[i]);
+		i++;
+	}
+	address = lowcaseaddr;
 
 	/* get the list address */
 	listaddr = getlistaddr(listdir);

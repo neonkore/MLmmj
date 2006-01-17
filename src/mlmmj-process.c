@@ -583,8 +583,13 @@ int main(int argc, char **argv)
 
 	/* discard malformed mail with invalid From: */
 	if(fromemails.emailcount != 1) { 
+		for(i = 0; i < fromemails.emailcount; i++)
+			printf("fromemails.emaillist[%d] = %s\n",
+					i, fromemails.emaillist[i]);
 		discardname = concatstr(3, listdir,
 				"/queue/discarded/", randomstr);
+		log_error(LOG_ARGS, "Discarding %s due to invalid From:",
+				mailfile);
 		rename(mailfile, discardname);
 		unlink(donemailname);
 		myfree(donemailname);

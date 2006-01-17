@@ -32,6 +32,7 @@
 #include <libgen.h>
 #include <dirent.h>
 #include <sys/wait.h>
+#include <ctype.h>
 
 #include "mlmmj.h"
 #include "mlmmj-unsub.h"
@@ -328,10 +329,10 @@ int main(int argc, char **argv)
 	int subread, subwrite, rlock, wlock, opt, unsubres, status, nomail = 0;
 	int confirmunsub = 0, unsubconfirm = 0, notifysub = 0, digest = 0;
 	int changeuid = 1, groupwritable = 0, sublock, sublockfd;
-	int nogennotsubscribed = 0;
+	int nogennotsubscribed = 0, i = 0;
 	char *listaddr, *listdelim, *listdir = NULL, *address = NULL;
 	char *subreadname = NULL, *subwritename, *mlmmjsend, *bindir, *subdir;
-	char *subddirname, *sublockname;
+	char *subddirname, *sublockname, *lowcaseaddr;
 	off_t suboff;
 	DIR *subddir;
 	struct dirent *dp;
@@ -404,6 +405,15 @@ int main(int argc, char **argv)
 		fprintf(stderr, "%s -h for help\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
+
+	/* Make the address lowercase */
+	lowcaseaddr = mystrdup(address);
+	i = 0;
+	while(lowcaseaddr[i]) {
+		lowcaseaddr[i] = tolower(lowcaseaddr[i]);
+		i++;
+	}
+	address = lowcaseaddr;
 
 	/* get the list address */
 	listaddr = getlistaddr(listdir);
