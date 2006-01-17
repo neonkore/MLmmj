@@ -184,6 +184,7 @@ static char *skin(char *name)
 struct email_container *find_email_adr(const char *str,
 		struct email_container *retstruct)
 {
+	char *c1 = NULL, *c2 = NULL;
 	char *p;
 	char *s;
 
@@ -196,12 +197,30 @@ struct email_container *find_email_adr(const char *str,
 		char *cur;
 
 		cur = p;
+oncemore:
 		p = strchr(p, ',');
 		if (p) {
 			/* If there's a comma, replace it with a NUL, so
-			 * cur will only have one address in it. */
-			*p = '\0';
-			p += 1;
+			 * cur will only have one address in it. Except
+			 * it's not in ""s */
+			c1 = strchr(cur, '"');
+			if(c1) {
+				c2 = strchr(c1+1, '"');
+			}
+			if(c2) {
+				if(*(c2-1) == '\\') {
+					*c2 = ' ';
+					c2 = NULL;
+					goto oncemore;
+				}
+			}
+			if(c2 && c2 < p) {
+				*p = '\0';
+				p += 1;
+			} else {
+				*p = ' ';
+				goto oncemore;
+			}
 		}
 
 		while(cur && ((' ' == *cur) ||

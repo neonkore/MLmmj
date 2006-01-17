@@ -229,10 +229,10 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	int opt, fd, dsnbounce = 0;
+	int opt, fd, dsnbounce = 0, i = 0;
 	char *listdir = NULL, *address = NULL, *number = NULL;
 	char *bindir, *mlmmjsend, *savename;
-	char *mailname = NULL, *bfilename, *a, *buf;
+	char *mailname = NULL, *bfilename, *a, *buf, *lowcaseaddr;
 	size_t len;
 	time_t t;
 	int probe = 0;
@@ -316,6 +316,15 @@ int main(int argc, char **argv)
 		a = strrchr(address, '@');
 		*a = '=';
 	}
+
+	/* Make the address lowercase */
+	lowcaseaddr = mystrdup(address);
+	i = 0;
+	while(lowcaseaddr[i]) {
+		lowcaseaddr[i] = tolower(lowcaseaddr[i]);
+		i++;
+	}
+	address = lowcaseaddr;
 			
 	if(number != NULL && probe != 0) {
 		fprintf(stderr, "You can only specify one of -n or -p\n");

@@ -1,3 +1,8 @@
+1.2.10
+ o Fix nasty bug in the new 1.2.9 find_email_adr() making comma in
+   quoted text in From: being discarded as invalid
+ o Simply make all addresses lowercase before doing anything else
+   wrt. sub/unsub and bounce
  o Add czech listtexts (Lukas Hluze)
  o Make non list emails (subconf, moderation etc.) also honor relayhost
    and smtpport
