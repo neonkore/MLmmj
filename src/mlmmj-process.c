@@ -590,6 +590,9 @@ int main(int argc, char **argv)
 				"/queue/discarded/", randomstr);
 		log_error(LOG_ARGS, "Discarding %s due to invalid From:",
 				mailfile);
+		for(i = 0; i < fromemails.emailcount; i++)
+			log_error(LOG_ARGS, "fromemails.emaillist[%d] = %s\n",
+					i, fromemails.emaillist[i]);
 		rename(mailfile, discardname);
 		unlink(donemailname);
 		myfree(donemailname);

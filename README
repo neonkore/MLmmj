@@ -1,4 +1,4 @@
-README mlmmj-1.2.9					         Dec 14th 2005
+README mlmmj-1.2.10					         Jan 17th 2005
 
 This is an attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
@@ -29,8 +29,8 @@ To use mlmmj, do the following:
 
     $ ./configure && make && make install
 
- 1) Make sure your mailserver accepts '+' as a recipient delimiter. In Postfix
-    it's done by adding
+ 1) Configure a recipient delimiter. The default is to use '+', and in
+    Postfix it's done by adding
 
         recipient_delimiter = +
 
@@ -46,6 +46,8 @@ To use mlmmj, do the following:
     There is a nice FAQ explaining recipient delimiter configuration here:
 
     http://faqs.org/faqs/mail/addressing/
+
+    The mmj TUNABLE "delimiter" configures this on a per list basis
 
  2) Create the mailinglist.  There's a script, mlmmj-make-ml.sh, that will make
     a mailinglist for mlmmj. It is highly recommended to use this script to make
