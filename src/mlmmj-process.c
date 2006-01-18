@@ -609,6 +609,9 @@ int main(int argc, char **argv)
 		discardname = concatstr(3, listdir,
 				"/queue/discarded/",
 				randomstr);
+		log_error(LOG_ARGS, "Discarding %s due to invalid envelope"
+				" from email count (was %d, must be 1)",
+				mailfile, efromemails.emailcount);
 		rename(mailfile, discardname);
 		unlink(donemailname);
 		myfree(donemailname);
@@ -654,6 +657,11 @@ int main(int argc, char **argv)
 		 */
 		if ((strcasecmp(listaddr, fromemails.emaillist[0]) == 0) ||
 				notoccdenymails) {
+			log_error(LOG_ARGS, "Discarding %s because list"
+					" address was not in To: or Cc:,"
+					" and From: was the list or"
+					" notoccdenymails was set",
+					mailfile);
 			myfree(listaddr);
 			unlink(donemailname);
 			myfree(donemailname);
@@ -691,6 +699,10 @@ int main(int argc, char **argv)
 		/* Don't send a mail about denial to the list, but silently
 		 * discard and exit. */
 		if (strcasecmp(listaddr, fromemails.emaillist[0]) == 0) {
+			log_error(LOG_ARGS, "Discarding %s because"
+					" subonlypost was set and From: was"
+					" the list address",
+					mailfile);
 			myfree(listaddr);
 			unlink(donemailname);
 			myfree(donemailname);
@@ -698,6 +710,10 @@ int main(int argc, char **argv)
 		}
 		if(is_subbed(listdir, fromemails.emaillist[0]) != 0) {
 			if(nosubonlydenymails) {
+				log_error(LOG_ARGS, "Discarding %s because"
+						" subonlypost and"
+						" nosubonlydenymails was set",
+						mailfile);
 				myfree(listaddr);
 				unlink(donemailname);
 				myfree(donemailname);
@@ -741,6 +757,12 @@ int main(int argc, char **argv)
 		if (accret == DENY) {
 			if ((strcasecmp(listaddr, fromemails.emaillist[0]) ==
 						0) || noaccessdenymails) {
+				log_error(LOG_ARGS, "Discarding %s because"
+						" it was denied by an access"
+						" rule, and From: was the list"
+						" address or noaccessdenymails"
+						" was set",
+						mailfile);
 				myfree(listaddr);
 				unlink(donemailname);
 				myfree(donemailname);
