@@ -1,3 +1,8 @@
+1.2.11
+ o Previous fix to find_email_adr() was incomplete, so in some
+   cases mails would get rejected due to the To: or Cc: rule. Thanks
+   again lcars for finding this
+ o Sanity check to make sure there's a '@' in listaddress
 1.2.10
  o Fix nasty bug in the new 1.2.9 find_email_adr() making comma in
    quoted text in From: being discarded as invalid

@@ -54,6 +54,11 @@ char *getlistaddr(const char *listdir)
 		exit(EXIT_FAILURE);
 	}
 
+	if(strchr(tmpstr, '@') == NULL) {
+		log_error(LOG_ARGS, "FATAL. No @ sign in listaddress");
+		exit(EXIT_FAILURE);
+	}
+
 	chomp(tmpstr);
 	close(listnamefd);
 

@@ -214,7 +214,7 @@ oncemore:
 					goto oncemore;
 				}
 			}
-			if(c2 && c2 < p) {
+			if(c1 == NULL || (c2 && c2 < p)) {
 				*p = '\0';
 				p += 1;
 			} else {
