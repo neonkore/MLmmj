@@ -113,6 +113,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	size_t cmdlen;
 	unsigned int ctrl;
 	struct strlist *owners;
+	int owner_idx;
 	
 	/* A closed list doesn't allow subscribtion and unsubscription */
 	closedlist = statctrl(listdir, "closedlist");
@@ -148,8 +149,16 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		if (strncmp(controlstr, ctrl_commands[ctrl].command, cmdlen)
 				== 0) {
 
-			if (ctrl_commands[ctrl].accepts_parameter &&
-					(controlstr[cmdlen] == '-')) {
+			if (ctrl_commands[ctrl].accepts_parameter) {
+				if (controlstr[cmdlen] != '-') {
+					errno = 0;
+					log_error(LOG_ARGS, "Command \"%s\""
+						" requires a parameter, but no"
+						" parameter was given."
+						" Ignoring mail",
+						ctrl_commands[ctrl].command);
+					return -1;
+                                }
 				param = mystrdup(controlstr + cmdlen + 1);
 				MY_ASSERT(param);
 				if (strchr(param, '/')) {
@@ -157,15 +166,20 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 					log_error(LOG_ARGS, "Slash (/) in"
 						" list control request,"
 						" discarding mail");
-					exit(EXIT_SUCCESS);
+					return -1;
 				}
-			} else if (!ctrl_commands[ctrl].accepts_parameter &&
-					(controlstr[cmdlen] == '\0')) {
-				param = NULL;
+
 			} else {
-				/* malformed request, ignore and clean up */
-				unlink(mailname);
-				exit(EXIT_SUCCESS);
+				if (controlstr[cmdlen] != '\0') {
+					errno = 0;
+					log_error(LOG_ARGS, "Command \"%s\""
+						" does not accept a parameter,"
+						" but a parameter was given."
+						" Ignoring mail",
+						ctrl_commands[ctrl].command);
+					return -1;
+				}
+				param = NULL;
 			}
 
 			myfree(controlstr);
@@ -176,22 +190,30 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	
 	/* Only allow mails with bad From: header to be bounce mails */
 	if(fromemails->emailcount != 1 && ctrl != CTRL_BOUNCES) {
-		log_error(LOG_ARGS, "Discarding mail with invalid From: "
+		errno = 0;
+		log_error(LOG_ARGS, "Ignoring mail with invalid From: "
 				"which was not a bounce");
-		unlink(mailname);
-		exit(EXIT_SUCCESS);
+		return -1;
 	}
 
 	switch (ctrl) {
 
 	/* listname+subscribe-digest@domain.tld */
 	case CTRL_SUBSCRIBE_DIGEST:
-		unlink(mailname);
-		if (closedlist || closedlistsub)
-			exit(EXIT_SUCCESS);
-		if (!strchr(fromemails->emaillist[0], '@'))
-			/* Not a valid From: address, silently ignore */
-			exit(EXIT_SUCCESS);
+		if (closedlist || closedlistsub) {
+			errno = 0;
+			log_error(LOG_ARGS, "A subscribe-digest request was"
+				" sent to a closed list. Ignoring mail");
+			return -1;
+		}
+		if (!strchr(fromemails->emaillist[0], '@')) {
+			/* Not a valid From: address */
+			errno = 0;
+			log_error(LOG_ARGS, "A subscribe-digest request was"
+				" sent with an invalid From: header."
+				" Ignoring mail");
+			return -1;
+		}
 		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: request for digest"
 					" subscription from %s",
 					fromemails->emaillist[0]);
@@ -207,12 +229,20 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	/* listname+subscribe-nomail@domain.tld */
 	case CTRL_SUBSCRIBE_NOMAIL:
-		unlink(mailname);
-		if (closedlist || closedlistsub)
-			exit(EXIT_SUCCESS);
-		if (!strchr(fromemails->emaillist[0], '@'))
-			/* Not a valid From: address, silently ignore */
-			exit(EXIT_SUCCESS);
+		if (closedlist || closedlistsub) {
+			errno = 0;
+			log_error(LOG_ARGS, "A subscribe-nomail request was"
+				" sent to a closed list. Ignoring mail");
+			return -1;
+		}
+		if (!strchr(fromemails->emaillist[0], '@')) {
+			/* Not a valid From: address */
+			errno = 0;
+			log_error(LOG_ARGS, "A subscribe-nomail request was"
+				" sent with an invalid From: header."
+				" Ignoring mail");
+			return -1;
+		}
 		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: request for nomail"
 					" subscription from %s",
 					fromemails->emaillist[0]);
@@ -228,12 +258,20 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	/* listname+subscribe@domain.tld */
 	case CTRL_SUBSCRIBE:
-		unlink(mailname);
-		if (closedlist || closedlistsub)
-			exit(EXIT_SUCCESS);
-		if (!strchr(fromemails->emaillist[0], '@'))
-			/* Not a valid From: address, silently ignore */
-			exit(EXIT_SUCCESS);
+		if (closedlist || closedlistsub) {
+			errno = 0;
+			log_error(LOG_ARGS, "A subscribe request was"
+				" sent to a closed list. Ignoring mail");
+			return -1;
+		}
+		if (!strchr(fromemails->emaillist[0], '@')) {
+			/* Not a valid From: address */
+			errno = 0;
+			log_error(LOG_ARGS, "A subscribe request was"
+				" sent with an invalid From: header."
+				" Ignoring mail");
+			return -1;
+		}
 		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: request for regular"
 					" subscription from %s",
 					fromemails->emaillist[0]);
@@ -248,12 +286,15 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	/* listname+subconf-digest-COOKIE@domain.tld */
 	case CTRL_CONFSUB_DIGEST:
-		unlink(mailname);
 		conffilename = concatstr(3, listdir, "/subconf/", param);
 		myfree(param);
 		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
-			/* invalid COOKIE, silently ignore */
-			exit(EXIT_SUCCESS);
+			/* invalid COOKIE */
+			errno = 0;
+			log_error(LOG_ARGS, "A subconf-digest request was"
+				" sent with a mismatching cookie."
+				" Ignoring mail");
+			return -1;
 		}
 		tmpstr = mygetline(tmpfd);
 		chomp(tmpstr);
@@ -273,12 +314,15 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	/* listname+subconf-nomail-COOKIE@domain.tld */
 	case CTRL_CONFSUB_NOMAIL:
-		unlink(mailname);
 		conffilename = concatstr(3, listdir, "/subconf/", param);
 		myfree(param);
 		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
-			/* invalid COOKIE, silently ignore */
-			exit(EXIT_SUCCESS);
+			/* invalid COOKIE */
+			errno = 0;
+			log_error(LOG_ARGS, "A subconf-nomail request was"
+				" sent with a mismatching cookie."
+				" Ignoring mail");
+			return -1;
 		}
 		tmpstr = mygetline(tmpfd);
 		chomp(tmpstr);
@@ -298,12 +342,15 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	/* listname+subconf-COOKIE@domain.tld */
 	case CTRL_CONFSUB:
-		unlink(mailname);
 		conffilename = concatstr(3, listdir, "/subconf/", param);
 		myfree(param);
 		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
-			/* invalid COOKIE, silently ignore */
-			exit(EXIT_SUCCESS);
+			/* invalid COOKIE */
+			errno = 0;
+			log_error(LOG_ARGS, "A subconf request was"
+				" sent with a mismatching cookie."
+				" Ignoring mail");
+			return -1;
 		}
 		tmpstr = mygetline(tmpfd);
 		chomp(tmpstr);
@@ -323,12 +370,20 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	/* listname+unsubscribe-digest@domain.tld */
 	case CTRL_UNSUBSCRIBE_DIGEST:
-		unlink(mailname);
-		if (closedlist)
-			exit(EXIT_SUCCESS);
-		if (!strchr(fromemails->emaillist[0], '@'))
-			/* Not a valid From: address, silently ignore */
-			exit(EXIT_SUCCESS);
+		if (closedlist) {
+			errno = 0;
+			log_error(LOG_ARGS, "An unsubscribe-digest request was"
+				" sent to a closed list. Ignoring mail");
+			return -1;
+		}
+		if (!strchr(fromemails->emaillist[0], '@')) {
+			/* Not a valid From: address */
+			errno = 0;
+			log_error(LOG_ARGS, "An unsubscribe-digest request was"
+				" sent with an invalid From: header."
+				" Ignoring mail");
+			return -1;
+		}
 		log_oper(listdir, OPLOGFNAME, "mlmmj-unsub: %s requests"
 					" unsubscribe from digest",
 					fromemails->emaillist[0]);
@@ -344,12 +399,20 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	/* listname+unsubscribe-nomail@domain.tld */
 	case CTRL_UNSUBSCRIBE_NOMAIL:
-		unlink(mailname);
-		if (closedlist)
-			exit(EXIT_SUCCESS);
-		if (!strchr(fromemails->emaillist[0], '@'))
-			/* Not a valid From: address, silently ignore */
-			exit(EXIT_SUCCESS);
+		if (closedlist) {
+			errno = 0;
+			log_error(LOG_ARGS, "An unsubscribe-nomail request was"
+				" sent to a closed list. Ignoring mail");
+			return -1;
+		}
+		if (!strchr(fromemails->emaillist[0], '@')) {
+			/* Not a valid From: address */
+			errno = 0;
+			log_error(LOG_ARGS, "An unsubscribe-nomail request was"
+				" sent with an invalid From: header."
+				" Ignoring mail");
+			return -1;
+		}
 		log_oper(listdir, OPLOGFNAME, "mlmmj-unsub: %s requests"
 					" unsubscribe from nomail",
 					fromemails->emaillist[0]);
@@ -365,12 +428,20 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	/* listname+unsubscribe@domain.tld */
 	case CTRL_UNSUBSCRIBE:
-		unlink(mailname);
-		if (closedlist)
-			exit(EXIT_SUCCESS);
-		if (!strchr(fromemails->emaillist[0], '@'))
-			/* Not a valid From: address, silently ignore */
-			exit(EXIT_SUCCESS);
+		if (closedlist) {
+			errno = 0;
+			log_error(LOG_ARGS, "An unsubscribe request was"
+				" sent to a closed list. Ignoring mail");
+			return -1;
+		}
+		if (!strchr(fromemails->emaillist[0], '@')) {
+			/* Not a valid From: address */
+			errno = 0;
+			log_error(LOG_ARGS, "An unsubscribe request was"
+				" sent with an invalid From: header."
+				" Ignoring mail");
+			return -1;
+		}
 		log_oper(listdir, OPLOGFNAME, "mlmmj-unsub: %s requests"
 					" unsubscribe from regular list",
 					fromemails->emaillist[0]);
@@ -385,14 +456,21 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	/* listname+unsubconf-digest-COOKIE@domain.tld */
 	case CTRL_CONFUNSUB_DIGEST:
-		unlink(mailname);
-		if (closedlist)
-			exit(EXIT_SUCCESS);
+		if (closedlist) {
+			errno = 0;
+			log_error(LOG_ARGS, "An unsubconf-digest request was"
+				" sent to a closed list. Ignoring mail");
+			return -1;
+		}
 		conffilename = concatstr(3, listdir, "/unsubconf/", param);
 		myfree(param);
 		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
-			/* invalid COOKIE, silently ignore */
-			exit(EXIT_SUCCESS);
+			/* invalid COOKIE */
+			errno = 0;
+			log_error(LOG_ARGS, "An unsubconf-digest request was"
+				" sent with a mismatching cookie."
+				" Ignoring mail");
+			return -1;
 		}
 		tmpstr = mygetline(tmpfd);
 		close(tmpfd);
@@ -412,14 +490,21 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	/* listname+unsubconf-nomail-COOKIE@domain.tld */
 	case CTRL_CONFUNSUB_NOMAIL:
-		unlink(mailname);
-		if (closedlist)
-			exit(EXIT_SUCCESS);
+		if (closedlist) {
+			errno = 0;
+			log_error(LOG_ARGS, "An unsubconf-nomail request was"
+				" sent to a closed list. Ignoring mail");
+			return -1;
+		}
 		conffilename = concatstr(3, listdir, "/unsubconf/", param);
 		myfree(param);
 		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
-			/* invalid COOKIE, silently ignore */
-			exit(EXIT_SUCCESS);
+			/* invalid COOKIE */
+			errno = 0;
+			log_error(LOG_ARGS, "An unsubconf-nomail request was"
+				" sent with a mismatching cookie."
+				" Ignoring mail");
+			return -1;
 		}
 		tmpstr = mygetline(tmpfd);
 		close(tmpfd);
@@ -439,14 +524,21 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	/* listname+unsubconf-COOKIE@domain.tld */
 	case CTRL_CONFUNSUB:
-		unlink(mailname);
-		if (closedlist)
-			exit(EXIT_SUCCESS);
+		if (closedlist) {
+			errno = 0;
+			log_error(LOG_ARGS, "An unsubconf request was"
+				" sent to a closed list. Ignoring mail");
+			return -1;
+		}
 		conffilename = concatstr(3, listdir, "/unsubconf/", param);
 		myfree(param);
 		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
-			/* invalid COOKIE, silently ignore */
-			exit(EXIT_SUCCESS);
+			/* invalid COOKIE */
+			errno = 0;
+			log_error(LOG_ARGS, "An unsubconf request was"
+				" sent with a mismatching cookie."
+				" Ignoring mail");
+			return -1;
 		}
 		tmpstr = mygetline(tmpfd);
 		close(tmpfd);
@@ -491,14 +583,18 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	/* listname+moderate-COOKIE@domain.tld */
 	case CTRL_MODERATE:
 		/* TODO Add accept/reject parameter to moderate */
-		unlink(mailname);
 		moderatefilename = concatstr(3, listdir, "/moderation/", param);
 		sendfilename = concatstr(2, moderatefilename, ".sending");
 		myfree(param);
 
 		if(stat(moderatefilename, &stbuf) < 0) {
 			myfree(moderatefilename);
-			exit(EXIT_SUCCESS); /* just exit, no mail to moderate */
+			/* no mail to moderate */
+			errno = 0;
+			log_error(LOG_ARGS, "A moderate request was"
+				" sent with a mismatching cookie."
+				" Ignoring mail");
+			return -1;
 		}
 		/* Rename it to avoid mail being sent twice */
 		if(rename(moderatefilename, sendfilename) < 0) {
@@ -519,34 +615,54 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	/* listname+help@domain.tld */
 	case CTRL_HELP:
-		unlink(mailname);
-		if(strchr(fromemails->emaillist[0], '@')) {
-			log_oper(listdir, OPLOGFNAME, "%s requested help",
-				fromemails->emaillist[0]);
-			send_help(listdir, fromemails->emaillist[0],
-				  mlmmjsend);
+		if(!strchr(fromemails->emaillist[0], '@')) {
+			/* Not a valid From: address */
+			errno = 0;
+			log_error(LOG_ARGS, "A help request was"
+				" sent with an invalid From: header."
+				" Ignoring mail");
+			return -1;
 		}
+		log_oper(listdir, OPLOGFNAME, "%s requested help",
+				fromemails->emaillist[0]);
+		send_help(listdir, fromemails->emaillist[0], mlmmjsend);
 		break;
 
 	/* listname+get-INDEX@domain.tld */
 	case CTRL_GET:
-		unlink(mailname);
 		noget = statctrl(listdir, "noget");
-		if(noget)
-			exit(EXIT_SUCCESS);
+		if(noget) {
+			errno = 0;
+			log_error(LOG_ARGS, "A get request was sent to a list"
+				" with the noget option set. Ignoring mail");
+			return -1;
+		}
 		subonlyget = statctrl(listdir, "subonlyget");
-		if(subonlyget)
-			if(is_subbed(listdir, fromemails->emaillist[0]) != 0)
-				exit(EXIT_SUCCESS);
+		if(subonlyget) {
+			if(is_subbed(listdir, fromemails->emaillist[0]) != 0) {
+				errno = 0;
+				log_error(LOG_ARGS, "A get request was sent"
+					" from a non-subscribed address to a"
+					" list with the subonlyget option set."
+					" Ignoring mail");
+				return -1;
+			}
+		}
 		/* sanity check--is it all digits? */
 		for(c = param; *c != '\0'; c++) {
-			if(!isdigit((int)*c))
-				exit(EXIT_SUCCESS);
+			if(!isdigit((int)*c)) {
+				errno = 0;
+				log_error(LOG_ARGS, "The get request contained"
+					" non-digits in index. Ignoring mail");
+				return -1;
+			}
 		}
 		archivefilename = concatstr(3, listdir, "/archive/",
 						param);
-		if(stat(archivefilename, &stbuf) < 0)
-			exit(EXIT_SUCCESS);
+		if(stat(archivefilename, &stbuf) < 0) {
+			log_error(LOG_ARGS, "Unable to open archive file");
+			exit(EXIT_FAILURE);
+		}
 		log_oper(listdir, OPLOGFNAME, "%s got archive/%s",
 				fromemails->emaillist[0], archivefilename);
 		execlp(mlmmjsend, mlmmjsend,
@@ -562,7 +678,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	/* listname+list@domain.tld */
 	case CTRL_LIST:
-		unlink(mailname);
+		owner_idx = -1;
 		owners = ctrlvalues(listdir, "owner");
 		for(i = 0; i < owners->count; i++) {
 			if(strcmp(fromemails->emaillist[0],
@@ -570,13 +686,29 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				log_oper(listdir, OPLOGFNAME,
 						"%s requested sub list",
 				fromemails->emaillist[0]);
-				send_list(listdir, owners->strs[i], mlmmjsend);
+				owner_idx = i;
+				break;
 			}
 		}
+		if (owner_idx == -1) {
+			errno = 0;
+			log_error(LOG_ARGS, "A list request was sent to the"
+				" list from a non-owner address."
+				" Ignoring mail");
+			return -1;
+		} else {
+			send_list(listdir, owners->strs[owner_idx], mlmmjsend);
+		}
 		break;
-	}
 
-	unlink(mailname);
+	/* listname+???@domain.tld */
+	default:
+		errno = 0;
+		log_error(LOG_ARGS, "Unknown command \"%s\". Ignoring mail",
+								controlstr);
+		return -1;
+
+	}
 
 	return 0;
 }
