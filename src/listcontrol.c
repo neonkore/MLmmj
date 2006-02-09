@@ -585,7 +585,6 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		/* TODO Add accept/reject parameter to moderate */
 		moderatefilename = concatstr(3, listdir, "/moderation/", param);
 		sendfilename = concatstr(2, moderatefilename, ".sending");
-		myfree(param);
 
 		if(stat(moderatefilename, &stbuf) < 0) {
 			myfree(moderatefilename);
@@ -604,6 +603,10 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 		log_oper(listdir, OPLOGFNAME, "%s moderated %s",
 				fromemails->emaillist[0], moderatefilename);
+		if(strncmp(param, "subscribe", 9) == 0)
+			execlp(mlmmjsub, mlmmjsub,
+					"-L", listdir,
+					"-m", param, (char *)NULL);
 		myfree(moderatefilename);
 		execlp(mlmmjsend, mlmmjsend,
 				"-L", listdir,

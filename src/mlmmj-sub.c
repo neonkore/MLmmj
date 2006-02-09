@@ -47,6 +47,130 @@
 #include "statctrl.h"
 #include "prepstdreply.h"
 #include "memory.h"
+#include "ctrlvalues.h"
+
+void moderate_sub(const char *listdir, const char *listaddr,
+		const char *listdelim, const char *subaddr,
+		const char *mlmmjsend, enum subtype typesub)
+{
+	int i, fd;
+	char *a, *queuefilename, *fromaddr, *listname, *listfqdn, *listtext;
+	char *modfilename, *randomstr, *str, *listdelim, *mods;
+	struct strlist *submods;
+	char *maildata[6] = { "subaddr", NULL, "moderateaddr", NULL,
+				"moderators", NULL };
+
+	submods = ctrlvalues(listdir, "submod");
+
+	/* no subscriber moderation wanted */
+	if(submods == NULL)
+		return;
+
+	/* generate the file in moderation/ */
+	switch(typesub) {
+		default:
+		case SUB_NORMAL:
+			str = concatstr(4, subaddr, "\n", "SUB_NORMAL", "\n");
+			break;
+		case SUB_DIGEST:
+			str = concatstr(4, subaddr, "\n", "SUB_DIGEST", "\n");
+			break;
+		case SUB_NOMAIL:
+			str = concatstr(4, subaddr, "\n", "SUB_NOMAIL", "\n");
+			break;
+	}
+	
+	randomstr = random_str();
+	modfilename = concatstr(3, listdir, "/moderation/subscribe",
+			randomstr);
+	myfree(randomstr);
+
+	fd = open(modfilename, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
+	while(fd < 0 && errno == EEXIST) {
+		myfree(modfilename);
+		randomstr = random_str();
+		modfilename = concatstr(3, listdir, "/moderation/subscribe",
+				randomstr);
+		myfree(randomstr);
+		fd = open(modfilename, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
+	}
+	if(fd < 0) {
+		log_error(LOG_ARGS, "could not create %s", modfilename);
+		log_error(LOG_ARGS, "ignoring request: %s", str);
+		myfree(modfilename);
+		myfree(str);
+		exit(EXIT_FAILURE);
+	}
+	if(writen(fd, str, strlen(str)) < 0) {
+		log_error(LOG_ARGS, "could not write to %s", modfilename);
+		log_error(LOG_ARGS, "ignoring request: %s", str);
+		myfree(modfilename);
+		myfree(str);
+		exit(EXIT_FAILURE);
+	}
+	
+	close(fd);
+	
+	myfree(str);
+
+	/* check to see if there's adresses in the submod control file */
+	for(i = 0; i < submods->count; i++)
+		a = strchr(submods->strs[i], '@');
+
+	mods = concatstr(2, listdir, "/control/submod");
+
+	/* no addresses in submod control file, use owner */
+	if(a == NULL) {
+		/* free the submods struct from above */
+		for(i = 0; i < submods->count; i++)
+			myfree(submods->strs[i]);
+		myfree(submods->strs);
+		mods = concatstr(2, listdir, "/control/owner");
+	}
+
+	/* send mail to requester that the list is submod'ed */
+
+	/* send mail to moderators about request pending */
+	listdelim = getlistdelim(listdir);
+	listfqdn = genlistfqdn(listaddr);
+	listname = genlistname(listaddr);
+
+	from = concatstr(4, listname, listdelim, "owner@", listfqdn);
+	to = concatstr(3, listname, "-moderators@", listfqdn);
+	replyto = concatstr(6, listname, listdelim, "moderate-", modfilename,
+			"@", listfqdn);
+	for(i = 0; i < submods->count; i++) {
+		str = moderators;
+		moderators = concatstr(3, moderators, submods->strs[i], "\n");
+		myfree(str);
+	}
+
+	maildata[1] = subaddr;
+	maildata[3] = replyto;
+	maildata[5] = moderators;
+
+	queuefilename = prepstdreply(listdir, "submod-moderator",
+				"$listowner$", to, replyto, 3, maildata);
+			
+	myfree(listdelim);
+	myfree(listname);
+	myfree(listfqdn);
+
+	if((fd = open(queuefilename, O_RDONLY) < 0)) {
+		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
+		log_error(LOG_ARGS, "Request in %s not served", modfilename);
+		myfree(queuefilename);
+		
+	execlp(mlmmjsend, mlmmjsend,
+				"-a",
+				"-l", "4",
+				"-L", listdir,
+				"-s", mods,
+				"-F", from,
+				"-R", replyto,
+				"-m", queuefilename, (char *)NULL);
+
+}
 
 void confirm_sub(const char *listdir, const char *listaddr,
 		const char *listdelim, const char *subaddr,
