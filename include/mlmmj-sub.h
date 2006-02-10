@@ -26,9 +26,14 @@
 
 #include <mlmmj.h>
 
+void moderate_sub(const char *listdir, const char *listaddr,
+		  const char *listdelim, const char *subaddr,
+		  const char *mlmmjsend, enum subtype typesub,
+		  int do_moderate);
 void confirm_sub(const char *listdir, const char *listaddr,
 		 const char *listdelim, const char *subaddr,
-		 const char *mlmmjsend, enum subtype typesub);
+		 const char *mlmmjsend, enum subtype typesub,
+		 int do_moderate);
 void generate_subconfirm(const char *listdir, const char *listadr,
 		const char *listdelim, const char *subaddr,
 		const char *mlmmjsend, enum subtype typesub);

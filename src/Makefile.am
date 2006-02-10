@@ -36,7 +36,7 @@ mlmmj_sub_SOURCES = mlmmj-sub.c writen.c mylocking.c \
 			getlistaddr.c chomp.c random-int.c strgen.c \
 			subscriberfuncs.c print-version.c \
 			log_error.c mygetline.c prepstdreply.c memory.c \
-			statctrl.c readn.c getlistdelim.c
+			statctrl.c readn.c getlistdelim.c ctrlvalues.c
 
 mlmmj_unsub_SOURCES = mlmmj-unsub.c writen.c mylocking.c \
 			getlistaddr.c chomp.c subscriberfuncs.c random-int.c \
