@@ -31,6 +31,11 @@ char *chomp(char *str)
 	if(str == NULL)
 		return NULL;
 
+	if(*str == '\0' || *str == '\n') {
+		*str = '\0';
+		return str;
+	}
+
 	i = strlen(str) - 1;
 
 	while(str[i] == '\n') {

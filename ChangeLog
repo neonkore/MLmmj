@@ -1,3 +1,4 @@
+ o Make sure chomp works with empty strings (Frank Denis)
 1.2.11
  o Previous fix to find_email_adr() was incomplete, so in some
    cases mails would get rejected due to the To: or Cc: rule. Thanks
