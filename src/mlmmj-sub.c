@@ -51,22 +51,16 @@
 
 void moderate_sub(const char *listdir, const char *listaddr,
 		const char *listdelim, const char *subaddr,
-		const char *mlmmjsend, enum subtype typesub,
-		int do_moderate)
+		const char *mlmmjsend, enum subtype typesub)
 {
 	int i, fd;
 	char *a = NULL, *queuefilename, *from, *listname, *listfqdn, *str;
 	char *modfilename, *randomstr, *mods, *to, *replyto, *moderators = NULL;
+	char *modfilebase;
 	struct strlist *submods;
 	pid_t pid;
 	char *maildata[6] = { "subaddr", NULL, "moderateaddr", NULL,
 				"moderators", NULL };
-
-	submods = ctrlvalues(listdir, "submod");
-
-	/* no subscriber moderation wanted */
-	if(submods == NULL || do_moderate == 0)
-		return;
 
 	/* generate the file in moderation/ */
 	switch(typesub) {
@@ -111,32 +105,37 @@ void moderate_sub(const char *listdir, const char *listaddr,
 	
 	myfree(str);
 
-	/* check to see if there's adresses in the submod control file */
+	submods = ctrlvalues(listdir, "submod");
 	mods = concatstr(2, listdir, "/control/submod");
+	/* check to see if there's adresses in the submod control file */
 	for(i = 0; i < submods->count; i++)
 		a = strchr(submods->strs[i], '@');
 
 	/* no addresses in submod control file, use owner */
 	if(a == NULL) {
-		mods = concatstr(2, listdir, "/control/owner");
 		/* free the submods struct from above */
 		for(i = 0; i < submods->count; i++)
 			myfree(submods->strs[i]);
 		myfree(submods->strs);
+		myfree(submods);
+		submods = ctrlvalues(listdir, "owner");
+		myfree(mods);
+		mods = concatstr(2, listdir, "/control/submod");
 	}
-
-	/* send mail to requester that the list is submod'ed */
 
 	/* send mail to moderators about request pending */
 	listdelim = getlistdelim(listdir);
 	listfqdn = genlistfqdn(listaddr);
 	listname = genlistname(listaddr);
+	modfilebase = mybasename(modfilename);
 
 	from = concatstr(4, listname, listdelim, "owner@", listfqdn);
 	to = concatstr(3, listname, "-moderators@", listfqdn);
-	replyto = concatstr(6, listname, listdelim, "moderate-", modfilename,
+	replyto = concatstr(6, listname, listdelim, "moderate-", modfilebase,
 			"@", listfqdn);
+	myfree(modfilebase);
 	for(i = 0; i < submods->count; i++) {
+		printf("%s", submods->strs[i]);
 		str = moderators;
 		moderators = concatstr(3, moderators, submods->strs[i], "\n");
 		myfree(str);
@@ -150,7 +149,9 @@ void moderate_sub(const char *listdir, const char *listaddr,
 				"$listowner$", to, replyto, 3, maildata);
 	
 	myfree(maildata[1]);
+	
 	/* we need to exec more than one mlmmj-send */
+	
 	pid = fork();
 
 	if(pid < 0) {
@@ -176,6 +177,8 @@ void moderate_sub(const char *listdir, const char *listaddr,
 	myfree(moderators);
 	myfree(queuefilename);
 	
+	/* send mail to requester that the list is submod'ed */
+
 	from = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
 	queuefilename = prepstdreply(listdir, "submod-requester", "$listowner$",
 					subaddr, NULL, 0, NULL);
@@ -193,13 +196,12 @@ void moderate_sub(const char *listdir, const char *listaddr,
 
 void confirm_sub(const char *listdir, const char *listaddr,
 		const char *listdelim, const char *subaddr,
-		const char *mlmmjsend, enum subtype typesub,
-		int do_moderate)
+		const char *mlmmjsend, enum subtype typesub)
 {
 	char *queuefilename, *fromaddr, *listname, *listfqdn, *listtext;
 
 	moderate_sub(listdir, listaddr, listdelim, subaddr, mlmmjsend,
-			typesub, do_moderate);
+			typesub);
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
@@ -432,7 +434,7 @@ int main(int argc, char **argv)
 	char *subfilename = NULL, *mlmmjsend, *bindir, chstr[2], *subdir;
 	char *subddirname = NULL, *sublockname, *lowcaseaddr;
 	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock, notifysub;
-	int changeuid = 1, status, digest = 0, nomail = 0, i = 0;
+	int changeuid = 1, status, digest = 0, nomail = 0, i = 0, submod;
 	int groupwritable = 0, sublock, sublockfd, nogensubscribed = 0, subbed;
 	size_t len;
 	struct stat st;
@@ -604,6 +606,8 @@ int main(int argc, char **argv)
 	}
 	subbed = is_subbed_in(subddirname, address);
 	listdelim = getlistdelim(listdir);
+	submod = statctrl(listdir, "submod");
+	
 	if(subbed) {
 		if(subconfirm) {
 			close(subfilefd);
@@ -613,6 +617,14 @@ int main(int argc, char **argv)
 			generate_subconfirm(listdir, listaddr, listdelim,
 					    address, mlmmjsend, typesub);
 		} else {
+			if(submod) {
+				close(subfilefd);
+				close(sublockfd);
+				unlink(sublockname);
+				myfree(sublockname);
+				moderate_sub(listdir, listaddr, listdelim,
+					address, mlmmjsend, typesub);
+			}
 			lseek(subfilefd, 0L, SEEK_END);
 			len = strlen(address);
 			address[len] = '\n';
@@ -645,7 +657,7 @@ int main(int argc, char **argv)
 		if(childpid < 0) {
 			log_error(LOG_ARGS, "Could not fork");
 			confirm_sub(listdir, listaddr, listdelim, address,
-					mlmmjsend, typesub, 1);
+					mlmmjsend, typesub);
 		}
 		
 		if(childpid > 0) {
@@ -657,7 +669,7 @@ int main(int argc, char **argv)
 		/* child confirms subscription */
 		if(childpid == 0)
 			confirm_sub(listdir, listaddr, listdelim, address,
-					mlmmjsend, typesub, 1);
+					mlmmjsend, typesub);
 	}
 
 	notifysub = statctrl(listdir, "notifysub");

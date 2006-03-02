@@ -28,12 +28,10 @@
 
 void moderate_sub(const char *listdir, const char *listaddr,
 		  const char *listdelim, const char *subaddr,
-		  const char *mlmmjsend, enum subtype typesub,
-		  int do_moderate);
+		  const char *mlmmjsend, enum subtype typesub);
 void confirm_sub(const char *listdir, const char *listaddr,
 		 const char *listdelim, const char *subaddr,
-		 const char *mlmmjsend, enum subtype typesub,
-		 int do_moderate);
+		 const char *mlmmjsend, enum subtype typesub);
 void generate_subconfirm(const char *listdir, const char *listadr,
 		const char *listdelim, const char *subaddr,
 		const char *mlmmjsend, enum subtype typesub);
