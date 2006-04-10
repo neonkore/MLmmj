@@ -1,3 +1,4 @@
+ o No need to check for subscribers in 0-sized files
  o Make sure chomp works with empty strings (Frank Denis)
 1.2.11
  o Previous fix to find_email_adr() was incomplete, so in some

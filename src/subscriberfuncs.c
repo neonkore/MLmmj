@@ -51,6 +51,10 @@ off_t find_subscriber(int fd, const char *address)
 		return (off_t)-1;
 	}
 
+	/* No need to check in 0-size file */
+	if(st.st_size == 0)
+		return (off_t)-1;
+
 	if(!S_ISREG(st.st_mode)) {
 		log_error(LOG_ARGS, "Non regular file in subscribers.d/");
 		return (off_t)-1;
