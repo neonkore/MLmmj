@@ -1,3 +1,5 @@
+ o Close stdin, stdout and stderr in the child of mlmmj-receive after
+   forking. This is neccesary on FreeBSD.
  o No need to check for subscribers in 0-sized files
  o Make sure chomp works with empty strings (Frank Denis)
 1.2.11

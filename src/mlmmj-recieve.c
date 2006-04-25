@@ -162,6 +162,10 @@ int main(int argc, char **argv)
 	
 		if(childpid)
 			exit(EXIT_SUCCESS); /* Parent says: "bye bye kids!"*/
+
+		close(0);
+		close(1);
+		close(2);
 	}
 
 	execlp(mlmmjprocess, mlmmjprocess,
