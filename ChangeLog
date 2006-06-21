@@ -1,3 +1,4 @@
+ o Only add To: header when sending out actual list mail
  o Close stdin, stdout and stderr in the child of mlmmj-receive after
    forking. This is neccesary on FreeBSD.
  o No need to check for subscribers in 0-sized files

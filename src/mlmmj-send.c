@@ -823,7 +823,6 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	addtohdr = statctrl(listdir, "addtohdr");
 	memmailsizestr = ctrlvalue(listdir, "memorymailsize");
 	ctrlarchive = statctrl(listdir, "noarchive");
 	if(memmailsizestr) {
@@ -886,6 +885,7 @@ int main(int argc, char **argv)
 		}
 		break;
 	case '3':
+		addtohdr = statctrl(listdir, "addtohdr");
 	case '4': /* sending mails to subfile */
 		if((subfd = open(subfilename, O_RDONLY)) < 0) {
 			log_error(LOG_ARGS, "Could not open '%s':",
@@ -904,6 +904,7 @@ int main(int argc, char **argv)
 						archivefilename);
 		break;
 	default: /* normal list mail -- now handled when forking */
+		addtohdr = statctrl(listdir, "addtohdr");
 		break;
 	}
 
