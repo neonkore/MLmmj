@@ -194,9 +194,10 @@ sub get_subscribers {
 	chomp @nomailsubs;
 
 	if (defined $search) {
-		@subscribers = grep {index($_, $search) != -1} @subscribers;
-		@digesters = grep {index($_, $search) != -1} @digesters;
-		@nomailsubs = grep {index($_, $search) != -1} @nomailsubs;
+		$search = lc $search;
+		@subscribers = grep {index(lc $_, $search) != -1} @subscribers;
+		@digesters = grep {index(lc $_, $search) != -1} @digesters;
+		@nomailsubs = grep {index(lc $_, $search) != -1} @nomailsubs;
 	}
 
 	for my $address (@subscribers) {
