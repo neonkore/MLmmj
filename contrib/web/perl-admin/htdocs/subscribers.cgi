@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright (C) 2004 Christian Laursen <christian@pil.dk>
+# Copyright (C) 2004, 2005, 2006 Christian Laursen <christian@pil.dk>
 #
 # $Id$
 #
@@ -44,8 +44,22 @@ my $tpl = new CGI::FastTemplate($templatedir);
 
 my $q = new CGI;
 $list = $q->param("list");
-my $subscribe = $q->param("subscribe");
 my $update = $q->param("update");
+my $search = $q->param("search");
+my $email = $q->param("email");
+
+# Everything is submitted from the same form so a little hackery is needed
+# to pick the right action to perform. When doing subscribe and search we
+# don't depend on the submit buttons since hitting enter in either of the
+# text fields will pick the "Subscribe" button.
+#
+# If an email has been entered for subscription, clear the search field.
+
+if (defined $email && $email !~ /^$/) {
+	$search = undef;
+} else {
+	$email = undef;
+}
 
 die "no list specified" unless $list;
 die "non-existent list" unless -d("$topdir/$list");
@@ -57,8 +71,7 @@ my $action = '';
 
 my $subscribers;
 
-if (defined $subscribe) {
-	my $email = $q->param("email");
+if (defined $email) {
 	my $subscriber = $q->param("subscriber");
 	my $digester = $q->param("digester");
 	my $nomailsub = $q->param("nomailsub");
@@ -135,7 +148,8 @@ if (keys %$subscribers == 0) {
 }
 
 $tpl->assign(LIST => encode_entities($list),
-			 MAXID => scalar(keys %$subscribers));
+			 MAXID => scalar(keys %$subscribers),
+			 SEARCH => defined $search ? $search : '');
 
 print "Content-type: text/html\n\n";
 
@@ -152,6 +166,12 @@ sub get_subscribers {
 	chomp @subscribers;
 	chomp @digesters;
 	chomp @nomailsubs;
+
+	if (defined $search) {
+		@subscribers = grep {index($_, $search) != -1} @subscribers;
+		@digesters = grep {index($_, $search) != -1} @digesters;
+		@nomailsubs = grep {index($_, $search) != -1} @nomailsubs;
+	}
 
 	for my $address (@subscribers) {
 		$subscribers{$address}->{subscriber} = 1;

@@ -9,12 +9,16 @@ $ACTION
 <form action="subscribers.cgi" method="post">
 <input type="hidden" name="list" value="$LIST">
 <input type="hidden" name="maxid" value="$MAXID">
-<table><tr><td rowspan="4" valign="top">Add subscriber:&nbsp;&nbsp;</td>
+<table><tr><td rowspan="5" valign="top">Add subscriber:&nbsp;&nbsp;</td>
 <td>Email address: <input type="text" name="email"></td></tr>
 <tr><td>Normal subscriber: <input type="checkbox" name="subscriber" value="1" checked></td></tr>
 <tr><td>Digest subscriber: <input type="checkbox" name="digester" value="1"></td></tr>
 <tr><td>No-mail subscriber: <input type="checkbox" name="nomailsub" value="1"></td></tr>
-<tr><td>&nbsp;</td><td><input type="submit" name="subscribe" value="Subscribe"></td></tr>
+<tr><td><input type="submit" name="subscribe" value="Subscribe"></td></tr>
+
+<tr><td rowspan="2" valign="top">Search for subscriber:</td>
+<td>Email address: <input type="text" name="search" value="$SEARCH"></td></tr>
+<tr><td><input type="submit" name="searchsubmit" value="Search"></td></tr>
 </table>
 <hr>
 <table border="1">
