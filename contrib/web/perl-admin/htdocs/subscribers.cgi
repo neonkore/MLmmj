@@ -134,8 +134,32 @@ $tpl->assign(ACTION => $action);
 
 $subscribers = get_subscribers();
 
+my $paginator = '';
+my $page = $q->param('page');
+$page = 0 unless $page =~ /^\d+$/;
+if (keys %$subscribers > 50) {
+	$paginator = 'Pages: ';
+	my $pages = (keys %$subscribers) / 50;
+	$page = 0 unless ($page >= 0 && $page < $pages);
+	my $searchstr = defined $search ? '&search='.uri_escape($search) : '';
+
+	for (my $i = 0; $ i < $pages; ++$i) {
+		if ($page == $i) {
+			$paginator .= ($i + 1)."&nbsp;";
+		} else {
+			$paginator .= "<a href=\"?list=".uri_escape($list)."&page=$i$searchstr\">".($i + 1)."</a>&nbsp;";
+		}
+	}
+}
+
 my $i = 0;
-for my $address (sort {lc $a cmp lc $b} keys %$subscribers) {
+my @addresses = sort {lc $a cmp lc $b} keys %$subscribers;
+if ($paginator ne '') {
+	@addresses = @addresses[$page * 50 .. ($page + 1) * 50 - 1];
+	pop @addresses until defined $addresses[@addresses - 1];
+}
+
+for my $address (@addresses) {
 	$tpl->assign(EMAIL => $address,
 				 ID => $i++,
 				 SCHECKED => $subscribers->{$address}->{subscriber} ? 'checked' : '',
@@ -148,8 +172,10 @@ if (keys %$subscribers == 0) {
 }
 
 $tpl->assign(LIST => encode_entities($list),
-			 MAXID => scalar(keys %$subscribers),
-			 SEARCH => defined $search ? $search : '');
+			 MAXID => scalar(@addresses),
+			 SEARCH => defined $search ? $search : '',
+			 PAGINATOR => $paginator,
+			 PAGE => $page);
 
 print "Content-type: text/html\n\n";
 

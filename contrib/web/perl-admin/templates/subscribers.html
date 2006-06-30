@@ -9,6 +9,7 @@ $ACTION
 <form action="subscribers.cgi" method="post">
 <input type="hidden" name="list" value="$LIST">
 <input type="hidden" name="maxid" value="$MAXID">
+<input type="hidden" name="page" value="$PAGE">
 <table><tr><td rowspan="5" valign="top">Add subscriber:&nbsp;&nbsp;</td>
 <td>Email address: <input type="text" name="email"></td></tr>
 <tr><td>Normal subscriber: <input type="checkbox" name="subscriber" value="1" checked></td></tr>
@@ -21,10 +22,12 @@ $ACTION
 <tr><td><input type="submit" name="searchsubmit" value="Search"></td></tr>
 </table>
 <hr>
+$PAGINATOR
 <table border="1">
 <tr><th>Email address</th><th>Normal subscriber</th><th>Digest subscriber</th><th>No-mail subscriber</th></tr>
 $ROWS
 </table>
+$PAGINATOR
 <p><input type="submit" name="update" value="Update subscriptions"></p>
 </form>
 </body></html>
