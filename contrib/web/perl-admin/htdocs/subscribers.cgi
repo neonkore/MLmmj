@@ -141,7 +141,7 @@ if (keys %$subscribers > 50) {
 	$paginator = 'Pages: ';
 	my $pages = (keys %$subscribers) / 50;
 	$page = 0 unless ($page >= 0 && $page < $pages);
-	my $searchstr = (defined $search & $search ne '') ? '&search='.uri_escape($search) : '';
+	my $searchstr = (defined $search && $search ne '') ? '&search='.uri_escape($search) : '';
 
 	for (my $i = 0; $ i < $pages; ++$i) {
 		if ($page == $i) {
