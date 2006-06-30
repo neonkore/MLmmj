@@ -1,3 +1,4 @@
+ o Add search and pagination functionality to the perl-admin web interface
  o Only add To: header when sending out actual list mail
  o Close stdin, stdout and stderr in the child of mlmmj-receive after
    forking. This is neccesary on FreeBSD.
