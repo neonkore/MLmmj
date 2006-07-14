@@ -70,6 +70,7 @@ $tpl->define(main => "subscribers.html",
 my $action = '';
 
 my $subscribers;
+my $subcount;
 
 if (defined $email) {
 	my $subscriber = $q->param("subscriber");
@@ -175,7 +176,8 @@ $tpl->assign(LIST => encode_entities($list),
 			 MAXID => scalar(@addresses),
 			 SEARCH => defined $search ? $search : '',
 			 PAGINATOR => $paginator,
-			 PAGE => $page);
+			 PAGE => $page,
+			 SUBCOUNT => $subcount);
 
 print "Content-type: text/html\n\n";
 
@@ -211,6 +213,8 @@ sub get_subscribers {
 	for my $address (@nomailsubs) {
 		$subscribers{$address}->{nomailsub} = 1;
 	}
+
+	$subcount = scalar(keys %subscribers);
 
 	return \%subscribers;
 }
