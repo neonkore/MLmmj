@@ -30,6 +30,6 @@ char *substitute_one(const char *line, const char *listaddr,
 		 const char *listdelim, size_t datacount, char **data);
 char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		   const char *to, const char *replyto, size_t tokencount,
-		   char **data);
+		   char **data, char *customheaders);
 
 #endif /* PREPSTDREPLY_H */

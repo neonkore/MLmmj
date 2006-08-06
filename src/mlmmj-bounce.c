@@ -139,7 +139,7 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 
 	maildata[1] = indexstr;
 	queuefilename = prepstdreply(listdir, "bounce-probe", "$listowner$",
-					myaddr, NULL, 1, maildata);
+					myaddr, NULL, 1, maildata, NULL);
 	MY_ASSERT(queuefilename);
 	myfree(indexstr);
 

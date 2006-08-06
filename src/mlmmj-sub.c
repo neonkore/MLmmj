@@ -146,7 +146,7 @@ void moderate_sub(const char *listdir, const char *listaddr,
 	maildata[5] = moderators;
 
 	queuefilename = prepstdreply(listdir, "submod-moderator",
-				"$listowner$", to, replyto, 3, maildata);
+				"$listowner$", to, replyto, 3, maildata, NULL);
 	
 	myfree(maildata[1]);
 	
@@ -181,7 +181,7 @@ void moderate_sub(const char *listdir, const char *listaddr,
 
 	from = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
 	queuefilename = prepstdreply(listdir, "submod-requester", "$listowner$",
-					subaddr, NULL, 0, NULL);
+					subaddr, NULL, 0, NULL, NULL);
 	
 	myfree(listname);
 	myfree(listfqdn);
@@ -225,7 +225,7 @@ void confirm_sub(const char *listdir, const char *listaddr,
 	}
 
 	queuefilename = prepstdreply(listdir, listtext, "$helpaddr$",
-				     subaddr, NULL, 0, NULL);
+				     subaddr, NULL, 0, NULL, NULL);
 	MY_ASSERT(queuefilename);
 	myfree(listtext);
 
@@ -272,7 +272,7 @@ void notify_sub(const char *listdir, const char *listaddr,
 	}
 
 	queuefilename = prepstdreply(listdir, listtext, "$listowner$",
-				"$listowner$", NULL, 1, maildata);
+				"$listowner$", NULL, 1, maildata, NULL);
 	MY_ASSERT(queuefilename)
 	myfree(listtext);
 	myfree(maildata[1]);
@@ -359,7 +359,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	maildata[3] = mystrdup(confirmaddr);
 
 	queuefilename = prepstdreply(listdir, listtext, "$helpaddr$", subaddr,
-				     confirmaddr, 2, maildata);
+				     confirmaddr, 2, maildata, NULL);
 
 	myfree(maildata[1]);
 	myfree(maildata[3]);
@@ -410,7 +410,7 @@ void generate_subscribed(const char *listdir, const char *subaddr,
 	myfree(listdelim);
 
 	queuefilename = prepstdreply(listdir, "sub-subscribed", "$helpaddr$",
-				     subaddr, NULL, 0, NULL);
+				     subaddr, NULL, 0, NULL, NULL);
 	MY_ASSERT(queuefilename);
 
 	myfree(listaddr);

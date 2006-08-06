@@ -153,7 +153,7 @@ concatandreturn:
 
 char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		   const char *to, const char *replyto, size_t tokencount,
-		   char **data)
+		   char **data, char *customheaders)
 {
 	int infd, outfd;
 	char *listaddr, *listdelim, *myfrom, *tmp, *subject, *retstr = NULL;
@@ -212,8 +212,8 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		return NULL;
 	}
 
-	str = concatstr(9, "From: ", myfrom, "\nTo: ", myto, "\n", myreplyto,
-			   mymsgid, mydate, subject);
+	str = concatstr(10, "From: ", myfrom, "\nTo: ", myto, "\n", myreplyto,
+			   mymsgid, mydate, subject, customheaders);
 
 	if(writen(outfd, str, strlen(str)) < 0) {
 		log_error(LOG_ARGS, "Could not write std mail");

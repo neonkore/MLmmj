@@ -122,7 +122,7 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	myfree(listfqdn);
 
 	queuefilename = prepstdreply(listdir, "moderation", "$listowner$",
-				     to, replyto, 2, maildata);
+				     to, replyto, 2, maildata, NULL);
 
 	if((queuefd = open(queuefilename, O_WRONLY|O_APPEND)) < 0) {
 		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
@@ -676,7 +676,7 @@ int main(int argc, char **argv)
 				     listfqdn);
 		queuefilename = prepstdreply(listdir, "notintocc",
 					"$listowner$", fromemails.emaillist[0],
-					NULL, 0, NULL);
+					     NULL, 0, NULL, NULL);
 		MY_ASSERT(queuefilename)
 		myfree(listdelim);
 		myfree(listname);
@@ -729,7 +729,7 @@ int main(int argc, char **argv)
 					"bounces-help@", listfqdn);
 			queuefilename = prepstdreply(listdir, "subonlypost",
 					"$listowner$", fromemails.emaillist[0],
-					NULL, 1, maildata);
+						     NULL, 1, maildata, NULL);
 			MY_ASSERT(queuefilename)
 			myfree(listaddr);
 			myfree(listdelim);
@@ -778,7 +778,7 @@ int main(int argc, char **argv)
 			queuefilename = prepstdreply(listdir, "access",
 							"$listowner$",
 							fromemails.emaillist[0],
-							NULL, 0, NULL);
+						     NULL, 0, NULL, NULL);
 			MY_ASSERT(queuefilename)
 			myfree(listaddr);
 			myfree(listdelim);

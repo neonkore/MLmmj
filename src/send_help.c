@@ -57,7 +57,7 @@ void send_help(const char *listdir, const char *emailaddr,
 	myfree(listdelim);
 
 	queuefilename = prepstdreply(listdir, "listhelp", "$listowner$",
-					emailaddr, NULL, 0, NULL);
+					emailaddr, NULL, 0, NULL, NULL);
 	if(queuefilename == NULL) {
 		log_error(LOG_ARGS, "Could not prepare help mail");
 		exit(EXIT_FAILURE);
