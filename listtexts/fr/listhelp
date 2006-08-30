@@ -1,0 +1,24 @@
+Subject: Commandes disponibles pour $listaddr$
+
+Bonjour,
+
+Les options suivantes sont disponibles :
+
+Pour vous désinscire envoyez un message à :
+$listunsubaddr$
+
+Pour s'inscrire au résumé de la liste envoyez un message à :
+$digestsubaddr$
+
+Pour s'inscrire à la version "sans mail" de la liste envoyez un message à :
+$nomailsubaddr$
+
+La version "sans mail" signifie que vous êtes reconnu comme inscrit mais que vous ne recevrez pas 
+les messages de la liste.
+Cela est utile quand l'on poste depuis plusieurs adresses email vers une liste non ouverte.
+
+Pour retrouver un messager numéro N dans l'archive envoyez un message à :
+$listgetN$
+
+Pour contacter l'administrateur de la liste, envoyez un message à :
+$listowner$

@@ -1,0 +1,13 @@
+Subject: Envoi à la liste $listaddr$ interdit
+
+Bonjour, ceci est le programme mlmmj de gestion de la liste de diffusion
+$listaddr$
+
+Je suis désolé de vous informer que votre message n'a pas pu être délivré à la liste.
+
+Pour pouvoir envoyer un message à la liste l'adresse de la liste doit être mise dans les champs To: ou Cc: de l'entête.
+
+Si vous êtes un administrateur de la liste gérée par mlmmj vous deviez savoir que vous pouvez changer ce comportement en
+modifiant le fichier de controle 'tocc'.
+
+Merci.

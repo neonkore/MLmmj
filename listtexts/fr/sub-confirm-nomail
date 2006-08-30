@@ -1,0 +1,20 @@
+Subject: Confirmer votre inscription a la version sans mail de la liste $listaddr$
+
+Bonjour, ceci est le programme mlmmj de gestion de la liste de diffusion
+$listaddr$
+
+Pour confirmer que vous voulez que l'adresse
+$subaddr$
+
+soit inscrite a la version sans mail de la liste merci d'envoyer une réponse à cette adresse :
+$confaddr$
+
+Cette confirmation à deux objectifs.
+Premierement, tester que des mails peuvent être envoyés à votre adresse.
+Deuxiemement être certain que ce n'est pas quelqu'un d'autre qui tente de vous inscrire sans votre permission.
+
+Votre client de messagerie va certainement répondre à l'adresse de confirmation quand vous cliquerez sur le bouton répondre.
+
+Le sujet et le corps du texte peuvent être ce que vous souhaitez.
+
+

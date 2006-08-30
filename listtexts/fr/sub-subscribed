@@ -1,0 +1,13 @@
+Subject: Vous êtes déjà inscrit à la liste $listaddr$
+
+Bonjour, ceci est le programme mlmmj de gestion de la liste de diffusion
+$listaddr$
+
+Vous êtes déjà inscrit à la liste.
+
+Pour vous désinscrire, veuillez envoyer un message à:
+$listunsubaddr$
+
+Pour obtenir de l'aide envoyez un message à:
+$helpaddr$
+

@@ -1,0 +1,13 @@
+Subject: Vous n'êtes pas inscrit à la liste $listaddr$
+
+Bonjour, ceci est le programme mlmmj de gestion de la liste de diffusion
+$listaddr$
+
+Vous n'êtes pas inscrit à la liste de de diffusion, de ce fait vous ne pouvez vous désinscrire.
+
+Pour vous inscrire veuillez envoyer un message à :
+$listsubaddr$
+
+Et pour obtenir de l'aide envoyez un message à:
+$helpaddr$
+
