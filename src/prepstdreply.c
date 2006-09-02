@@ -174,7 +174,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	if(strncasecmp(tmp, "Subject:", 8) != 0) {
 		log_error(LOG_ARGS, "No Subject in listtexts. Using "
 				"standard subject");
-		subject = mystrdup("mlmmj administrativa\n");
+		subject = mystrdup("Subject: mlmmj administrativa\n");
 	} else
 		subject = substitute(tmp, listaddr, listdelim, tokencount,
 				     data);

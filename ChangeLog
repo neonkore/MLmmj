@@ -1,3 +1,4 @@
+ o Fix default subject in administrative mails
  o Add French listtexts (Christophe Gallienne)
  o Add search and pagination functionality to the perl-admin web interface
  o Only add To: header when sending out actual list mail
