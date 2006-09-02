@@ -1,0 +1,64 @@
+|------------------------------------------------------------------------------|
+|                     Using mlmmj with qmail (and vpopmail)                    |
+|------------------------------------------------------------------------------|
+|--------------- Fabio Busatto <fabio.busatto@programmazione.it> --------------|
+|------------------------------------------------------------------------------|
+
+This mini-HOWTO is a step-by-step guide for using mlmmj with qmail MTA
+(http://www.qmail.org/), and it has been successfully tested also with vpopmail
+virtual domains (http://www.inter7.com/vpopmail/).
+
+Prerequisites:
+- qmail (and vpopmail) correctly installed
+- mlmmj correctly installed
+
+Conventions:
+- ${BINDIR}: directory with mlmmj binary files (/usr/local/bin/)
+- ${LISTDIR}: directory with list configuration files
+              (/var/spool/mlmmj/listname)
+- ${DQFILE}: dot-qmail file (see below)
+
+Configuration:
+- the first thing you've to do is to create the list, using the
+  mlmmj-make-ml.sh script (follow the classic procedure to do this step)
+- enter the control directory for the list (${LISTDIR}/control/), and execute
+  the following command:
+   # cd ${LISTDIR}/control/; echo '-' > delimiter
+- chown and chmod the file according to the mlmmj configuration
+- create dot-qmail files for the list to handle direct requests and extensions:
+   # echo -e "|${BINDIR}/mlmmj-recieve -L ${LISTDIR}" > ${DQFILE}
+- chown and chmod the files according to the qmail (and vpopmail) configuration
+
+WARNING: REMEMBER that the delimiter is -, so do not use + when composing mail
+addresses for extensions!!!
+
+WARNING: DO NOT USE 'preline' command in dot-qmail files, it will result in
+mlmmj to not work properly!!!
+
+|------------------------------------------------------------------------------|
+
+Example:
+
+- Configuring mlmmj to handle ml@programmazione.it mailing list using qmail as
+  MTA and vpopmail for virtual domain support:
+
+# mlmmj-make-ml.sh -c vpopmail:vchkpw -L ml
+Creating Directorys below /var/spool/mlmmj. Use '-s spooldir' to change
+The Domain for the List? [] : programmazione.it
+The emailaddress of the list owner? [postmaster] : postmaster@programmazione.it
+The path to texts for the list? [/usr/local/share/mlmmj/text.skel] :
+chown -R vpopmail:vchkpw /var/spool/mlmmj/ml? [y/n]: y
+
+# cd /var/spool/mlmmj/ml/control/
+# echo '-' > delimiter
+# chown vpopmail:vchkpw delimiter
+# cd /home/vpopmail/domains/programmazione.it/
+# echo -e "|/usr/local/bin/mlmmj-recieve -L /var/spool/mlmmj/ml/" > .qmail-ml
+# cp -a .qmail-ml .qmail-ml-default
+# cat *-default
+# chown vpopmail:vchkpw .qmail-ml .qmail-ml-default
+# chmod 600 .qmail-ml .qmail-ml-default
+
+|------------------------------------------------------------------------------|
+|--------------- Fabio Busatto <fabio.busatto@programmazione.it> --------------|
+|------------------------------------------------------------------------------|
