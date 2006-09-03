@@ -749,12 +749,12 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 
 int run_digests(const char *listdir, const char *mlmmjsend)
 {
-	char *lasttimestr, *lastindexstr;
+	char *lasttimestr, *lastindexstr, *lastissuestr;
 	char *digestname, *indexname;
 	char *digestintervalstr, *digestmaxmailsstr;
 	char *s1, *s2, *s3;
 	time_t digestinterval, t, lasttime;
-	long digestmaxmails, lastindex, index;
+	long digestmaxmails, lastindex, index, lastissue;
 	int fd, indexfd, lock;
 	size_t lenbuf, lenstr;
 	
@@ -792,9 +792,15 @@ int run_digests(const char *listdir, const char *mlmmjsend)
 
 	s1 = mygetline(fd);
 
-	/* Syntax is lastindex:lasttime */
+	/* Syntax is lastindex:lasttime or lastindex:lasttime:lastissue */
 	if (s1 && (lasttimestr = strchr(s1, ':'))) {
 		*(lasttimestr++) = '\0';
+		if ((lastissuestr = strchr(lasttimestr, ':'))) {
+			*(lastissuestr++) = '\0';
+			lastissue = atol(lastissuestr);
+		} else {
+			lastissue = 0;
+		}
 		lasttime = atol(lasttimestr);
 		lastindexstr = s1;
 		lastindex = atol(lastindexstr);
@@ -810,6 +816,7 @@ int run_digests(const char *listdir, const char *mlmmjsend)
 		/* If lastdigest is empty, we start from scratch */
 		lasttime = 0;
 		lastindex = 0;
+		lastissue = 0;
 	}
 	
 	indexname = concatstr(2, listdir, "/index");
@@ -843,15 +850,18 @@ int run_digests(const char *listdir, const char *mlmmjsend)
 		if (index > lastindex+digestmaxmails)
 			index = lastindex+digestmaxmails;
 
-		send_digest(listdir, lastindex+1, index, NULL, mlmmjsend);
+		if (index > lastindex) {
+			lastissue++;
+			send_digest(listdir, lastindex+1, index, lastissue, NULL, mlmmjsend);
+		}
 
 		if (lseek(fd, 0, SEEK_SET) < 0) {
 			log_error(LOG_ARGS, "Could not seek '%s'", digestname);
 		} else {
-			/* index + ':' + time + '\n' + '\0' */
-			lenbuf = 20 + 1 + 20 + 2;
+			/* index + ':' + time + ':' + issue + '\n' + '\0' */
+			lenbuf = 20 + 1 + 20 + 1 + 20 + 2;
 			s3 = mymalloc(lenbuf);
-			lenstr = snprintf(s3, lenbuf, "%ld:%ld\n", index, (long)t);
+			lenstr = snprintf(s3, lenbuf, "%ld:%ld:%ld\n", index, (long)t, lastissue);
 			if (lenstr >= lenbuf)
 				lenstr = lenbuf - 1;
 			if (writen(fd, s3, lenstr) == -1) {

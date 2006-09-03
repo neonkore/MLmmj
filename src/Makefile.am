@@ -53,7 +53,8 @@ mlmmj_bounce_SOURCES = mlmmj-bounce.c print-version.c log_error.c \
 mlmmj_maintd_SOURCES = mlmmj-maintd.c print-version.c log_error.c mygetline.c \
 		       strgen.c random-int.c chomp.c writen.c memory.c \
 		       ctrlvalue.c send_digest.c getlistaddr.c dumpfd2fd.c \
-		       mylocking.c log_oper.c readn.c getlistdelim.c
+		       mylocking.c log_oper.c readn.c getlistdelim.c \
+ 		       prepstdreply.c statctrl.c gethdrline.c unistr.c
 
 mlmmj_list_SOURCES = mlmmj-list.c strgen.c writen.c print-version.c memory.c \
 		     log_error.c random-int.c readn.c

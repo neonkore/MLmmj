@@ -161,3 +161,8 @@ to specify several entries (one pr. line), it's marked "list".
 
    This specifies what to use as recipient delimiter for the list.
    Default is "+".
+
+ · nodigesttext			(boolean)
+
+   If this file exists, digest mails won't have a text part with a thread
+   sumary.
