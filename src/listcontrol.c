@@ -98,15 +98,14 @@ static struct ctrl_command ctrl_commands[] = {
 
 
 int listcontrol(struct email_container *fromemails, const char *listdir,
-		const char *controladdr, const char *mlmmjsub,
+		const char *controlstr, const char *mlmmjsub,
 		const char *mlmmjunsub, const char *mlmmjsend,
 		const char *mlmmjbounce, const char *mailname)
 {
-	char *atsign, *recipdelimsign, *listdelim, *bouncenr, *tmpstr;
-	char *controlstr, *param = NULL, *conffilename, *moderatefilename;
+	char *bouncenr, *tmpstr;
+	char *param = NULL, *conffilename, *moderatefilename;
 	char *c, *archivefilename, *sendfilename;
 	const char *subswitch;
-	size_t len;
 	struct stat stbuf;
 	int closedlist, nosubconfirm, tmpfd, noget, i, closedlistsub,
 	    subonlyget = 0;
@@ -127,18 +126,6 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	else
 		subswitch = "-C";
 	
-	listdelim = getlistdelim(listdir);
-	recipdelimsign = strstr(controladdr, listdelim);
-	MY_ASSERT(recipdelimsign);
-	atsign = index(controladdr, '@');
-	MY_ASSERT(atsign);
-	len = atsign - recipdelimsign;
-
-	controlstr = mymalloc(len);
-	MY_ASSERT(controlstr);
-	snprintf(controlstr, len, "%s", recipdelimsign + strlen(listdelim));
-	myfree(listdelim);
-
 #if 0
 	log_error(LOG_ARGS, "controlstr = [%s]\n", controlstr);
 	log_error(LOG_ARGS, "fromemails->emaillist[0] = [%s]\n",
@@ -182,7 +169,6 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				param = NULL;
 			}
 
-			myfree(controlstr);
 			break;
 
 		}
