@@ -233,11 +233,14 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 
 		if(stat(mailname, &st) < 0) {
 			log_error(LOG_ARGS, "Could not stat(%s)", mailname);
+			myfree(mailname);
 			continue;
 		}
 
-		if(!S_ISREG(st.st_mode))
+		if(!S_ISREG(st.st_mode)) {
+			myfree(mailname);
 			continue;
+		}
 
 		if(strchr(dp->d_name, '.')) {
 			ch = strrchr(mailname, '.');
@@ -309,6 +312,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		t = time(NULL);
 		if(t - st.st_mtime > bouncelife) {
 			unlink(mailname);
+			myfree(mailname);
 			continue;
 		}
 
