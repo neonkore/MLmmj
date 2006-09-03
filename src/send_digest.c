@@ -461,7 +461,6 @@ errdighdrs:
 		exit(EXIT_FAILURE);  /* It is OK to exit, as this is a child */
 	}
 
-	unlink(queuename);
 	myfree(queuename);
 
 	return 0;
