@@ -196,6 +196,10 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		return -1;
 	}
 
+	/* We only need the control mail when bouncing, to save bounced msg */
+	if(ctrl != CTRL_BOUNCES)
+		unlink(mailname);
+
 	switch (ctrl) {
 
 	/* listname+subscribe-digest@domain.tld */
@@ -591,7 +595,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				fromemails->emaillist[0], moderatefilename);
 			execlp(mlmmjsub, mlmmjsub,
 					"-L", listdir,
-					"-m", param, (char *)NULL);
+					"-m", param,
+					"-c", (char *)NULL);
 		}
 
 		sendfilename = concatstr(2, moderatefilename, ".sending");

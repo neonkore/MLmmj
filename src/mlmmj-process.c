@@ -578,7 +578,6 @@ int main(int argc, char **argv)
 		listcontrol(&fromemails, listdir, whichto->emaillist[0],
 			    mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce,
 			    donemailname);
-		unlink(donemailname);
 
 		return EXIT_SUCCESS;
 	}

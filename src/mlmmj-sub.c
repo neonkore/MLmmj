@@ -538,12 +538,12 @@ int main(int argc, char **argv)
 	}
 
 	if(listdir == NULL) {
-		fprintf(stderr, "You have to specify -L and -a\n");
+		fprintf(stderr, "You have to specify -L\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 	
-	if(address == NULL || modstr == NULL) {
+	if(address == NULL && modstr == NULL) {
 		fprintf(stderr, "You have to specify -a or -m\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
 		exit(EXIT_FAILURE);
