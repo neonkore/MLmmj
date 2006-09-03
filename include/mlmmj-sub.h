@@ -29,6 +29,8 @@
 void moderate_sub(const char *listdir, const char *listaddr,
 		  const char *listdelim, const char *subaddr,
 		  const char *mlmmjsend, enum subtype typesub);
+void getaddrandtype(const char *listdir, const char *modstr,
+		char **addrptr, enum subtype *subtypeptr);
 void confirm_sub(const char *listdir, const char *listaddr,
 		 const char *listdelim, const char *subaddr,
 		 const char *mlmmjsend, enum subtype typesub);

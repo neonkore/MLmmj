@@ -48,6 +48,7 @@
 #include "prepstdreply.h"
 #include "memory.h"
 #include "ctrlvalues.h"
+#include "chomp.h"
 
 void moderate_sub(const char *listdir, const char *listaddr,
 		const char *listdelim, const char *subaddr,
@@ -120,7 +121,7 @@ void moderate_sub(const char *listdir, const char *listaddr,
 		myfree(submods);
 		submods = ctrlvalues(listdir, "owner");
 		myfree(mods);
-		mods = concatstr(2, listdir, "/control/submod");
+		mods = concatstr(2, listdir, "/control/owner");
 	}
 
 	/* send mail to moderators about request pending */
@@ -171,11 +172,9 @@ void moderate_sub(const char *listdir, const char *listaddr,
 		log_error(LOG_ARGS, "execl() of '%s' failed", mlmmjsend);
 	}
 	
-	myfree(from);
 	myfree(to);
 	myfree(replyto);
 	myfree(moderators);
-	myfree(queuefilename);
 	
 	/* send mail to requester that the list is submod'ed */
 
@@ -194,14 +193,62 @@ void moderate_sub(const char *listdir, const char *listaddr,
 	log_error(LOG_ARGS, "execl() of '%s' failed", mlmmjsend);
 }
 
+void getaddrandtype(const char *listdir, const char *modstr,
+		char **addrptr, enum subtype *subtypeptr)
+{
+	int fd;
+	char *readaddr, *readtype, *modfilename;
+		
+	modfilename = concatstr(3, listdir, "/moderation/", modstr);
+
+	fd = open(modfilename, O_RDONLY);
+	if(fd < 0) {
+		log_error(LOG_ARGS, "Could not open %s", modfilename);
+		exit(EXIT_FAILURE);
+	}
+
+	readaddr = mygetline(fd);
+	readtype = mygetline(fd);
+
+	close(fd);
+
+	if(readaddr == NULL || readtype == NULL) {
+		log_error(LOG_ARGS, "Could not parse %s", modfilename);
+		exit(EXIT_FAILURE);
+	}
+	
+	chomp(readaddr);
+	*addrptr = readaddr;
+
+	if(strncmp(readtype, "SUB_NORMAL", 10) == 0) {
+		*subtypeptr = SUB_NORMAL;
+		goto freedone;
+	}
+
+	if(strncmp(readtype, "SUB_DIGEST", 10) == 0) {
+		*subtypeptr = SUB_DIGEST;
+		goto freedone;
+	}
+
+	if(strncmp(readtype, "SUB_NOMAIL", 10) == 0) {
+		*subtypeptr = SUB_NOMAIL;
+		goto freedone;
+	}
+
+	log_error(LOG_ARGS, "Type %s not valid in %s", readtype,
+			modfilename);
+
+freedone:
+	myfree(readtype);
+	unlink(modfilename);
+	myfree(modfilename);
+}
+
 void confirm_sub(const char *listdir, const char *listaddr,
 		const char *listdelim, const char *subaddr,
 		const char *mlmmjsend, enum subtype typesub)
 {
 	char *queuefilename, *fromaddr, *listname, *listfqdn, *listtext;
-
-	moderate_sub(listdir, listaddr, listdelim, subaddr, mlmmjsend,
-			typesub);
 
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
@@ -379,7 +426,7 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 
 static void print_help(const char *prg)
 {
-	printf("Usage: %s -L /path/to/list -a john@doe.org "
+	printf("Usage: %s -L /path/to/list [-a john@doe.org | -m str]"
 	       "[-c] [-C] [-h]\n       [-L] [-d | -n] [-s] [-U] [-V]\n"
 	       " -a: Email address to subscribe \n"
 	       " -c: Send welcome mail\n"
@@ -387,12 +434,13 @@ static void print_help(const char *prg)
 	       " -d: Subscribe to digest of list\n"
 	       " -h: This help\n"
 	       " -L: Full path to list directory\n"
-	       " -n: Subscribe to no mail version of list\n"
-	       " -s: Don't send a mail to the subscriber if already subscribed\n"
+	       " -m: moderation string\n"
+	       " -n: Subscribe to no mail version of list\n", prg);
+	printf(" -s: Don't send a mail to subscriber if already subscribed\n"
 	       " -U: Don't switch to the user id of the listdir owner\n"
 	       " -V: Print version\n"
 	       "When no options are specified, subscription silently "
-	       "happens\n", prg);
+	       "happens\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -433,8 +481,9 @@ int main(int argc, char **argv)
 	char *listaddr, *listdelim, *listdir = NULL, *address = NULL;
 	char *subfilename = NULL, *mlmmjsend, *bindir, chstr[2], *subdir;
 	char *subddirname = NULL, *sublockname, *lowcaseaddr;
+	char *modstr = NULL;
 	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock, notifysub;
-	int changeuid = 1, status, digest = 0, nomail = 0, i = 0, submod;
+	int changeuid = 1, status, digest = 0, nomail = 0, i = 0, submod = 0;
 	int groupwritable = 0, sublock, sublockfd, nogensubscribed = 0, subbed;
 	size_t len;
 	struct stat st;
@@ -450,7 +499,7 @@ int main(int argc, char **argv)
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	myfree(bindir);
 
-	while ((opt = getopt(argc, argv, "hcCdnsVUL:a:")) != -1) {
+	while ((opt = getopt(argc, argv, "hcCdm:nsVUL:a:")) != -1) {
 		switch(opt) {
 		case 'a':
 			address = optarg;
@@ -470,6 +519,9 @@ int main(int argc, char **argv)
 		case 'L':
 			listdir = optarg;
 			break;
+		case 'm':
+			modstr = optarg;
+			break;
 		case 'n':
 			nomail = 1;
 			break;
@@ -484,12 +536,21 @@ int main(int argc, char **argv)
 			exit(0);
 		}
 	}
-	
-	if(listdir == 0 || address == 0) {
+
+	if(listdir == NULL) {
 		fprintf(stderr, "You have to specify -L and -a\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
+	
+	if(address == NULL || modstr == NULL) {
+		fprintf(stderr, "You have to specify -a or -m\n");
+		fprintf(stderr, "%s -h for help\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	if(modstr)
+		getaddrandtype(listdir, modstr, &address, &typesub);
 
 	if(strchr(address, '@') == NULL) {
 		log_error(LOG_ARGS, "No '@' sign in '%s', not subscribing",
@@ -606,7 +667,8 @@ int main(int argc, char **argv)
 	}
 	subbed = is_subbed_in(subddirname, address);
 	listdelim = getlistdelim(listdir);
-	submod = statctrl(listdir, "submod");
+	if(modstr == NULL)
+		submod = statctrl(listdir, "submod");
 	
 	if(subbed) {
 		if(subconfirm) {

@@ -28,6 +28,12 @@ to specify several entries (one pr. line), it's marked "list".
    If this file is present, the emailaddresses in the file
    listdir/control/moderators will act as moderators for the list.
 
+ · submod			(list)
+
+   If this file is present, subscription will be moderated by owner(s).
+   If there's emailaddresses in this file, then these will be used
+   instead of owner.
+
  · tocc				(boolean)
 
    If this file is present, the list address does not have to be in the To:
