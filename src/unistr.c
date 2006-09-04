@@ -185,8 +185,8 @@ void unistr_dump(unistr *str)
 	unsigned int i;
 
 	printf("unistr_dump(%p)\n", (void *)str);
-	printf(" ->len = %d\n", str->len);
-	printf(" ->alloc_len = %d\n", str->alloc_len);
+	printf(" ->len = %lu\n", (unsigned long)str->len);
+	printf(" ->alloc_len = %lu\n", (unsigned long)str->alloc_len);
 	printf(" ->chars [ ");
 	for (i=0; i<str->len; i++) {
 		if ((str->chars[i] <= 0x7F) && (str->chars[i] != '\n')) {
