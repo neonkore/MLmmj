@@ -1,9 +1,11 @@
 mlmmj_boolean("closedlist",
 			  "Closed list",
 			  "If the list is open or closed. If it's closed subscription ".
-			  "and unsubscription via mail is disabled. Also note that ".
-			  "confirmation is disabled too, so the -C option to mlmmj-sub ".
-			  "and mlmmj-unsub is of no use with a closed list.");
+			  "and unsubscription via mail is disabled.");
+
+mlmmj_boolean("closedlistsub",
+			  "Closed for subscription",
+			  "Closed for subscription. Unsubscription is possible.");
 
 mlmmj_boolean("nosubconfirm",
 			  "No subscribe confirmation",
@@ -16,6 +18,10 @@ mlmmj_boolean("moderated",
 mlmmj_list("moderators",
 		   "Moderators",
 		   "If the list is moderated, this is the list of moderators.");
+
+mlmmj_list("submod",
+		   "Subscription moderators",
+		   "This is the list of moderators that will approve subscriptions.");
 
 mlmmj_boolean("tocc",
 			  "To: Cc:",
@@ -123,3 +129,8 @@ mlmmj_boolean("nosubonlydenymails",
 			  "No subscribers only deny mails",
 			  "This switch turns off whether mlmmj sends out notification about postings ".
 			  "being rejected due to a subscribers only posting list (see 'subonlypost').");
+
+mlmmj_boolean("nodigesttext",
+			  "No digest text summary",
+			  "This switch turns off whether digest mails will have a text part with a thread ".
+			  "summary.");
