@@ -16,7 +16,7 @@ to specify several entries (one pr. line), it's marked "list".
 
  · closedlist			(boolean)
 
-   Is the list is open or closed. If it's closed subscribtion and
+   Is the list is open or closed. If it's closed subscription and
    unsubscription via mail is disabled.
 
  · closedlistsub		(boolean)
@@ -31,7 +31,7 @@ to specify several entries (one pr. line), it's marked "list".
  · submod			(list)
 
    If this file is present, subscription will be moderated by owner(s).
-   If there's emailaddresses in this file, then these will be used
+   If there are emailaddresses in this file, then these will be used
    instead of owner.
 
  · tocc				(boolean)
@@ -165,4 +165,4 @@ to specify several entries (one pr. line), it's marked "list".
  · nodigesttext			(boolean)
 
    If this file exists, digest mails won't have a text part with a thread
-   sumary.
+   summary.
