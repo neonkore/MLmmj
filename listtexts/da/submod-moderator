@@ -1,0 +1,22 @@
+Subject: Subscription request for $listaddr$
+
+Hi, this is the mlmmj program managing the mailinglist
+
+$listaddr$
+
+There is a subscription request from
+
+$subaddr$
+
+waiting. To approve this request, please send a reply to
+
+$moderateaddr$
+
+Your mailer probably automatically replies to this address, when you hit
+the reply button. If you don't want to approve the request, simply ignore this
+message.
+
+The following subscription moderators have received this mail:
+
+$moderators$
+

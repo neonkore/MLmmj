@@ -1,0 +1,22 @@
+Subject: Confirm unsubscribe from digest of $listaddr$
+
+Hi, this is the mlmmj program managing the mailinglist
+
+$listaddr$
+
+To confirm you want the address
+
+$subaddr$
+
+removed from the digest of this list, please send a reply to
+
+$confaddr$
+
+Your mailer may automatically reply to this address when you hit
+the reply button.
+
+If you're not subscribed with this list, you will receive no reply.
+
+You can see in the envelope "Return-Path" header of a message to the
+mailinglist which address you're subscribed with.
+

@@ -1,0 +1,14 @@
+Subject: Messages from $listaddr$ to you have been bouncing
+
+Hi, this is the mlmmj program managing the mailinglist
+
+$listaddr$
+
+Some messages to you could not be delivered. If you're seeing this
+message it means things are back to normal, and it's merely for your
+information.
+
+Here is the list of the bounced messages:
+
+$bouncenumbers$
+
