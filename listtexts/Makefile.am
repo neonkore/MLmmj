@@ -6,4 +6,4 @@ dist_textlib_DATA = access bounce-probe listhelp moderation notifysub \
 	sub-confirm-nomail sub-ok sub-ok-digest sub-ok-nomail subonlypost \
 	unsub-confirm unsub-confirm-digest unsub-confirm-nomail unsub-ok \
 	unsub-ok-digest unsub-ok-nomail listsubs sub-subscribed \
-	unsub-notsubscribed
+	unsub-notsubscribed digest submod-moderator submod-requester
