@@ -1,14 +1,17 @@
-Subject: Messages from $listaddr$ to you have been bouncing
+Subject: Nachrichten von $listaddr$ an Sie wurden zurueckgewiesen
 
-Hi, this is the mlmmj program managing the mailinglist
+Hi, dies ist das mlmmj Programm, das die Mailingliste
 
 $listaddr$
 
-Some messages to you could not be delivered. If you're seeing this
-message it means things are back to normal, and it's merely for your
-information.
+verwaltet.
 
-Here is the list of the bounced messages:
+Einige Ihrer Nachrichten konnten nicht erfolgreich zugestellt werden.
+Wenn Sie allerdings diese Nachricht hier sehen, dann funktioniert die
+Zustellung jetzt wieder. Daher ist diese Nachricht nur zu Ihrer
+Information, Sie müssen nichts weiter unternehmen.
+
+Hier finden Sie eine Liste der zurückgewiesenen Nachrichten:
 
 $bouncenumbers$
 
