@@ -10,8 +10,5 @@ list.
 In order to post to this list, the list address must be contained
 in either the To: or Cc: header.
 
-If you are an admin of an mlmmj driven list, you should know that this
-behaviour can be changed by touching the list control file 'tocc'.
-
 Thanks.
 
