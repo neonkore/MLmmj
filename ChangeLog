@@ -1,3 +1,4 @@
+ o Changed English listtexts (Stefan Reinauer)
  o Changed chomp() to also remove CR from CRLF sequences
 1.2.12-RC1
  o Update web interface with new tunables
