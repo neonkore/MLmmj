@@ -1,3 +1,4 @@
+ o Changed chomp() to also remove CR from CRLF sequences
 1.2.12-RC1
  o Update web interface with new tunables
  o Add support for qmail (envelope from address in environment variable)

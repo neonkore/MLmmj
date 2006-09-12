@@ -38,7 +38,7 @@ char *chomp(char *str)
 
 	i = strlen(str) - 1;
 
-	while(str[i] == '\n') {
+	while((str[i] == '\n') || (str[i] == '\r')) {
 		str[i] = 0;
 		i--;
 	}
