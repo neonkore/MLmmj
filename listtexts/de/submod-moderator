@@ -1,27 +1,26 @@
-Subject: Anmeldeanfrage $listaddr$
+Subject: Abonnement-Antrag $listaddr$
 
-Hi, dies ist das mlmmj Programm, das die Mailingliste
+Hi, dies ist das mlmmj-Programm, das die Mailingliste 
 
 $listaddr$
 
 verwaltet.
 
-Es liegt eine Anmeldeanfrage von
+Ein Abonnement-Antrag von
 
 $subaddr$
 
-vor. Um die Anmeldung zu bestätigen, schicken Sie bitte eine Antwort an
+wartet aus Bestätigung. Um diesen Antrag zu gewähren, senden Sie bitte
+eine Antwort an
 
 $moderateaddr$
 
-Ihr Mailprogramm wird vermutlich direkt an die richtige Adresse
-antworten wenn Sie auf den 'Antwort'-Knopf drücken. Falls Sie die
-Anmeldungsanfrage nicht annehmen wollen, ignorieren Sie diese
-Nachricht bitte einfach.
+Ihr Mail-Programm sollte, wenn Sie die Antworten-Funktion benutzen,
+automatisch eine Mail an die Bestätigungsadresse schicken. Wenn Sie
+diesen Antrag nicht bestätigen möchten, ignorieren Sie diese Mail
+einfach.
 
-
-Hier finden Sie eine Liste der Moderatoren, die diese Mail erhalten
-haben:
+Die folgenden Abonnement-Moderatoren haben diese Mail erhalten:
 
 $moderators$
 

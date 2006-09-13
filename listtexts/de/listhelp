@@ -1,29 +1,29 @@
-Subject: Verfügbare Kommandos für $listaddr$
+Subject: =?iso-8859-1?Q?Verf=FCgbare_Kommandos_f=FCr?= $listaddr$
 
 Hallo,
 
 Die folgenden Kommandos sind verfügbar:
 
-Um sich auszutragen senden Sie eine Mail an:
+Um sich auszutragen, senden Sie eine Mail an:
 
 $listunsubaddr$
 
-Um sich auf die Digest Version auf die Liste einzutragen
+Um sich auf die Digest-Version auf die Liste einzutragen,
 senden Sie eine Mail an:
 
 $digestsubaddr$
 
-Um sich auf die Nomail Version auf die Liste einzutragen
+Um sich auf die Nomail-Version auf die Liste einzutragen,
 senden Sie eine Mail an:
 
 $nomailsubaddr$
 
-Wenn Sie sich auf die Nomail Version eintragen empfangen Sie keine
-Nachrichten von der Liste sind aber trotzdem eingetragen. Dies ist
-sinnvoll wenn Sie von mehreren Adressen Beiträge auf die Liste 
+Wenn Sie sich auf die Nomail-Version eintragen, empfangen Sie keine
+Nachrichten von der Liste, sind aber trotzdem eingetragen. Dies ist
+sinnvoll, wenn Sie von mehreren Adressen aus Beiträge auf die Liste 
 schicken möchten.
 
-Um die Nachricht mit der Archivnummer N zu erhalten senden Sie eine
+Um die Nachricht mit der Archivnummer N zu erhalten, senden Sie eine
 Mail an:
 
 $listgetN$

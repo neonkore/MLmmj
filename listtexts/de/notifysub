@@ -1,12 +1,12 @@
 Subject: $newsub$ eingetragen auf $listaddr$
 
 
-Hi, dies ist das mlmmj Programm das die Mailingliste
+Hi, dies ist das mlmmj-Programm, das die Mailingliste
 
 $listaddr$
 
 verwaltet.
 
-Die folgende Adresse wurde gerade auf die Mailingliste eingetragen.
+Die folgende Adresse wurde gerade auf die Mailingliste eingetragen:
 
 $newsub$

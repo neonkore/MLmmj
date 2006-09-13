@@ -1,25 +1,25 @@
-Subject: Moderation für $listaddr$ gebraucht
+Subject: Moderation =?iso-8859-1?Q?f=FCr?= $listaddr$ gebraucht
 
 Hallo,
 
-Jemand hat eine Nachricht die Moderation benötigt an
+jemand hat eine Nachricht, welche moderiert werden muss, an
 
 $listaddr$
 
 geschickt.
 
-Um die Nachricht zu akzeptieren schicken Sie eine Mail an:
+Um die Nachricht zu akzeptieren, schicken Sie eine Mail an:
 
 $moderateaddr$
 
-Ihr Mailprogramm benutzt diese Adresse warscheinlich von selber wenn Sie
-die Antworten funktion benutzen.  
-Wenn Sie die Machricht nicht akzeptieren möchten ignorieren sie einfach
-diese Mail.
+Ihr Mailprogramm verwendet diese Adresse vermutlich automatisch, wenn 
+Sie die Antworten-Funktion benutzen.
 
-die folgenden Moderatoren haben dies Mail erhalten:
+Wenn Sie die Nachricht nicht akzeptieren möchten, ignorieren sie diese 
+Mail einfach.
+
+Die folgenden Moderatoren haben diese Mail erhalten:
 
 $moderators$
 
---- unterhalb dieser Linie sehen Sie die ersten 100 Zeilen der Nachricht
-die Moderation erfordert. --->
+--- Unterhalb dieser Linie sehen Sie die ersten 100 Zeilen der Nachricht, welche moderiert werden muss. --->

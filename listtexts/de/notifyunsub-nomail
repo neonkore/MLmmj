@@ -1,12 +1,12 @@
-Subject: $oldsub$ ausgetragen aus der Nomail Version von $listaddr$
+Subject: $oldsub$ ausgetragen aus der Nomail-Version von $listaddr$
 
-Hi, dies ist das mlmmj Programm das die Mailingliste
+Hi, dies ist das mlmmj-Programm, das die Mailingliste
 
 $listaddr$
 
 verwaltet.
 
-Die folgende Adresse wurde gerade aus der Nomail Version der
-Mailingliste ausgetragen.
+Die folgende Adresse wurde gerade aus der Nomail-Version der
+Mailingliste ausgetragen:
 
 $oldsub$

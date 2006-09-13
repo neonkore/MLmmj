@@ -1,17 +1,16 @@
-Subject: Nachrichten von $listaddr$ an Sie wurden zurueckgewiesen
+Subject: Nachrichten an Sie von $listaddr$ konnten nicht zugestellt werden
 
-Hi, dies ist das mlmmj Programm, das die Mailingliste
+Hi, dies ist das mlmmj-Programm, das die Mailingliste
 
 $listaddr$
 
 verwaltet.
 
-Einige Ihrer Nachrichten konnten nicht erfolgreich zugestellt werden.
-Wenn Sie allerdings diese Nachricht hier sehen, dann funktioniert die
-Zustellung jetzt wieder. Daher ist diese Nachricht nur zu Ihrer
-Information, Sie müssen nichts weiter unternehmen.
+Einige Nachrichten an Sie konnten nicht zugestellt werden. Wenn Sie
+diese Nachricht lesen, funktioniert die Zustellung wieder, und diese
+Nachricht dient lediglich Ihrer Information.
 
-Hier finden Sie eine Liste der zurückgewiesenen Nachrichten:
+Hier die Liste der nicht zugestellten Nachrichten:
 
 $bouncenumbers$
 
