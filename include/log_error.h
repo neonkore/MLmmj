@@ -25,6 +25,7 @@
 #define LOG_ERROR_H
 
 #include <errno.h>
+#include <string.h>
 
 #define LOG_ARGS __FILE__, __LINE__, strerror(errno)
 
