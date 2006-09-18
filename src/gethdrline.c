@@ -1,4 +1,5 @@
 /* Copyright (C) 2004 Mads Martin Joergensen <mmj at mmj.dk>
+ * Copyright (C) 2006 Morten K. Poulsen <morten at afdelingp.dk>
  *
  * $Id$
  *
@@ -28,37 +29,48 @@
 #include "gethdrline.h"
 #include "strgen.h"
 #include "memory.h"
+#include "wrappers.h"
+#include "log_error.h"
+
 
 char *gethdrline(int fd)
 {
-	char *line = NULL, *retstr = NULL, *nextline = NULL, *tmp = NULL;
+	char *line = NULL, *retstr = NULL, *oldretstr = NULL;
 	char ch;
+	ssize_t n;
+	
+	retstr = mygetline(fd);
+
+	/* do not attempt to unfold the end-of-headers marker */
+	if (retstr[0] == '\n')
+		return retstr;
 	
 	for(;;) {
-		line = mygetline(fd);
-		if(line == NULL)
-			return NULL;
-		if(read(fd, &ch, 1) == (size_t)1)
-			lseek(fd, -1, SEEK_CUR);
-		if(ch == '\t' || ch == ' ') {
-			nextline = mygetline(fd);
-			tmp = retstr;
-			retstr = concatstr(3, retstr, line, nextline);
-			myfree(tmp);
-			myfree(line);
-			myfree(nextline);
-			tmp = line = nextline = NULL;
-			if(read(fd, &ch, 1) == (size_t)1)
-				lseek(fd, -1, SEEK_CUR);
-			if(ch != '\t' && ch != ' ')
-				return retstr;
-		} else {
-			tmp = retstr;
-			retstr = concatstr(3, retstr, line, nextline);
-			myfree(line);
-			myfree(tmp);
-
+		/* look-ahead one char to determine if we need to unfold */
+		n = readn(fd, &ch, 1);
+		if (n == 0) {  /* end of file, and therefore also headers */
 			return retstr;
+		} else if (n == -1) {  /* error */
+			log_error(LOG_ARGS, "readn() failed in gethdrline()");
+			myfree(retstr);
+			return NULL;
 		}
+
+		if (lseek(fd, -1, SEEK_CUR) == (off_t)-1) {
+			log_error(LOG_ARGS, "lseek() failed in gethdrline()");
+			myfree(retstr);
+			return NULL;
+		}
+
+		if ((ch != '\t') && (ch != ' '))  /* no more unfolding */
+			return retstr;
+
+		oldretstr = retstr;
+		line = mygetline(fd);
+
+		retstr = concatstr(2, oldretstr, line);
+		
+		myfree(oldretstr);
+		myfree(line);
 	}
 }
