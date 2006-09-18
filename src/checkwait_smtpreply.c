@@ -28,24 +28,14 @@
 #include "checkwait_smtpreply.h"
 #include "config.h"
 #include "memory.h"
+#include "mygetline.h"
 
-#define USEC_WAIT 1
-#define LOOP_WAIT 10000
-
-#define RFC_REPLY_SIZE 512
 
 char *checkwait_smtpreply(int sockfd, int replytype)
 {
-	size_t len = 0;
-	char smtpreply[RFC_REPLY_SIZE + 1];
+	char *smtpreply;
 
-	smtpreply[RFC_REPLY_SIZE] = '\0';
-
-	do {
-		len += read(sockfd, (smtpreply+len), RFC_REPLY_SIZE - len);
-	} while(smtpreply[len - 1] != '\n' && len <= RFC_REPLY_SIZE);
-
-	smtpreply[len] = '\0';
+	smtpreply = mygetline(sockfd);
 #if 0
 	printf("replytype = [%d], smtpreply = [%s]\n", replytype, smtpreply);
 	fprintf(stderr, "%s", smtpreply);

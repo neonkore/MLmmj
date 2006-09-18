@@ -1,3 +1,4 @@
+ o Fixed EOF handling in checkwait_smtpreply()
  o Fixed header unfolding in gethdrline()
 1.2.12-RC2
  o Changed German listtexts (Stefan Reinauer, Christian Lackas)
