@@ -1,3 +1,4 @@
+1.2.12-RC3
  o Fixed EOF handling in checkwait_smtpreply()
  o Fixed header unfolding in gethdrline()
 1.2.12-RC2
