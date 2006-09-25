@@ -542,7 +542,7 @@ int main(int argc, char **argv)
 	}
 
 	/* address extension (the "foo" part of "user+foo@domain.tld") */
-	if((envstr = getenv("EXT")) != NULL) {
+	if((envstr = getenv("DEFAULT")) != NULL) {
 		/* qmail */
 		recipextra = mystrdup(envstr);
 	} else if((envstr = getenv("EXTENSION")) != NULL) {

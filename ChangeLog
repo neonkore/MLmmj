@@ -1,3 +1,5 @@
+ o Changed mlmmj-process to look at environment variable DEFAULT instead
+   of EXT for qmail.
  o Added Frensh listtext unsub-confirm-digest (Christophe Gallienne)
 1.2.12-RC3
  o Fixed EOF handling in checkwait_smtpreply()
