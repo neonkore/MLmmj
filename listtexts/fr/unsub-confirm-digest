@@ -1,22 +1,20 @@
-Subject: Confirm unsubscribe from digest of $listaddr$
+Subject: Confirmation de votre =?iso-8859-1?Q?d=E9sincription?= de la liste $listaddr$
 
-Hi, this is the mlmmj program managing the mailinglist
-
+Bonjour, ceci est le programme mlmmj de gestion de la liste de diffusion
 $listaddr$
 
-To confirm you want the address
-
+Pour confirmer que vous souhaitez bien que votre adresse
 $subaddr$
 
-removed from the digest of this list, please send a reply to
-
+soit désinscrite du résumé de la liste merci de répondre à =
+cette adresse :
 $confaddr$
 
-Your mailer may automatically reply to this address when you hit
-the reply button.
+Votre client de messagerie va certainement répondre à l'adresse de
+confirmation quand vous cliquerez sur le bouton répondre.
 
-If you're not subscribed with this list, you will receive no reply.
+Si vous n'êtes pas inscrit à la list vous ne recevrez pas de
+réponse.
 
-You can see in the envelope "Return-Path" header of a message to the
-mailinglist which address you're subscribed with.
-
+Vous pouvez voir dans l'enveloppe "Return-Path" de l'entête d'un
+message de la liste avec quelle adresse vous vous êtes inscrit.
