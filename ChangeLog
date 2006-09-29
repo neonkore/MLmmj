@@ -1,5 +1,6 @@
+ o Fixed memory leak in checkwait_smtpreply()
  o Changed mlmmj-process to look at environment variable DEFAULT instead
-   of EXT for qmail.
+   of EXT for qmail (Fabio Busatto)
  o Added Frensh listtext unsub-confirm-digest (Christophe Gallienne)
 1.2.12-RC3
  o Fixed EOF handling in checkwait_smtpreply()
