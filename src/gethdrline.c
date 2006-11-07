@@ -40,6 +40,9 @@ char *gethdrline(int fd)
 	ssize_t n;
 	
 	retstr = mygetline(fd);
+	if (!retstr) {
+		return NULL;
+	}
 
 	/* do not attempt to unfold the end-of-headers marker */
 	if (retstr[0] == '\n')
@@ -67,6 +70,9 @@ char *gethdrline(int fd)
 
 		oldretstr = retstr;
 		line = mygetline(fd);
+		if (!line) {
+			return retstr;
+		}
 
 		retstr = concatstr(2, oldretstr, line);
 		

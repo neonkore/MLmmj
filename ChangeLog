@@ -1,3 +1,5 @@
+ o Fixed bug in gethdrline() introduced in 1.2.12-RC3
+1.2.12-RC4
  o Fixed memory leak in checkwait_smtpreply()
  o Changed mlmmj-process to look at environment variable DEFAULT instead
    of EXT for qmail (Fabio Busatto)
