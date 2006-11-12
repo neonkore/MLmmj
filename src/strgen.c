@@ -29,6 +29,7 @@
 #include <netdb.h>
 #include <libgen.h>
 #include <time.h>
+#include <ctype.h>
 
 #include "strgen.h"
 #include "wrappers.h"
@@ -194,12 +195,16 @@ char *cleanquotedp(const char *qpstr)
 	retstr = mymalloc(len + 1);
 	retstr[len] = '\0';
 	qc[2] = '\0';
-	while(*c != '\0') {
+	while(c < qpstr+len) {
 		switch(*c) {
 			case '=':
-				qc[0] = *(++c);
-				qc[1] = *(++c);
 				c++;
+				if (!isxdigit(*c))
+					break;
+				qc[0] = *(c++);
+				if (!isxdigit(*c))
+					break;
+				qc[1] = *(c++);
 				qcval = strtol(qc, NULL, 16);
 				if(qcval)
 					retstr[i++] = (char)qcval;
