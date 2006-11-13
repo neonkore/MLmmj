@@ -1,4 +1,4 @@
- o Fixed invalid read in cleanquotedp()
+ o Fixed memory corruption in cleanquotedp()
  o Fixed bug in gethdrline() introduced in 1.2.12-RC3
 1.2.12-RC4
  o Fixed memory leak in checkwait_smtpreply()
