@@ -371,7 +371,7 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 	struct stat st;
 	pid_t childpid, pid;
 	time_t t;
-	int status;
+	int status, fromrequeuedir = 0;
 
 	if(chdir(dirname) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
@@ -412,10 +412,22 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 			 * continue
 			 */
 			myfree(archivefilename);
-			continue;
+
+			/* If the list is set not to archive we want to look
+			 * in /requeue/ for a mailfile
+			 */
+			archivefilename = concatstr(4, listdir, "/requeue/",
+							dp->d_name, "/mailfile");
+			if(stat(archivefilename, &st) < 0) {
+				myfree(archivefilename);
+				continue;
+			}
+			fromrequeuedir = 1;
 		}
 		subfilename = concatstr(3, dirname, dp->d_name, "/subscribers");
 		if(stat(subfilename, &st) < 0) {
+			if (fromrequeuedir)
+				unlink(archivefilename);
 			myfree(archivefilename);
 			myfree(subfilename);
 			continue;

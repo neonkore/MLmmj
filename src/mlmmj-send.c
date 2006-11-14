@@ -73,6 +73,34 @@ void catch_sig_term(int sig)
 	gotsigterm = 1;
 }
 
+char *get_index_from_filename(const char *filename)
+{
+	char *myfilename, *indexstr, *ret;
+	size_t len;
+
+	myfilename = mystrdup(filename);
+	if (!myfilename) {
+		return NULL;
+	}
+
+	len = strlen(myfilename);
+	if (len > 9 && (strcmp(myfilename + len - 9, "/mailfile") == 0)) {
+		myfilename[len - 9] = '\0';
+	}
+
+	indexstr = strrchr(myfilename, '/');
+	if (indexstr) {
+		indexstr++;  /* skip the slash */
+	} else {
+		indexstr = myfilename;
+	}
+
+	ret = mystrdup(indexstr);
+	myfree(myfilename);
+
+	return ret;
+}
+
 char *bounce_from_adr(const char *recipient, const char *listadr,
 		      const char *listdelim, const char *mailfilename)
 {
@@ -85,12 +113,7 @@ char *bounce_from_adr(const char *recipient, const char *listadr,
 		return NULL;
 	}
 
-	indexstr = strrchr(mymailfilename, '/');
-	if (indexstr) {
-		indexstr++;  /* skip the slash */
-	} else {
-		indexstr = mymailfilename;
-	}
+	indexstr = get_index_from_filename(mymailfilename);
 
 	myrecipient = mystrdup(recipient);
 	if (!myrecipient) {
@@ -142,6 +165,7 @@ char *bounce_from_adr(const char *recipient, const char *listadr,
 	myfree(myrecipient);
 	myfree(mylistadr);
 	myfree(mylistdelim);
+	myfree(indexstr);
 	myfree(mymailfilename);
 
 	return bounceaddr;
@@ -579,7 +603,7 @@ int send_mail_many_list(int sockfd, const char *from, const char *replyto,
 		   const char *mlmmjbounce, const char *hdrs, size_t hdrslen,
 		   const char *body, size_t bodylen)
 {
-	int res = 0, i;
+	int res = 0, i, status;
 	char *bounceaddr, *addr, *index;
 
 	for(i = 0; i < addrs->count; i++) {
@@ -594,8 +618,10 @@ int send_mail_many_list(int sockfd, const char *from, const char *replyto,
 			/* we got SIGTERM, so save the addresses and bail */
 			log_error(LOG_ARGS, "TERM signal recieved, "
 						"shutting down.");
-			index = mybasename(archivefilename);
-			return requeuemail(listdir, index, addrs, i);
+			index = get_index_from_filename(archivefilename);
+			status = requeuemail(listdir, index, addrs, i);
+			myfree(index);
+			return status;
 		}
 		if(from) {
 			res = send_mail(sockfd, from, addr, replyto,
@@ -611,8 +637,10 @@ int send_mail_many_list(int sockfd, const char *from, const char *replyto,
 		}
 		if(res && listaddr && archivefilename) {
 			/* we failed, so save the addresses and bail */
-			index = mybasename(archivefilename);
-			return requeuemail(listdir, index, addrs, i);
+			index = get_index_from_filename(archivefilename);
+			status = requeuemail(listdir, index, addrs, i);
+			myfree(index);
+			return status;
 		}
 	}
 	return 0;
@@ -659,7 +687,7 @@ int main(int argc, char **argv)
 	char *mlmmjbounce = NULL, *bindir, *mailmap, *probefile, *a;
 	char *body = NULL, *hdrs = NULL, *memmailsizestr = NULL, *verp = NULL;
 	char relay[16], *listname, *listfqdn, *verpfrom, *maxverprecipsstr;
-	char strindex[32], *reply, *strport;
+	char strindex[32], *reply, *strport, *requeuefilename;
 	ssize_t memmailsize = 0;
 	DIR *subddir;
 	struct dirent *dp;
@@ -1227,7 +1255,13 @@ int main(int argc, char **argv)
 						archivefilename);
 			}
 		} else {
-			unlink(mailfilename);
+			len = strlen(listdir) + 9 + 20 + 9;
+		  	requeuefilename = mymalloc(len);
+		  	snprintf(requeuefilename, len, "%s/requeue/%d/mailfile", listdir,
+				mindex);
+			if (rename(mailfilename, requeuefilename) < 0)
+				unlink(mailfilename);
+			myfree(requeuefilename);
 		}
 		myfree(archivefilename);
 	} else if(deletewhensent)

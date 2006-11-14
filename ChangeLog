@@ -1,3 +1,4 @@
+ o Fixed requeue for lists with noarchive enabled
 1.2.12
  o Fixed memory corruption in cleanquotedp()
  o Fixed bug in gethdrline() introduced in 1.2.12-RC3
