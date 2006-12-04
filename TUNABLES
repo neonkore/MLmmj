@@ -46,8 +46,8 @@ to specify several entries (one pr. line), it's marked "list".
 
  · modnonsubposts		(boolean)
 
-   When this file is present, all postings from people who are not subscribed
-   to the list will be moderated.
+   When this file is present and subonlypost is enabled, all postings from
+   people who are not subscribed to the list will be moderated.
 
  · prefix			(normal)
 
