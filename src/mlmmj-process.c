@@ -347,7 +347,7 @@ int main(int argc, char **argv)
 {
 	int i, j, opt, noprocess = 0, moderated = 0;
 	int hdrfd, footfd, rawmailfd, donemailfd;
-	int subonlypost = 0, addrtocc = 1, intocc = 0;
+	int subonlypost = 0, addrtocc = 1, intocc = 0, modnonsubposts = 0;
 	int notoccdenymails = 0, noaccessdenymails = 0, nosubonlydenymails = 0;
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
@@ -742,8 +742,6 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	nosubonlydenymails = statctrl(listdir, "nosubonlydenymails");
-
 	subonlypost = statctrl(listdir, "subonlypost");
 	if(subonlypost) {
 		/* Don't send a mail about denial to the list, but silently
@@ -759,6 +757,16 @@ int main(int argc, char **argv)
 			exit(EXIT_SUCCESS);
 		}
 		if(is_subbed(listdir, fromemails.emaillist[0]) != 0) {
+			modnonsubposts = statctrl(listdir,
+					"modnonsubposts");
+			if(modnonsubposts) {
+				moderated = 1;
+				goto startaccess;
+			}
+			
+			nosubonlydenymails = statctrl(listdir,
+					"nosubonlydenymails");
+
 			if(nosubonlydenymails) {
 				log_error(LOG_ARGS, "Discarding %s because"
 						" subonlypost and"
@@ -796,6 +804,7 @@ int main(int argc, char **argv)
 		}
 	}
 
+startaccess:
 	noaccessdenymails = statctrl(listdir, "noaccessdenymails");
 
 	access_rules = ctrlvalues(listdir, "access");

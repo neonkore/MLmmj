@@ -1,3 +1,5 @@
+ o Add 'modnonsubposts' tunable that when set will moderate all posts
+   from non subscribers
  o Fixed requeue for lists with noarchive enabled
 1.2.12
  o Fixed memory corruption in cleanquotedp()
