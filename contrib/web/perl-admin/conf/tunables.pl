@@ -37,6 +37,11 @@ mlmmj_boolean("subonlypost",
 			  "If this option is set, only people who are subscribed to the list, are allowed to post to it. ".
 			  "The check is made against the \"From:\" header.");
 
+mlmmj_boolean("modnonsubposts",
+			  "Moderate non-subscriber posts",
+			  "If this option is set and subonlypost is enabled, all postings from ".
+			  "people who are not subscribed to the list will be moderated.");
+
 mlmmj_string("prefix",
 			 "Prefix",
 			 "The prefix for the Subject: line of mails to the list. This will alter the Subject: line, ".
