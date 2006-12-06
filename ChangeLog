@@ -1,3 +1,5 @@
+ o Fixed hostnamestr() for hosts that can't find themselves using
+   gethostbyname() (Benoit Dolez)
  o Add 'modnonsubposts' tunable that when set will moderate all posts
    from non subscribers
  o Fixed requeue for lists with noarchive enabled

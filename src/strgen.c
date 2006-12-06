@@ -30,6 +30,7 @@
 #include <libgen.h>
 #include <time.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include "strgen.h"
 #include "wrappers.h"
@@ -136,16 +137,50 @@ char *concatstr(int count, ...)
 
 char *hostnamestr()
 {
-        struct hostent *hostlookup;
-        char hostname[1024];
+	struct hostent *hostlookup;
+	char *hostname = NULL;
+	size_t len = 512;
 
-        /* TODO use dynamic allocation */
-        gethostname(hostname, sizeof(hostname) - 1);
-        /* gethostname() is allowed to return an unterminated string */
-        hostname[sizeof(hostname)-1] = '\0';
-        hostlookup = gethostbyname(hostname);
+	for (;;) {
+		len *= 2;
+		free(hostname);
 
-        return mystrdup(hostlookup->h_name);
+		hostname = malloc(len);
+		hostname[len-1] = '\0';
+
+		/* gethostname() is allowed to:
+		 * a) return -1 and undefined in hostname
+		 * b) return 0 and an unterminated string in hostname
+		 * c) return 0 and a NUL-terminated string in hostname
+		 *
+		 * We keep expanding the buffer until the hostname is
+		 * NUL-terminated (and pray that it is not truncated)
+		 * or an error occurs.
+		 */
+		if (gethostname(hostname, len - 1)) {
+			if (errno == ENAMETOOLONG) {
+				continue;
+			}
+			myfree(hostname);
+			return mystrdup("localhost");
+		}
+		
+		if (hostname[len-1] == '\0') {
+			break;
+		}
+	}
+
+	if (strchr(hostname, '.')) {
+		/* hostname is FQDN */
+		return hostname;
+	}
+
+	if ((hostlookup = gethostbyname(hostname))) {
+		myfree(hostname);
+		return mystrdup(hostlookup->h_name);
+	}
+
+	return hostname;
 }
 
 char *mydirname(const char *path)
