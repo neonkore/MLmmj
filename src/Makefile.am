@@ -2,7 +2,7 @@
 
 AUTOMAKE_OPTIONS = foreign
 
-AM_CFLAGS = -g -Wall -pedantic -Wsign-compare
+AM_CFLAGS = -g -Wall -pedantic -Wsign-compare -DDEFAULTTEXTDIR='"@textlibdir@"'
 INCLUDES = -I$(srcdir)/../include
 
 bin_PROGRAMS = mlmmj-send mlmmj-recieve mlmmj-process mlmmj-sub \
