@@ -625,7 +625,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		}
 		log_oper(listdir, OPLOGFNAME, "%s requested help",
 				fromemails->emaillist[0]);
-		send_help(listdir, fromemails->emaillist[0], mlmmjsend);
+		send_help(listdir, fromemails->emaillist[0], mlmmjsend, "help", "listhelp");
 		break;
 
 	/* listname+get-INDEX@domain.tld */
