@@ -1,3 +1,4 @@
+ o Fixed a Bourne Shell issue in mlmmj-make-ml.sh (Magnus Naeslund)
  o Fixed hostnamestr() for hosts that can't find themselves using
    gethostbyname() (Benoit Dolez)
  o Add 'modnonsubposts' tunable that when set will moderate all posts

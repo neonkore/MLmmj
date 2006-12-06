@@ -46,7 +46,7 @@ case "$Option" in
 	exit 1
 esac
 done
-let SHIFTVAL=$OPTIND-1
+SHIFTVAL=$((OPTIND-1))
 shift $SHIFTVAL
 
 if [ -z "$SPOOLDIR" ]; then
