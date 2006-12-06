@@ -63,6 +63,7 @@ enum ctrl_e {
 	CTRL_BOUNCES,
 	CTRL_MODERATE,
 	CTRL_HELP,
+	CTRL_FAQ,
 	CTRL_GET,
 	CTRL_LIST,
 	CTRL_END  /* end marker, must be last */
@@ -92,6 +93,7 @@ static struct ctrl_command ctrl_commands[] = {
 	{ "bounces",            1 },
 	{ "moderate",           1 },
 	{ "help",               0 },
+	{ "faq",                0 },
 	{ "get",                1 },
 	{ "list",               0 }
 };
@@ -627,6 +629,21 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				fromemails->emaillist[0]);
 		send_help(listdir, fromemails->emaillist[0], mlmmjsend, "help", "listhelp");
 		break;
+
+       /* listname+faq@domain.tld */
+        case CTRL_FAQ:
+               if(!strchr(fromemails->emaillist[0], '@')) {
+                       /* Not a valid From: address */
+                       errno = 0;
+                       log_error(LOG_ARGS, "A faq request was"
+                               " sent with an invalid From: header."
+                               " Ignoring mail");
+                       return -1;
+               }
+               log_oper(listdir, OPLOGFNAME, "%s requested faq",
+                               fromemails->emaillist[0]);
+               send_help(listdir, fromemails->emaillist[0], mlmmjsend, "faq", "listfaq");
+               break;
 
 	/* listname+get-INDEX@domain.tld */
 	case CTRL_GET:

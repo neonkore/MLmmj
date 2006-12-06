@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-dist_textlib_DATA = access bounce-probe listhelp moderation notifysub \
+dist_textlib_DATA = access bounce-probe listhelp listfaq moderation notifysub \
 	notifysub-digest notifysub-nomail notifyunsub notifyunsub-digest \
 	notifyunsub-nomail notintocc sub-confirm sub-confirm-digest \
 	sub-confirm-nomail sub-ok sub-ok-digest sub-ok-nomail subonlypost \

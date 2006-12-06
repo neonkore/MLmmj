@@ -1,3 +1,4 @@
+ o Added list FAQ feature (Henne Vogelsang)
  o Added support for default list text directory (Henne Vogelsang)
  o Fixed a Bourne Shell issue in mlmmj-make-ml.sh (Magnus Naeslund)
  o Fixed hostnamestr() for hosts that can't find themselves using

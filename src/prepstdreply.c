@@ -102,6 +102,9 @@ char *substitute_one(const char *line, const char *listaddr,
 	} else if(strcmp(token, "helpaddr") == 0) {
 		value = concatstr(4, listname, listdelim, "help@", fqdn);
 		goto concatandreturn;
+	} else if(strcmp(token, "faqaddr") == 0) {
+		value = concatstr(4, listname, listdelim, "faq@", fqdn);
+		goto concatandreturn;
 	} else if(strcmp(token, "listgetN") == 0) {
 		value = concatstr(4, listname, listdelim, "get-N@", fqdn);
 		goto concatandreturn;
