@@ -1,0 +1,30 @@
+Subject: Beschikbare opdrachten voor $listaddr$
+
+Hallo,
+
+De volgende opties zijn beschikbaar:
+
+Om uit te schrijven stuur een bericht naar:
+
+$listunsubaddr$
+
+Om in te schrijven op deze lijst stuur een bericht naar:
+
+$digestsubaddr$
+
+Om in te schrijven op de "geen mail" versie van deze lijst, stuur een bericht naar:
+
+$nomailsubaddr$
+
+De "geen mail" versie betekent dat je herkend wordt als lid, maar u krijgt geen e-mail 
+op dit adres. Dit kan handig zijn als u vanaf meerdere e-mail adressen wil posten op 
+een alleen leden lijst.
+
+Om bericht nummer N uit het archief op te halen stuur dan een mail naar:
+
+$listgetN$
+
+Om contact op te nemen met de eigenaar van de lijst, stuur dan een mail naar:
+
+$listowner$
+

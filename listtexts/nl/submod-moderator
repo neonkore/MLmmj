@@ -1,0 +1,22 @@
+Subject: Verzoek tot inschrijving op $listaddr$
+
+Hallo, dit is de mlmmj mailinglijstbeheerder voor de lijst
+
+$listaddr$
+
+Er is een verzoek tot inschrijving gekomen van
+
+$subaddr$
+
+Om dit verzoek te honoreren, stuur een antwoord naar
+
+$moderateaddr$
+
+Uw mailprogramma stuurt waarschijnlijk een antwoord naar dit adres als u 
+simpelweg antwoord op dit bericht. Wilt u het verzoek niet willen honoreren
+negeer dit bericht dan
+
+De volgende inschrijvings moderators hebben deze mail ontvangen:
+
+$moderators$
+

@@ -1,0 +1,14 @@
+Subject: Berichten van $listaddr$ geadresseerd aan u zijn tegengehouden
+
+Hallo, dit is de mlmmj mailinglijstbeheerder voor de lijst
+
+$listaddr$
+
+Een aantal berichten bestemd voor u kon niet worden afgeleverd. Als u dit 
+bericht gekregen heeft betekent dit dat alles weer werkt. Dit bericht is 
+puur informatief
+
+Hier onder volgt een lijst van tegengehouden berichten.
+
+$bouncenumbers$
+
