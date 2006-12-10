@@ -206,6 +206,14 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				" Ignoring mail");
 			return -1;
 		}
+		if (statctrl(listdir, "nodigestsub")) {
+			errno = 0;
+			log_error(LOG_ARGS, "A subcribe-digest request was"
+				" denied");
+			send_help(listdir, fromemails->emaillist[0],
+				mlmmjsend, "nodigest", "sub-deny-digest");
+			return -1;
+		}
 		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: request for digest"
 					" subscription from %s",
 					fromemails->emaillist[0]);

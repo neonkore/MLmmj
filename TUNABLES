@@ -171,3 +171,9 @@ to specify several entries (one pr. line), it's marked "list".
 
    If this file exists, digest mails won't have a text part with a thread
    summary.
+
+ · nodigestsub			(boolean)
+
+   If this file exists, subscription to the digest version of the mailinglist
+   will be denied. (Usefull if you dont want to allow digests and notify users
+   about it).
