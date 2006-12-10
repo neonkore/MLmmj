@@ -243,6 +243,14 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				" Ignoring mail");
 			return -1;
 		}
+		if (statctrl(listdir, "nonomailsub")) {
+			errno = 0;
+			log_error(LOG_ARGS, "A subcribe-nomail request was"
+				" denied");
+			send_help(listdir, fromemails->emaillist[0],
+				mlmmjsend, "nonomail", "sub-deny-nomail");
+			return -1;
+		}
 		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: request for nomail"
 					" subscription from %s",
 					fromemails->emaillist[0]);
