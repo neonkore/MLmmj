@@ -142,6 +142,12 @@ mlmmj_boolean("nodigesttext",
 
 mlmmj_boolean("nodigestsub",
 			  "No digest subscribers",
-			  "If this options is set, subscription to the digest version of the mailinglist ".
+			  "If this option is set, subscription to the digest version of the mailinglist ".
 			  "will be denied. (Useful if you don't want to allow digests and notify users ".
+			  "about it).");
+
+mlmmj_boolean("nonomailsub",
+			  "No nomail subscribers",
+			  "If this option is set, subscription to the nomail version of the mailinglist ".
+			  "will be denied. (Useful if you don't want to allow nomail and notify users ".
 			  "about it).");
