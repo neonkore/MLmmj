@@ -175,5 +175,5 @@ to specify several entries (one pr. line), it's marked "list".
  · nodigestsub			(boolean)
 
    If this file exists, subscription to the digest version of the mailinglist
-   will be denied. (Useful if you dont want to allow digests and notify users
+   will be denied. (Useful if you don't want to allow digests and notify users
    about it).
