@@ -139,3 +139,9 @@ mlmmj_boolean("nodigesttext",
 			  "No digest text summary",
 			  "This switch turns off whether digest mails will have a text part with a thread ".
 			  "summary.");
+
+mlmmj_boolean("nodigestsub",
+			  "No digest subscribers",
+			  "If this options is set, subscription to the digest version of the mailinglist ".
+			  "will be denied. (Useful if you don't want to allow digests and notify users ".
+			  "about it).");
