@@ -1,22 +1,24 @@
-Subject: Subscription request for $listaddr$
+Subject: =?iso-8859-1?Q?Tilmeldingsforesp=F8rgsel?= for $listaddr$
 
-Hi, this is the mlmmj program managing the mailinglist
+Hej, dette er mlmmj programmet der bestyrer postlisten
 
 $listaddr$
 
-There is a subscription request from
+Der venter en tilmeldingsforespørgsel fra
 
 $subaddr$
 
-waiting. To approve this request, please send a reply to
+For at godkende denne forespørgsel, send et svar til
 
 $moderateaddr$
 
-Your mailer probably automatically replies to this address, when you hit
-the reply button. If you don't want to approve the request, simply ignore this
-message.
+Din mailprogram vil sandsynligvis automatisk besvare til denne
+bekræftelses adresse, når du trykker på "Besvar" knappen.
 
-The following subscription moderators have received this mail:
+Hvis du ikke vil godkende denne forespørgsel, skal du bare ignorere
+denne besked.
+
+Følgende tilmeldings moderatore har modtaget denne mail:
 
 $moderators$
 

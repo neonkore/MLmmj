@@ -10,8 +10,5 @@ til postlisten.
 For at kunne sende beskeder til denne liste, skal listens addresse
 være indeholdt i enten To: eller Cc: mailheaderen.
 
-Hvis du er administrator af en mlmmj postliste, skal du vide at denne
-opførsel kan ændres ved at berøre kontrolfilen "tocc".
-
 Tak.
 

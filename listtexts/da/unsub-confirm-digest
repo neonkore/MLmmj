@@ -1,5 +1,4 @@
-Subject: Bekræft afmelding af resume af $listaddr$
-
+Subject: =?iso-8859-1?Q?Bekr=E6ft?= afmelding af resume af $listaddr$
 
 Hej, dette er mlmmj programmet der bestyrer postlisten
 
@@ -17,6 +16,6 @@ Dit mailprogram vil sandsynligvis automatisk besvare til denne
 bekræftelses addresse, når du trykker på "Besvar" knappen
 
 Hvis du ikke er tilmeldt listen, modtager du ikke noget svar. Du kan
-se i "Envelope" headeren i en mail til postlisten, hvilken addresse
+se i "Return-Path" headeren i en mail til postlisten, hvilken addresse
 du er tilmeldt med.
 
