@@ -14,9 +14,9 @@ $confaddr$
 
 Denne bekræftelse har to formål. Den tester at mail rent faktisk
 kan sendes til dig. Sekundært sørger den for at ingen melder dig
-til postlisten, uden dit ønske.
+til postlisten, uden din tilladelse.
 
-Dit mailprogram vil sandsynligvis automatisk besvare til denne 
+Dit mailprogram vil måske automatisk besvare til denne 
 bekræftelses addresse, når du trykker på "Besvar" knappen
 
 Emnet og beskeden i den mail kan være hvad som helst.
