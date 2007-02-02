@@ -52,6 +52,9 @@ struct strlist *ctrlvalues(const char *listdir, const char *ctrlstr)
 	ret->strs = NULL;
 	while((value = mygetline(ctrlfd)) != NULL) {
 		chomp(value);
+		/* Ignore empty lines */
+		if (*value == '\0')
+			continue;
 		ret->count++;
 		ret->strs = (char **) myrealloc(ret->strs, sizeof(char *) *
 					(ret->count + 1));
