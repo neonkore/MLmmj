@@ -60,11 +60,10 @@ enum action {
 };
 
 
-struct rule_list {
-	regex_t regexp;
-	unsigned int not;
-	enum action act;
-	struct rule_list *next;
+static char *action_strs[] = {
+	"allowed",
+	"denied",
+	"moderated"
 };
 
 
@@ -154,147 +153,130 @@ void newmoderated(const char *listdir, const char *mailfilename,
 }
 
 
-static void free_rules(struct rule_list *rule)
+static enum action do_access(struct strlist *rule_strs, struct strlist *hdrs,
+		const char *from, const char *listdir)
 {
-	struct rule_list *next;
-
-	while (rule) {
-		next = rule->next;
-		regfree(&rule->regexp);
-		myfree(rule);
-		rule = next;
-	}
-}
-
-
-static enum action do_access(struct strlist *rule_strs, struct strlist *hdrs)
-{
-	int i;
+	int i, j;
 	unsigned int match;
-	unsigned int rule_nr;
-	struct rule_list *head = NULL;
-	struct rule_list *rule, *new_rule;
 	char *rule_ptr;
 	char errbuf[128];
 	int err;
-	enum action ret;
+	enum action act;
+	unsigned int not;
+	regex_t regexp;
+	char *hdr;
 
-	/* They're going in backwards later on, so loop from the end here
-	 * to get it right
-	 */
-	for (i=rule_strs->count-1; i>=0; i--) {
-		new_rule = mymalloc(sizeof(struct rule_list));
-
-		/* linked list */
-		new_rule->next = head;
-		head = new_rule;
+	for (i=0; i<rule_strs->count; i++) {
 
 		rule_ptr = rule_strs->strs[i];
+
 		if (strncmp(rule_ptr, "allow", 5) == 0) {
 			rule_ptr += 5;
-			new_rule->act = ALLOW;
+			act = ALLOW;
 		} else if (strncmp(rule_ptr, "deny", 4) == 0) {
 			rule_ptr += 4;
-			new_rule->act = DENY;
+			act = DENY;
 		} else if (strncmp(rule_ptr, "moderate", 8) == 0) {
 			rule_ptr += 8;
-			new_rule->act = MODERATE;
+			act = MODERATE;
 		} else {
 			errno = 0;
-			log_error(LOG_ARGS, "Unable to parse rule #%d!"
-					" Denying post to list", i);
-			free_rules(head);
+			log_error(LOG_ARGS, "Unable to parse rule #%d \"%s\":"
+					" Missing action keyword. Denying post from \"%s\"",
+					i, rule_strs->strs[i], from);
+			log_oper(listdir, OPLOGFNAME, "Unable to parse rule #%d \"%s\":"
+					" Missing action keyword. Denying post from \"%s\"",
+					i, rule_strs->strs[i], from);
 			return DENY;
 		}
 
 		if (*rule_ptr == ' ') {
 			rule_ptr++;
 		} else if (*rule_ptr == '\0') {
-			/* We had a single allow/deny so match everything */
-			*(--rule_ptr) = '.';
+			/* the rule is a keyword and no regexp */
+			log_oper(listdir, OPLOGFNAME, "mlmmj-process: access -"
+					" A mail from \"%s\" was %s by rule #%d \"%s\"",
+					from, action_strs[act], i, rule_strs->strs[i]);
+			return act;
 		} else {
 			/* we must have space or end of string */
 			errno = 0;
-			log_error(LOG_ARGS, "Unable to parse rule #%d!"
-					" Denying post to list", i);
-			free_rules(head);
+			log_error(LOG_ARGS, "Unable to parse rule #%d \"%s\":"
+					" Invalid character after action keyword."
+					" Denying post from \"%s\"", i, rule_strs->strs[i], from);
+			log_oper(listdir, OPLOGFNAME, "Unable to parse rule #%d \"%s\":"
+					" Invalid character after action keyword."
+					" Denying post from \"%s\"", i, rule_strs->strs[i], from);
 			return DENY;
 		}
 
 		if (*rule_ptr == '!') {
 			rule_ptr++;
-			new_rule->not = 1;
+			not = 1;
 		} else {
-			new_rule->not = 0;
+			not = 0;
 		}
 
 		/* remove unanchored ".*" from beginning of regexp to stop the
 		 * regexp matching to loop so long time it seems like it's
 		 * hanging */
-		
-		if (strlen(rule_ptr) > 2 && !strncmp(rule_ptr, ".*", 2))
-			memmove(rule_ptr, rule_ptr + 2, strlen(rule_ptr) - 1);
+		if (strncmp(rule_ptr, "^.*", 3) == 0) {
+			rule_ptr += 3;
+		}
+		while (strncmp(rule_ptr, ".*", 2) == 0) {
+			rule_ptr += 2;
+		}
 
-		if ((err = regcomp(&new_rule->regexp, rule_ptr,
+		if ((err = regcomp(&regexp, rule_ptr,
 				REG_EXTENDED | REG_NOSUB | REG_ICASE))) {
-			regerror(err, &new_rule->regexp, errbuf,
-					sizeof(errbuf));
+			regerror(err, &regexp, errbuf, sizeof(errbuf));
+			regfree(&regexp);
 			errno = 0;
-			log_error(LOG_ARGS, "regcomp() failed for rule #%d!"
+			log_error(LOG_ARGS, "regcomp() failed for rule #%d \"%s\""
 					" (message: '%s') (expression: '%s')"
-					" Denying post to list",
-					i, errbuf, rule_ptr);
-			free_rules(head);
+					" Denying post from \"%s\"",
+					i, rule_strs->strs[i], errbuf, rule_ptr, from);
+			log_oper(listdir, OPLOGFNAME, "regcomp() failed for rule"
+					" #%d \"%s\" (message: '%s') (expression: '%s')"
+					" Denying post from \"%s\"",
+					i, rule_strs->strs[i], errbuf, rule_ptr, from);
 			return DENY;
 		}
-		
-#if 0
-		printf("rule #%d: %s if%s match '%s'\n", i,
-				(new_rule->act == ALLOW) ? "allow" : "deny",
-				(new_rule->not) ? " not" : "",
-				rule_ptr);
-#endif
 
-	}
-
-	rule = head;
-	for (rule_nr=0; rule; rule_nr++) {
 		match = 0;
-		for (i=0; i<hdrs->count; i++) {
-			if (regexec(&rule->regexp, hdrs->strs[i], 0, NULL, 0)
+		for (j=0; j<hdrs->count; j++) {
+			if (regexec(&regexp, hdrs->strs[j], 0, NULL, 0)
 					== 0) {
 				match = 1;
 				break;
 			}
 		}
-		if (match != rule->not) {
-			char *logstr;
 
-			errno = 0;
-			switch(rule->act) {
-				case ALLOW:
-					logstr = "allowed";
-					break;
-				case MODERATE:
-					logstr = "moderated";
-					break;
-				default:
-				case DENY:
-					logstr = "denied";
-					break;
+		regfree(&regexp);
+		
+		if (match != not) {
+			if (match) {
+				hdr = mystrdup(hdrs->strs[j]);
+				chomp(hdr);
+				log_oper(listdir, OPLOGFNAME, "mlmmj-process: access -"
+						" A mail from \"%s\" with header \"%s\" was %s by"
+						" rule #%d \"%s\"", from, hdr, action_strs[act],
+						i, rule_strs->strs[i]);
+				myfree(hdr);
+			} else {
+				log_oper(listdir, OPLOGFNAME, "mlmmj-process: access -"
+						" A mail from \"%s\" was %s by rule #%d \"%s\""
+						" because no header matched.", from,
+						action_strs[act], i, rule_strs->strs[i]);
 			}
-
-			log_error(LOG_ARGS, "A mail was %s by rule #%d",
-					logstr, rule_nr);
-			ret = rule->act;
-			free_rules(head);
-			return ret;
+			return act;
 		}
 
-		rule = rule->next;
 	}
 
-	free_rules(head);
+	log_oper(listdir, OPLOGFNAME, "mlmmj-process: access -"
+			" A mail from \"%s\" didn't match any rules, and"
+			" was denied by default.", from);
 	return DENY;
 }
 
@@ -812,7 +794,8 @@ startaccess:
 		enum action accret;
 		/* Don't send a mail about denial to the list, but silently
 		 * discard and exit. Also do this in case it's turned off */
-		accret = do_access(access_rules, &allheaders);
+		accret = do_access(access_rules, &allheaders,
+								fromemails.emaillist[0], listdir);
 		if (accret == DENY) {
 			if ((strcasecmp(listaddr, fromemails.emaillist[0]) ==
 						0) || noaccessdenymails) {
