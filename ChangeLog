@@ -1,3 +1,4 @@
+ o Log the result of access rules in the operation log (Henne Vogelsang)
  o Ignore empty lines in control files
 1.2.13
  o Added Dutch listtexts (Raymond den Ouden)
