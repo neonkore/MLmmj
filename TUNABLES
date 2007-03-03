@@ -183,3 +183,12 @@ to specify several entries (one pr. line), it's marked "list".
    If this file exists, subscription to the nomail version of the mailinglist
    will be denied. (Useful if you don't want to allow nomail and notify users
    about it).
+
+ · maxmailsize			(normal)
+
+   With this option the maximal allowed size of incoming mails can be specified.
+
+ · nomaxmailsizedenymails	(boolean)
+
+   If this is set, no reject notifications caused by violation of maxmailsize
+   will be sent.

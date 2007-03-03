@@ -330,7 +330,9 @@ int main(int argc, char **argv)
 	int i, j, opt, noprocess = 0, moderated = 0;
 	int hdrfd, footfd, rawmailfd, donemailfd;
 	int subonlypost = 0, addrtocc = 1, intocc = 0, modnonsubposts = 0;
+	int maxmailsize = 0;
 	int notoccdenymails = 0, noaccessdenymails = 0, nosubonlydenymails = 0;
+	int nomaxmailsizedenymails = 0;
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
 	char *randomstr = NULL, *mqueuename;
@@ -338,7 +340,8 @@ int main(int argc, char **argv)
 	char *bindir, *subjectprefix, *discardname, *listaddr, *listdelim;
 	char *listfqdn, *listname, *fromaddr;
 	char *queuefilename, *recipextra = NULL, *owner = NULL;
-	char *maildata[2] = { "posteraddr", NULL };
+	char *maxmailsizestr;
+	char *maildata[4] = { "posteraddr", NULL, "maxmailsize", NULL };
 	char *envstr, *efrom;
 	struct stat st;
 	uid_t uid;
@@ -613,6 +616,63 @@ int main(int argc, char **argv)
 		return EXIT_SUCCESS;
 	}
 
+	listaddr = getlistaddr(listdir);
+	alternates = ctrlvalues(listdir, "listaddress");
+	
+	/* checking incoming mail's size */
+	maxmailsizestr = ctrlvalue(listdir, "maxmailsize");
+	if(maxmailsizestr) {
+		maxmailsize = atol(maxmailsizestr);
+		if(stat(donemailname, &st) < 0) {
+			log_error(LOG_ARGS, "stat(%s,..) failed", donemailname);
+			exit(EXIT_FAILURE);
+		}
+
+		if(st.st_size > maxmailsize) {
+
+			nomaxmailsizedenymails = statctrl(listdir, "nomaxmailsizedenymails");
+			if (nomaxmailsizedenymails) {
+				errno = 0;
+				log_error(LOG_ARGS, "Discarding %s due to"
+						" size limit (%d bytes too big)",
+						donemailname, (st.st_size - maxmailsize));
+				unlink(donemailname);
+				unlink(mailfile);
+				myfree(donemailname);
+				myfree(maxmailsizestr);
+				exit(EXIT_SUCCESS);
+			}
+
+			listdelim = getlistdelim(listdir);
+			listname = genlistname(listaddr);
+			listfqdn = genlistfqdn(listaddr);
+			fromaddr = concatstr(4, listname, listdelim,
+					"bounces-help@", listfqdn);
+			maildata[3] = maxmailsizestr;
+			queuefilename = prepstdreply(listdir,
+					"maxmailsize", "$listowner$",
+					fromemails.emaillist[0],
+					NULL, 2, maildata, NULL);
+			MY_ASSERT(queuefilename)
+			myfree(listdelim);
+			myfree(listname);
+			myfree(listfqdn);
+			unlink(donemailname);
+			unlink(mailfile);
+			myfree(donemailname);
+			myfree(maxmailsizestr);
+			execlp(mlmmjsend, mlmmjsend,
+					"-l", "1",
+					"-L", listdir,
+					"-T", fromemails.emaillist[0],
+					"-F", fromaddr,
+					"-m", queuefilename, (char *)NULL);
+		
+			log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
+			exit(EXIT_FAILURE);
+		}
+	}
+
 	/* discard malformed mail with invalid From: */
 	if(fromemails.emailcount != 1) { 
 		for(i = 0; i < fromemails.emailcount; i++)
@@ -654,9 +714,6 @@ int main(int argc, char **argv)
 	}
 
 	unlink(mailfile);
-
-	listaddr = getlistaddr(listdir);
-	alternates = ctrlvalues(listdir, "listaddress");
 
 	addrtocc = !(statctrl(listdir, "tocc"));
 	if(addrtocc) {
