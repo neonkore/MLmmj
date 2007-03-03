@@ -1,0 +1,11 @@
+Subject: Post to $listaddr$ denied due to size limit
+
+Hi, this is the mlmmj program managing the mailinglist
+
+$listaddr$
+
+I'm sorry to inform you that your message could not be delivered to the
+list. Your mail was rejected due to the size limit of $maxmailsize$ bytes.
+
+Thanks.
+
