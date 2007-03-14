@@ -1,3 +1,4 @@
+ o Fixed digest multipart boundary (Thanks to Ulrich Mueller)
  o Added support for mail size limit (Christoph Wilke)
  o Log the result of access rules in the operation log (Henne Vogelsang)
  o Ignore empty lines in control files

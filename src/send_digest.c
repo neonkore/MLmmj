@@ -313,7 +313,7 @@ errdighdrs:
 
 	if ((txtfd > 0) && !statctrl(listdir, "nodigesttext")) {
 
-		tmp = concatstr(3, "--", boundary,
+		tmp = concatstr(3, "\n--", boundary,
 				"\nContent-Type: text/plain; charset=UTF-8"
 				"\n\n");
 		if (writen(fd, tmp, strlen(tmp)) == -1) {
@@ -386,7 +386,7 @@ errdighdrs:
 		if (archivefd < 0)
 			continue;
 		
-		tmp = concatstr(7, "--", boundary,
+		tmp = concatstr(7, "\n--", boundary,
 				"\nContent-Type: message/rfc822"
 				"\nContent-Disposition: inline; filename=\"",
 					listname, "_", buf, ".eml\""
@@ -422,7 +422,7 @@ errdighdrs:
 		close(archivefd);
 	}
 
-	tmp = concatstr(3, "--", boundary, "--\n");
+	tmp = concatstr(3, "\n--", boundary, "--\n");
 	if (writen(fd, tmp, strlen(tmp)) == -1) {
 		log_error(LOG_ARGS, "Could not write digest end to '%s'",
 				queuename);
