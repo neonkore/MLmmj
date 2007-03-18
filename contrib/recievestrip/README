@@ -1,0 +1,33 @@
+mlmmj-recieve-strip is a replacement for mlmmj-recieve
+
+It opens the files control/mimedeny and control/mimestrip to get a list of mimetypes
+for parts of multipart/mime messages that should be denied or stripped
+
+The parts then get stripped directly when the mail is recieved.
+
+mlmmj-recieve-strip also appends an extra header
+
+X-ThisMailContainsUnwantedMimeParts: Y when the mail contains unwanted mime parts
+
+
+Usage:
+Compile the program in this directory with make and use "make install" to install it.
+Afterwards replace mlmmj-receive with mlmmj-receive-strip in /etc/aliases for the mailinglist
+you want to enable stripping and run newaliases
+
+
+Then create the files mimedeny mimestrip in the control directory of your mailinglist.
+
+If control/mimestrip for example contains:
+
+text/html
+application/octet-stream
+
+html texts and binarys will be stripped from the mail.
+
+When you also want to deny mails with certain mimeparts add the mimetypes to the mimedeny file
+and add the following lines to the access file in the control dir:
+
+deny ^X-ThisMailContainsUnwantedMimeParts: Y
+allow
+

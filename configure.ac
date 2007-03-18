@@ -42,4 +42,5 @@ AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([src/Makefile])
 AC_CONFIG_FILES([src/mlmmj-make-ml.sh])
 AC_CONFIG_FILES([listtexts/Makefile])
+AC_CONFIG_FILES([contrib/recievestrip/Makefile])
 AC_OUTPUT
