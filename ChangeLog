@@ -1,3 +1,4 @@
+ o Fixed address parsing for cases with quotes and multiple addresses
  o Added contrib/recievestrip/ MIME processor (Sascha Sommer)
  o Fixed digest multipart boundary (Thanks to Ulrich Mueller)
  o Added support for mail size limit (Christoph Wilke)
