@@ -1,0 +1,12 @@
+Subject: Beskeden til $listaddr$ afvist =?iso-8859-1?Q?p=E5_grund_af_en_st=F8rrelsesbegr=E6nsning?=
+
+Hej, dette er mlmmj programmet der bestyrer postlisten
+
+$listaddr$
+
+Jeg må desværre informere dig om at din besked ikke kunne blive
+leveret til listen. Din besked blev afvist på grund af en
+størrelsesbegrænsning på $maxmailsize$ bytes.
+
+Tak.
+
