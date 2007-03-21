@@ -62,8 +62,8 @@ int log_oper(const char *prefix, const char *basename, const char *fmt, ...)
 		if(rename(logfilename, tmp) < 0) {
 			log_error(LOG_ARGS, "Could not rename %s,%s",
 					logfilename, tmp);
-		myfree(tmp);
 		}
+		myfree(tmp);
 	}
 	
 	fd = open(logfilename, O_RDWR|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR);
