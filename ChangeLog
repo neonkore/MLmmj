@@ -1,3 +1,4 @@
+1.2.14-RC1
  o Fixed a small memory leak in log_oper() log rotation
  o Fixed address parsing for cases with quotes and multiple addresses
  o Added contrib/recievestrip/ MIME processor (Sascha Sommer)
