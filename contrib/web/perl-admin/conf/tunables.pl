@@ -151,3 +151,12 @@ mlmmj_boolean("nonomailsub",
 			  "If this option is set, subscription to the nomail version of the mailinglist ".
 			  "will be denied. (Useful if you don't want to allow nomail and notify users ".
 			  "about it).");
+
+mlmmj_string("maxmailsize",
+			 "Max. mail size",
+			 "With this option the maximal allowed size of incoming mails can be specified.");
+
+mlmmj_boolean("nomaxmailsizedenymails",
+			  "No max. mail size deny mails",
+			  "If this is set, no reject notifications caused by violation of maxmailsize ".
+			  "will be sent.");
