@@ -56,14 +56,16 @@
 enum action {
 	ALLOW,
 	DENY,
-	MODERATE
+	MODERATE,
+	DISCARD
 };
 
 
 static char *action_strs[] = {
 	"allowed",
 	"denied",
-	"moderated"
+	"moderated",
+	"discarded"
 };
 
 
@@ -179,6 +181,9 @@ static enum action do_access(struct strlist *rule_strs, struct strlist *hdrs,
 		} else if (strncmp(rule_ptr, "moderate", 8) == 0) {
 			rule_ptr += 8;
 			act = MODERATE;
+		} else if (strncmp(rule_ptr, "discard", 7) == 0) {
+			rule_ptr += 7;
+			act = DISCARD;
 		} else {
 			errno = 0;
 			log_error(LOG_ARGS, "Unable to parse rule #%d \"%s\":"
@@ -896,6 +901,20 @@ startaccess:
 			exit(EXIT_FAILURE);
 		} else if (accret == MODERATE) {
 			moderated = 1;
+		} else if (accret == DISCARD) {
+	                discardname = concatstr(3, listdir,
+                                "/queue/discarded/", randomstr);
+			myfree(randomstr);
+                	if(rename(donemailname, discardname) < 0) {
+				log_error(LOG_ARGS, "could not rename(%s,%s)",
+					    donemailname, discardname);
+				myfree(donemailname);
+				myfree(discardname);
+				exit(EXIT_FAILURE);
+			}
+			myfree(donemailname);
+			myfree(discardname);
+                	exit(EXIT_SUCCESS);
 		}
 	}
 	
