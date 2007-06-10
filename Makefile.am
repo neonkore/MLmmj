@@ -2,8 +2,7 @@
 
 AUTOMAKE_OPTIONS = foreign dist-bzip2
 EXTRA_DIST = include VERSION LICENSE UPGRADE src/log_error.c FAQ \
-	     TUNABLES README.access contrib man listtexts/cz listtexts/da \
-	     listtexts/de listtexts/es listtexts/fr listtexts/it listtexts/nl \
+	     TUNABLES README.access contrib man \
 	     README.exim4 README.sendmail README.security README.qmail
 CLEANFILES = *~ mlmmj-*.tar.*
 

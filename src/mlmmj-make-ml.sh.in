@@ -89,23 +89,33 @@ if [ -z "$OWNER" ]; then
 fi
 echo "$OWNER" > "$LISTDIR"/"control/owner"
 
-TEXTPATHDEF=@textlibdir@
-echo -n "The path to texts for the list? [$TEXTPATHDEF] : "
-read TEXTPATHIN
-if [ -z "$TEXTPATHIN" ] ; then
-	TEXTPATH=$TEXTPATHDEF
-else
-	TEXTPATH=$TEXTPATHIN
-fi
-if [ ! -d "$TEXTPATH" ]; then
+(
+	cd "@textlibdir@"
 	echo
-        echo "**NOTE** Could not copy the texts for the list"
-        echo "Please manually copy the files from the listtexts/ directory"
-        echo "in the source distribution of mlmmj."
-	sleep 2
-else
-        cp "$TEXTPATH"/* "$LISTDIR"/"text"
-fi
+	echo "For the list texts you can choose between the following languages or"
+	echo "give a absolute path to a directory containing the texts."
+	echo
+	echo "Available languages:"
+	ls
+
+	TEXTPATHDEF=en
+	echo -n "The path to texts for the list? [$TEXTPATHDEF] : "
+	read TEXTPATHIN
+	if [ -z "$TEXTPATHIN" ] ; then
+		TEXTPATH="$TEXTPATHDEF"
+	else
+		TEXTPATH="$TEXTPATHIN"
+	fi
+	if [ ! -d "$TEXTPATH" ]; then
+		echo
+		echo "**NOTE** Could not copy the texts for the list"
+		echo "Please manually copy the files from the listtexts/ directory"
+		echo "in the source distribution of mlmmj."
+		sleep 2
+	else
+		cp "$TEXTPATH"/* "$LISTDIR"/"text"
+	fi
+)
 
 LISTADDRESS="$LISTNAME@$FQDN"
 echo "$LISTADDRESS" > "$LISTDIR"/control/"listaddress"
