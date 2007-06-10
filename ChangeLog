@@ -1,3 +1,4 @@
+ o Added encoding headers for German listtexts (Ansgar Burchardt)
  o Fixed missing exit()s in case of failed execl() calls (Ansgar Burchardt)
  o Changed Message-ID headers to include FQDN (Ansgar Burchardt)
  o Added support for 'discard' keyword in access rules (Sascha Sommer)
