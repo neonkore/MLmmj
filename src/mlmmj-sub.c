@@ -170,6 +170,7 @@ void moderate_sub(const char *listdir, const char *listaddr,
 				"-R", replyto,
 				"-m", queuefilename, (char *)NULL);
 		log_error(LOG_ARGS, "execl() of '%s' failed", mlmmjsend);
+		exit(EXIT_FAILURE);
 	}
 	
 	myfree(to);
@@ -191,6 +192,7 @@ void moderate_sub(const char *listdir, const char *listaddr,
 				"-F", from,
 				"-m", queuefilename, (char *)NULL);
 	log_error(LOG_ARGS, "execl() of '%s' failed", mlmmjsend);
+	exit(EXIT_FAILURE);
 }
 
 void getaddrandtype(const char *listdir, const char *modstr,
