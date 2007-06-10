@@ -167,12 +167,17 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	infd = open(tmp, O_RDONLY);
 	myfree(tmp);
 	if(infd < 0) {
-		tmp = concatstr(2, DEFAULTTEXTDIR "/", filename);
+		tmp = concatstr(2, DEFAULTTEXTDIR "/default/", filename);
 		infd = open(tmp, O_RDONLY);
 		myfree(tmp);
 		if(infd < 0) {
-			log_error(LOG_ARGS, "Could not open std mail %s", filename);
-			return NULL;
+			tmp = concatstr(2, DEFAULTTEXTDIR "/en/", filename);
+			infd = open(tmp, O_RDONLY);
+			myfree(tmp);
+			if(infd < 0) {
+				log_error(LOG_ARGS, "Could not open std mail %s", filename);
+				return NULL;
+			}
 		}
 	}
 
