@@ -160,6 +160,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 {
 	int infd, outfd;
 	char *listaddr, *listdelim, *myfrom, *tmp, *subject, *retstr = NULL;
+	char *listfqdn;
 	char *myreplyto, *myto, *str = NULL, *mydate, *mymsgid;
 
 	tmp = concatstr(3, listdir, "/text/", filename);
@@ -177,6 +178,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 
 	listaddr = getlistaddr(listdir);
 	listdelim = getlistdelim(listdir);
+	listfqdn = genlistfqdn(listaddr);
 
 	tmp = mygetline(infd);
 	if(strncasecmp(tmp, "Subject:", 8) != 0) {
@@ -192,7 +194,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	myfrom = substitute(from, listaddr, listdelim, tokencount, data);
 	myto = substitute(to, listaddr, listdelim, tokencount, data);
 	mydate = gendatestr();
-	mymsgid = genmsgid();
+	mymsgid = genmsgid(listfqdn);
 
 	if(replyto) {
 		myreplyto = substitute(replyto, listaddr, listdelim,
@@ -216,7 +218,9 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	if(outfd < 0) {
 		log_error(LOG_ARGS, "Could not open std mail %s", retstr);
 		myfree(str);
+		myfree(listaddr);
 		myfree(listdelim);
+		myfree(listfqdn);
 		return NULL;
 	}
 
@@ -226,7 +230,9 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	if(writen(outfd, str, strlen(str)) < 0) {
 		log_error(LOG_ARGS, "Could not write std mail");
 		myfree(str);
+		myfree(listaddr);
 		myfree(listdelim);
+		myfree(listfqdn);
 		return NULL;
 	}
 
@@ -238,7 +244,9 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		myfree(tmp);
 		if(writen(outfd, str, strlen(str)) < 0) {
 			myfree(str);
+			myfree(listaddr);
 			myfree(listdelim);
+			myfree(listfqdn);
 			log_error(LOG_ARGS, "Could not write std mail");
 			return NULL;
 		}
@@ -247,6 +255,10 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	
 	fsync(outfd);
 	close(outfd);
+
+	myfree(listaddr);
+	myfree(listdelim);
+	myfree(listfqdn);
 
 	return retstr;
 }

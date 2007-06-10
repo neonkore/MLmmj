@@ -34,7 +34,7 @@ char *hostnamestr(void);
 char *mydirname(const char *path);
 char *mybasename(const char *path);
 char *cleanquotedp(const char *qpstr);
-char *genmsgid(void);
+char *genmsgid(const char *fqdn);
 char *gendatestr(void);
 
 #endif /* STRGEN_H */

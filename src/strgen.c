@@ -259,21 +259,14 @@ char *cleanquotedp(const char *qpstr)
 	return retstr;
 }
 
-char *genmsgid()
+char *genmsgid(const char *fqdn)
 {
-	size_t len = 128;
-	char *s = mymalloc(len), *retstr;
-	time_t t;
+	char buf[256];
 
-	t = time(NULL);
+	snprintf(buf, sizeof(buf), "Message-ID: <%ld-%d-mlmmj-%x@%s>\n",
+			(long int)time(NULL), (int)getpid(), random_int(), fqdn);
 
-	snprintf(s, len-1, "<%ld-%x-mlmmj-%x@%x.plonk", (long int)t,
-			random_int(), random_int(), random_int());
-
-	retstr = concatstr(3, "Message-ID: ", s, ">\n");
-	myfree(s);
-	
-	return retstr;
+	return mystrdup(buf);
 }
 
 char *gendatestr()
