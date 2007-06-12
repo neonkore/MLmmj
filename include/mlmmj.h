@@ -24,7 +24,7 @@
 #ifndef MLMMJ_GENERIC_INCLUDES
 #define MLMMJ_GENERIC_INCLUDES
 
-#include "../config.h"
+#include "config.h"
 
 #define RELAYHOST "127.0.0.1"
 #define READ_BUFSIZE 2048

@@ -29,7 +29,7 @@
 #include <unistd.h>
 
 #include "log_error.h"
-#include "../config.h"
+#include "config.h"
 #include "memory.h"
 
 #ifdef HAVE_SYSLOG_H
