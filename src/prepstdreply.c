@@ -272,6 +272,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 			mymsgid,
 			mydate,
 			"Subject: ", subject,
+			"\nMIME-Version: 1.0"
 			"\nContent-Type: text/plain; charset=utf-8"
 			"\nContent-Encoding: 8bit"
 			"\n", customheaders,
