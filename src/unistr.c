@@ -459,3 +459,116 @@ char *unistr_header_to_utf8(char *str)
 
 	return ret;
 }
+
+
+static int is_ok_in_header(char ch)
+{
+	if ((ch >= 'a') && (ch <= 'z')) return 1;
+	if ((ch >= 'A') && (ch <= 'Z')) return 1;
+	if ((ch >= '0') && (ch <= '9')) return 1;
+	if (ch == '.') return 1;
+	if (ch == ',') return 1;
+	if (ch == ':') return 1;
+	if (ch == ';') return 1;
+	if (ch == '-') return 1;
+	if (ch == ' ') return 1;
+	return 0;
+}
+
+
+/* IN: "hyggem\xC3\xB8de torsdag"
+ * OUT: "=?utf-8?Q?hyggem=C3=B8de_torsdag?="
+ */
+char *unistr_utf8_to_header(char *str)
+{
+	unistr *us;
+	char *ret;
+	char *p;
+	int clean;
+	char buf[4];
+
+	/* clean header? */
+	clean = 1;
+	for (p=str; *p; p++) {
+		if (!is_ok_in_header(*p)) {
+			clean = 0;
+			break;
+		}
+	}
+	if (clean) {
+		return mystrdup(str);
+	}
+
+	us = unistr_new();
+
+	unistr_append_usascii(us, "=?utf-8?q?", 10);
+	for (p=str; *p; p++) {
+		if (*p == 0x20) {
+			unistr_append_char(us, '_');
+		} else if (is_ok_in_header(*p)) {
+			unistr_append_char(us, *p);
+		} else {
+			snprintf(buf, sizeof(buf), "=%02X", (unsigned char)*p);
+			unistr_append_usascii(us, buf, 3);
+		}
+	}
+	unistr_append_usascii(us, "?=", 2);
+
+	ret = unistr_to_utf8(us);
+	unistr_free(us);
+
+	return ret;
+}
+
+
+/* IN: "hyggem\\u00F8de torsdag"
+ * OUT: "hyggem\xC3\xB8de torsdag"
+ */
+char *unistr_escaped_to_utf8(char *str)
+{
+	unistr_char ch;
+	unistr *us;
+	char *ret;
+	char u[5];
+
+	us = unistr_new();
+
+	while (*str) {
+		if (*str == '\\') {
+			str++;
+			if (*str == '\\') {
+				str++;
+				unistr_append_char(us, '\\');
+				continue;
+			} else if (*str == 'u') {
+				str++;
+				if (!isxdigit(str[0]) ||
+						!isxdigit(str[1]) ||
+						!isxdigit(str[2]) ||
+						!isxdigit(str[3])) {
+					unistr_append_char(us, '?');
+					continue;
+				}
+				u[0] = *str++;
+				u[1] = *str++;
+				u[2] = *str++;
+				u[3] = *str++;
+				u[4] = '\0';
+				ch = strtol(u, NULL, 16);
+				unistr_append_char(us, ch);
+				continue;
+			} else {
+				unistr_append_char(us, '?');
+				continue;
+			}
+		} else {
+			unistr_append_usascii(us, str, 1);
+			str++;
+		}
+	}
+
+	ret = unistr_to_utf8(us);
+	unistr_free(us);
+
+	return ret;
+}

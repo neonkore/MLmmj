@@ -140,28 +140,29 @@ mlmmj_process_SOURCES = mlmmj-process.c writen.c find_email_adr.c \
 			do_all_the_voodo_here.c mygetline.c gethdrline.c \
 			log_error.c statctrl.c ctrlvalue.c dumpfd2fd.c \
 			subscriberfuncs.c ctrlvalues.c memory.c log_oper.c \
-			send_list.c readn.c getlistdelim.c
+			send_list.c readn.c getlistdelim.c unistr.c
 
 
 mlmmj_sub_SOURCES = mlmmj-sub.c writen.c mylocking.c \
 			getlistaddr.c chomp.c random-int.c strgen.c \
 			subscriberfuncs.c print-version.c \
 			log_error.c mygetline.c prepstdreply.c memory.c \
-			statctrl.c readn.c getlistdelim.c ctrlvalues.c
+			statctrl.c readn.c getlistdelim.c ctrlvalues.c \
+			unistr.c
 
 
 mlmmj_unsub_SOURCES = mlmmj-unsub.c writen.c mylocking.c \
 			getlistaddr.c chomp.c subscriberfuncs.c random-int.c \
 			strgen.c print-version.c log_error.c mygetline.c \
 			prepstdreply.c memory.c statctrl.c readn.c \
-			getlistdelim.c
+			getlistdelim.c unistr.c
 
 
 mlmmj_bounce_SOURCES = mlmmj-bounce.c print-version.c log_error.c \
 		       subscriberfuncs.c strgen.c random-int.c writen.c \
 		       prepstdreply.c mygetline.c chomp.c getlistaddr.c \
 		       memory.c find_email_adr.c gethdrline.c readn.c \
-		       getlistdelim.c
+		       getlistdelim.c unistr.c
 
 
 mlmmj_maintd_SOURCES = mlmmj-maintd.c print-version.c log_error.c mygetline.c \
@@ -189,7 +190,7 @@ am_mlmmj_bounce_OBJECTS = mlmmj-bounce.$(OBJEXT) print-version.$(OBJEXT) \
 	random-int.$(OBJEXT) writen.$(OBJEXT) prepstdreply.$(OBJEXT) \
 	mygetline.$(OBJEXT) chomp.$(OBJEXT) getlistaddr.$(OBJEXT) \
 	memory.$(OBJEXT) find_email_adr.$(OBJEXT) gethdrline.$(OBJEXT) \
-	readn.$(OBJEXT) getlistdelim.$(OBJEXT)
+	readn.$(OBJEXT) getlistdelim.$(OBJEXT) unistr.$(OBJEXT)
 mlmmj_bounce_OBJECTS = $(am_mlmmj_bounce_OBJECTS)
 mlmmj_bounce_LDADD = $(LDADD)
 mlmmj_bounce_DEPENDENCIES =
@@ -223,7 +224,7 @@ am_mlmmj_process_OBJECTS = mlmmj-process.$(OBJEXT) writen.$(OBJEXT) \
 	statctrl.$(OBJEXT) ctrlvalue.$(OBJEXT) dumpfd2fd.$(OBJEXT) \
 	subscriberfuncs.$(OBJEXT) ctrlvalues.$(OBJEXT) memory.$(OBJEXT) \
 	log_oper.$(OBJEXT) send_list.$(OBJEXT) readn.$(OBJEXT) \
-	getlistdelim.$(OBJEXT)
+	getlistdelim.$(OBJEXT) unistr.$(OBJEXT)
 mlmmj_process_OBJECTS = $(am_mlmmj_process_OBJECTS)
 mlmmj_process_LDADD = $(LDADD)
 mlmmj_process_DEPENDENCIES =
@@ -253,7 +254,8 @@ am_mlmmj_sub_OBJECTS = mlmmj-sub.$(OBJEXT) writen.$(OBJEXT) \
 	random-int.$(OBJEXT) strgen.$(OBJEXT) subscriberfuncs.$(OBJEXT) \
 	print-version.$(OBJEXT) log_error.$(OBJEXT) mygetline.$(OBJEXT) \
 	prepstdreply.$(OBJEXT) memory.$(OBJEXT) statctrl.$(OBJEXT) \
-	readn.$(OBJEXT) getlistdelim.$(OBJEXT) ctrlvalues.$(OBJEXT)
+	readn.$(OBJEXT) getlistdelim.$(OBJEXT) ctrlvalues.$(OBJEXT) \
+	unistr.$(OBJEXT)
 mlmmj_sub_OBJECTS = $(am_mlmmj_sub_OBJECTS)
 mlmmj_sub_LDADD = $(LDADD)
 mlmmj_sub_DEPENDENCIES =
@@ -263,7 +265,7 @@ am_mlmmj_unsub_OBJECTS = mlmmj-unsub.$(OBJEXT) writen.$(OBJEXT) \
 	subscriberfuncs.$(OBJEXT) random-int.$(OBJEXT) strgen.$(OBJEXT) \
 	print-version.$(OBJEXT) log_error.$(OBJEXT) mygetline.$(OBJEXT) \
 	prepstdreply.$(OBJEXT) memory.$(OBJEXT) statctrl.$(OBJEXT) \
-	readn.$(OBJEXT) getlistdelim.$(OBJEXT)
+	readn.$(OBJEXT) getlistdelim.$(OBJEXT) unistr.$(OBJEXT)
 mlmmj_unsub_OBJECTS = $(am_mlmmj_unsub_OBJECTS)
 mlmmj_unsub_LDADD = $(LDADD)
 mlmmj_unsub_DEPENDENCIES =

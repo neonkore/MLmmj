@@ -1,4 +1,5 @@
 /* Copyright (C) 2004 Mads Martin Joergensen <mmj at mmj.dk>
+ * Copyright (C) 2007 Morten K. Poulsen <morten at afdelingp.dk>
  *
  * $Id$
  *
@@ -40,6 +41,7 @@
 #include "getlistaddr.h"
 #include "mlmmj.h"
 #include "getlistdelim.h"
+#include "unistr.h"
 
 char *substitute(const char *line, const char *listaddr, const char *listdelim,
 		 size_t datacount, char **data)
@@ -154,47 +156,80 @@ concatandreturn:
 	return retstr;
 }
 
+
+int open_listtext(const char *listdir, const char *filename)
+{
+	char *tmp;
+	int fd;
+
+	tmp = concatstr(3, listdir, "/text/", filename);
+	fd = open(tmp, O_RDONLY);
+	myfree(tmp);
+	if (fd >= 0)
+		return fd;
+
+	tmp = concatstr(2, DEFAULTTEXTDIR "/default/", filename);
+	fd = open(tmp, O_RDONLY);
+	myfree(tmp);
+	if (fd >= 0)
+		return fd;
+
+	tmp = concatstr(2, DEFAULTTEXTDIR "/en/", filename);
+	fd = open(tmp, O_RDONLY);
+	myfree(tmp);
+	if (fd >= 0)
+		return fd;
+
+	log_error(LOG_ARGS, "Could not open listtext '%s'", filename);
+	return -1;
+}
+
+
 char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		   const char *to, const char *replyto, size_t tokencount,
 		   char **data, char *customheaders)
 {
 	int infd, outfd;
 	char *listaddr, *listdelim, *myfrom, *tmp, *subject, *retstr = NULL;
-	char *listfqdn;
+	char *listfqdn, *line, *utfline, *utfsub, *utfsub2;
 	char *myreplyto, *myto, *str = NULL, *mydate, *mymsgid;
 
-	tmp = concatstr(3, listdir, "/text/", filename);
-	infd = open(tmp, O_RDONLY);
-	myfree(tmp);
-	if(infd < 0) {
-		tmp = concatstr(2, DEFAULTTEXTDIR "/default/", filename);
-		infd = open(tmp, O_RDONLY);
-		myfree(tmp);
-		if(infd < 0) {
-			tmp = concatstr(2, DEFAULTTEXTDIR "/en/", filename);
-			infd = open(tmp, O_RDONLY);
-			myfree(tmp);
-			if(infd < 0) {
-				log_error(LOG_ARGS, "Could not open std mail %s", filename);
-				return NULL;
-			}
-		}
+	if ((infd = open_listtext(listdir, filename)) < 0) {
+		return NULL;
 	}
 
 	listaddr = getlistaddr(listdir);
 	listdelim = getlistdelim(listdir);
 	listfqdn = genlistfqdn(listaddr);
 
-	tmp = mygetline(infd);
-	if(strncasecmp(tmp, "Subject:", 8) != 0) {
-		log_error(LOG_ARGS, "No Subject in listtexts. Using "
-				"standard subject");
-		subject = mystrdup("Subject: mlmmj administrativa\n");
-	} else
-		subject = substitute(tmp, listaddr, listdelim, tokencount,
+	line = mygetline(infd);
+	if(!line || (strncasecmp(line, "Subject: ", 9) != 0)) {
+		log_error(LOG_ARGS, "No Subject in '%s' listtext. Using "
+				"standard subject", filename);
+		subject = mystrdup("mlmmj administrativa");
+	} else {
+		chomp(line);
+		utfsub = unistr_escaped_to_utf8(line + 9);
+		utfsub2 = substitute(utfsub, listaddr, listdelim, tokencount,
 				     data);
+		subject = unistr_utf8_to_header(utfsub2);
+		myfree(utfsub);
+		myfree(utfsub2);
+		myfree(line);
 
-	myfree(tmp);
+		/* skip empty line after subject */
+		line = mygetline(infd);
+		if (line && (line[0] == '\n')) {
+			myfree(line);
+			line = NULL;
+		}
+	}
+	if (line) {
+		utfline = unistr_escaped_to_utf8(line);
+		myfree(line);
+	} else {
+		utfline = NULL;
+	}
 	
 	myfrom = substitute(from, listaddr, listdelim, tokencount, data);
 	myto = substitute(to, listaddr, listdelim, tokencount, data);
@@ -226,11 +261,23 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		myfree(listaddr);
 		myfree(listdelim);
 		myfree(listfqdn);
+		myfree(utfline);
 		return NULL;
 	}
 
-	str = concatstr(10, "From: ", myfrom, "\nTo: ", myto, "\n", myreplyto,
-			   mymsgid, mydate, subject, customheaders);
+	str = concatstr(14,
+			"From: ", myfrom,
+			"\nTo: ", myto,
+			"\n", myreplyto,
+			mymsgid,
+			mydate,
+			"Subject: ", subject,
+			"\nContent-Type: text/plain; charset=utf-8"
+			"\nContent-Encoding: 8bit"
+			"\n", customheaders,
+			"\n", utfline);
+
+	myfree(utfline);
 
 	if(writen(outfd, str, strlen(str)) < 0) {
 		log_error(LOG_ARGS, "Could not write std mail");
@@ -245,8 +292,13 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 
 	while((str = mygetline(infd))) {
 		tmp = str;
-		str = substitute(tmp, listaddr, listdelim, tokencount, data);
+		utfline = unistr_escaped_to_utf8(str);
 		myfree(tmp);
+
+		tmp = utfline;
+		str = substitute(utfline, listaddr, listdelim, tokencount, data);
+		myfree(tmp);
+
 		if(writen(outfd, str, strlen(str)) < 0) {
 			myfree(str);
 			myfree(listaddr);

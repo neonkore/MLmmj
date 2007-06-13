@@ -43,5 +43,7 @@ void unistr_append_iso88591(unistr *str, char *binary, size_t bin_len);
 void unistr_dump(unistr *str);
 char *unistr_to_utf8(unistr *str);
 char *unistr_header_to_utf8(char *str);
+char *unistr_utf8_to_header(char *str);
+char *unistr_escaped_to_utf8(char *str);
 
 #endif

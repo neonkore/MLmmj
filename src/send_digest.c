@@ -44,6 +44,7 @@
 #include "gethdrline.h"
 #include "statctrl.h"
 #include "unistr.h"
+#include "chomp.h"
 
 
 struct mail {
@@ -182,6 +183,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	int i, fd, archivefd, status, hdrfd, txtfd;
 	char buf[45];
 	char *tmp, *queuename = NULL, *archivename, *subject, *line = NULL;
+	char *utfsub, *utfsub2, *utfline;
 	char *boundary, *listaddr, *listdelim, *listname, *listfqdn;
 	char *subst_data[10];
 	pid_t childpid, pid;
@@ -222,9 +224,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	listfqdn = genlistfqdn(listaddr);
 	listdelim = getlistdelim(listdir);
 	
-	tmp = concatstr(2, listdir, "/text/digest");
-	txtfd = open(tmp, O_RDONLY);
-	myfree(tmp);
+	txtfd = open_listtext(listdir, "digest");
 	if (txtfd < 0) {
 		log_error(LOG_ARGS, "Notice: Could not open std mail digest");
 	}
@@ -252,22 +252,28 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	subst_data[8] = "digestthreads";
 	subst_data[9] = thread_list(listdir, firstindex, lastindex);
 
-	if ((txtfd > 0) && (line = mygetline(txtfd)) &&
-			(strncasecmp(line, "Subject: ", 9) == 0)) {
-		subject = substitute(line + 9, listaddr, listdelim,
-				5, subst_data);
+	if ((txtfd < 0) || !(line = mygetline(txtfd)) ||
+			(strncasecmp(line, "Subject: ", 9) != 0)) {
+
+		utfsub = mystrdup("Digest of $listaddr$ issue $digestissue$"
+				" ($digestinterval$)");
 	} else {
-		subject = substitute("Digest of $listaddr$ issue $digestissue$"
-				" ($digestinterval$)\n", listaddr, listdelim,
-				5, subst_data);
+
+		chomp(line);
+		utfsub = unistr_escaped_to_utf8(line + 9);
 	}
 
-	tmp = concatstr(9, "From: ", listname, listdelim, "help@", listfqdn,
+	utfsub2 = substitute(utfsub, listaddr, listdelim, 5, subst_data);
+	subject = unistr_utf8_to_header(utfsub2);
+	myfree(utfsub);
+	myfree(utfsub2);
+
+	tmp = concatstr(10, "From: ", listname, listdelim, "help@", listfqdn,
 			   "\nMIME-Version: 1.0"
 			   "\nContent-Type: multipart/" DIGESTMIMETYPE "; "
 			   "boundary=", boundary,
-			   "\nSubject: ", subject);
-	/* subject includes a newline */
+			   "\nSubject: ", subject,
+			   "\n");
 
 	myfree(listfqdn);
 	myfree(subject);
@@ -315,6 +321,7 @@ errdighdrs:
 
 		tmp = concatstr(3, "\n--", boundary,
 				"\nContent-Type: text/plain; charset=UTF-8"
+				"\nContent-Encoding: 8bit"
 				"\n\n");
 		if (writen(fd, tmp, strlen(tmp)) == -1) {
 			log_error(LOG_ARGS, "Could not write digest text/plain"
@@ -351,9 +358,13 @@ errdighdrs:
 
 		if (line) {
 			do {
-				tmp = substitute(line, listaddr, listdelim,
-						5, subst_data);
+				utfline = unistr_escaped_to_utf8(line);
 				myfree(line);
+
+				tmp = substitute(utfline, listaddr, listdelim,
+						5, subst_data);
+				myfree(utfline);
+
 				if(writen(fd, tmp, strlen(tmp)) < 0) {
 					myfree(tmp);
 					log_error(LOG_ARGS, "Could not write"
