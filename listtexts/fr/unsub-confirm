@@ -1,4 +1,4 @@
-Subject: Confirmation de votre =?iso-8859-1?Q?d=E9sincription?= de la liste $listaddr$
+Subject: Confirmation de votre d\u00E9sincription de la liste $listaddr$
 
 Bonjour, ceci est le programme mlmmj de gestion de la liste de diffusion
 $listaddr$
@@ -6,11 +6,11 @@ $listaddr$
 Pour confirmer que votre adresse
 $subaddr$
 
-a bien été retirée de la liste merci de répondre à cette adresse :
+a bien \u00E9t\u00E9 retir\u00E9e de la liste merci de r\u00E9pondre \u00E0 cette adresse :
 $confaddr$
 
-Votre client de messagerie va certainement répondre à l'adresse de confirmation quand vous cliquerez sur le bouton répondre.
+Votre client de messagerie va certainement r\u00E9pondre \u00E0 l'adresse de confirmation quand vous cliquerez sur le bouton r\u00E9pondre.
 
-Si vous n'êtes pas inscrit à la list vous ne recevrez pas de réponse.
+Si vous n'\u00EAtes pas inscrit \u00E0 la list vous ne recevrez pas de r\u00E9ponse.
 
-Vous pouvez voir dans l'enveloppe "Return-Path" de l'entête d'un message de la liste avec quelle adresse vous vous êtes inscrit.
+Vous pouvez voir dans l'enveloppe "Return-Path" de l'ent\u00EAte d'un message de la liste avec quelle adresse vous vous \u00EAtes inscrit.

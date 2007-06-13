@@ -1,24 +1,24 @@
-Subject: =?iso-8859-1?Q?Tilmeldingsforesp=F8rgsel?= for $listaddr$
+Subject: Tilmeldingsforesp\u00F8rgsel for $listaddr$
 
 Hej, dette er mlmmj programmet der bestyrer postlisten
 
 $listaddr$
 
-Der venter en tilmeldingsforespørgsel fra
+Der venter en tilmeldingsforesp\u00F8rgsel fra
 
 $subaddr$
 
-For at godkende denne forespørgsel, send et svar til
+For at godkende denne foresp\u00F8rgsel, send et svar til
 
 $moderateaddr$
 
 Din mailprogram vil sandsynligvis automatisk besvare til denne
-bekræftelses adresse, når du trykker på "Besvar" knappen.
+bekr\u00E6ftelses adresse, n\u00E5r du trykker p\u00E5 "Besvar" knappen.
 
-Hvis du ikke vil godkende denne forespørgsel, skal du bare ignorere
+Hvis du ikke vil godkende denne foresp\u00F8rgsel, skal du bare ignorere
 denne besked.
 
-Følgende tilmeldings moderatore har modtaget denne mail:
+F\u00F8lgende tilmeldings moderatore har modtaget denne mail:
 
 $moderators$
 

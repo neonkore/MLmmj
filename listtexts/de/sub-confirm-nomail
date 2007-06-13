@@ -1,4 +1,4 @@
-Subject: =?iso-8859-1?Q?Best=E4tigen?= Sie bitte das Eintragen auf die Nomail-Version der Liste $listaddr$
+Subject: Best\u00E4tigen Sie bitte das Eintragen auf die Nomail-Version der Liste $listaddr$
 
 Hi, dies ist das mlmmj-Programm, das die Mailingliste
 
@@ -6,7 +6,7 @@ $listaddr$
 
 verwaltet.
 
-Um zu bestätigen, dass Sie die Adresse 
+Um zu best\u00E4tigen, dass Sie die Adresse 
 
 $subaddr$
 
@@ -15,13 +15,13 @@ bitte eine Antwort-Mail an folgende Adresse:
 
 $confaddr$
 
-Diese Bestätigung erfüllt zwei Zwecke: Wenn Sie diese Mail erhalten
+Diese Best\u00E4tigung erf\u00FCllt zwei Zwecke: Wenn Sie diese Mail erhalten
 haben, kann die Liste Nachrichten an Sie zustellen. Zweitens wird
-sichergestellt, dass niemand diese Adresse auf eine Liste einträgt, 
-ohne dass Sie dies möchten.
+sichergestellt, dass niemand diese Adresse auf eine Liste eintr\u00E4gt, 
+ohne dass Sie dies m\u00F6chten.
 
 Ihr Mail-Programm sollte, wenn Sie die Antworten-Funktion benutzen,
-automatisch eine Mail an die Bestätigungsadresse schicken.
+automatisch eine Mail an die Best\u00E4tigungsadresse schicken.
 
 Der Betreff und der Text spielen bei dieser Mail keine Rolle.
 

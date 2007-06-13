@@ -1,11 +1,11 @@
-Subject: Bienvenue =?iso-8859-1?Q?=E0?= la version sans mail de la liste $listaddr$
+Subject: Bienvenue \u00E0 la version sans mail de la liste $listaddr$
 
-Bienvenue ! Vous avez bien été inscrit à la version sans mail de la liste de diffusion :
+Bienvenue ! Vous avez bien \u00E9t\u00E9 inscrit \u00E0 la version sans mail de la liste de diffusion :
 $listaddr$
 
-Pour vous désinscrire envoyez un message à :
+Pour vous d\u00E9sinscrire envoyez un message \u00E0 :
 $listunsubaddr$
 
-Et pour de l'aide envoyez un message à : 
+Et pour de l'aide envoyez un message \u00E0 : 
 $helpaddr$
 

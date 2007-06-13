@@ -1,10 +1,10 @@
-Subject: Bekræft afmelding af $listaddr$
+Subject: Bekr\u00E6ft afmelding af $listaddr$
 
 Hej, dette er mlmmj programmet der bestyrer postlisten
 
 $listaddr$
 
-For at bekræft at addressen 
+For at bekr\u00E6ft at addressen 
 
 $subaddr$
 
@@ -13,7 +13,7 @@ skal afmeldes af postlisten, send et svar til
 $confaddr$
 
 Dit mailprogram vil sandsynligvis automatisk besvare til denne
-bekræftelses addresse, når du trykker på "Besvar" knappen
+bekr\u00E6ftelses addresse, n\u00E5r du trykker p\u00E5 "Besvar" knappen
 
 Hvis du ikke er tilmeldt listen, modtager du ikke noget svar. Du kan
 se i "Return-Path" headeren i en mail til postlisten, hvilken addresse

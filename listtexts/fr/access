@@ -1,10 +1,10 @@
-Subject: Envoi =?iso-8859-1?Q?=E0?= $listaddr$ interdit
+Subject: Envoi \u00E0 $listaddr$ interdit
 
 Bonjour, ceci est le programme mlmmj de gestion de la liste de diffusion
 $listaddr$
 
-Je suis désolé de vous informer que votre message ne peut être délivré à la liste.
-Votre mail à été rejeté en raison d'une règle paramétrée par l'administrateur.
+Je suis d\u00E9sol\u00E9 de vous informer que votre message ne peut \u00EAtre d\u00E9livr\u00E9 \u00E0 la liste.
+Votre mail \u00E0 \u00E9t\u00E9 rejet\u00E9 en raison d'une r\u00E8gle param\u00E9tr\u00E9e par l'administrateur.
 
 Merci.
 

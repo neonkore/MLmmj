@@ -1,4 +1,4 @@
-Subject: =?iso-8859-1?Q?Best=E4tigen?= Sie bitte das Austragen aus der Nomail Version der Liste $listaddr$
+Subject: Best\u00E4tigen Sie bitte das Austragen aus der Nomail Version der Liste $listaddr$
 
 Hi, dies ist das mlmmj-Programm, das die Mailingliste
 
@@ -6,7 +6,7 @@ $listaddr$
 
 verwaltet.
 
-Um zu bestätigen, dass Sie die Adresse
+Um zu best\u00E4tigen, dass Sie die Adresse
 
 $subaddr$
 
@@ -16,10 +16,10 @@ Antwort-Mail an folgende Adresse:
 $confaddr$
 
 Ihr Mail-Programm sollte, wenn Sie die Antworten-Funktion verwenden,
-automatisch eine Mail an die Bestätigungsadresse schicken.
+automatisch eine Mail an die Best\u00E4tigungsadresse schicken.
 
 Wenn Sie nicht auf der Liste eingetragen sind, werden Sie keine Antwort
 erhalten. Um zu sehen, mit welcher Adresse Sie auf der Liste eingetragen
-sind, überprüfen Sie bitte die Willkommen-Nachricht, oder überprüfen Sie
+sind, \u00FCberpr\u00FCfen Sie bitte die Willkommen-Nachricht, oder \u00FCberpr\u00FCfen Sie
 die Header irgendeiner Nachricht an die Liste.
 

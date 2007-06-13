@@ -1,4 +1,4 @@
-Subject: Confirmer votre inscription au =?iso-8859-1?Q?r=E9sum=E9?= de la liste $listaddr$
+Subject: Confirmer votre inscription au r\u00E9sum\u00E9 de la liste $listaddr$
 
 Bonjour, ceci est le programme mlmmj de gestion de la liste de diffusion
 $listaddr$
@@ -6,14 +6,14 @@ $listaddr$
 Pour confirmer que vous voulez que l'adresse
 $subaddr$
 
-soit inscrite au résumé de la liste merci d'envoyer une réponse à cette adresse :
+soit inscrite au r\u00E9sum\u00E9 de la liste merci d'envoyer une r\u00E9ponse \u00E0 cette adresse :
 $confaddr$
 
-Cette confirmation à deux objectifs.
-Premierement, tester que des mails peuvent être envoyés à votre adresse.
-Deuxiemement être certain que ce n'est pas quelqu'un d'autre qui tente de vous inscrire sans votre permission.
+Cette confirmation \u00E0 deux objectifs.
+Premierement, tester que des mails peuvent \u00EAtre envoy\u00E9s \u00E0 votre adresse.
+Deuxiemement \u00EAtre certain que ce n'est pas quelqu'un d'autre qui tente de vous inscrire sans votre permission.
 
-Votre client de messagerie va certainement répondre à l'adresse de confirmation quand vous cliquerez sur le bouton répondre.
+Votre client de messagerie va certainement r\u00E9pondre \u00E0 l'adresse de confirmation quand vous cliquerez sur le bouton r\u00E9pondre.
 
-Le sujet et le corps du texte peuvent être ce que vous souhaitez.
+Le sujet et le corps du texte peuvent \u00EAtre ce que vous souhaitez.
 

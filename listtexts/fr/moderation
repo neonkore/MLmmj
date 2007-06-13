@@ -2,17 +2,17 @@ Subject: Moderation requise pour la liste $listaddr$
 
 Bonjour,
 
-Quelqu'un a soumis un message à la modération pour :
+Quelqu'un a soumis un message \u00E0 la mod\u00E9ration pour :
 $listaddr$
 
-Pour accepter, envoyez un message à :
+Pour accepter, envoyez un message \u00E0 :
 $moderateaddr$
 
-Votre client de messagerie repondra probablement automatiquement à cette adresse quand vous cliquerez sur le bouton
-répondre.
+Votre client de messagerie repondra probablement automatiquement \u00E0 cette adresse quand vous cliquerez sur le bouton
+r\u00E9pondre.
 Si vous ne voulez pas accepter le message ignorez simplement ce message.
 
-Les moderateurs suivants ont reçu cet email :
+Les moderateurs suivants ont re\u00E7u cet email :
 $moderators$
 
---- Ci dessous les 100 lignes du message soumis à la modération  --->
+--- Ci dessous les 100 lignes du message soumis \u00E0 la mod\u00E9ration  --->

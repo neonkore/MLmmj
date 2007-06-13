@@ -1,12 +1,12 @@
-Subject: Beskeden til $listaddr$ afvist =?iso-8859-1?Q?p=E5_grund_af_en_st=F8rrelsesbegr=E6nsning?=
+Subject: Beskeden til $listaddr$ afvist p\u00E5 grund af en st\u00F8rrelsesbegr\u00E6nsning
 
 Hej, dette er mlmmj programmet der bestyrer postlisten
 
 $listaddr$
 
-Jeg må desværre informere dig om at din besked ikke kunne blive
-leveret til listen. Din besked blev afvist på grund af en
-størrelsesbegrænsning på $maxmailsize$ bytes.
+Jeg m\u00E5 desv\u00E6rre informere dig om at din besked ikke kunne blive
+leveret til listen. Din besked blev afvist p\u00E5 grund af en
+st\u00F8rrelsesbegr\u00E6nsning p\u00E5 $maxmailsize$ bytes.
 
 Tak.
 

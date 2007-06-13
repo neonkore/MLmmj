@@ -1,15 +1,15 @@
-Subject: Bienvenido a la versión sin correo de $listaddr$
+Subject: Bienvenido a la versi\u00F3n sin correo de $listaddr$
 
-¡Bienvenido!
-Se ha suscrito a la versión sin correo de la lista de distribución
+\u00A1Bienvenido!
+Se ha suscrito a la versi\u00F3n sin correo de la lista de distribuci\u00F3n
 
 $listaddr$
 
-Para darse de baja envíe un mensaje a:
+Para darse de baja env\u00EDe un mensaje a:
 
 $listunsubaddr$
 
-Y para obtener ayuda, envíe un mensaje a:
+Y para obtener ayuda, env\u00EDe un mensaje a:
 
 $helpaddr$
 

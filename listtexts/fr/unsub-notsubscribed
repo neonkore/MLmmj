@@ -1,13 +1,13 @@
-Subject: Vous =?iso-8859-1?Q?n'=EAtes_pas_inscrit_=E0?= la liste $listaddr$
+Subject: Vous n'\u00EAtes pas inscrit \u00E0 la liste $listaddr$
 
 Bonjour, ceci est le programme mlmmj de gestion de la liste de diffusion
 $listaddr$
 
-Vous n'êtes pas inscrit à la liste de de diffusion, de ce fait vous ne pouvez vous désinscrire.
+Vous n'\u00EAtes pas inscrit \u00E0 la liste de de diffusion, de ce fait vous ne pouvez vous d\u00E9sinscrire.
 
-Pour vous inscrire veuillez envoyer un message à :
+Pour vous inscrire veuillez envoyer un message \u00E0 :
 $listsubaddr$
 
-Et pour obtenir de l'aide envoyez un message à:
+Et pour obtenir de l'aide envoyez un message \u00E0:
 $helpaddr$
 

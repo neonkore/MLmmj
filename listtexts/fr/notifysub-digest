@@ -1,7 +1,7 @@
-Subject: $newsub$ est inscrit au =?iso-8859-1?Q?r=E9sum=E9?= de la liste $listaddr$
+Subject: $newsub$ est inscrit au r\u00E9sum\u00E9 de la liste $listaddr$
 
 Bonjour, ceci est le programme mlmmj de gestion de la liste de diffusion
 $listaddr$
 
-L'adresse suivante viens juste d'être inscrit au résumé de la liste de diffusion :
+L'adresse suivante viens juste d'\u00EAtre inscrit au r\u00E9sum\u00E9 de la liste de diffusion :
 $newsub$

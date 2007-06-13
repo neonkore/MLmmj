@@ -1,4 +1,4 @@
-Subject: Beitrag zur Liste $listaddr$ wegen =?iso-8859-1?Q?Gr=F6=DFen=FCberschreitung?= abgelehnt
+Subject: Beitrag zur Liste $listaddr$ wegen Gr\u00F6\u00DFen\u00FCberschreitung abgelehnt
 
 Hallo, dies ist das mlmmj Programm das die Mailingliste
 
@@ -7,5 +7,5 @@ $listaddr$
 verwaltet.
 
 Tut mir leid aber Ihre Mail konnte nicht versandt werden. Die von
-Ihnen verschickte Mail überschreitet das bestehende Größenlimit
+Ihnen verschickte Mail \u00FCberschreitet das bestehende Gr\u00F6\u00DFenlimit
 von $maxmailsize$ Bytes.

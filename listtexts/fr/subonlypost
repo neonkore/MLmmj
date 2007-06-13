@@ -1,4 +1,4 @@
-Subject: Vous devez =?iso-8859-1?Q?=EAtre?= inscrit pour poster sur la liste $listaddr$
+Subject: Vous devez \u00EAtre inscrit pour poster sur la liste $listaddr$
 
 Bonjour, ceci est le programme mlmmj de gestion de la liste de diffusion
 $listaddr$
@@ -6,10 +6,10 @@ $listaddr$
 Vous avez essayez d'envoyer un email depuis l'adresse :
 $posteraddr$
 
-Mais cette adresse n'est pas inscrite à la liste, hors seulement les inscrits peuvent poster sur cette liste de diffusion.
+Mais cette adresse n'est pas inscrite \u00E0 la liste, hors seulement les inscrits peuvent poster sur cette liste de diffusion.
 
-Si vous pensez que vous êtes bien inscrit veuillez verifier svp avec quelle adresse email vous avez reçu votre message de bienvenue.
-Ou verifier n'importe quelle entête d'un mail reçu de la liste de diffusion.
+Si vous pensez que vous \u00EAtes bien inscrit veuillez verifier svp avec quelle adresse email vous avez re\u00E7u votre message de bienvenue.
+Ou verifier n'importe quelle ent\u00EAte d'un mail re\u00E7u de la liste de diffusion.
 
 Si vous voulez pouvoir poster depuis plusieurs adresses email vous devrez inscrire ces autres adresses email en mode 'sans mail'.
 
