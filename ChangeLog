@@ -1,3 +1,4 @@
+1.2.15-RC1
  o Added --enable-recieve-strip configure option (Ansgar Burchardt)
  o Added unicode support to listtexts
  o Fixed build outside the source directory (Ansgar Burchardt)
