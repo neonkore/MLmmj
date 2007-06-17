@@ -33,6 +33,11 @@ exec_prefix=$savex
 
 AC_SUBST(textlibdir)
 
+AC_ARG_ENABLE([recieve-strip],
+  AS_HELP_STRING([--enable-recieve-strip],
+                 [build mlmmj-recieve-strip (default is no)]))
+AM_CONDITIONAL(WANT_RECIEVESTRIP, test x"$enable_recieve_strip" = xyes)
+
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([ftruncate memset socket strerror strncasecmp snprintf fcntl])

@@ -1,3 +1,4 @@
+ o Added --enable-recieve-strip configure option (Ansgar Burchardt)
  o Added unicode support to listtexts
  o Fixed build outside the source directory (Ansgar Burchardt)
  o Moved English listtexts and install all languages (Ansgar Burchardt)
