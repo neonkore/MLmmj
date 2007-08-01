@@ -1,7 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright (C) 2004 Morten K. Poulsen <morten at afdelingp.dk>
-# Copyright (C) 2004, 2005 Christian Laursen <christian@pil.dk>
+# Copyright (C) 2007 Franky Van Liedekerke <liedekef@telenet.be>
 #
 # $Id$
 #
@@ -22,10 +21,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
-
-# We might want some kind of validation of the values we are about to save,
-# but that would require save.cgi to know about all kind of options that mlmmj
-# accepts. I am not sure we want that.  -- mortenp 20040709
 
 use strict;
 use CGI;
@@ -48,52 +43,43 @@ $list = $q->param("list");
 die "no list specified" unless $list;
 die "non-existent list" unless -d("$topdir/$list");
 
-$tpl->define(main => "save.html");
+$tpl->define(main => "edit_text.html",
+             list => "edit_textstring.html");
+
 $tpl->assign(LIST => encode_entities($list));
 
-my $tunables_file = "../conf/tunables.pl";
-if (exists $ENV{TUNABLES_PATH}) {
-	$tunables_file = $ENV{TUNABLES_PATH};
-}
+my $textdir = "$topdir/$list/text";
+my @files;
+opendir(DIR, $textdir ) || die "can't opendir $textdir: $!";
+@files = grep { !/^\./ && -f "$textdir/$_" } readdir(DIR);
+closedir DIR;
 
-do $tunables_file;
+for my $textfile (sort @files) {
+   mlmmj_text($textfile);
+}
 
 print "Content-type: text/html\n\n";
 $tpl->parse(CONTENT => "main");
 $tpl->print;
 
-sub mlmmj_boolean {
-	my ($name, $nicename, $text) = @_;
+sub mlmmj_text {
+	my ($name) = @_;
+    my $file = "$textdir/$name";
+    my $value;
 
-	my $file = "$topdir/$list/control/$name";
+    if (! -f $file) {
+        $value = "";
+    } else {
+        open(F, $file) or die("can't open $file");
+        while (<F>) {
+            $value .= $_;
+        }
+        close(F);
+        chomp($value);
+    }
 
-	my $value = $q->param($name);
-	if ($value) {
-		open (FILE, ">$file") or die "Couldn't open $file for writing: $!";
-		close FILE;
-	} else {
-		unlink $file;
-	}
-}
+	$tpl->assign(NAME => encode_entities($name));
+	$tpl->assign(VALUE => encode_entities($value));
 
-sub mlmmj_string {
-	mlmmj_list(@_);
-}
-
-sub mlmmj_list {
-	my ($name, $nicename, $text) = @_;
-
-	my $file = "$topdir/$list/control/$name";
-
-	my $value = $q->param($name);
-
-	if (defined $value && $value !~ /^\s*$/) {
-		$value .= "\n" if $value !~ /\n$/;
-		$value =~ s/\s*\r?\n/\n/g;
-		open (FILE, ">$file") or die "Couldn't open $file for writing: $!";
-		print FILE $value;
-		close FILE;
-	} else {
-		unlink $file;
-	}
+	$tpl->parse(ROWS => ".list");
 }

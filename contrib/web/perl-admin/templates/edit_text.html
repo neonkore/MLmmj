@@ -1,0 +1,16 @@
+<html><head><title>mlmmj config</title></head><body>
+<h1>mlmmj config</h1>
+<p>
+<a href="index.cgi">Index</a> | <a href="edit.cgi?list=$LIST">Configuration</a> | <a href="subscribers.cgi?list=$LIST">Subscribers</a>
+</p>
+<p>
+List: $LIST
+</p>
+<form method="post" action="save_text.cgi">
+<input type="hidden" name="list" value="$LIST">
+<table border="1">
+$ROWS
+</table>
+<input type="submit" name="submit" value="Update texts" />
+</form>
+</body></html>

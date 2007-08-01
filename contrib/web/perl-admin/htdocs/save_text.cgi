@@ -1,7 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright (C) 2004 Morten K. Poulsen <morten at afdelingp.dk>
-# Copyright (C) 2004, 2005 Christian Laursen <christian@pil.dk>
+# Copyright (C) 2007 Franky Van Liedekerke <liedekef@telenet.be>
 #
 # $Id$
 #
@@ -48,52 +47,31 @@ $list = $q->param("list");
 die "no list specified" unless $list;
 die "non-existent list" unless -d("$topdir/$list");
 
-$tpl->define(main => "save.html");
+$tpl->define(main => "save_text.html");
 $tpl->assign(LIST => encode_entities($list));
 
-my $tunables_file = "../conf/tunables.pl";
-if (exists $ENV{TUNABLES_PATH}) {
-	$tunables_file = $ENV{TUNABLES_PATH};
-}
+my $textdir = "$topdir/$list/text";
+my @files;
+opendir(DIR, $textdir ) || die "can't opendir $textdir: $!";
+@files = grep { !/^\./ && -f "$textdir/$_" } readdir(DIR);
+closedir DIR;
 
-do $tunables_file;
+for my $textfile (sort @files) {
+   mlmmj_text($textfile);
+}
 
 print "Content-type: text/html\n\n";
 $tpl->parse(CONTENT => "main");
 $tpl->print;
 
-sub mlmmj_boolean {
+sub mlmmj_text {
 	my ($name, $nicename, $text) = @_;
 
-	my $file = "$topdir/$list/control/$name";
-
-	my $value = $q->param($name);
-	if ($value) {
-		open (FILE, ">$file") or die "Couldn't open $file for writing: $!";
-		close FILE;
-	} else {
-		unlink $file;
-	}
-}
-
-sub mlmmj_string {
-	mlmmj_list(@_);
-}
-
-sub mlmmj_list {
-	my ($name, $nicename, $text) = @_;
-
-	my $file = "$topdir/$list/control/$name";
+	my $file = "$textdir/$name";
 
 	my $value = $q->param($name);
 
-	if (defined $value && $value !~ /^\s*$/) {
-		$value .= "\n" if $value !~ /\n$/;
-		$value =~ s/\s*\r?\n/\n/g;
-		open (FILE, ">$file") or die "Couldn't open $file for writing: $!";
-		print FILE $value;
-		close FILE;
-	} else {
-		unlink $file;
-	}
+	open (FILE, ">$file") or die "Couldn't open $file for writing: $!";
+	print FILE $value;
+	close FILE;
 }

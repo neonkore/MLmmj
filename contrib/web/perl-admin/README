@@ -27,8 +27,14 @@ To use this web-interface you have to:
    you need to create a group (eg. mlmmj) and add both users to it. The
    subscribers.d directory then needs to be writable by that group:
 
-     # chgrp -R mlmmj /var/spool/mlmmj/mlmmj-test/subscribers.d/
-     # chmod -R g+w /var/spool/mlmmj/mlmmj-test/subscribers.d/
+     # chgrp -R mlmmj /var/spool/mlmmj/mlmmj-test/subscribers.d
+     # chmod -R g+w /var/spool/mlmmj/mlmmj-test/subscribers.d
+     # chgrp -R mlmmj /var/spool/mlmmj/mlmmj-test/digesters.d
+     # chmod -R g+w /var/spool/mlmmj/mlmmj-test/digesters.d
+     # chgrp -R mlmmj /var/spool/mlmmj/mlmmj-test/nomailsubs.d
+     # chmod -R g+w /var/spool/mlmmj/mlmmj-test/nomailsubs.d
+     # chgrp -R mlmmj /var/spool/mlmmj/mlmmj-test/text
+     # chmod -R g+w /var/spool/mlmmj/mlmmj-test/text
 
 To enable access control on Apache you have to:
 

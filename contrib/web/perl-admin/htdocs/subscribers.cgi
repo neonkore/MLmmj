@@ -1,6 +1,7 @@
 #!/usr/bin/perl -w
 
-# Copyright (C) 2004, 2005, 2006 Christian Laursen <christian@pil.dk>
+# Copyright (C) 2004, 2005, 2006, 2007 Christian Laursen <christian@pil.dk>
+# Copyright (C) 2007 Franky Van Liedekerke <liedekef@telenet.be>
 #
 # $Id$
 #
@@ -47,6 +48,8 @@ $list = $q->param("list");
 my $update = $q->param("update");
 my $search = $q->param("search");
 my $email = $q->param("email");
+my $file = $q->param("file");
+my $removeall = $q->param("removeall");
 
 # Everything is submitted from the same form so a little hackery is needed
 # to pick the right action to perform. When doing subscribe and search we
@@ -72,21 +75,55 @@ my $action = '';
 my $subscribers;
 my $subcount;
 
-if (defined $email) {
+if (defined $removeall) {
+	my $removeall_check = $q->param("removeall_check");
+	if ($removeall_check) {
+	   unlink <$topdir/$list/subscribers.d/*>;
+	   unlink <$topdir/$list/nomailsubs.d/*>;
+	   unlink <$topdir/$list/digesters.d/*>;
+	   $action = "All subscribers have been removed.";
+	} else {
+	   $action = "Safety check not clicked, nothing done.";
+	}
+} elsif (defined $file) {
+	my $subscriber = $q->param("subscriber");
+	my $digester = $q->param("digester");
+	my $nomailsub = $q->param("nomailsub");
+	my $upload_handle = $q->upload("file");
+	binmode $upload_handle;
+	while (<$upload_handle>) {
+	   s/\r?\n$//;
+	   my $email=$_;
+	   if ($email =~ /^[a-z0-9\.\-_\@]+$/i) {
+		if ($subscriber) {
+			system "$mlmmjsub -L $topdir/$list -a $email -U -s";
+		}
+		if ($digester) {
+			system "$mlmmjsub -L $topdir/$list -a $email -Ud -s";
+		}
+		if ($nomailsub) {
+			system "$mlmmjsub -L $topdir/$list -a $email -Un -s";
+		}
+		$action .= "$email has been subscribed.<br>\n";
+	   } else {
+		$action .= '"'.encode_entities($email).'" is not a valid email address.<br>';
+	   }
+	}
+} elsif (defined $email) {
 	my $subscriber = $q->param("subscriber");
 	my $digester = $q->param("digester");
 	my $nomailsub = $q->param("nomailsub");
 	if ($email =~ /^[a-z0-9\.\-_\@]+$/i) {
 		if ($subscriber) {
-			system "$mlmmjsub -L $topdir/$list -a $email -U";
+			system "$mlmmjsub -L $topdir/$list -a $email -U -s";
 		}
 		if ($digester) {
-			system "$mlmmjsub -L $topdir/$list -a $email -Ud";
+			system "$mlmmjsub -L $topdir/$list -a $email -Ud -s";
 		}
 		if ($nomailsub) {
-			system "$mlmmjsub -L $topdir/$list -a $email -Un";
+			system "$mlmmjsub -L $topdir/$list -a $email -Un -s";
 		}
-		$action = "$email has been subscribed.";
+		$action = "error adding $email (code $?)";
 	} else {
 		$action = '"'.encode_entities($email).'" is not a valid email address.';
 	}
@@ -137,7 +174,7 @@ $subscribers = get_subscribers();
 
 my $paginator = '';
 my $page = $q->param('page');
-$page = 0 unless $page =~ /^\d+$/;
+$page = 0 unless defined $page && $page =~ /^\d+$/;
 if (keys %$subscribers > 50) {
 	$paginator = 'Pages: ';
 	my $pages = (keys %$subscribers) / 50;

@@ -1,11 +1,35 @@
 <html><head><title>mlmmj subscribers</title></head><body>
 <h1>mlmmj subscribers</h1>
 <p>
-<a href="index.cgi">Index</a> | <a href="subscribers.cgi?list=$LIST">Reload subscriber list</a> | <a href="edit.cgi?list=$LIST">Configure</a>
+<a href="index.cgi">Index</a> | <a href="subscribers.cgi?list=$LIST">Reload subscriber list</a> | <a href="edit.cgi?list=$LIST">Configuration</a> | <a href="edit_text.cgi?list=$LIST">Edit texts</a></td>
 </p>
 <p>
 $ACTION
 </p>
+<hr>
+<form action="subscribers.cgi" method="post" onSubmit="if (window.confirm('Are you sure you want to do this?')) this.submit(); else return false;">
+<input type="hidden" name="list" value="$LIST">
+<input type="hidden" name="maxid" value="$MAXID">
+<input type="hidden" name="removeall" value="1">
+<table><tr><td rowspan="5" valign="top">Remove all subscribers:&nbsp;&nbsp;</td>
+<td><input type="submit" name="remove" value="Remove all"></td></tr>
+<tr><td>Click this as extra safety check: <input type="checkbox" name="removeall_check" value="1" unchecked></td></tr>
+</table>
+</form>
+<hr>
+<form action="subscribers.cgi" method="post" enctype="multipart/form-data">
+<input type="hidden" name="list" value="$LIST">
+<input type="hidden" name="maxid" value="$MAXID">
+<input type="hidden" name="page" value="$PAGE">
+<table><tr><td rowspan="5" valign="top">Bulk add subscribers:&nbsp;&nbsp;</td>
+<td>File: <input type="FILE" name="file"></td></tr>
+<tr><td>Normal subscribers: <input type="checkbox" name="subscriber" value="1" checked></td></tr>
+<tr><td>Digest subscribers: <input type="checkbox" name="digester" value="1"></td></tr>
+<tr><td>No-mail subscribers: <input type="checkbox" name="nomailsub" value="1"></td></tr>
+<tr><td><input type="submit" name="subscribe" value="Subscribe"></td></tr>
+</table>
+</form>
+
 <form action="subscribers.cgi" method="post">
 <input type="hidden" name="list" value="$LIST">
 <input type="hidden" name="maxid" value="$MAXID">
