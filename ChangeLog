@@ -1,3 +1,4 @@
+ o Merged various changes to the web interface from Franky Van Liedekerke
 1.2.15-RC1
  o Added --enable-recieve-strip configure option (Ansgar Burchardt)
  o Added unicode support to listtexts
