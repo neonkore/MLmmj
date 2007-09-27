@@ -711,6 +711,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 
 	/* listname+list@domain.tld */
 	case CTRL_LIST:
+		if(statctrl(listdir, "nolistsubsemail"))
+			return -1;
 		owner_idx = -1;
 		owners = ctrlvalues(listdir, "owner");
 		for(i = 0; i < owners->count; i++) {

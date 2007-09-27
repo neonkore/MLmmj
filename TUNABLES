@@ -192,3 +192,8 @@ to specify several entries (one pr. line), it's marked "list".
 
    If this is set, no reject notifications caused by violation of maxmailsize
    will be sent.
+
+ · nolistsubsemail		(boolean)
+
+   If this is set, the LISTNAME+list@ functionality for requesting an
+   email with the subscribers for owner is disabled.
