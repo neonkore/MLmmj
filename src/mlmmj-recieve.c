@@ -170,7 +170,7 @@ int main(int argc, char **argv)
 
 	execlp(mlmmjprocess, mlmmjprocess,
 				"-L", listdir,
-				"-m", infilename, NULL);
+				"-m", infilename, (char *)NULL);
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjprocess);
 
 	exit(EXIT_FAILURE);
