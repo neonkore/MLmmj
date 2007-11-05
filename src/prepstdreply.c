@@ -44,13 +44,13 @@
 #include "unistr.h"
 
 char *substitute(const char *line, const char *listaddr, const char *listdelim,
-		 size_t datacount, char **data)
+		 size_t datacount, char **data, const char *mailname)
 {
 	char *s1, *s2;
 
-	s1 = substitute_one(line, listaddr, listdelim, datacount, data);
+	s1 = substitute_one(line, listaddr, listdelim, datacount, data, mailname);
 	while(s1) {
-		s2 = substitute_one(s1, listaddr, listdelim, datacount, data);
+		s2 = substitute_one(s1, listaddr, listdelim, datacount, data, mailname);
 		if(s2) {
 			myfree(s1);
 			s1 = s2;
@@ -62,7 +62,8 @@ char *substitute(const char *line, const char *listaddr, const char *listdelim,
 }
 
 char *substitute_one(const char *line, const char *listaddr,
-		     const char *listdelim, size_t datacount, char **data)
+			const char *listdelim, size_t datacount, char **data,
+			const char* mailname)
 {
 	char *fqdn, *listname, *d1, *d2, *token, *value = NULL;
 	char *retstr, *origline;
@@ -132,6 +133,27 @@ char *substitute_one(const char *line, const char *listaddr,
 		value = concatstr(4, listname, listdelim, "subscribe-nomail@",
 				  fqdn);
 		goto concatandreturn;
+	} else if(strcmp(token, "originalmail") == 0) {
+		/* append the first 100 lines of the mail inline */
+		int mailfd;
+		if(mailname && 
+		     ((mailfd = open(mailname, O_RDONLY)) > 0)){
+			size_t count = 0;
+			char* str = NULL;
+			while(count < 100 && (str = mygetline(mailfd))) {
+				char* tmp = value;
+				value = concatstr(3, value, " ", str);
+				if(tmp)
+					myfree(tmp);
+				count++;
+			}
+			if(str)
+				myfree(str);
+			close(mailfd);
+		}else{
+			log_error(LOG_ARGS, "Could not substitute $originalmail$ (mailname == %s)",mailname);
+		}
+		goto concatandreturn;
 	}
 	if(data) {
 		for(i = 0; i < datacount; i++) {
@@ -187,7 +209,7 @@ int open_listtext(const char *listdir, const char *filename)
 
 char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		   const char *to, const char *replyto, size_t tokencount,
-		   char **data, char *customheaders)
+		   char **data, char *customheaders, const char *mailname)
 {
 	int infd, outfd;
 	char *listaddr, *listdelim, *myfrom, *tmp, *subject, *retstr = NULL;
@@ -211,7 +233,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		chomp(line);
 		utfsub = unistr_escaped_to_utf8(line + 9);
 		utfsub2 = substitute(utfsub, listaddr, listdelim, tokencount,
-				     data);
+				     data, NULL);
 		subject = unistr_utf8_to_header(utfsub2);
 		myfree(utfsub);
 		myfree(utfsub2);
@@ -231,14 +253,14 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		utfline = NULL;
 	}
 	
-	myfrom = substitute(from, listaddr, listdelim, tokencount, data);
-	myto = substitute(to, listaddr, listdelim, tokencount, data);
+	myfrom = substitute(from, listaddr, listdelim, tokencount, data, NULL);
+	myto = substitute(to, listaddr, listdelim, tokencount, data, NULL);
 	mydate = gendatestr();
 	mymsgid = genmsgid(listfqdn);
 
 	if(replyto) {
 		myreplyto = substitute(replyto, listaddr, listdelim,
-				       tokencount, data);
+				       tokencount, data, NULL);
 		tmp = concatstr(3, "Reply-To: ", myreplyto, "\n");
 		myfree(myreplyto);
 		myreplyto = tmp;
@@ -297,7 +319,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		myfree(tmp);
 
 		tmp = utfline;
-		str = substitute(utfline, listaddr, listdelim, tokencount, data);
+		str = substitute(utfline, listaddr, listdelim, tokencount, data, mailname);
 		myfree(tmp);
 
 		if(writen(outfd, str, strlen(str)) < 0) {

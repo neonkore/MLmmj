@@ -76,8 +76,7 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	char *buf, *replyto, *listaddr = getlistaddr(listdir), *listdelim;
 	char *queuefilename = NULL, *moderatorsfilename;
 	char *mailbasename = mybasename(mailfilename), *tmp, *to;
-	int queuefd, moderatorsfd, mailfd;
-	size_t count = 0;
+	int moderatorsfd;
 	char *maildata[4] = { "moderateaddr", NULL, "moderators", NULL };
 #if 0
 	printf("mailfilename = [%s], mailbasename = [%s]\n", mailfilename,
@@ -85,11 +84,6 @@ void newmoderated(const char *listdir, const char *mailfilename,
 #endif
 	listfqdn = genlistfqdn(listaddr);
 	listname = genlistname(listaddr);
-
-	if((mailfd = open(mailfilename, O_RDONLY)) < 0) {
-		log_error(LOG_ARGS, "Could not open '%s'", mailfilename);
-		exit(EXIT_FAILURE);
-	}
 
 	moderatorsfilename = concatstr(2, listdir, "/control/moderators");
 	if((moderatorsfd = open(moderatorsfilename, O_RDONLY)) < 0) {
@@ -123,25 +117,7 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	myfree(listfqdn);
 
 	queuefilename = prepstdreply(listdir, "moderation", "$listowner$",
-				     to, replyto, 2, maildata, NULL);
-
-	if((queuefd = open(queuefilename, O_WRONLY|O_APPEND)) < 0) {
-		log_error(LOG_ARGS, "Could not open '%s'", queuefilename);
-		myfree(queuefilename);
-		exit(EXIT_FAILURE);
-	}
-	
-	while(count < 100 && (buf = mygetline(mailfd))) {
-		tmp = concatstr(2, " ", buf);
-		myfree(buf);
-		if(writen(queuefd, tmp, strlen(tmp)) < 0)
-			log_error(LOG_ARGS, "Could not write line for "
-					    "moderatemail");
-		myfree(tmp);
-		count++;
-	}
-	close(queuefd);
-	close(mailfd);
+				     to, replyto, 2, maildata, NULL, mailfilename);
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "2",
@@ -657,7 +633,7 @@ int main(int argc, char **argv)
 			queuefilename = prepstdreply(listdir,
 					"maxmailsize", "$listowner$",
 					fromemails.emaillist[0],
-					NULL, 2, maildata, NULL);
+					NULL, 2, maildata, NULL, donemailname);
 			MY_ASSERT(queuefilename)
 			myfree(listdelim);
 			myfree(listname);
@@ -768,7 +744,7 @@ int main(int argc, char **argv)
 				     listfqdn);
 		queuefilename = prepstdreply(listdir, "notintocc",
 					"$listowner$", fromemails.emaillist[0],
-					     NULL, 0, NULL, NULL);
+					     NULL, 0, NULL, NULL, donemailname);
 		MY_ASSERT(queuefilename)
 		myfree(listdelim);
 		myfree(listname);
@@ -829,7 +805,7 @@ int main(int argc, char **argv)
 					"bounces-help@", listfqdn);
 			queuefilename = prepstdreply(listdir, "subonlypost",
 					"$listowner$", fromemails.emaillist[0],
-						     NULL, 1, maildata, NULL);
+						     NULL, 1, maildata, NULL, donemailname);
 			MY_ASSERT(queuefilename)
 			myfree(listaddr);
 			myfree(listdelim);
@@ -880,7 +856,7 @@ startaccess:
 			queuefilename = prepstdreply(listdir, "access",
 							"$listowner$",
 							fromemails.emaillist[0],
-						     NULL, 0, NULL, NULL);
+						     NULL, 0, NULL, NULL, donemailname);
 			MY_ASSERT(queuefilename)
 			myfree(listaddr);
 			myfree(listdelim);
