@@ -12,3 +12,6 @@ in either the To: or Cc: header.
 
 Thanks.
 
+--- below this line are the first 100 lines of the denied message --->
+$originalmail$
+

@@ -18,4 +18,6 @@ The following moderators have received this mail:
 
 $moderators$
 
---- below this line the first 100 lines of the message up for moderation --->
+--- below this line are the first 100 lines of the message --->
+$originalmail$
+
