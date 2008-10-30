@@ -1,3 +1,4 @@
+ o Disabled digest mails when 'noarchive' is set (Thomas Jarosch)
  o Added Russian listtexts (Nikolay Derkach)
  o Fixed mmap()ing of zero-sized files (Robin H. Johnson)
  o Fixed mlmmj-recieve [sic] for architectures where

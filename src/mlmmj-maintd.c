@@ -42,6 +42,7 @@
 #include "wrappers.h"
 #include "memory.h"
 #include "ctrlvalue.h"
+#include "statctrl.h"
 #include "send_digest.h"
 #include "mylocking.h"
 #include "log_oper.h"
@@ -769,6 +770,10 @@ int run_digests(const char *listdir, const char *mlmmjsend)
 	long digestmaxmails, lastindex, index, lastissue;
 	int fd, indexfd, lock;
 	size_t lenbuf, lenstr;
+
+	if (statctrl(listdir, "noarchive")) {
+		return 0;
+	}
 	
 	digestintervalstr = ctrlvalue(listdir, "digestinterval");
 	if (digestintervalstr) {
