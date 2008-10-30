@@ -21,6 +21,10 @@ off_t getaddrsfromfd(struct strlist *slist, int fd, int max)
 		log_error(LOG_ARGS, "Could not fstat fd");
 		return -1;
 	}
+	/* mmap of 0-bytes is invalid */
+	if(st.st_size == 0) {
+		return 0;
+	}
 
 	start = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
 	if(start == MAP_FAILED) {

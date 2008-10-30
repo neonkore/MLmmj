@@ -1,3 +1,4 @@
+ o Fixed mmap()ing of zero-sized files (Robin H. Johnson)
  o Fixed mlmmj-recieve [sic] for architectures where
    sizeof(int) and sizeof(char *) differ
  o Added support for the 'originalmail' keyword (Sascha Sommer)

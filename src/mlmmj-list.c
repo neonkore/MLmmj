@@ -68,6 +68,11 @@ int dumpcount(const char *filename, int *count)
 	
 	if(!S_ISREG(st.st_mode))
 		return -1;
+	
+	/* Nobody there */
+	if(st.st_size == 0) {
+		return 0;
+	}
 
 	start = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
 	if(start == MAP_FAILED)
