@@ -163,7 +163,7 @@ mlmmj_boolean("nomaxmailsizedenymails",
 
 mlmmj_boolean("nolistsubsemail",
 			  "No list subscribers email",
-			  "If this is set, the LISTNAME+list@ functionality for requesting an ".
+			  "If this is set, the LISTNAME+list\@ functionality for requesting an ".
 			  "email with the subscribers for owner is disabled.");
 
 mlmmj_string("staticbounceaddr",
