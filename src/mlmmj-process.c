@@ -234,7 +234,7 @@ static enum action do_access(struct strlist *rule_strs, struct strlist *hdrs,
 		}
 
 		regfree(&regexp);
-		
+
 		if (match != not) {
 			if (match) {
 				hdr = mystrdup(hdrs->strs[j]);
@@ -354,7 +354,7 @@ int main(int argc, char **argv)
 	mlmmjunsub = concatstr(2, bindir, "/mlmmj-unsub");
 	mlmmjbounce = concatstr(2, bindir, "/mlmmj-bounce");
 	myfree(bindir);
-	
+
 	while ((opt = getopt(argc, argv, "hVPm:L:")) != -1) {
 		switch(opt) {
 		case 'L':
@@ -410,7 +410,7 @@ int main(int argc, char **argv)
 						S_IRUSR|S_IWUSR);
 
         } while ((donemailfd < 0) && (errno == EEXIST));
-	
+
 	if(donemailfd < 0) {
 		log_error(LOG_ARGS, "could not create %s", donemailname);
 		myfree(donemailname);
@@ -431,7 +431,7 @@ int main(int argc, char **argv)
 	headerfilename = concatstr(2, listdir, "/control/customheaders");
 	hdrfd = open(headerfilename, O_RDONLY);
 	myfree(headerfilename);
-	
+
     /* footfd is checked in do_all_the_voodo_here(), see above */
 	footerfilename = concatstr(2, listdir, "/control/footer");
 	footfd = open(footerfilename, O_RDONLY);
@@ -449,9 +449,9 @@ int main(int argc, char **argv)
 	delheaders->strs[delheaders->count++] = mystrdup("From ");
 	delheaders->strs[delheaders->count++] = mystrdup("Return-Path:");
 	delheaders->strs[delheaders->count] = NULL;
-	
-	subjectprefix = ctrlvalue(listdir, "prefix");	
-	
+
+	subjectprefix = ctrlvalue(listdir, "prefix");
+
 	if(do_all_the_voodo_here(rawmailfd, donemailfd, hdrfd, footfd,
 				(const char**)delheaders->strs, readhdrs,
 				&allheaders, subjectprefix) < 0) {
@@ -599,7 +599,7 @@ int main(int argc, char **argv)
 
 	listaddr = getlistaddr(listdir);
 	alternates = ctrlvalues(listdir, "listaddress");
-	
+
 	/* checking incoming mail's size */
 	maxmailsizestr = ctrlvalue(listdir, "maxmailsize");
 	if(maxmailsizestr) {
@@ -648,14 +648,14 @@ int main(int argc, char **argv)
 					"-T", fromemails.emaillist[0],
 					"-F", fromaddr,
 					"-m", queuefilename, (char *)NULL);
-		
+
 			log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 			exit(EXIT_FAILURE);
 		}
 	}
 
 	/* discard malformed mail with invalid From: */
-	if(fromemails.emailcount != 1) { 
+	if(fromemails.emailcount != 1) {
 		for(i = 0; i < fromemails.emailcount; i++)
 			printf("fromemails.emaillist[%d] = %s\n",
 					i, fromemails.emaillist[i]);
@@ -699,6 +699,8 @@ int main(int argc, char **argv)
 	addrtocc = !(statctrl(listdir, "tocc"));
 	if(addrtocc) {
 		for(i = 0; i < toemails.emailcount; i++) {
+			log_error(LOG_ARGS, "Found To: %s",
+				toemails.emaillist[i]);
 			for(j = 0; j < alternates->count; j++) {
 				chomp(alternates->strs[j]);
 				if(strcasecmp(alternates->strs[j],
@@ -707,6 +709,8 @@ int main(int argc, char **argv)
 			}
 		}
 		for(i = 0; i < ccemails.emailcount; i++) {
+			log_error(LOG_ARGS, "Found Cc: %s",
+				ccemails.emaillist[i]);
 			for(j = 0; j < alternates->count; j++) {
 				chomp(alternates->strs[j]);
 				if(strcasecmp(alternates->strs[j],
@@ -720,7 +724,7 @@ int main(int argc, char **argv)
 		myfree(alternates->strs[i]);
 
 	notoccdenymails = statctrl(listdir, "notoccdenymails");
-	
+
 	if(addrtocc && !intocc) {
 		/* Don't send a mail about denial to the list, but silently
 		 * discard and exit. Also don't in case of it being turned off
@@ -783,7 +787,7 @@ int main(int argc, char **argv)
 				moderated = 1;
 				goto startaccess;
 			}
-			
+
 			nosubonlydenymails = statctrl(listdir,
 					"nosubonlydenymails");
 
@@ -893,7 +897,7 @@ startaccess:
                 	exit(EXIT_SUCCESS);
 		}
 	}
-	
+
 	if(!moderated)
 		moderated = statctrl(listdir, "moderated");
 	if(moderated) {
@@ -919,7 +923,7 @@ startaccess:
 		/* XXX: toemails and ccemails etc. have to be myfree() */
 		exit(EXIT_SUCCESS);
 	}
-	
+
 	execlp(mlmmjsend, mlmmjsend,
 				"-L", listdir,
 				"-m", donemailname, (char *)NULL);

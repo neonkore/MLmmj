@@ -55,7 +55,7 @@ char *fetchindexes(const char *bouncefile)
 	char *indexstr = NULL, *s, *start, *line, *cur, *colon, *next;
 	size_t len;
 	struct stat st;
-	
+
 	fd = open(bouncefile, O_RDONLY);
 	if(fd < 0) {
 		log_error(LOG_ARGS, "Could not open bounceindexfile %s",
@@ -68,13 +68,19 @@ char *fetchindexes(const char *bouncefile)
 					bouncefile);
 	}
 
+	if(st.st_size == 0) {
+		log_error(LOG_ARGS, "Bounceindexfile %s is size 0",
+					bouncefile);
+		return NULL;
+	}
+
 	start = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
 	if(start == MAP_FAILED) {
 		log_error(LOG_ARGS, "Could not mmap bounceindexfile");
 		return NULL;
 	}
-	
-	
+
+
 	for(next = cur = start; next < start + st.st_size; next++) {
 		if(*next == '\n') {
 			len = next - cur;
@@ -92,7 +98,7 @@ char *fetchindexes(const char *bouncefile)
 		myfree(s);
 		myfree(line);
 	}
-		
+
 	munmap(start, st.st_size);
 	close(fd);
 
@@ -200,7 +206,7 @@ char *dsnparseaddr(const char *mailname)
 					addr = mystrdup(emails.emaillist[0]);
 					for(i = 0; i < emails.emailcount; i++)
 						myfree(emails.emaillist[i]);
-					myfree(emails.emaillist);	
+					myfree(emails.emaillist);
 				} else {
 					addr = NULL;
 				}
@@ -210,7 +216,7 @@ char *dsnparseaddr(const char *mailname)
 		}
 		myfree(line);
 	}
-	
+
 	return NULL;
 }
 
@@ -325,7 +331,7 @@ int main(int argc, char **argv)
 		i++;
 	}
 	address = lowcaseaddr;
-			
+
 	if(number != NULL && probe != 0) {
 		fprintf(stderr, "You can only specify one of -n or -p\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
@@ -375,7 +381,7 @@ int main(int argc, char **argv)
 		myfree(a);
 		exit(EXIT_SUCCESS);
 	}
-	
+
 	/* save the filename with '=' before replacing it with '@' */
 	bfilename = concatstr(3, listdir, "/bounce/", address);
 
@@ -435,7 +441,7 @@ int main(int argc, char **argv)
 		rename(mailname, savename);
 		myfree(savename);
 	}
-		
+
 	myfree(bfilename);
 	if(dsnbounce && address)
 		myfree(address);
