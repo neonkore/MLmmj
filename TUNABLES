@@ -197,3 +197,9 @@ to specify several entries (one pr. line), it's marked "list".
 
    If this is set, the LISTNAME+list@ functionality for requesting an
    email with the subscribers for owner is disabled.
+
+ · staticbounceaddr      	(normal)
+
+   If this is set to something@example.org, the bounce address (Return-Path:)
+   will be fixed to something+listname-bounces-and-so-on@example.org
+   in case you need to disable automatic bounce handling.

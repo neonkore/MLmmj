@@ -102,10 +102,13 @@ char *get_index_from_filename(const char *filename)
 }
 
 char *bounce_from_adr(const char *recipient, const char *listadr,
-		      const char *listdelim, const char *mailfilename)
+		      const char *listdelim, const char *mailfilename,
+		      const char *listdir)
 {
-	char *bounceaddr, *myrecipient, *mylistadr, *mylistdelim;
+	char *bounceaddr, *myrecipient, *mylistadr;
 	char *indexstr, *listdomain, *a = NULL, *mymailfilename;
+	char *staticbounceaddr, *staticbounceaddr_localpart;
+	char *staticbounceaddr_domain;
 	size_t len;
 
 	mymailfilename = mystrdup(mailfilename);
@@ -114,6 +117,10 @@ char *bounce_from_adr(const char *recipient, const char *listadr,
 	}
 
 	indexstr = get_index_from_filename(mymailfilename);
+	if (!indexstr) {
+		myfree(mymailfilename);
+		return NULL;
+	}
 
 	myrecipient = mystrdup(recipient);
 	if (!myrecipient) {
@@ -131,40 +138,57 @@ char *bounce_from_adr(const char *recipient, const char *listadr,
 		return NULL;
 	}
 
-	mylistdelim = mystrdup(listdelim);
-	if (!mylistdelim) {
-		myfree(mymailfilename);
-		myfree(myrecipient);
-		myfree(mylistadr);
-		return NULL;
-	}
-
 	listdomain = strchr(mylistadr, '@');
 	if (!listdomain) {
 		myfree(mymailfilename);
 		myfree(myrecipient);
 		myfree(mylistadr);
-		myfree(mylistdelim);
 		return NULL;
 	}
 	*listdomain++ = '\0';
 
 	/* 11 = "bounces-" + "-" + "@" + NUL */
-	len = strlen(mylistadr) + strlen(mylistdelim) + strlen(myrecipient)
-		 + strlen(indexstr) + strlen(listdomain) + 11;
+	len = strlen(mylistadr) + strlen(listdelim) + strlen(myrecipient)
+		   + strlen(indexstr) + strlen(listdomain) + 11;
+
+	staticbounceaddr = ctrlvalue(listdir, "staticbounceaddr");
+	if (staticbounceaddr) {
+		staticbounceaddr_localpart = genlistname(staticbounceaddr);
+		staticbounceaddr_domain = genlistfqdn(staticbounceaddr);
+
+		/* localpart + "-" + domain */
+		len += strlen(staticbounceaddr_localpart) + 1
+				+ strlen(staticbounceaddr_domain);
+	} else {
+		staticbounceaddr_localpart = NULL;
+		staticbounceaddr_domain = NULL;
+	}
+
 	bounceaddr = mymalloc(len);
 	if (!bounceaddr) {
+		myfree(staticbounceaddr);
+		myfree(staticbounceaddr_localpart);
+		myfree(staticbounceaddr_domain);
 		myfree(myrecipient);
 		myfree(mylistadr);
-		myfree(mylistdelim);
 		return NULL;
 	}
-	snprintf(bounceaddr, len, "%s%sbounces-%s-%s@%s", mylistadr, listdelim,
-		 indexstr, myrecipient, listdomain);
+
+	if (staticbounceaddr) {
+		snprintf(bounceaddr, len, "%s%s%s-bounces-%s-%s@%s", 
+			staticbounceaddr_localpart, listdelim, mylistadr,
+			indexstr, myrecipient, staticbounceaddr_domain);
+
+		myfree(staticbounceaddr);
+		myfree(staticbounceaddr_localpart);
+		myfree(staticbounceaddr_domain);
+	} else {
+		snprintf(bounceaddr, len, "%s%sbounces-%s-%s@%s", mylistadr, listdelim,
+			indexstr, myrecipient, listdomain);
+	}
 
 	myfree(myrecipient);
 	myfree(mylistadr);
-	myfree(mylistdelim);
 	myfree(indexstr);
 	myfree(mymailfilename);
 
@@ -629,7 +653,7 @@ int send_mail_many_list(int sockfd, const char *from, const char *replyto,
 					    hdrs, hdrslen, body, bodylen);
 		} else {
 			bounceaddr = bounce_from_adr(addr, listaddr, listdelim,
-						     archivefilename);
+						     archivefilename, listdir);
 			res = send_mail(sockfd, bounceaddr, addr, replyto,
 				  mailmap, mailsize, listdir, mlmmjbounce,
 				  hdrs, hdrslen, body, bodylen);
@@ -929,7 +953,7 @@ int main(int argc, char **argv)
 		deletewhensent = 0;
 		archivefilename = mystrdup(mailfilename);
 		bounceaddr = bounce_from_adr(to_addr, listaddr, listdelim,
-						archivefilename);
+						archivefilename, listdir);
 		break;
 	default: /* normal list mail -- now handled when forking */
 		addtohdr = statctrl(listdir, "addtohdr");
