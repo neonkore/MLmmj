@@ -160,3 +160,14 @@ mlmmj_boolean("nomaxmailsizedenymails",
 			  "No max. mail size deny mails",
 			  "If this is set, no reject notifications caused by violation of maxmailsize ".
 			  "will be sent.");
+
+mlmmj_boolean("nolistsubsemail",
+			  "No list subscribers email",
+			  "If this is set, the LISTNAME+list@ functionality for requesting an ".
+			  "email with the subscribers for owner is disabled.");
+
+mlmmj_string("staticbounceaddr",
+			 "Static bounce address",
+			 "If this is set to something\@example.org, the bounce address (Return-Path:) ".
+			 "will be fixed to something+listname-bounces-and-so-on\@example.org ".
+			 "in case you need to disable automatic bounce handling.");
