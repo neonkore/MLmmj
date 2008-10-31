@@ -18,3 +18,5 @@ controlla gli header di un qualunque messaggio della mailing list.
 Se vuoi mandare messaggi alla lista da pi\u00F9 di un indirizzo email, puoi
 iscrivere eventuali altri indirizzi alla versione nomail della lista.
 
+--- Below this line are the first 100 lines of the denied message --->
+$originalmail$

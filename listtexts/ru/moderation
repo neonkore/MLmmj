@@ -18,4 +18,5 @@ $moderateaddr$
 
 $moderators$
 
---- below this line the first 100 lines of the message up for moderation --->
+--- Below this line the first 100 lines of the message up for moderation --->
+$originalmail$

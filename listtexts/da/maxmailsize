@@ -10,3 +10,5 @@ st\u00F8rrelsesbegr\u00E6nsning p\u00E5 $maxmailsize$ bytes.
 
 Tak.
 
+--- Under denne linje er de f\u00F8rste 100 linjer af den afviste besked --->
+$originalmail$
