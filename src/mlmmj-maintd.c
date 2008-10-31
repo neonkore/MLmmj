@@ -245,6 +245,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 
 		if(strchr(dp->d_name, '.')) {
 			ch = strrchr(mailname, '.');
+			MY_ASSERT(ch);
 			*ch = '\0';
 			if(stat(mailname, &st) < 0) {
 				if(errno == ENOENT) {

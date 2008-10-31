@@ -32,9 +32,11 @@
 #include <ctype.h>
 #include <errno.h>
 
+#include "mlmmj.h"
 #include "strgen.h"
 #include "wrappers.h"
 #include "memory.h"
+#include "log_error.h"
 
 char *random_str()
 {
@@ -57,6 +59,7 @@ char *random_plus_addr(const char *addr)
 	snprintf(tmpstr, len, "%s", addr);
 
 	atsign = strchr(tmpstr, '@');
+	MY_ASSERT(atsign);
 	*atsign = '=';
 
 	snprintf(dest, len, "%x%x-%s", random_int(), random_int(), tmpstr);
@@ -82,6 +85,7 @@ char *genlistname(const char *listaddr)
 	char *dest, *atsign;
 
 	atsign = strchr(listaddr, '@');
+	MY_ASSERT(atsign);
 	len = atsign - listaddr + 1;
 	dest = mymalloc(len);
 	
@@ -96,6 +100,7 @@ char *genlistfqdn(const char *listaddr)
 	char *dest, *atsign;
 
 	atsign = strchr(listaddr, '@');
+	MY_ASSERT(atsign);
 	len = strlen(listaddr) - (atsign - listaddr);
 	dest = mymalloc(len);
 	snprintf(dest, len, "%s", atsign + 1);
@@ -143,9 +148,9 @@ char *hostnamestr()
 
 	for (;;) {
 		len *= 2;
-		free(hostname);
+		myfree(hostname);
 
-		hostname = malloc(len);
+		hostname = mymalloc(len);
 		hostname[len-1] = '\0';
 
 		/* gethostname() is allowed to:
@@ -278,7 +283,7 @@ char *gendatestr()
 	const char *weekday = NULL, *month = NULL;
 
 	/* 6 + 26 + ' ' + timezone which is 5 + '\n\0' == 40 */
-	timestr = (char *)malloc(40);
+	timestr = (char *)mymalloc(40);
 	t = time(NULL);
 
 	localtime_r(&t, &lttm);

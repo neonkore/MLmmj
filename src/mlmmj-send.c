@@ -1067,6 +1067,7 @@ int main(int argc, char **argv)
 			/* error, so remove the probefile */
 			tmpstr = mystrdup(to_addr);
 			a = strchr(tmpstr, '@');
+			MY_ASSERT(a);
 			*a = '=';
 			probefile = concatstr(4, listdir, "/bounce/", tmpstr,
 					"-probe");

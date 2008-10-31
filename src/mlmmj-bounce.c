@@ -92,6 +92,7 @@ char *fetchindexes(const char *bouncefile)
 	 		continue;
 
 		colon = strchr(line, ':');
+		MY_ASSERT(colon);
 		*colon = '\0';
 		s = indexstr;
 		indexstr = concatstr(4, s, "        ", line, "\n");
@@ -320,6 +321,7 @@ int main(int argc, char **argv)
 			exit(EXIT_SUCCESS);
 
 		a = strrchr(address, '@');
+		MY_ASSERT(a);
 		*a = '=';
 	}
 
