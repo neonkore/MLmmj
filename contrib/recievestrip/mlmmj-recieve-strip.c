@@ -81,6 +81,9 @@ static int findit(char *line, char **headers)
         int i = 0;
         size_t len;
 
+	if (!headers)
+		return 0;
+
         while(headers[i]) {
                 len = strlen(headers[i]);
                 if(strncasecmp(line, headers[i], len) == 0)

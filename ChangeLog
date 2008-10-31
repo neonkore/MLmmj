@@ -1,3 +1,4 @@
+ o Added a sanity check in mlmmj-receive-strip (Chris Webb)
  o Added more sanity checks (Thomas Jarosch)
  o Disabled digest mails when 'noarchive' is set (Thomas Jarosch)
  o Added Russian listtexts (Nikolay Derkach)
