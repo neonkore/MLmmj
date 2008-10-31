@@ -1,4 +1,12 @@
 .deps
 Makefile
 Makefile.in
+mlmmj-bounce
+mlmmj-list
+mlmmj-maintd
 mlmmj-make-ml.sh
+mlmmj-process
+mlmmj-recieve
+mlmmj-send
+mlmmj-sub
+mlmmj-unsub
