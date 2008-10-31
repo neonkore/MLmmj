@@ -26,8 +26,12 @@ application/octet-stream
 html texts and binarys will be stripped from the mail.
 
 When you also want to deny mails with certain mimeparts add the mimetypes to the mimedeny file
-and add the following lines to the access file in the control dir:
+and add the following lines to the control/access file:
 
 deny ^X-ThisMailContainsUnwantedMimeParts: Y
 allow
 
+You will most likely want to remove the X-ThisMailContainsUnwantedMimeParts
+header by adding the following line to the control/delheaders file:
+
+X-ThisMailContainsUnwantedMimeParts:
