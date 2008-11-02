@@ -1,14 +1,14 @@
-Soggetto: Messaggi da $listaddr$ per te sono stati respinti
+Subject: Sono ritornati indietro alcuni messaggi per te da $listaddr$
 
-Ciao, sono mlmmj, il programma che gestisce la mailing list
+Ciao, sono il programma mlmmj che gestisce la lista
 
 $listaddr$
 
-Alcuni messaggi a te diretti potrebbero non esserti arrivati.
-Se tu stai leggendo questo messaggio, significa che le cose sono tornate normali.
-Questa comunicazione giunge a solo titolo informativo.
+Alcuni messaggi per te non sono stati consegnati. Se stai leggendo 
+questo messaggio vuol dire che tutto \u00E8 tornato alla normalit\u00E0, ed \u00E8 
+giusto per pura informazione.
 
-Nel seguito l'elenco dei messaggi respinti:
+Questa \u00E8 la lista dei messaggi tornati indietro:
 
 $bouncenumbers$
 

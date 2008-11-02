@@ -1,24 +1,22 @@
-Soggetto: conferma la deiscrizione dal sommario della lista  $listaddr$
+Subject: Conferma la deiscrizione dalla versione digest di $listaddr$
 
-Ciao, sono mlmmj, il programma che gestisce la mailing list
+Ciao, sono il programma mlmmj che gestisce la lista
 
 $listaddr$
 
-Per confermare la deiscrizione dal sommario della lista dell'indirizzo
+Per confermare che vuoi che l'indirizzo
 
 $subaddr$
 
-per cortesia rispondi a
+sia rimosso dalla versione digest di questa lista, invia una risposta a:
 
 $confaddr$
 
-Il tuo client di posta elettronica probabilmente replica automaticamente
-all'indirizzo di cui sopra, quando premi il pulsante "rispondi".
+Il tuo programma di posta potrebbe rispondere automaticamente 
+all'indirizzo di conferma quando premi il pulsante per rispondere.
 
-Se non sei iscritto al sommario di questa lista, non riceverai nessuna risposta.
+Se non sei iscritto a questa lista, non riceverai nessuna risposta.
 
-Il soggetto ed il corpo della mail possono essere vuoti.
-
-Se vuoi sapere con quale indirizzo sei iscritto, controlla il valore
-dell'header "Return-Path" di un qualunque messaggio della mailing list.
+Puoi vedere nell'header "Return-Path" di un messaggio della lista con 
+quale indirizzo sei iscritto.
 

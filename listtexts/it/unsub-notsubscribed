@@ -1,17 +1,17 @@
-Soggetto: indirizzo non iscritto alla lista $listaddr$
+Subject: Non iscritto a $listaddr$
 
-Ciao, sono mlmmj, programma che gestisce la mailing list
+Ciao, sono il programma mlmmj che gestisce la lista
 
 $listaddr$
 
-Tu non sei iscritto alla lista di cui sopra e pertanto non puoi
-essere deiscritto.
+Non sei iscritto a questa lista, quindi non ti puoi deiscrivere.
+
 
 Per iscriverti manda un messaggio a:
 
 $listsubaddr$
 
-E per ottenere aiuto, manda un messaggio a:
+Per ottenere supporto manda un messaggio a:
 
 $helpaddr$
 

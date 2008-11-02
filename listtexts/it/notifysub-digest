@@ -1,10 +1,11 @@
-Soggetto: $newsub$ iscritto al sommario di $listaddr$
+Subject: $newsub$ iscritto alla versione digest di $listaddr$
 
-Ciao, sono mlmmj, il programma che gestisce la mailing list
+Ciao, sono il programma mlmmj che gestisce la lista
 
 $listaddr$
 
-Il seguente indirizzo e' stato iscritto al sommario della mailing list:
+Il seguente indirizzo si \u00E8 appena iscritto alla versione digest della 
+lista:
 
 $newsub$
 

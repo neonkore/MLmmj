@@ -1,6 +1,6 @@
-Soggetto: benvenuto a $listaddr$
+Subject: Benvenuto a $listaddr$
 
-Benvenuto! Tu sei stato iscritto alla mailing list
+Benvenuto! Sei stato iscritto alla lista
 
 $listaddr$
 
@@ -8,7 +8,7 @@ Per deiscriverti manda un messaggio a:
 
 $listunsubaddr$
 
-E per avere aiuto manda un messaggio a:
+Per ottenere supporto manda un messaggio a:
 
 $helpaddr$
 

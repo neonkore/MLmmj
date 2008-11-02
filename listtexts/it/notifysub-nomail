@@ -1,10 +1,11 @@
-Soggetto: $newsub$ iscritto alla versione "nomail" di $listaddr$
+Subject: $newsub$ iscritto alla versione nomail di $listaddr$
 
-Ciao, sono mlmmj, il programma che gestisce la mailing list
+Ciao, sono il programma mlmmj che gestisce la lista
 
 $listaddr$
 
-Il seguente indirizzo e' stato iscritto alla versione "nomail" della mailing list:
+Il seguente indirizzo si \u00E8 appena iscritto alla versione nomail della 
+lista:
 
 $newsub$
 

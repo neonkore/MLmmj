@@ -1,12 +1,12 @@
-Soggetto: messaggio alla lista $listaddr$ non inoltrato
+Subject: Invio a $listaddr$ negato
 
-Ciao, sono mlmmj, il programma che gestisce la mailing list
+Ciao, sono il programma mlmmj che gestisce la lista
 
 $listaddr$
 
-Sono spiacente di informarti che il tuo messaggio non puo' essere mandato
-alla lista. La tua mail e' stata rifiutata perche' non segue le regole
-impostate dall'amministratore della lista.
+Mi dispiace informarti che il tuo messaggio non pu\u00F2 essere consegnato 
+alla lista. Il tuo messaggio \u00E8 stato rifiutato a causa di una regola 
+impostata dall'amministratore della lista.
 
 Grazie.
 

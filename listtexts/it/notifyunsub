@@ -1,10 +1,10 @@
-Soggetto: $newsub$ deiscritto da $listaddr$
+Subject: $oldsub$ deiscritto da $listaddr$
 
-Ciao, sono mlmmj, il programma che gestische la mailing list
+Ciao, sono il programma mlmmj che gestisce la lista
 
 $listaddr$
 
-Il seguente indirizzo e' stato deiscritto dalla mailing list:
+Il seguente indirizzo si \u00E8 appena deiscritto dalla lista:
 
 $oldsub$
 

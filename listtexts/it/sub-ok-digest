@@ -1,14 +1,14 @@
-Soggetto: benvenuto al sommario della lista $listaddr$
+Subject: Benvenuto alla versione digest di $listaddr$
 
-Benvenuto! Sei stato iscritto al sommario della lista
+Benvenuto! Sei stato iscritto alla versione digest della lista
 
 $listaddr$
 
 Per deiscriverti manda un messaggio a:
 
-$digestunsubaddr$
+$listunsubaddr$
 
-E per avere aiuto manda un messaggio a:
+Per ottenere supporto manda un messaggio a:
 
 $helpaddr$
 

@@ -1,18 +1,14 @@
-Soggetto: messaggi indirizzati a $listaddr$ sono vietati
+Subject: Messaggi a $listaddr$ negati
 
-Ciao, sono mlmmj, il programma che gestisce la mailing list
+Ciao, sono il programma mlmmj che gestisce la lista
 
 $listaddr$
 
-Io sono spiacente di informarti che il tuo messaggio non puo' essere
-inoltrato alla lista.
+Mi dispiace informarti che il tuo messaggio non pu\u00F2 essere inviato alla 
+lista.
 
-Per mandare un messaggio alla lista, l'indirizzo della stessa deve
-essere presente nel campo A: o Cc: (in inglese To: e Cc:).
-
-Se tu sei un amministratore di una lista di mlmmj , tu dovresti sapere
-che questo comportamento puo' essere cambiato attraverso il file di controllo
-della lista 'tocc'.
+Per inviare messaggi a questa lista, l'indirizzo della lista deve 
+essere contenuto negli header To: oppure Cc:
 
 Grazie.
 

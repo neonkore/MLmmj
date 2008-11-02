@@ -1,0 +1,14 @@
+Subject: Invio a $listaddr$ negato a causa della dimensione limite
+
+Ciao, sono il programma mlmmj che gestisce la lista
+
+$listaddr$
+
+Mi dispiace informarti che il tuo messaggio non pu\u00F2 essere recapitato 
+alla lista. Il tuo messaggio \u00E8 stato respinto a causa della dimensione 
+limite di $maxmailsize$ byte.
+
+Grazie.
+
+--- Below this line are the first 100 lines of the denied message --->
+$originalmail$

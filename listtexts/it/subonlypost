@@ -1,22 +1,23 @@
-Soggetto: $listaddr$ e' una lista per soli iscritti
+Subject: $listaddr$ e` una lista riservata agli gli iscritti
 
-Ciao, sono mlmmj, il programma che gestisce la mailing list
+Ciao, sono il programma mlmmj che gestisce la lista
 
 $listaddr$
 
-Tu hai tentato di mandare un messaggio alla lista da questo indirizzo:
+Hai tentato di inviare un messaggio da questo indirizzo:
 
 $posteraddr$
 
-Ma l'indirizzo di cui sopra non risulta iscritto alla lista e soltanto
-gli iscritti possono inoltrare messaggi alla lista stessa.
+Ma questo indirizzo non \u00E8 iscritto, e solo gli iscritti possono inviare 
+messaggi alla lista.
 
-If tu ritieni di esserti iscritto correttamente, allora per cortesia
-verifica l'email che compare nel messaggio di benvenuto, oppure
-controlla gli header di un qualunque messaggio della mailing list.
+Se pensi di essere iscritto correttamente, controlla l'indirizzo con 
+cui ti sei iscritto nel messaggio di benvenuto, o controlla gli header 
+di un qualsiasi messaggio della lista.
 
-Se vuoi mandare messaggi alla lista da pi\u00F9 di un indirizzo email, puoi
-iscrivere eventuali altri indirizzi alla versione nomail della lista.
+Se vuoi essere in grado di inviare messaggio da pi\u00F9 di un indirizzo, 
+puoi iscriverti con gli altri indirizzi alla versione nomail della 
+lista.
 
 --- Below this line are the first 100 lines of the denied message --->
 $originalmail$

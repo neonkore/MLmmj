@@ -1,24 +1,23 @@
-Soggetto: conferma d'iscrizione a $listaddr$
+Subject: Conferma l'iscrizione a $listaddr$
 
-Ciao, sono mlmmj, il programma che gestisce la mailing list
+Ciao, sono il programma mlmmj che gestisce la lista
 
 $listaddr$
 
-Per confermare l'iscrizione alla lista dell'indirizzo
+Per confermare che vuoi che l'indirizzo
 
 $subaddr$
 
-per cortesia rispondi a
+sia aggiunto a questa lista, invia una risposta a:
 
 $confaddr$
 
-La conferma dell'iscrizione ha due scopi. Il primo e' quello
-di assicurare che l'indirizzo con cui ti sei iscritto sia valido,
-secondariamente essa evita che qualcun altro possa iscrivere
-il tuo indirizzo email senza il tuo permesso.
+Questa conferma ha due scopi. Controlla che sia possibile inviare 
+messaggi al tuo indirizzo. In secondo luogo assicura che qualcun'altro 
+non abbia tentato di iscrivere il tuo indirizzo senza il tuo permesso.
 
-Il tuo client di posta elettronica probabilmente replica automaticamente
-all'indirizzo di cui sopra, quando premi il pulsante "rispondi".
+Il tuo programma di posta potrebbe rispondere automaticamente 
+all'indirizzo di conferma quando premi il pulsante per rispondere.
 
-Il soggetto ed il corpo della mail possono essere vuoti.
+Il subject e il corpo dell'email possono essere arbitrari.
 
