@@ -85,8 +85,8 @@ die("non-existent list");
 $tpl->define(array("main" => "save.html"));
 $tpl->assign(array("LIST" => htmlentities($list)));
 
-$handle = fopen("../conf/tunables.pl", "r");
-$tunables = fread($handle, filesize("../conf/tunables.pl"));
+$handle = fopen("$templatedir/../conf/tunables.pl", "r");
+$tunables = fread($handle, filesize("$templatedir/../conf/tunables.pl"));
 fclose($handle);
 
 eval($tunables);
