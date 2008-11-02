@@ -42,10 +42,12 @@ extern char *optarg;
 
 static void print_help(const char *prg)
 {
-        printf("Usage: %s -L /path/to/listdir [-h] [-V] [-P] [-F]\n"
+        printf("Usage: %s -L /path/to/listdir [-s sender@example.org] [-e extension] [-h] [-V] [-P] [-F]\n"
 	       " -h: This help\n"
 	       " -F: Don't fork in the background\n"
 	       " -L: Full path to list directory\n"
+	       " -s: Specify sender address\n"
+	       " -e: The foo part of user+foo@example.org\n"
 	       " -P: Don't execute mlmmj-process\n"
 	       " -V: Print version\n", prg);
 	exit(EXIT_SUCCESS);
@@ -69,13 +71,19 @@ int main(int argc, char **argv)
 	mlmmjprocess = concatstr(2, bindir, "/mlmmj-process");
 	myfree(bindir);
 	
-	while ((opt = getopt(argc, argv, "hPVL:F")) != -1) {
+	while ((opt = getopt(argc, argv, "hPVL:s:e:F")) != -1) {
 		switch(opt) {
 		case 'h':
 			print_help(argv[0]);
 			break;
 		case 'L':
 			listdir = optarg;
+			break;
+		case 's':
+			setenv("SENDER", optarg, 1);
+			break;
+		case 'e':
+			setenv("EXTENSION", optarg, 1);
 			break;
 		case 'P':
 			noprocess = 1;
