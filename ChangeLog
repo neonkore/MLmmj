@@ -1,3 +1,4 @@
+ o PHP admin interface bugfix (Niki Guldbrand)
  o Added support for static bounce addresses (Thomas Jarosch)
  o Added a sanity check in mlmmj-receive-strip (Chris Webb)
  o Added miscellaneous sanity checks (Thomas Jarosch)
