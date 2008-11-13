@@ -1,3 +1,5 @@
+1.2.16-RC1
+ o Updated Dutch listtexts (Franky Van Liedekerke)
  o Updated Italian listtexts (Fabio Busatto)
  o Added Postfix pipe backend support (Niki Guldbrand)
  o PHP admin interface bugfix (Niki Guldbrand)
