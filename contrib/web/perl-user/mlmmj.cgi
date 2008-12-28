@@ -60,14 +60,13 @@ sub mlmmj_mail {
 	my $date = `/bin/date -R`;
 
 	$mail = "Received: from " . $query->remote_addr()
-		. " by " .  $query->server_name() . " witn HTTP;\n"
+		. " by " .  $query->server_name() . " with HTTP;\n"
 		. "\t$date"
 		. "X-Originating-IP: " . $query->remote_addr() . "\n"
 		. "X-Mailer: mlmmj-webinterface powered by Perl\n"
 		. "Date: $date"
 		. "From: $from\n"
 		. "To: $to\n"
-		. "Cc: $from\n"
 		. "Subject: $subject\n"
 		. "\n"
 		. "$body\n";
@@ -89,6 +88,15 @@ sub mlmmj_gen_to {
 	return sprintf("%s%s%s@%s", $user, $delimiter, $job, $domain);
 }
 
+sub check_email {
+    my $addr = shift;
+
+    if ($addr !~ /^[-!#$%&\'*+\.\/0-9=?A-Z^_a-z{|}~]+@[-0-9A-Za-z]+\.[-\.0-9A-Za-z]+$/) {
+        return false;
+    } else {
+        return true;
+    }
+}
 
 $query = new CGI;
 
@@ -98,10 +106,7 @@ $redirect_failure = $query->param('redirect_failure');
 $redirect_success = $query->param('redirect_success');
 $email = $query->param('email');
 
-print header;
-print $list;
-
-if (mlmmj_check_list($list) ne false) {
+if (mlmmj_check_list($list) ne false && check_email($email) ne false)) {
 	$to = mlmmj_gen_to($list, $job);
 	if ($to ne false) {
 		mlmmj_mail($email, $to, "$job to $list", $job);
