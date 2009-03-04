@@ -1,3 +1,4 @@
+ o Added contrib/web/php-moderation (Thomas Goirand)
 1.2.16
  o Fixed injection in contrib/web/perl-user (Gerd von Egidy)
 1.2.16-RC1
