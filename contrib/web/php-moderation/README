@@ -1,0 +1,52 @@
+MLMMJ PHP Moderation Web Interface by Thomas Goirand <thomas@goirand.fr>
+
+
+* dependencies *
+
+This app needs:
+- php with gettext() support (for translations). Nearly all (if not all)
+Unix distributions have php with gettext support.
+- The Mail_mime PEAR package (php-mail-mime in Debian)
+
+
+* setup *
+
+- Run "./build-translations.sh" to generate the gettext binaries out of the
+sources
+- Edit the 5 variables on top of mlmmj-moderation.php to set the
+moderation folder, list name, domain, delimiter and the address used to
+send the moderation validation messages. You will need gettext installed
+on your system...
+- Eventually rename mlmmj-moderation.php and edit mlmmj.css to your taste
+- Edit and rename the dot.htaccess files to .htaccess to protect the
+moderation folder from others
+- make it so this app have read/write access to the moderation folder.
+Write access is needed because the app does some unlink() calls to
+delete the messages.
+- If using debian, you might need to dpkg-reconfigure locales and add
+fr_FR.UTF-8, if you want to see my French translation (there might be
+some other distributions needing the same kind of thing, I don't know...).
+
+
+* known issues *
+
+- Because this web app is sending an email to validate messages to be
+moderated, once you have hit "validate", validated messages will still
+(most of the times) show in the interface, as the folder is (most of the
+times) read before MLMMJ has time to send the moderated messages and
+remove them from the moderation folder.
+
+A workaround would be to NOT display messages that are moderated on the
+URL bar, but it's not a good way to go, as if the server is very busy,
+the next refresh of the page (the one after the validation) can still
+show some messages already validated. We see here that the method to
+send emails doesn't seem to be very good... Would it be possible for me
+to rename the moderated messages???
+
+- Because it's the first version, I have not yet used POST, but some GET
+in order to see things on the URL bar. So, of course, we are here
+hitting the limitation of the URL size (if there are really a lot of
+messages to moderate). This can be changed later simply by adding
+method="POST" in the form, as I use $_REQUEST (and not the stupid $_POST
+/ $_GET that everybody uses...). I might do this on the next version,
+but for now, it's more easy for debug purposes to keep it this way.
