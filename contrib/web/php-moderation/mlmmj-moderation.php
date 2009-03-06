@@ -151,14 +151,24 @@ function printAllMessages($all_msg){
 		}
 		$out .= "<tr>";
 		$out .= "<td $cls>" . "<input type=\"checkbox\" name=\"msg_id[]\" value=\"". $all_msg[$i]["filename"] ."\">" . "</td>";
-		$out .= "<td $cls>" . htmlspecialchars($all_msg[$i]["headers"]["date"]) . "</td>";
-		if( strlen($all_msg[$i]["headers"]["subject"]) == 0){
+		if( isset($all_msg[$i]["headers"]["date"]) ){
+			$mydate = htmlspecialchars($all_msg[$i]["headers"]["date"]);
+		}else{
+			$mydate = _("No date");
+		}
+		$out .= "<td $cls>" . $mydate . "</td>";
+		if( !isset($all_msg[$i]["headers"]["subject"]) || strlen($all_msg[$i]["headers"]["subject"]) == 0){
 			$subject = _("No subject");
 		}else{
 			$subject = $all_msg[$i]["headers"]["subject"];
 		}
 		$out .= "<td $cls><a href=\"". $_SERVER["PHP_SELF"] ."?action=show_message&msgid=". $all_msg[$i]["filename"] ."\">" . htmlspecialchars($subject) . "</a></td>";
-		$out .= "<td $cls>" . htmlspecialchars($all_msg[$i]["headers"]["from"]) . "</td>";
+		if( isset($all_msg[$i]["headers"]["from"]) ){
+			$myfrom = htmlspecialchars($all_msg[$i]["headers"]["from"]);
+		}else{
+			$myfrom = _("No from in headers");
+		}
+		$out .= "<td $cls>" . $myfrom . "</td>";
 		$out .= "</tr>\n";
 	}
 	$out .= "</table>\n";
@@ -234,7 +244,7 @@ function checkscript(){
 <h3>MLMMJ "._("moderation web interface")."</h3>
 <a href=\"".$_SERVER["PHP_SELF"]."\">"._("Refresh page")."</a>";
 
-if( isset($_REQUEST["action"]) && $_REQUEST["action"] == show_message){
+if( isset($_REQUEST["action"]) && $_REQUEST["action"] == "show_message"){
 	if( !ereg("^([0-9a-f]+)\$",$_REQUEST["msgid"]) ){
 		echo "<span class=\"errorMessages\">"._("Message ID format is wrong: can't display!")."</span>";
 	}else{

@@ -7,15 +7,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-02-08 11:46+0000\n"
-"PO-Revision-Date: 2009-02-08 11:15+0000\n"
+"POT-Creation-Date: 2009-03-05 07:25+0800\n"
+"PO-Revision-Date: 2009-03-05 07:29+0800\n"
 "Last-Translator: Thomas Goirand <thomas@goirand.fr>\n"
 "Language-Team: Thomas Goirand <thomas@goirand.fr>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: mlmmj-moderation.php:249
+#: mlmmj-moderation.php:259
 msgid "Back to messages list"
 msgstr "Retour a la liste des messages"
 
@@ -23,27 +23,27 @@ msgstr "Retour a la liste des messages"
 msgid "Date"
 msgstr "Date"
 
-#: mlmmj-moderation.php:251
+#: mlmmj-moderation.php:261
 msgid "Date:"
 msgstr "Date :"
 
-#: mlmmj-moderation.php:167
+#: mlmmj-moderation.php:177
 msgid "Delete"
 msgstr "Effacer"
 
-#: mlmmj-moderation.php:246
+#: mlmmj-moderation.php:256
 msgid "Error: could not read"
 msgstr "Erreur: impossible de lire"
 
-#: mlmmj-moderation.php:165
+#: mlmmj-moderation.php:175
 msgid "For the selection:"
-msgstr "Pour la selection :"
+msgstr "Pour la sélection :"
 
 #: mlmmj-moderation.php:144
 msgid "From"
 msgstr "De"
 
-#: mlmmj-moderation.php:250
+#: mlmmj-moderation.php:260
 msgid "From:"
 msgstr "De:"
 
@@ -51,27 +51,35 @@ msgstr "De:"
 msgid "Inverse selection"
 msgstr "Inverser la selection"
 
-#: mlmmj-moderation.php:239
+#: mlmmj-moderation.php:249
 msgid "Message ID format is wrong: can't display!"
 msgstr "Le format de l'ID du message est faux: affichage impossible !"
 
-#: mlmmj-moderation.php:254
+#: mlmmj-moderation.php:264
 msgid "Message body:"
 msgstr "Corp du message :"
 
-#: mlmmj-moderation.php:184
+#: mlmmj-moderation.php:194
 msgid "Moderation ID not found in the moderation folder!"
-msgstr "ID de moderation non trouve dans le dossier de moderation!"
+msgstr "ID de modération non trouve dans le dossier de modération!"
 
-#: mlmmj-moderation.php:174
+#: mlmmj-moderation.php:157
+msgid "No date"
+msgstr "Pas de date"
+
+#: mlmmj-moderation.php:169
+msgid "No from in headers"
+msgstr "Pas de from dans les entêtes"
+
+#: mlmmj-moderation.php:184
 msgid "No message selected!"
-msgstr "Pas de message selectionne !"
+msgstr "Pas de message sélectionné !"
 
-#: mlmmj-moderation.php:156
+#: mlmmj-moderation.php:161
 msgid "No subject"
 msgstr "Pas de sujet"
 
-#: mlmmj-moderation.php:235
+#: mlmmj-moderation.php:245
 msgid "Refresh page"
 msgstr "Rafraichir la page"
 
@@ -79,22 +87,23 @@ msgstr "Rafraichir la page"
 msgid "Subject"
 msgstr "Sujet"
 
-#: mlmmj-moderation.php:253
+#: mlmmj-moderation.php:263
 msgid "Subject:"
 msgstr "Sujet :"
 
-#: mlmmj-moderation.php:252
+#: mlmmj-moderation.php:262
 msgid "To:"
 msgstr "Pour :"
 
-#: mlmmj-moderation.php:166
+#: mlmmj-moderation.php:176
 msgid "Validate"
 msgstr "Valider"
 
 #: mlmmj-moderation.php:122
 msgid "Warning: could not read"
-msgstr "Warning : impossible de lire"
+msgstr "Alerte : impossible de lire"
 
-#: mlmmj-moderation.php:234
+#: mlmmj-moderation.php:244
 msgid "moderation web interface"
 msgstr "interface web de moderation"
+
