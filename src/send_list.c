@@ -42,20 +42,58 @@
 #include "prepstdreply.h"
 #include "memory.h"
 
+
+
+static void print_subs(int cur_fd, char *dirname)
+{
+	char *fileiter;
+	DIR *dirp;
+	struct dirent *dp;
+	int subfd;
+
+	dirp = opendir(dirname);
+	if(dirp == NULL) {
+		fprintf(stderr, "Could not opendir(%s);\n", dirname);
+		exit(EXIT_FAILURE);
+	}
+	while((dp = readdir(dirp)) != NULL) {
+		if((strcmp(dp->d_name, "..") == 0) ||
+		   (strcmp(dp->d_name, ".") == 0))
+			continue;
+
+		fileiter = concatstr(2, dirname, dp->d_name);
+		subfd = open(fileiter, O_RDONLY);
+		if(subfd < 0) {
+			log_error(LOG_ARGS, "Could not open %s for reading",
+					fileiter);
+			myfree(fileiter);
+			continue;
+		}
+		if(dumpfd2fd(subfd, cur_fd) < 0) {
+			log_error(LOG_ARGS, "Error dumping subfile content"
+					" of %s to sub list mail",
+					fileiter);
+		}
+
+		close(subfd);
+		myfree(fileiter);
+	}
+	closedir(dirp);
+}
+
+
+
 void send_list(const char *listdir, const char *emailaddr,
 	       const char *mlmmjsend)
 {
 	char *queuefilename, *listaddr, *listdelim, *listname, *listfqdn;
-	char *fromaddr, *subdir, *fileiter;
-	DIR *dirp;
-	struct dirent *dp;
-	int fd, subfd;
+	char *fromaddr, *subdir, *nomaildir, *digestdir;
+	int fd;
 
 	listaddr = getlistaddr(listdir);
 	listdelim = getlistdelim(listdir);
 	listname = genlistname(listaddr);
 	listfqdn = genlistfqdn(listaddr);
-	subdir = concatstr(2, listdir, "/subscribers.d/");
 
 	fromaddr = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
 	myfree(listdelim);
@@ -78,37 +116,19 @@ void send_list(const char *listdir, const char *emailaddr,
 		exit(EXIT_FAILURE);
 	}
 
-	dirp = opendir(subdir);
-	if(dirp == NULL) {
-		fprintf(stderr, "Could not opendir(%s);\n", subdir);
-		exit(EXIT_FAILURE);
-	}
-	while((dp = readdir(dirp)) != NULL) {
-		if((strcmp(dp->d_name, "..") == 0) ||
-		   (strcmp(dp->d_name, ".") == 0))
-			continue;
+	subdir = concatstr(2, listdir, "/subscribers.d/");
+	nomaildir = concatstr(2, listdir, "/nomailsubs.d/");
+	digestdir = concatstr(2, listdir, "/digesters.d/");
 
-		fileiter = concatstr(2, subdir, dp->d_name);
-		subfd = open(fileiter, O_RDONLY);
-		if(subfd < 0) {
-			log_error(LOG_ARGS, "Could not open %s for reading",
-					fileiter);
-			myfree(fileiter);
-			continue;
-		}
-		if(dumpfd2fd(subfd, fd) < 0)
-			log_error(LOG_ARGS, "Error dumping subfile content "
-					"to sub list mail");
-
-		close(subfd);
-		myfree(fileiter);
-	}
-
+	print_subs(fd, subdir);
+	writen(fd, "\n-- \n", 5);
+	print_subs(fd, nomaildir);
+	writen(fd, "\n-- \n", 5);
+	print_subs(fd, digestdir);
 	writen(fd, "\n-- \nend of output\n", 19);
 
 	close(fd);
-	closedir(dirp);
-	
+
 	myfree(listaddr);
 	myfree(listname);
 	myfree(listfqdn);
