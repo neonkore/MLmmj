@@ -70,13 +70,13 @@ static char *action_strs[] = {
 
 
 void newmoderated(const char *listdir, const char *mailfilename,
-		  const char *mlmmjsend)
+		  const char *mlmmjsend, const char *efromsender)
 {
 	char *from, *listfqdn, *listname, *moderators = NULL;
 	char *buf, *replyto, *listaddr = getlistaddr(listdir), *listdelim;
-	char *queuefilename = NULL, *moderatorsfilename;
+	char *queuefilename = NULL, *moderatorsfilename, *efromismod = NULL;
 	char *mailbasename = mybasename(mailfilename), *tmp, *to;
-	int moderatorsfd;
+	int moderatorsfd, foundaddr = 0;
 	char *maildata[4] = { "moderateaddr", NULL, "moderators", NULL };
 #if 0
 	printf("mailfilename = [%s], mailbasename = [%s]\n", mailfilename,
@@ -93,11 +93,21 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	}
 	myfree(moderatorsfilename);
 
+	if(statctrl(listdir, "ifmodsendonlymodmoderate"))
+		efromismod = concatstr(2, efromsender, "\n");
+
 	while((buf = mygetline(moderatorsfd))) {
+		if(efromismod && strcmp(buf, efromismod) == 0)
+			foundaddr = 1;
 		tmp = moderators;
 		moderators = concatstr(2, moderators, buf);
 		myfree(buf);
 		myfree(tmp);
+	}
+
+	if(!foundaddr) {
+		myfree(efromismod);
+		efromismod = NULL;
 	}
 
 	close(moderatorsfd);
@@ -107,7 +117,11 @@ void newmoderated(const char *listdir, const char *mailfilename,
 			    "@", listfqdn);
 
 	maildata[1] = replyto;
-	maildata[3] = moderators;
+	if(efromismod) {
+		myfree(moderators);
+		maildata[3] = efromismod;
+	} else
+		maildata[3] = moderators;
 
 	from = concatstr(4, listname, listdelim, "owner@", listfqdn);
 	to = concatstr(3, listname, "-moderators@", listfqdn); /* FIXME JFA: Should this be converted? Why, why not? */
@@ -119,7 +133,15 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	queuefilename = prepstdreply(listdir, "moderation", "$listowner$",
 				     to, replyto, 2, maildata, NULL, mailfilename);
 
-	execlp(mlmmjsend, mlmmjsend,
+	if(efromismod)
+		execlp(mlmmjsend, mlmmjsend,
+				"-l", "1",
+				"-L", listdir,
+				"-F", from,
+				"-m", queuefilename,
+				"-T", efromsender, (char *)NULL);
+	else
+		execlp(mlmmjsend, mlmmjsend,
 				"-l", "2",
 				"-L", listdir,
 				"-F", from,
@@ -837,7 +859,7 @@ startaccess:
 		/* Don't send a mail about denial to the list, but silently
 		 * discard and exit. Also do this in case it's turned off */
 		accret = do_access(access_rules, &allheaders,
-								fromemails.emaillist[0], listdir);
+					fromemails.emaillist[0], listdir);
 		if (accret == DENY) {
 			if ((strcasecmp(listaddr, fromemails.emaillist[0]) ==
 						0) || noaccessdenymails) {
@@ -912,7 +934,7 @@ startaccess:
 			exit(EXIT_FAILURE);
 		}
 		myfree(donemailname);
-		newmoderated(listdir, mqueuename, mlmmjsend);
+		newmoderated(listdir, mqueuename, mlmmjsend, efrom);
 		return EXIT_SUCCESS;
 	}
 
