@@ -373,7 +373,7 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 	struct stat st;
 	pid_t childpid, pid;
 	time_t t;
-	int status, fromrequeuedir = 0;
+	int status, fromrequeuedir;
 
 	if(chdir(dirname) < 0) {
 		log_error(LOG_ARGS, "Could not chdir(%s)", dirname);
@@ -408,6 +408,10 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 
 		archivefilename = concatstr(3, listdir, "/archive/",
 						dp->d_name);
+
+		/* Explicitly initialize for each mail we examine */
+		fromrequeuedir = 0;
+
 		if(stat(archivefilename, &st) < 0) {
 			/* Might be it's just not moved to the archive
 			 * yet because it's still getting sent, so just

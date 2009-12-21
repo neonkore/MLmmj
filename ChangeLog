@@ -1,3 +1,5 @@
+ o Fixed bug in mlmmj-maintd which caused loss of archive files in some
+   requeue cases (Robin H. Johnson)
  o Added README.postfix (Jeremy Hinegardner, Andreas Schneider)
  o Added support for digest and nomail to +list (Christoph Wilke)
  o Caseinsensitive string compare for owner addr when +list is invoked. Spotted
