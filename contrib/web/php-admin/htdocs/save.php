@@ -27,7 +27,7 @@
  */
 
 require("../conf/config.php");
-require("class.FastTemplate.php");
+require("class.rFastTemplate.php");
 
 function mlmmj_boolean($name, $nicename, $text)
 {
@@ -72,7 +72,7 @@ function mlmmj_list($name, $nicename, $text)
 function encode_entities($str) { return htmlentities($str); }
 
 
-$tpl = new FastTemplate($templatedir);
+$tpl = new rFastTemplate($templatedir);
 
 $list = $HTTP_POST_VARS["list"];
 

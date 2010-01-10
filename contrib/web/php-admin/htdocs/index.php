@@ -26,10 +26,10 @@
  * IN THE SOFTWARE.
  */
 
-require("class.FastTemplate.php");
+require("class.rFastTemplate.php");
 require("../conf/config.php");
 
-$tpl = new FastTemplate($templatedir);
+$tpl = new rFastTemplate($templatedir);
 
 $tpl->define(array("main" => "index.html"));
 
