@@ -1,3 +1,4 @@
+1.2.17-RC2
  o Replaced class.FastTemplate.php with class.rFastTemplate.php in
    contrib/web/php-admin (Christoph Thiel)
 1.2.17-RC1
