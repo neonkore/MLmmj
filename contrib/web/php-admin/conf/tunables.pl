@@ -1,3 +1,9 @@
+mlmmj_list("listaddress",
+			  "List address",
+			  "This option contains all addresses which mlmmj sees as listaddresses (see ".
+			  "tocc below). The first one is the one used as the primary one, when mlmmj ".
+			  "sends out mail.");
+
 mlmmj_boolean("closedlist",
 			  "Closed list",
 			  "If the list is open or closed. If it's closed subscription ".
@@ -85,6 +91,11 @@ mlmmj_string("smtpport",
 			 "SMTP port",
 			 "In this file a port other than port 25 for connecting to the relayhost can be specified.");
 
+mlmmj_string("delimiter",
+			  "Delimiter",
+			  "This specifies what to use as recipient delimiter for the list.".
+			  "Default is '+'.");
+
 mlmmj_boolean("notifysub",
 			  "Notify subscribers",
 			  "If this option is set, the owner(s) will get a mail with the address of someone sub/unsubscribing to a mailinglist.");
@@ -119,6 +130,16 @@ mlmmj_boolean("noget",
 mlmmj_boolean("subonlyget",
 			  "Subscribers only get",
 			  "If this option is set, retrieving old posts with +get-N is only possible for subscribers.");
+
+mlmmj_string("verp",
+			  "VERP",
+			  "Enable VERP support. Anything added in this variable will be appended the ".
+			  "MAIL FROM: line. If 'postfix' is put in the file, it'll make postfix use ".
+			  "VERP by adding XVERP=-= to the MAIL FROM: line.");
+
+mlmmj_string("maxverprecips",
+			  "Maximum VERP recipients",
+			  "How many recipients pr. mail delivered to the smtp server. Defaults to 100.");
 
 mlmmj_boolean("notoccdenymails",
 			  "No To: Cc: deny mails",
@@ -171,3 +192,16 @@ mlmmj_string("staticbounceaddr",
 			 "If this is set to something\@example.org, the bounce address (Return-Path:) ".
 			 "will be fixed to something+listname-bounces-and-so-on\@example.org ".
 			 "in case you need to disable automatic bounce handling.");
+
+mlmmj_boolean("ifmodsendonlymodmoderate",
+			  "If moderator send only moderator moderate",
+			  "If this is set, then mlmmj in case of moderation checks the ".
+			  "envelope from, to see if the sender is a moderator, and in that case ".
+			  "only send the moderation mails to that address. In practice this means that ".
+			  "a moderator sending mail to the list won't bother all the other moderators ".
+			  "with his mail.");
+
+mlmmj_list("footer",
+			  "Footer",
+			  "The content of this option is appended to mail sent to the list.");
+

@@ -1,3 +1,4 @@
+ o Updated TUNABLES file (Ben Schmidt)
 1.2.17
  o Added ifmodsendonlymodmoderate tunable
  o Replaced class.FastTemplate.php with class.rFastTemplate.php in

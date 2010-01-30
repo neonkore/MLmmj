@@ -6,7 +6,8 @@ filename is supposed to be below listdir/control. In the case it's a "boolean",
 the contents of a file does not matter, the mere presence of it, will set the
 variable to "true". If it's a "normal" file, the first line will be used as
 value, leaving line 2 and forward ready for commentary etc. If it's possible
-to specify several entries (one pr. line), it's marked "list".
+to specify several entries (one pr. line), it's marked "list". If the file's
+entire content is used as value, it's marked "text".
 
  · listaddress			(list)
 
@@ -209,5 +210,10 @@ to specify several entries (one pr. line), it's marked "list".
    If this file is present, then mlmmj in case of moderation checks the
    envelope from, to see if the sender is a moderator, and in that case
    only send the moderation mails to that address. In practice this means that
-   a moderator sending mail to the list wont bother all the other moderators
+   a moderator sending mail to the list won't bother all the other moderators
    with his mail.
+
+ · footer			(text)
+
+   The content of this file is appended to mail sent to the list.
+
