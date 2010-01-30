@@ -1,4 +1,4 @@
-Subject: Nicht eingetragen auf $listaddr$
+Subject: Nicht auf $listaddr$ eingetragen.
 
 Hi, hier ist das mlmmj-Programm, das die Mailingliste 
 
@@ -8,6 +8,10 @@ verwaltet.
 
 Sie sind nicht auf dieser Liste eingetragen, deshalb k\u00F6nnen Sie
 sich auch nicht austragen.
+
+Um sich aus der Digest-Version auszutragen, senden Sie eine Mail an:
+
+$digestunsubaddr$
 
 Um sich einzutragen, senden Sie eine Mail an:
 

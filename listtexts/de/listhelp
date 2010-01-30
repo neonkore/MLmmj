@@ -8,6 +8,16 @@ Um sich auszutragen, senden Sie eine Mail an:
 
 $listunsubaddr$
 
+Um sich von der Digest-Version der Liste auszutragen, senden Sie eine
+Mail an:
+
+$digestunsubaddr$
+
+Um sich von der Nomail-Version der Liste auszutragen, senden Sie eine
+Mail an:
+
+$nomailunsubaddr$
+
 Um sich auf die Digest-Version auf die Liste einzutragen,
 senden Sie eine Mail an:
 
@@ -31,3 +41,4 @@ $listgetN$
 Die Adresse des Verwalters dieser Liste ist:
 
 $listowner$
+

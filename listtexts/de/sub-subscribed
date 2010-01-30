@@ -1,4 +1,4 @@
-Subject: Bereits eingetragen auf $listaddr$
+Subject: Bereits auf $listaddr$ eingetragen.
 
 Hi, hier ist das mlmmj-Programm, das die Mailingliste
 
@@ -13,7 +13,17 @@ Um sich abzumelden, senden Sie eine Mail an:
 
 $listunsubaddr$
 
-Um eine Hilfe zu erhalten, senden Sie eine Nachricht an:
+Um sich von der Digest-Version der Liste abzumelden, senden Sie eine
+Mail an:
+
+$digestunsubaddr$
+
+Um sich von der Nomail-Version der Liste abzumelden, senden Sie eine
+Mail an:
+
+$nomailunsubaddr$
+
+Um Hilfe zu erhalten, senden Sie eine Nachricht an:
 
 $helpaddr$
 
