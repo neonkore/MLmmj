@@ -145,10 +145,9 @@ char *substitute_one(const char *line, const char *listaddr,
 				value = concatstr(3, value, " ", str);
 				if(tmp)
 					myfree(tmp);
+				myfree(str);
 				count++;
 			}
-			if(str)
-				myfree(str);
 			close(mailfd);
 		}else{
 			log_error(LOG_ARGS, "Could not substitute $originalmail$ (mailname == %s)",mailname);

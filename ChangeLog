@@ -1,3 +1,4 @@
+ o Fixed memory leak in substitute_one() (Ben Schmidt)
  o Updated German listtexts (Christoph Wilke)
  o Updated TUNABLES file (Ben Schmidt)
 1.2.17
