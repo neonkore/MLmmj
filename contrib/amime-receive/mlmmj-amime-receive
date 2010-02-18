@@ -1,0 +1,89 @@
+#!/bin/bash
+# 
+# mlmmj-amime-receive
+#
+# Take mail from stdin, pipe it through altermime and then to mlmmj-recieve
+# needed to add footers in a MIME-aware way
+#
+# requires altermime, see http://www.pldaniels.com/altermime/
+#
+# just replace mlmmj-recieve (sic) with mlmmj-amime-receive, e.g. in /etc/aliases:
+# myml:   "|/usr/bin/mlmmj-amime-receive -L /var/spool/mlmmj/myml/"
+#
+# put the footer-text for the different MIME-types into 
+# control/amime-footer-text
+# control/amime-footer-html
+# control/amime-footer-base64
+#
+# Copyright 2008 by Gerd v. Egidy, <gerd@egidy.de>
+#
+# Licensed under MIT License, see LICENSE file coming with mlmmj
+#
+
+MLMMJRECIEVE=/usr/bin/mlmmj-recieve
+ALTERMIME=/usr/bin/altermime
+
+# check executables
+if ! [ -x $MLMMJRECIEVE ]; then
+    echo "can't find $MLMMJRECIEVE executable, aborting"
+    exit 1
+fi
+
+if ! [ -x $ALTERMIME ]; then
+    echo "can't find $ALTERMIME executable, aborting"
+    exit 1
+fi
+
+# read parameters
+I=1
+PARAM_L=0
+while [ $I -le $# ] && [ $PARAM_L == 0 ]; do
+    if [ "${!I}" == "-L" ]; then
+        PARAM_L=1
+    fi
+    I=$[$I+1]
+done
+
+if [ $PARAM_L == 1 ] && [ $I -le $# ]; then
+    MLPATH="${!I}"
+else
+    echo "parameter -L /path/to/listdir missing, aborting"
+    exit 1
+fi
+
+if ! [ -d "${MLPATH}" ]; then
+    echo "${MLPATH} is not existing or no directory, aborting"
+    exit 1
+fi
+
+CONTROLD="${MLPATH}/control"
+
+if ! [ -d "${CONTROLD}" ]; then
+    echo "${CONTROLD} is not existing or no directory, aborting"
+    exit 1
+fi
+
+# look for footer-files and build parameters
+
+if ! [ -f "${CONTROLD}/amime-footer-text" ]; then
+    echo "${CONTROLD}/amime-footer-text is not existing or no regular file, aborting"
+    exit 1
+fi
+
+PARAM="--disclaimer=${CONTROLD}/amime-footer-text"
+
+if [ -f "${CONTROLD}/amime-footer-html" ]; then
+    PARAM="${PARAM} --disclaimer-html=${CONTROLD}/amime-footer-html --htmltoo --force-for-bad-html"
+fi
+
+if [ -f "${CONTROLD}/amime-footer-base64" ]; then
+    PARAM="${PARAM} --disclaimer-b64=${CONTROLD}/amime-footer-base64"
+fi
+
+PARAM="${PARAM} --altersigned --log-syslog"
+
+# go to a dir where altermime can write it's tmp-files safely
+cd $MLPATH
+
+# pipe the calls
+$ALTERMIME --input=- ${PARAM} | $MLMMJRECIEVE "$@"
