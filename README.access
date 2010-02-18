@@ -23,8 +23,41 @@ The syntax is quite simple: action[ [!]regexp]
 - "Regexp" is a POSIX.2 extended regular expression. Matching is done case
   insensitive.
 
+The action "allow" will pass the mail on to the next step in processing. The
+mail may still be held for moderation, if it would have been so without access
+rules.
+
+The action "deny" will not send the mail to the mailing list, but will send a
+rejection mail to the sender.
+
+The action "discard" will not send the mail to the list, and will not send a
+rejection mail.
+
+The action "moderate" will hold the mail for moderation.
+
 IMPORTANT: if "moderate" is used then don't forget to add people who should
            function as moderators in listdir/control/moderators
+
+
+The flow out of the access system is like this:
+
+                      |
+                      v
++--------+   deny +--------+ discard   +---------+
+| reject |<-------| access |---------->| discard |
++--------+        +--------+           +---------+
+               allow |  | moderate
+                     |  +-----------+
+                     v              v
+               +------------+    +------+
+               | moderation |--->| hold |
+               +------------+    +------+
+                     |              |
+                     v              |
+                  +------+          |
+                  | send |<---------+
+                  +------+
+
 
 First a simple example. This rule set will reject any mail that is NOT plain
 text, or has a subject that contains "BayStar", and allow anything else:
