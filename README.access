@@ -17,7 +17,7 @@ The first rule to match a header decides which action to take - allow, deny,
 discard or moderate the post.
 
 The syntax is quite simple: action[ [!]regexp]
-- "Action" can be "allow", "deny", "discard" or "moderate".
+- "Action" can be "allow", "send", "deny", "discard" or "moderate".
 - The optional "!" makes the rule a match, if NO header matches the regular
   expression.
 - "Regexp" is a POSIX.2 extended regular expression. Matching is done case
@@ -26,6 +26,9 @@ The syntax is quite simple: action[ [!]regexp]
 The action "allow" will pass the mail on to the next step in processing. The
 mail may still be held for moderation, if it would have been so without access
 rules.
+
+The action "send" will send the mail unconditionally. It will not be
+moderated.
 
 The action "deny" will not send the mail to the mailing list, but will send a
 rejection mail to the sender.
@@ -39,24 +42,27 @@ IMPORTANT: if "moderate" is used then don't forget to add people who should
            function as moderators in listdir/control/moderators
 
 
-The flow out of the access system is like this:
+The flow through the access system is like this:
 
-                      |
-                      v
-+--------+   deny +--------+ discard   +---------+
-| reject |<-------| access |---------->| discard |
-+--------+        +--------+           +---------+
-               allow |  | moderate
-                     |  +-----------+
-                     v              v
-               +------------+    +------+
-               | moderation |--->| hold |
-               +------------+    +------+
-                     |              |
-                     v              |
-                  +------+          |
-                  | send |<---------+
-                  +------+
+               deny       +------+
+       +----------------->| deny |
+       |                  +------+
+       |
+       |       discard    +---------+
+       |  +-------------->| discard |
+       |  |               +---------+
+       |  |                   ^
+       |  |                   | expire
+    +--------+ moderate   +------+           +------+
+--->| access |----------->| hold |---------->| send |--->
+    +--------+            +------+ confirm   +------+
+       |  |                   ^                ^  ^
+       |  |                   | yes            |  |
+       |  |    allow      +------------+ no    |  |
+       |  +-------------->| moderation |-------+  |
+       |                  +------------+          |
+       |       send                               |
+       +------------------------------------------+
 
 
 First a simple example. This rule set will reject any mail that is NOT plain

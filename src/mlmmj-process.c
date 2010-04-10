@@ -55,6 +55,7 @@
 
 enum action {
 	ALLOW,
+	SEND,
 	DENY,
 	MODERATE,
 	DISCARD
@@ -173,6 +174,9 @@ static enum action do_access(struct strlist *rule_strs, struct strlist *hdrs,
 		if (strncmp(rule_ptr, "allow", 5) == 0) {
 			rule_ptr += 5;
 			act = ALLOW;
+		} else if (strncmp(rule_ptr, "send", 4) == 0) {
+			rule_ptr += 4;
+			act = SEND;
 		} else if (strncmp(rule_ptr, "deny", 4) == 0) {
 			rule_ptr += 4;
 			act = DENY;
@@ -851,6 +855,9 @@ int main(int argc, char **argv)
 	}
 
 startaccess:
+	if(!moderated)
+		moderated = statctrl(listdir, "moderated");
+
 	noaccessdenymails = statctrl(listdir, "noaccessdenymails");
 
 	access_rules = ctrlvalues(listdir, "access");
@@ -917,11 +924,13 @@ startaccess:
 			myfree(donemailname);
 			myfree(discardname);
                 	exit(EXIT_SUCCESS);
+		} else if (accret == SEND) {
+			moderated = 0;
+		} else if (accret == ALLOW) {
+			/* continue processing as normal */
 		}
 	}
 
-	if(!moderated)
-		moderated = statctrl(listdir, "moderated");
 	if(moderated) {
 		mqueuename = concatstr(3, listdir, "/moderation/",
 				       randomstr);
