@@ -1,0 +1,23 @@
+Subject: $listaddr$ listesine sadece uyeler e-posta gonderebilir
+
+Merhaba, bu mesaj mlmmj liste yazilimi tarafindan gonderilmistir.
+
+$listaddr$
+
+Asagidaki adresten listeye e-posta gonderdiniz:
+
+$posteraddr$
+
+Ancak bu adres e-posta listesine uye degil ve sadece uyeler listeye
+e-posta gonderebilir.
+
+Eger listeye uye oldugunuzu dusunuyorsaniz, lutfen kayit olurken kullanmis
+oldugunuz e-posta adresini kontrol edin ve listeye gonderilen mesajlarin
+basliklarini kontrol edin.
+
+Eger birden fazla e-posta adresi kullanarak listeye e-posta gondermek
+istiyorsaniz, diger e-posta adreslerinizi mesaj almayacak sekilde listeye
+uye yapabilirsiniz.
+
+--- Asagida reddedilen e-postanin ilk 100 satiri yer almaktadir --->
+$originalmail$

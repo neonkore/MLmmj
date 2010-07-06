@@ -1,0 +1,30 @@
+Subject: $listaddr$ listesi icin kullanilabilir komutlar
+
+Merhaba,
+
+Su secenekleri kullanmaniz mumkun:
+
+Listeden ayrilmak icin su adrese e-posta gonderin:
+
+$listunsubaddr$
+
+Toplu mesaj almak icin su adrese e-posta gonderin:
+
+$digestsubaddr$
+
+Listeden e-posta almamak icin su adrese e-posta gonderin:
+
+$nomailsubaddr$
+
+Bu durumda listeye uye olarak gozukursunuz fakat listeden e-posta
+almazsiniz. Bu secenek eger birden fazla e-posta adresinden listeye
+e-posta attiginizda faydali olmaktadir.
+
+Arsivden N numarali e-postayi almak icin su adrese e-posta gonderin:
+
+$listgetN$
+
+Liste yoneticisiyle iletisim kurmak icin, su adrese e-posta gonderin:
+
+$listowner$
+

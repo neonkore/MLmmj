@@ -1,3 +1,4 @@
+ o Added Turkish translation (Samed Beyribey)
  o Fixed security bug in mlmmj-php-admin (Florian Streibelt, Morten Shearman
    Kirkegaard)
  o Added "send" keyword to control/access handling (Ben Schmidt)

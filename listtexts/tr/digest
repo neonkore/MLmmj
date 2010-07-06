@@ -1,0 +1,5 @@
+Subject: $listaddr$ toplu mesaj sayi $digestissue$ ($digestinterval$)
+
+Basliklar ($digestfirst$ ile $digestlast$ arasindaki mesajlar):
+
+$digestthreads$

@@ -1,0 +1,14 @@
+Subject: $listaddr$ listesine gonderilen e-posta boyutu cok buyuk
+
+Merhaba, bu e-posta mlmmj liste yazilimi tarafindan gonderilmektedir.
+
+$listaddr$
+
+Gondermis oldugunuz e-posta, izin verilen maksimum boyutu astigi icin
+listeye gonderilemedi. Izin verilen maksimum boyut $maxmailsize$
+bayttir.
+
+Tesekkurler.
+
+--- Reddedilen mesajin ilk 100 satiri asagida yer almaktadir --->
+$originalmail$

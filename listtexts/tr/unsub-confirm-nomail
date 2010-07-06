@@ -1,0 +1,22 @@
+Subject: $listaddr$ listesinden e-posta almaksizin uyeliginizi sonlandirmak icin onayiniz gerekiyor
+
+Merhaba, bu mesaj mlmmj liste yazilimi tarafindan gonderilmistir.
+
+$listaddr$
+
+Asagidaki adres e-posta almayacak sekildeki uyeligini sonlandirmak
+istiyor: 
+
+$subaddr$
+
+Eger onay veriyorsaniz asagidaki adrese e-posta gonderin:
+
+$confaddr$
+
+Bu e-postayi yanitlamaniz yeterli olacaktir. Istemcinizin yanitla
+secenegini kullanabilirsiniz.
+
+Eger bu listeye uye degilseniz, yanit almayacaksiniz.
+
+E-posta basliklarinda "Return-Path" kismindan hangi e-posta listesine
+uye oldugunuzu gorebilirsiniz.
