@@ -104,6 +104,15 @@ $list = $HTTP_GET_VARS["list"];
 if(!isset($list))
 die("no list specified");
 
+if (strchr($list, "/") !== false)
+die("slash in list name");
+
+if ($list == ".")
+die("list name is dot");
+
+if ($list == "..")
+die("list name is dot-dot");
+
 if(!is_dir($topdir."/".$list))
 die("non-existent list");
 
