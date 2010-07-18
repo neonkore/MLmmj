@@ -1,3 +1,4 @@
+ o Better validation of input in php-admin (Thomas Goirand)
  o Added Turkish translation (Samed Beyribey)
  o Fixed security bug in mlmmj-php-admin (Florian Streibelt, Morten Shearman
    Kirkegaard)
