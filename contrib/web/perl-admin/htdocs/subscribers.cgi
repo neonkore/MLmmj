@@ -104,7 +104,11 @@ if (defined $removeall) {
 		if ($nomailsub) {
 			system "$mlmmjsub -L $topdir/$list -a $email -Un -s";
 		}
-		$action .= "$email has been subscribed.<br>\n";
+		if ($? == 0) {
+			$action .= "$email has been subscribed.<br>\n";
+		} else {
+			$action .= "error subscribing $email (code $?)<br>\n";
+		}
 	   } else {
 		$action .= '"'.encode_entities($email).'" is not a valid email address.<br>';
 	   }
@@ -123,7 +127,11 @@ if (defined $removeall) {
 		if ($nomailsub) {
 			system "$mlmmjsub -L $topdir/$list -a $email -Un -s";
 		}
-		$action = "error adding $email (code $?)";
+		if ($? == 0) {
+			$action = "$email has been added";
+		} else {
+			$action = "error adding $email (code $?)";
+		}
 	} else {
 		$action = '"'.encode_entities($email).'" is not a valid email address.';
 	}
