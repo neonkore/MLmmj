@@ -39,6 +39,8 @@ function mlmmj_boolean($name, $nicename, $text)
     {
 	if(!touch($file))
 	    die("Couldn't open ".$file." for writing");
+	if (!chmod($file, 0644))
+	    die("Couldn't chmod ".$file);
     }
     else
 	@unlink($file);
@@ -60,8 +62,11 @@ function mlmmj_list($name, $nicename, $text)
 	if (!$fp = fopen($file, "w"))
 	    die("Couldn't open ".$file." for writing");
 
-	fwrite($fp, $HTTP_POST_VARS[$name]);
+	fwrite($fp, preg_replace('/\\r\\n/',"\n",$HTTP_POST_VARS[$name]));
 	fclose($fp);
+
+	if (!chmod($file, 0644))
+	    die("Couldn't chmod ".$file);
     }
     else
 	@unlink($file);
