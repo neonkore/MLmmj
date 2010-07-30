@@ -30,9 +30,12 @@
 
 int random_int()
 {
+	static int init = 0;
 	unsigned int seed;
 	int devrandom;
 	unsigned char ch;
+
+	if (init) return rand();
 
 	seed = (unsigned int)time(NULL);
 
@@ -53,6 +56,7 @@ int random_int()
 	}
 
 	srand(seed);
+	init = 1;
 
 	return rand();
 }
