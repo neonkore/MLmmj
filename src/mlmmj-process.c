@@ -77,8 +77,9 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	char *buf, *replyto, *listaddr = getlistaddr(listdir), *listdelim;
 	char *queuefilename = NULL, *moderatorsfilename, *efromismod = NULL;
 	char *mailbasename = mybasename(mailfilename), *tmp, *to;
-	int moderatorsfd, foundaddr = 0;
+	int moderatorsfd, foundaddr = 0, notifymod = 0, status;
 	char *maildata[4] = { "moderateaddr", NULL, "moderators", NULL };
+	pid_t childpid, pid;
 #if 0
 	printf("mailfilename = [%s], mailbasename = [%s]\n", mailfilename,
 			                                     mailbasename);
@@ -132,24 +133,59 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	myfree(listfqdn);
 
 	queuefilename = prepstdreply(listdir, "moderation", "$listowner$",
-				     to, replyto, 2, maildata, NULL, mailfilename);
+				     to, replyto, 2, maildata, NULL,
+				     mailfilename);
 
-	if(efromismod)
-		execlp(mlmmjsend, mlmmjsend,
-				"-l", "1",
-				"-L", listdir,
-				"-F", from,
-				"-m", queuefilename,
-				"-T", efromsender, (char *)NULL);
-	else
-		execlp(mlmmjsend, mlmmjsend,
-				"-l", "2",
-				"-L", listdir,
-				"-F", from,
-				"-m", queuefilename, (char *)NULL);
+	/* we might need to exec more than one mlmmj-send */
+	
+	notifymod = !efromismod && statctrl(listdir,"notifymod");
+	
+	if (notifymod) {
+		childpid = fork();
+		if(childpid < 0)
+			log_error(LOG_ARGS, "Could not fork; poster not notified");
+	} else
+		childpid = -1;
+
+	if(childpid != 0) {
+		if(childpid > 0) {
+			do /* Parent waits for the child */
+				pid = waitpid(childpid, &status, 0);
+			while(pid == -1 && errno == EINTR);
+		}
+		if(efromismod)
+			execlp(mlmmjsend, mlmmjsend,
+					"-l", "1",
+					"-L", listdir,
+					"-F", from,
+					"-m", queuefilename,
+					"-T", efromsender, (char *)NULL);
+		else
+			execlp(mlmmjsend, mlmmjsend,
+					"-l", "2",
+					"-L", listdir,
+					"-F", from,
+					"-m", queuefilename, (char *)NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
+		exit(EXIT_FAILURE);
+	}
+
+	myfree(queuefilename);
+
+	/* send mail to poster that the list is moderated */
+
+	queuefilename = prepstdreply(listdir, "moderation-poster",
+				     "$listowner$", efromsender,
+				     NULL, 1, maildata+2, NULL, mailfilename);
+
+	execlp(mlmmjsend, mlmmjsend,
+			"-l", "1",
+			"-L", listdir,
+			"-F", from,
+			"-m", queuefilename,
+			"-T", efromsender, (char *)NULL);
 
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
-
 	exit(EXIT_FAILURE);
 }
 

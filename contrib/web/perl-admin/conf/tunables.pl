@@ -100,6 +100,11 @@ mlmmj_boolean("notifysub",
 			  "Notify subscribers",
 			  "If this option is set, the owner(s) will get a mail with the address of someone sub/unsubscribing to a mailinglist.");
 
+mlmmj_boolean("notifymod",
+			  "Notify moderation",
+			  "If this option is set, the poster (based on the envelope from) will ".
+			  "get a mail when their post is being moderation.");
+
 mlmmj_string("digestinterval",
 			 "Digest interval",
 			 "This option specifies how many seconds will pass before the ".

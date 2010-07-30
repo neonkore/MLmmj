@@ -103,6 +103,11 @@ entire content is used as value, it's marked "text".
    If this file is present, the owner(s) will get a mail with the address of
    someone sub/unsubscribing to a mailinglist.
 
+ · notifymod			(boolean)
+
+   If this file is present, the poster (based on the envelope from) will
+   get a mail when their post is being moderation.
+
  · digestinterval		(normal)
 
    This file specifies how many seconds will pass before the next digest is
