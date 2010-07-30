@@ -672,9 +672,9 @@ int send_mail_many_list(int sockfd, const char *from, const char *replyto,
 
 static void print_help(const char *prg)
 {
-        printf("Usage: %s [-L /path/to/list || -l listctrl] \n"
-	       "       -m /path/to/mail [-a] [-D] [-F] [-h] [-r] [-R] "
-	       "[-s] [-T] [-V]\n"
+	printf("Usage: %s [-L /path/to/list || -l listctrl] \n"
+	       "       -m /path/to/mail [-a] [-D] [-F] [-h] [-o] [-r] [-R] "
+	       "[-R] [-s] [-T] [-V]\n"
 	       " -a: Don't archive the mail\n"
 	       " -D: Don't delete the mail after it's sent\n"
 	       " -F: What to use as MAIL FROM:\n"
@@ -689,6 +689,7 @@ static void print_help(const char *prg)
 	       "    '7' means 'digest'\n"
 	       " -L: Full path to list directory\n"
 	       " -m: Full path to mail file\n"
+	       " -o: Address to omit from distribution (normal mail only)\n"
 	       " -r: Relayhost IP address (defaults to 127.0.0.1)\n"
 	       " -R: What to use as Reply-To: header\n"
 	       " -s: Subscribers file name\n"
@@ -704,7 +705,7 @@ int main(int argc, char **argv)
 	int deletewhensent = 1, sendres = 0, archive = 1, digest = 0;
 	int ctrlarchive, res;
 	char *listaddr = NULL, *listdelim = NULL;
-	char *mailfilename = NULL, *subfilename = NULL;
+	char *mailfilename = NULL, *subfilename = NULL, *omit = NULL;
 	char *replyto = NULL, *bounceaddr = NULL, *to_addr = NULL;
 	char *relayhost = NULL, *archivefilename = NULL, *tmpstr;
 	char *listctrl = NULL, *subddirname = NULL, *listdir = NULL;
@@ -737,7 +738,7 @@ int main(int argc, char **argv)
 	if(sigaction(SIGTERM, &sigact, NULL) < 0)
 		log_error(LOG_ARGS, "Could not install SIGTERM handler!");
 
-	while ((opt = getopt(argc, argv, "aVDhm:l:L:R:F:T:r:s:")) != -1){
+	while ((opt = getopt(argc, argv, "aVDhm:l:L:R:F:T:r:s:o:")) != -1){
 		switch(opt) {
 		case 'a':
 			archive = 0;
@@ -759,6 +760,9 @@ int main(int argc, char **argv)
 			break;
 		case 'm':
 			mailfilename = optarg;
+			break;
+		case 'o':
+			omit = optarg;
 			break;
 		case 'r':
 			relayhost = optarg;
@@ -1179,6 +1183,22 @@ int main(int argc, char **argv)
 			do {
 				res = getaddrsfromfd(&stl, subfd,
 						maxverprecips);
+				if(omit != NULL && maxverprecips > 1) {
+					for(i = 0; i < stl.count; i++) {
+						if(strcmp(stl.strs[i], omit)
+							== 0) {
+						    myfree(stl.strs[i]);
+						    stl.count--;
+						    while (i < stl.count) {
+							stl.strs[i] =
+								stl.strs[i+1];
+							i++;
+						    }
+						    stl.strs[stl.count] = NULL;
+						    break;
+						}
+					}
+				}
 				if(stl.count == maxverprecips) {
 					initsmtp(&sockfd, relay, smtpport);
 					if(verp) {

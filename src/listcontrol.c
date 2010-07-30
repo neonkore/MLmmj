@@ -105,7 +105,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		const char *mlmmjbounce, const char *mailname)
 {
 	char *bouncenr, *tmpstr;
-	char *param = NULL, *conffilename, *moderatefilename;
+	char *param = NULL, *conffilename, *moderatefilename, *omitfilename;
+	char *omit = NULL;
 	char *c, *archivefilename, *sendfilename;
 	const char *subswitch;
 	struct stat stbuf;
@@ -604,7 +605,6 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		}
 
 		sendfilename = concatstr(2, moderatefilename, ".sending");
-
 		if(stat(moderatefilename, &stbuf) < 0) {
 			myfree(moderatefilename);
 			/* no mail to moderate */
@@ -620,12 +620,33 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 			exit(EXIT_FAILURE);
 		}
 
+		omitfilename = concatstr(2, moderatefilename, ".omit");
+		if(stat(omitfilename, &stbuf) == 0) {
+			tmpfd = open(omitfilename, O_RDONLY);
+			if(tmpfd < 0) {
+				log_error(LOG_ARGS, "Could not open %s",
+						omitfilename);
+			} else {
+				omit = mygetline(tmpfd);
+				close(tmpfd);
+				chomp(omit);
+			}
+			unlink(omitfilename);
+			myfree(omitfilename);
+		}
+
 		log_oper(listdir, OPLOGFNAME, "%s moderated %s",
 				fromemails->emaillist[0], moderatefilename);
 		myfree(moderatefilename);
-		execlp(mlmmjsend, mlmmjsend,
-				"-L", listdir,
-				"-m", sendfilename, (char *)NULL);
+		if (omit != NULL)
+			execlp(mlmmjsend, mlmmjsend,
+					"-L", listdir,
+					"-o", omit,
+					"-m", sendfilename, (char *)NULL);
+		else
+			execlp(mlmmjsend, mlmmjsend,
+					"-L", listdir,
+					"-m", sendfilename, (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsend);
 		exit(EXIT_FAILURE);

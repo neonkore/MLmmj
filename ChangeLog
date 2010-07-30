@@ -1,3 +1,4 @@
+ o Added notmetoo feature where posts are not mirrored to their senders
  o Check return status in mlmmj-perl-admin when adding subscribers (Florian
    Streibelt, Bitmand)
  o Better validation of input in php-admin (Thomas Goirand)

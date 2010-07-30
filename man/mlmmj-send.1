@@ -1,11 +1,11 @@
-.TH mlmmj-send "1" "September 2004" mlmmj-send
+.TH mlmmj-send "1" "January 2010" mlmmj-send
 .SH NAME
 mlmmj-send \- send mail to a mailinglist or similar
 .SH SYNOPSIS
 .B mlmmj-send
 [\fI-L\fR /path/to/list | \fI-l\fR listctrl] \fI\-m\fR /path/to/mail
-[\fI-a\fR] [\fI-D\fR] [\fI-F\fR] [\fI-h\fR] [\fI-r\fR] [\fI-R\fR] [\fI-s\fR]
-[\fI-T\fR] [\fI-V\fR]
+[\fI-a\fR] [\fI-D\fR] [\fI-F\fR] [\fI-h\fR] [\fI-o\fR] [\fI-r\fR] [\fI-R\fR]
+[\fI-s\fR] [\fI-T\fR] [\fI-V\fR]
 .HP
 \fB\-a\fR: Don't archive the mail
 .HP
@@ -20,6 +20,8 @@ mlmmj-send \- send mail to a mailinglist or similar
 \fB\-L\fR: Full path to list directory
 .HP
 \fB\-m\fR: Full path to mail file
+.HP
+\fB\-o\fR: Address to omit from distribution (normal mail only)
 .HP
 \fB\-r\fR: Relayhost IP address (defaults to 127.0.0.1)
 .HP

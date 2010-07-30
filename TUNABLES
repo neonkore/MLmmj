@@ -217,3 +217,9 @@ entire content is used as value, it's marked "text".
 
    The content of this file is appended to mail sent to the list.
 
+ · notmetoo			(boolean)
+
+   If this file is present, mlmmj attempts to exclude the sender of a post
+   from the distribution list for that post so people don't receive copies
+   of their own posts.
+

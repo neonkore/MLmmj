@@ -335,14 +335,15 @@ static void print_help(const char *prg)
 int main(int argc, char **argv)
 {
 	int i, j, opt, noprocess = 0, moderated = 0;
-	int hdrfd, footfd, rawmailfd, donemailfd;
+	int hdrfd, footfd, rawmailfd, donemailfd, omitfd;
 	int subonlypost = 0, addrtocc = 1, intocc = 0, modnonsubposts = 0;
 	int maxmailsize = 0;
 	int notoccdenymails = 0, noaccessdenymails = 0, nosubonlydenymails = 0;
 	int nomaxmailsizedenymails = 0;
+	int notmetoo = 0;
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
-	char *randomstr = NULL, *mqueuename;
+	char *randomstr = NULL, *mqueuename, *omitfilename;
 	char *mlmmjsend, *mlmmjsub, *mlmmjunsub, *mlmmjbounce;
 	char *bindir, *subjectprefix, *discardname, *listaddr, *listdelim;
 	char *listfqdn, *listname, *fromaddr;
@@ -855,6 +856,7 @@ int main(int argc, char **argv)
 	}
 
 startaccess:
+
 	if(!moderated)
 		moderated = statctrl(listdir, "moderated");
 
@@ -931,6 +933,8 @@ startaccess:
 		}
 	}
 
+	notmetoo = statctrl(listdir, "notmetoo");
+
 	if(moderated) {
 		mqueuename = concatstr(3, listdir, "/moderation/",
 				       randomstr);
@@ -943,6 +947,27 @@ startaccess:
 			exit(EXIT_FAILURE);
 		}
 		myfree(donemailname);
+		if (notmetoo) {
+			omitfilename = concatstr(2, mqueuename, ".omit");
+			omitfd = open(omitfilename, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
+			if (omitfd < 0) {
+				log_error(LOG_ARGS, "could not open %s",
+					    	    omitfilename);
+				myfree(mqueuename);
+				myfree(omitfilename);
+				exit(EXIT_FAILURE);
+			}
+			myfree(omitfilename);
+			if(writen(omitfd, fromemails.emaillist[0],
+					strlen(fromemails.emaillist[0])) < 0) {
+				log_error(LOG_ARGS,
+						"could not write omit file");
+				myfree(mqueuename);
+				exit(EXIT_FAILURE);
+			}
+			fsync(omitfd);
+			close(omitfd);
+		}
 		newmoderated(listdir, mqueuename, mlmmjsend, efrom);
 		return EXIT_SUCCESS;
 	}
@@ -955,7 +980,13 @@ startaccess:
 		exit(EXIT_SUCCESS);
 	}
 
-	execlp(mlmmjsend, mlmmjsend,
+	if (notmetoo)
+		execlp(mlmmjsend, mlmmjsend,
+				"-L", listdir,
+				"-o", fromemails.emaillist[0],
+				"-m", donemailname, (char *)NULL);
+	else
+		execlp(mlmmjsend, mlmmjsend,
 				"-L", listdir,
 				"-m", donemailname, (char *)NULL);
 	log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);

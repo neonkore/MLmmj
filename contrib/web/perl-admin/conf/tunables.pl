@@ -205,3 +205,9 @@ mlmmj_list("footer",
 			  "Footer",
 			  "The content of this option is appended to mail sent to the list.");
 
+mlmmj_boolean("notmetoo",
+			  "Not me too",
+			  "If this is set, mlmmj attempts to exclude the sender of a post ".
+			  "from the distribution list for that post so people don't receive copies ".
+			  "of their own posts.");
+

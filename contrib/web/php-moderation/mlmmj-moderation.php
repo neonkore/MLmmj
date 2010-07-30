@@ -116,6 +116,7 @@ function getMessageList(){
 	if (is_dir($mod_dir)) {
 		if ($dh = opendir($mod_dir)) {
 			while (($file = readdir($dh)) !== false) {
+				if( !ereg("^([0-9a-f]+)\$",$file) ) continue;
 				$full_path = $mod_dir . "/" . $file;
 				if(filetype($full_path) == "file"){
 					if(FALSE === ($input = file_get_contents($full_path))){
@@ -203,6 +204,9 @@ if( isset($_REQUEST["validate"]) || isset($_REQUEST["delete"])){
 			}else{
 //				echo "Deleting message ".$_REQUEST["msg_id"][$i]."<br>";
 				unlink($mod_dir . "/" . $_REQUEST["msg_id"][$i]);
+				if( file_exists($mod_dir . "/" . $_REQUEST["msg_id"][$i] . ".orig") ){
+					unlink($mod_dir . "/" . $_REQUEST["msg_id"][$i] . ".orig");
+				}
 			}
 		}
 	}
