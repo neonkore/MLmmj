@@ -54,7 +54,7 @@ function mlmmj_string($name, $nicename, $text)
     $value = "";
 
     if(!is_file($file))
-	$lines = "";
+	$lines = array("");
     else
 	$lines = file($file);
 
