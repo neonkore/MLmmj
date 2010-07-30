@@ -158,6 +158,12 @@ entire content is used as value, it's marked "text".
    when it was rejected due to an access rule (see 'access') or whether it's a
    subscribers only posting list (see 'subonlypost').
 
+ · nosubmodmails		(boolean)
+
+   This switch turns off whether mlmmj sends out notification about
+   subscription being moderated to the person requesting subscription
+   (see 'submod').
+
  · smtpport			(normal)
 
    In this file a port other than port 25 for connecting to the relayhost

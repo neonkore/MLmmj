@@ -54,12 +54,12 @@ void moderate_sub(const char *listdir, const char *listaddr,
 		const char *listdelim, const char *subaddr,
 		const char *mlmmjsend, enum subtype typesub)
 {
-	int i, fd;
+	int i, fd, status, nosubmodmails = 0;
 	char *a = NULL, *queuefilename, *from, *listname, *listfqdn, *str;
 	char *modfilename, *randomstr, *mods, *to, *replyto, *moderators = NULL;
 	char *modfilebase;
 	struct strlist *submods;
-	pid_t pid;
+	pid_t childpid, pid;
 	char *maildata[6] = { "subaddr", NULL, "moderateaddr", NULL,
 				"moderators", NULL };
 
@@ -151,16 +151,24 @@ void moderate_sub(const char *listdir, const char *listaddr,
 	
 	myfree(maildata[1]);
 	
-	/* we need to exec more than one mlmmj-send */
+	/* we might need to exec more than one mlmmj-send */
 	
-	pid = fork();
-
-	if(pid < 0) {
-		log_error(LOG_ARGS, "Could not fork for mlmmj-send"
-				"Request in %s not served", modfilename);
-		exit(EXIT_FAILURE);
+	nosubmodmails = statctrl(listdir,"nosubmodmails");
+	
+	if (nosubmodmails)
+		childpid = -1;
+	else {
+		childpid = fork();
+		if(childpid < 0)
+			log_error(LOG_ARGS, "Could not fork; requester not notified");
 	}
-	if(pid == 0) {
+
+	if(childpid != 0) {
+		if(childpid > 0) {
+			do /* Parent waits for the child */
+				pid = waitpid(childpid, &status, 0);
+			while(pid == -1 && errno == EINTR);
+		}
 		execl(mlmmjsend, mlmmjsend,
 				"-a",
 				"-l", "4",
@@ -172,7 +180,7 @@ void moderate_sub(const char *listdir, const char *listaddr,
 		log_error(LOG_ARGS, "execl() of '%s' failed", mlmmjsend);
 		exit(EXIT_FAILURE);
 	}
-	
+
 	myfree(to);
 	myfree(replyto);
 	myfree(moderators);
@@ -428,12 +436,13 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 
 static void print_help(const char *prg)
 {
-	printf("Usage: %s -L /path/to/list [-a john@doe.org | -m str]"
-	       "[-c] [-C] [-h]\n       [-L] [-d | -n] [-s] [-U] [-V]\n"
+	printf("Usage: %s -L /path/to/list [-a john@doe.org | -m str]\n"
+	       "       [-c] [-C] [-f] [-h] [-L] [-d | -n] [-s] [-U] [-V]\n"
 	       " -a: Email address to subscribe \n"
 	       " -c: Send welcome mail\n"
 	       " -C: Request mail confirmation\n"
 	       " -d: Subscribe to digest of list\n"
+	       " -f: Force subscription (do not moderate)\n"
 	       " -h: This help\n"
 	       " -L: Full path to list directory\n"
 	       " -m: moderation string\n"
@@ -441,8 +450,8 @@ static void print_help(const char *prg)
 	printf(" -s: Don't send a mail to subscriber if already subscribed\n"
 	       " -U: Don't switch to the user id of the listdir owner\n"
 	       " -V: Print version\n"
-	       "When no options are specified, subscription silently "
-	       "happens\n");
+	       "When no options are specified, subscription may be "
+	       "moderated;\nto ensure a silent subscription, use -f\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -487,6 +496,7 @@ int main(int argc, char **argv)
 	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock, notifysub;
 	int changeuid = 1, status, digest = 0, nomail = 0, i = 0, submod = 0;
 	int groupwritable = 0, sublock, sublockfd, nogensubscribed = 0, subbed;
+	int force = 0;
 	size_t len;
 	struct stat st;
 	pid_t pid, childpid;
@@ -501,7 +511,7 @@ int main(int argc, char **argv)
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	myfree(bindir);
 
-	while ((opt = getopt(argc, argv, "hcCdm:nsVUL:a:")) != -1) {
+	while ((opt = getopt(argc, argv, "hcCdfm:nsVUL:a:")) != -1) {
 		switch(opt) {
 		case 'a':
 			address = optarg;
@@ -514,6 +524,9 @@ int main(int argc, char **argv)
 			break;
 		case 'd':
 			digest = 1;
+			break;
+		case 'f':
+			force = 1;
 			break;
 		case 'h':
 			print_help(argv[0]);
@@ -670,7 +683,7 @@ int main(int argc, char **argv)
 	subbed = is_subbed_in(subddirname, address);
 	listdelim = getlistdelim(listdir);
 	if(modstr == NULL)
-		submod = statctrl(listdir, "submod");
+		submod = !force && statctrl(listdir, "submod");
 	
 	if(subbed) {
 		if(subconfirm) {
@@ -719,7 +732,7 @@ int main(int argc, char **argv)
 		childpid = fork();
 
 		if(childpid < 0) {
-			log_error(LOG_ARGS, "Could not fork");
+			log_error(LOG_ARGS, "Could not fork; owner not notified");
 			confirm_sub(listdir, listaddr, listdelim, address,
 					mlmmjsend, typesub);
 		}

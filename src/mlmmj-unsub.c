@@ -274,8 +274,8 @@ ssize_t unsubscribe(int subreadfd, int subwritefd, const char *address)
 
 static void print_help(const char *prg)
 {
-	printf("Usage: %s -L /path/to/list -a john@doe.org "
-	       "[-c] [-C] [-h] [-L] [-d | -n] [-s] [-V]\n"
+	printf("Usage: %s -L /path/to/list -a john@doe.org\n"
+	       "       [-c] [-C] [-h] [-L] [-d | -n] [-s] [-V]\n"
 	       " -a: Email address to unsubscribe \n"
 	       " -c: Send goodbye mail\n"
 	       " -C: Request mail confirmation\n"

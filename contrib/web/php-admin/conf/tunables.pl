@@ -156,6 +156,12 @@ mlmmj_boolean("nosubonlydenymails",
 			  "This switch turns off whether mlmmj sends out notification about postings ".
 			  "being rejected due to a subscribers only posting list (see 'subonlypost').");
 
+mlmmj_boolean("nosubmodmails",
+			  "No subscription moderated mails",
+			  "This switch turns off whether mlmmj sends out notification about ".
+			  "subscription being moderated to the person requesting subscription".
+			  "(see 'submod').");
+
 mlmmj_boolean("nodigesttext",
 			  "No digest text summary",
 			  "This switch turns off whether digest mails will have a text part with a thread ".

@@ -1,18 +1,20 @@
-.TH mlmmj-sub "1" "September 2004" mlmmj-sub
+.TH mlmmj-sub "1" "January 2010" mlmmj-sub
 .SH NAME
 mlmmj-sub \- subscribe address to a mailinglist run by mlmmj
 .SH SYNOPSIS
 .B mlmmj-sub
 \fI-L /path/to/list -a john@doe.org \fR[\fI-c\fR | \fI-C\fR] \fR[\fI-d\fR | \fI-n\fR]
-[\fI-h\fR] [\fI-U\fR] [\fI-V\fR]
+[\fI-f\fR] [\fI-h\fR] [\fI-U\fR] [\fI-V\fR]
 .HP
 \fB\-a\fR: Email address to subscribe
 .HP
 \fB\-c\fR: Send welcome mail
 .HP
+\fB\-C\fR: Request mail confirmation
+.HP
 \fB\-d\fR: Subscribe to digest version of the list
 .HP
-\fB\-C\fR: Request mail confirmation
+\fB\-f\fR: Force subscription (do not moderate)
 .HP
 \fB\-h\fR: This help
 .HP
@@ -44,8 +46,11 @@ post to the list.
 Normally a mail is sent to the subscriber if the address is already subscribed
 to the list. If the \fB\-s\fR switch is used such a mail will not be sent.
 
-When neither \fB\-c\fR nor \fB\-C\fR are specified, subscription silently
-happens.
+Subscription may be moderated (if <listdir>/control/submod exists) unless the
+\fB\-f\fR switch is given.
+
+To ensure a silent subscription, use \fB\-f\fR, but neither \fB\-c\fR
+nor \fB\-C\fR.
 .SH "SEE ALSO"
 mlmmj-unsub(1), setuid(2)
 .SH AUTHORS

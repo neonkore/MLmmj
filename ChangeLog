@@ -1,3 +1,5 @@
+ o Fixed documentation regarding silent subscription, and added
+   ability to silently subscribe
  o Added notmetoo feature where posts are not mirrored to their senders
  o Check return status in mlmmj-perl-admin when adding subscribers (Florian
    Streibelt, Bitmand)
