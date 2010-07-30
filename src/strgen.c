@@ -40,10 +40,10 @@
 
 char *random_str()
 {
-	size_t len = 128;
+	size_t len = 17;
 	char *dest = mymalloc(len);
 
-	snprintf(dest, len, "%x%x", random_int(), random_int());
+	snprintf(dest, len, "%08x%08x", random_int(), random_int());
 
 	return dest;
 }

@@ -1,3 +1,6 @@
+ o Makes the random strings produced always the same length rather the
+   smaller random numbers producing shorter strings which could be
+   problematic
  o Make random number generation more efficient by only seeding the
    generator once
  o Added feature to notify users when their posts are moderated
