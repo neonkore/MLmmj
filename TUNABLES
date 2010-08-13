@@ -9,63 +9,63 @@ value, leaving line 2 and forward ready for commentary etc. If it's possible
 to specify several entries (one pr. line), it's marked "list". If the file's
 entire content is used as value, it's marked "text".
 
- · listaddress			(list)
+ Â· listaddress			(list)
 
    This file contains all addresses which mlmmj sees as listaddresses (see
    tocc below). The first one is the one used as the primary one, when mlmmj
    sends out mail.
 
- · closedlist			(boolean)
+ Â· closedlist			(boolean)
 
    Is the list is open or closed. If it's closed subscription and
    unsubscription via mail is disabled.
 
- · closedlistsub		(boolean)
+ Â· closedlistsub		(boolean)
 
    Closed for subscription. Unsubscription is possible.
 
- · moderated			(boolean)
+ Â· moderated			(boolean)
 
    If this file is present, the emailaddresses in the file
    listdir/control/moderators will act as moderators for the list.
 
- · submod			(list)
+ Â· submod			(list)
 
    If this file is present, subscription will be moderated by owner(s).
    If there are emailaddresses in this file, then these will be used
    instead of owner.
 
- · tocc				(boolean)
+ Â· tocc				(boolean)
 
    If this file is present, the list address does not have to be in the To:
    or Cc: header of the email to the list.
 
- · subonlypost			(boolean)
+ Â· subonlypost			(boolean)
 
    When this file is present, only people who are subscribed to the list,
    are allowed to post to it. The check is made against the "From:" header.
 
- · modnonsubposts		(boolean)
+ Â· modnonsubposts		(boolean)
 
    When this file is present and subonlypost is enabled, all postings from
    people who are not subscribed to the list will be moderated.
 
- · prefix			(normal)
+ Â· prefix			(normal)
 
    The prefix for the Subject: line of mails to the list. This will alter the
    Subject: line, and add a prefix if it's not present elsewhere.
 
- · owner			(list)
+ Â· owner			(list)
 
    The emailaddresses in this file (1 pr. line) will get mails to
    listname+owner@listdomain.tld
 
- · customheaders		(list)
+ Â· customheaders		(list)
 
    These headers are added to every mail coming through. This is the place you
    want to add Reply-To: header in case you want such.
 
- · delheaders			(list)
+ Â· delheaders			(list)
 
    In this file is specified *ONE* headertoken to match pr. line. If the file
    consists of:
@@ -74,149 +74,149 @@ entire content is used as value, it's marked "text".
    Then all occurences of these headers in incoming list mail will be deleted.
    "From " and "Return-Path:" are deleted no matter what.
 
- · access			(list)
+ Â· access			(list)
 
    If this file exists, all headers of a post to the list is matched against
    the rules. The first rule to match wins. See README.access for syntax and
    examples.
 
- · memorymailsize		(normal)
+ Â· memorymailsize		(normal)
 
    Here is specified in bytes how big a mail can be and still be prepared for
    sending in memory. It's greatly reducing the amount of write system calls to
    prepare it in memory before sending it, but can also lead to denial of
    service attacks. Default is 16k (16384 bytes).
 
- · addtohdr			(boolean)
+ Â· addtohdr			(boolean)
 
    When this file is present, a To: header including the recipients
    emailaddress will be added to outgoing mail. Recommended usage is to remove
    existing To: headers with delheaders (see above) first.
 
- · relayhost			(normal)
+ Â· relayhost			(normal)
 
    The host specified (IP address or hostname, both works) in this file will
    be used for relaying the mail sent to the list. Defaults to 127.0.0.1.
 
- · notifysub			(boolean)
+ Â· notifysub			(boolean)
 
    If this file is present, the owner(s) will get a mail with the address of
    someone sub/unsubscribing to a mailinglist.
 
- · notifymod			(boolean)
+ Â· notifymod			(boolean)
 
    If this file is present, the poster (based on the envelope from) will
    get a mail when their post is being moderation.
 
- · digestinterval		(normal)
+ Â· digestinterval		(normal)
 
    This file specifies how many seconds will pass before the next digest is
    sent. Defaults to 604800 seconds, which is 7 days.
 
- · digestmaxmails		(normal)
+ Â· digestmaxmails		(normal)
 
    This file specifies how many mails can accumulate before digest sending is
    triggered. Defaults to 50 mails, meaning that if 50 mails arrive to the list
    before digestinterval have passed, the digest is delivered.
 
- · bouncelife			(normal)
+ Â· bouncelife			(normal)
 
    Here is specified for how long time in seconds an address can bounce before
    it's unsubscribed. Defaults to 432000 seconds, which is 5 days.
 
- · noarchive			(boolean)
+ Â· noarchive			(boolean)
 
    If this file exists, the mail won't be saved in the archive but simply
    deleted.
 
- · nosubconfirm			(boolean)
+ Â· nosubconfirm			(boolean)
 
    If this file exists, no mail confirmation is needed to subscribe to the
    list. This should in principle never ever be used, but there is times
    on local lists etc. where this is useful. HANDLE WITH CARE!
 
- · noget			(boolean)
+ Â· noget			(boolean)
 
    If this file exists, then retrieving old posts with +get-N is disabled
 
- · subonlyget			(boolean)
+ Â· subonlyget			(boolean)
 
    If this file exists, then retrieving old posts with +get-N is only
    possible for subscribers. The above mentioned 'noget' have precedence.
 
- · verp				(normal)
+ Â· verp				(normal)
 
    Enable VERP support. Anything added in this variable will be appended the
    MAIL FROM: line. If "postfix" is put in the file, it'll make postfix use
    VERP by adding XVERP=-= to the MAIL FROM: line.
 
- · maxverprecips		(normal)
+ Â· maxverprecips		(normal)
 
    How many recipients pr. mail delivered to the smtp server. Defaults to 100.
 
- · notoccdenymails		(boolean)
- · noaccessdenymails		(boolean)
- · nosubonlydenymails		(boolean)
+ Â· notoccdenymails		(boolean)
+ Â· noaccessdenymails		(boolean)
+ Â· nosubonlydenymails		(boolean)
 
    These switches turns off whether mlmmj sends out notification about postings
    being denied due to the listaddress not being in To: or Cc: (see 'tocc'),
    when it was rejected due to an access rule (see 'access') or whether it's a
    subscribers only posting list (see 'subonlypost').
 
- · nosubmodmails		(boolean)
+ Â· nosubmodmails		(boolean)
 
    This switch turns off whether mlmmj sends out notification about
    subscription being moderated to the person requesting subscription
    (see 'submod').
 
- · smtpport			(normal)
+ Â· smtpport			(normal)
 
    In this file a port other than port 25 for connecting to the relayhost
    can be specified.
 
- · delimiter			(normal)
+ Â· delimiter			(normal)
 
    This specifies what to use as recipient delimiter for the list.
    Default is "+".
 
- · nodigesttext			(boolean)
+ Â· nodigesttext			(boolean)
 
    If this file exists, digest mails won't have a text part with a thread
    summary.
 
- · nodigestsub			(boolean)
+ Â· nodigestsub			(boolean)
 
    If this file exists, subscription to the digest version of the mailinglist
    will be denied. (Useful if you don't want to allow digests and notify users
    about it).
 
- · nonomailsub			(boolean)
+ Â· nonomailsub			(boolean)
 
    If this file exists, subscription to the nomail version of the mailinglist
    will be denied. (Useful if you don't want to allow nomail and notify users
    about it).
 
- · maxmailsize			(normal)
+ Â· maxmailsize			(normal)
 
    With this option the maximal allowed size of incoming mails can be specified.
 
- · nomaxmailsizedenymails	(boolean)
+ Â· nomaxmailsizedenymails	(boolean)
 
    If this is set, no reject notifications caused by violation of maxmailsize
    will be sent.
 
- · nolistsubsemail		(boolean)
+ Â· nolistsubsemail		(boolean)
 
    If this is set, the LISTNAME+list@ functionality for requesting an
    email with the subscribers for owner is disabled.
 
- · staticbounceaddr		(normal)
+ Â· staticbounceaddr		(normal)
 
    If this is set to something@example.org, the bounce address (Return-Path:)
    will be fixed to something+listname-bounces-and-so-on@example.org
    in case you need to disable automatic bounce handling.
 
- · ifmodsendonlymodmoderate	(boolean)
+ Â· ifmodsendonlymodmoderate	(boolean)
 
    If this file is present, then mlmmj in case of moderation checks the
    envelope from, to see if the sender is a moderator, and in that case
@@ -224,11 +224,11 @@ entire content is used as value, it's marked "text".
    a moderator sending mail to the list won't bother all the other moderators
    with his mail.
 
- · footer			(text)
+ Â· footer			(text)
 
    The content of this file is appended to mail sent to the list.
 
- · notmetoo			(boolean)
+ Â· notmetoo			(boolean)
 
    If this file is present, mlmmj attempts to exclude the sender of a post
    from the distribution list for that post so people don't receive copies

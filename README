@@ -6,20 +6,20 @@ independency.
 
 The functionality:
 
- · Archive
- · Custom headers / footer
- · Fully automated bouncehandling (similar to ezmlm)
- · Complete requeueing functionality
- · Moderation functionality
- · Subject prefix
- · Subscribers only posting
- · Regular expression access control
- · Functionality to retrieve old posts
- · Web-interface
- · Digests
- · No mail delivery subscription
- · VERP support
- · Delivery Status Notification (RFC1891) support
+ Â· Archive
+ Â· Custom headers / footer
+ Â· Fully automated bouncehandling (similar to ezmlm)
+ Â· Complete requeueing functionality
+ Â· Moderation functionality
+ Â· Subject prefix
+ Â· Subscribers only posting
+ Â· Regular expression access control
+ Â· Functionality to retrieve old posts
+ Â· Web-interface
+ Â· Digests
+ Â· No mail delivery subscription
+ Â· VERP support
+ Â· Delivery Status Notification (RFC1891) support
 
 To use mlmmj, do the following:
 
@@ -131,7 +131,7 @@ That's it! You probably want to go through the next steps too.
 10) Have a look at the file TUNABLES for runtime configurable things.
 
 Tunables in include/mlmmj.h:
- · There's some time intervals for how mlmmj-maintd operates. I've choosen
+ Â· There's some time intervals for how mlmmj-maintd operates. I've choosen
    non-strict defaults, so depending on your BOFH rate you might want to tweak.
    The defaults should be good for most people though.
 
