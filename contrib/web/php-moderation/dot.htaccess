@@ -1,0 +1,4 @@
+Require valid-user
+AuthType Basic
+AuthName "mlmmj web-interface"
+AuthUserFile /home/mlmmj/htpasswd
