@@ -133,7 +133,7 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	myfree(listfqdn);
 
 	queuefilename = prepstdreply(listdir, "moderation", "$listowner$",
-				     to, replyto, 2, maildata, NULL,
+				     to, replyto, 2, maildata,
 				     mailfilename);
 
 	/* we might need to exec more than one mlmmj-send */
@@ -176,7 +176,7 @@ void newmoderated(const char *listdir, const char *mailfilename,
 
 	queuefilename = prepstdreply(listdir, "moderation-poster",
 				     "$listowner$", efromsender,
-				     NULL, 1, maildata+2, NULL, mailfilename);
+				     NULL, 1, maildata+2, mailfilename);
 
 	execlp(mlmmjsend, mlmmjsend,
 			"-l", "1",
@@ -696,7 +696,7 @@ int main(int argc, char **argv)
 			queuefilename = prepstdreply(listdir,
 					"maxmailsize", "$listowner$",
 					fromemails.emaillist[0],
-					NULL, 1, maildata+2, NULL, donemailname);
+					NULL, 1, maildata+2, donemailname);
 			MY_ASSERT(queuefilename)
 			myfree(listdelim);
 			myfree(listname);
@@ -811,7 +811,7 @@ int main(int argc, char **argv)
 				     listfqdn);
 		queuefilename = prepstdreply(listdir, "notintocc",
 					"$listowner$", fromemails.emaillist[0],
-					     NULL, 0, NULL, NULL, donemailname);
+					     NULL, 0, NULL, donemailname);
 		MY_ASSERT(queuefilename)
 		myfree(listdelim);
 		myfree(listname);
@@ -872,7 +872,7 @@ int main(int argc, char **argv)
 					"bounces-help@", listfqdn);
 			queuefilename = prepstdreply(listdir, "subonlypost",
 					"$listowner$", fromemails.emaillist[0],
-						     NULL, 1, maildata, NULL, donemailname);
+						     NULL, 1, maildata, donemailname);
 			MY_ASSERT(queuefilename)
 			myfree(listaddr);
 			myfree(listdelim);
@@ -927,7 +927,7 @@ startaccess:
 			queuefilename = prepstdreply(listdir, "access",
 							"$listowner$",
 							fromemails.emaillist[0],
-						     NULL, 0, NULL, NULL, donemailname);
+						     NULL, 0, NULL, donemailname);
 			MY_ASSERT(queuefilename)
 			myfree(listaddr);
 			myfree(listdelim);

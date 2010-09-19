@@ -99,7 +99,7 @@ void send_list(const char *listdir, const char *emailaddr,
 	myfree(listdelim);
 
 	queuefilename = prepstdreply(listdir, "listsubs", "$listowner$",
-					emailaddr, NULL, 0, NULL, NULL, NULL);
+					emailaddr, NULL, 0, NULL, NULL);
 	if(queuefilename == NULL) {
 		log_error(LOG_ARGS, "Could not prepare sub list mail");
 		exit(EXIT_FAILURE);

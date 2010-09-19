@@ -1,5 +1,6 @@
+ o Allow arbitrary headers in list texts
  o Ensure digest listtext is always closed
- o Fix Content-Transfer-Encoding: header for digests
+ o Fix Content-Transfer-Encoding: header for digests and list texts
  o Fixed a bug that could cause a crash if $posteraddr$ appeared in the
    maxmaiilsize listtext
  o Documented listtexts

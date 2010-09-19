@@ -76,7 +76,7 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 	}
 
 	queuefilename = prepstdreply(listdir, listtext, "$helpaddr$",
-				     subaddr, NULL, 0, NULL, NULL, NULL);
+				     subaddr, NULL, 0, NULL, NULL);
 	MY_ASSERT(queuefilename);
 	myfree(listtext);
 
@@ -124,7 +124,7 @@ void notify_unsub(const char *listdir, const char *listaddr,
 	}
 	
 	queuefilename = prepstdreply(listdir, listtext, "$listowner$",
-				     "$listowner$", NULL, 1, maildata, NULL, NULL);
+				     "$listowner$", NULL, 1, maildata, NULL);
 	MY_ASSERT(queuefilename);
 	myfree(listtext);
 	myfree(maildata[1]);
@@ -213,7 +213,7 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 	maildata[3] = mystrdup(confirmaddr);
 
 	queuefilename = prepstdreply(listdir, listtext, "$helpaddr$", subaddr,
-				     confirmaddr, 2, maildata, NULL, NULL);
+				     confirmaddr, 2, maildata, NULL);
 
 	myfree(maildata[1]);
 	myfree(maildata[3]);
@@ -305,7 +305,7 @@ void generate_notsubscribed(const char *listdir, const char *subaddr,
 	myfree(listdelim);
 
 	queuefilename = prepstdreply(listdir, "unsub-notsubscribed",
-				     "$helpaddr$", subaddr, NULL, 0, NULL, NULL, NULL);
+				     "$helpaddr$", subaddr, NULL, 0, NULL, NULL);
 	MY_ASSERT(queuefilename);
 
 	myfree(listaddr);

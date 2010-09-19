@@ -32,6 +32,6 @@ char *substitute_one(const char *line, const char *listaddr,
 int open_listtext(const char *listdir, const char *filename);
 char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		const char *to, const char *replyto, size_t tokencount,
-		char **data, char *customheaders, const char *mailname);
+		char **data, const char *mailname);
 
 #endif /* PREPSTDREPLY_H */

@@ -208,12 +208,14 @@ int open_listtext(const char *listdir, const char *filename)
 
 char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		   const char *to, const char *replyto, size_t tokencount,
-		   char **data, char *customheaders, const char *mailname)
+		   char **data, const char *mailname)
 {
+	size_t i, len;
 	int infd, outfd;
-	char *listaddr, *listdelim, *myfrom, *tmp, *subject, *retstr = NULL;
+	char *listaddr, *listdelim, *tmp, *retstr = NULL;
 	char *listfqdn, *line, *utfline, *utfsub, *utfsub2;
-	char *myreplyto, *myto, *str = NULL, *mydate, *mymsgid;
+	char *str = NULL;
+	char *headers[10] = { NULL }; /* relies on NULL to flag end */
 
 	if ((infd = open_listtext(listdir, filename)) < 0) {
 		return NULL;
@@ -222,49 +224,6 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	listaddr = getlistaddr(listdir);
 	listdelim = getlistdelim(listdir);
 	listfqdn = genlistfqdn(listaddr);
-
-	line = mygetline(infd);
-	if(!line || (strncasecmp(line, "Subject: ", 9) != 0)) {
-		log_error(LOG_ARGS, "No Subject in '%s' listtext. Using "
-				"standard subject", filename);
-		subject = mystrdup("mlmmj administrativa");
-	} else {
-		chomp(line);
-		utfsub = unistr_escaped_to_utf8(line + 9);
-		utfsub2 = substitute(utfsub, listaddr, listdelim, tokencount,
-				     data, NULL);
-		subject = unistr_utf8_to_header(utfsub2);
-		myfree(utfsub);
-		myfree(utfsub2);
-		myfree(line);
-
-		/* skip empty line after subject */
-		line = mygetline(infd);
-		if (line && (line[0] == '\n')) {
-			myfree(line);
-			line = NULL;
-		}
-	}
-	if (line) {
-		utfline = unistr_escaped_to_utf8(line);
-		myfree(line);
-	} else {
-		utfline = NULL;
-	}
-	
-	myfrom = substitute(from, listaddr, listdelim, tokencount, data, NULL);
-	myto = substitute(to, listaddr, listdelim, tokencount, data, NULL);
-	mydate = gendatestr();
-	mymsgid = genmsgid(listfqdn);
-
-	if(replyto) {
-		myreplyto = substitute(replyto, listaddr, listdelim,
-				       tokencount, data, NULL);
-		tmp = concatstr(3, "Reply-To: ", myreplyto, "\n");
-		myfree(myreplyto);
-		myreplyto = tmp;
-	} else
-		myreplyto = NULL;
 
 	do {
 		tmp = random_str();
@@ -278,48 +237,164 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	
 	if(outfd < 0) {
 		log_error(LOG_ARGS, "Could not open std mail %s", retstr);
-		myfree(str);
 		myfree(listaddr);
 		myfree(listdelim);
 		myfree(listfqdn);
-		myfree(utfline);
 		return NULL;
 	}
 
-	str = concatstr(14,
-			"From: ", myfrom,
-			"\nTo: ", myto,
-			"\n", myreplyto,
-			mymsgid,
-			mydate,
-			"Subject: ", subject,
-			"\nMIME-Version: 1.0"
-			"\nContent-Type: text/plain; charset=utf-8"
-			"\nContent-Encoding: 8bit"
-			"\n", customheaders,
-			"\n", utfline);
+	tmp = substitute(from, listaddr, listdelim,
+	                 tokencount, data, NULL);
+	headers[0] = concatstr(2, "From: ", tmp);
+	myfree(tmp);
+	tmp = substitute(to, listaddr, listdelim,
+	                 tokencount, data, NULL);
+	headers[1] = concatstr(2, "To: ", tmp);
+	myfree(tmp);
+	headers[2] = genmsgid(listfqdn);
+	chomp(headers[2]);
+	headers[3] = gendatestr();
+	chomp(headers[3]);
+	headers[4] = mystrdup("Subject: mlmmj administrivia");
+	headers[5] = mystrdup("MIME-Version: 1.0");
+	headers[6] = mystrdup("Content-Type: text/plain; charset=utf-8");
+	headers[7] = mystrdup("Content-Transfer-Encoding: 8bit");
 
-	myfree(utfline);
+	if(replyto) {
+		tmp = substitute(replyto, listaddr, listdelim,
+		                 tokencount, data, NULL);
+		headers[8] = concatstr(2, "Reply-To: ", tmp);
+		myfree(tmp);
+	}
 
-	if(writen(outfd, str, strlen(str)) < 0) {
+	for(;;) {
+		line = mygetline(infd);
+		if (!line) {
+			log_error(LOG_ARGS, "No body in '%s' listtext",
+					filename);
+			break;
+		}
+		if (*line == '\n') {
+			/* end of headers */
+			myfree(line);
+			line = NULL;
+			break;
+		}
+		chomp(line);
+		if (*line == ' ' || *line == '\t') {
+			/* line beginning with linear whitespace is a
+			   continuation of previous header line */
+			utfsub = unistr_escaped_to_utf8(line);
+			str = substitute(utfsub, listaddr, listdelim,
+			                 tokencount, data, NULL);
+			myfree(utfsub);
+			len = strlen(str);
+			str[len] = '\n';
+			if(writen(outfd, str, len+1) < 0) {
+				log_error(LOG_ARGS, "Could not write std mail");
+				myfree(str);
+				myfree(line);
+				myfree(listaddr);
+				myfree(listdelim);
+				myfree(listfqdn);
+				return NULL;
+			}
+			myfree(str);
+		} else {
+			tmp = line;
+			len = 0;
+			while (*tmp && *tmp != ':') {
+				tmp++;
+				len++;
+			}
+			if (!*tmp) {
+				log_error(LOG_ARGS, "No headers or invalid "
+						"header in '%s' listtext",
+						filename);
+				break;
+			}
+			tmp++;
+			len++;
+			/* remove the standard header if one matches */
+			for (i=0; headers[i] != NULL; i++) {
+				if (strncasecmp(line, headers[i], len) == 0) {
+					myfree(headers[i]);
+					while (headers[i] != NULL) {
+						headers[i] = headers[i+1];
+						i++;
+					}
+					break;
+				}
+			}
+			utfsub = unistr_escaped_to_utf8(tmp);
+			*tmp = '\0';
+			utfsub2 = substitute(utfsub, listaddr, listdelim,
+			                     tokencount, data, NULL);
+			myfree(utfsub);
+			if (strncasecmp(line, "Subject:", len) == 0) {
+				tmp = unistr_utf8_to_header(utfsub2);
+				myfree(utfsub2);
+				str = concatstr(2, line, tmp);
+				myfree(tmp);
+			} else {
+				str = concatstr(2, line, utfsub2);
+				myfree(utfsub2);
+			}
+			len = strlen(str);
+			str[len] = '\n';
+			if(writen(outfd, str, len+1) < 0) {
+				log_error(LOG_ARGS, "Could not write std mail");
+				myfree(str);
+				myfree(line);
+				myfree(listaddr);
+				myfree(listdelim);
+				myfree(listfqdn);
+				return NULL;
+			}
+			myfree(str);
+		}
+		myfree(line);
+	}
+
+	for (i=0; headers[i] != NULL; i++) {
+		len = strlen(headers[i]);
+		headers[i][len] = '\n';
+		if(writen(outfd, headers[i], len+1) < 0) {
+			log_error(LOG_ARGS, "Could not write std mail");
+			if (line)
+				myfree(line);
+			myfree(str);
+			myfree(listaddr);
+			myfree(listdelim);
+			myfree(listfqdn);
+			return NULL;
+		}
+	}
+
+	/* end the headers */
+	if(writen(outfd, "\n", 1) < 0) {
 		log_error(LOG_ARGS, "Could not write std mail");
 		myfree(str);
+		if (line)
+			myfree(line);
 		myfree(listaddr);
 		myfree(listdelim);
 		myfree(listfqdn);
 		return NULL;
 	}
 
-	myfree(str);
-
-	while((str = mygetline(infd))) {
-		tmp = str;
+	if (line) {
+		str = concatstr(2, line, "\n");
+		myfree(line);
+	} else {
+		str = mygetline(infd);
+	}
+	while(str) {
 		utfline = unistr_escaped_to_utf8(str);
-		myfree(tmp);
+		myfree(str);
 
-		tmp = utfline;
 		str = substitute(utfline, listaddr, listdelim, tokencount, data, mailname);
-		myfree(tmp);
+		myfree(utfline);
 
 		if(writen(outfd, str, strlen(str)) < 0) {
 			myfree(str);
@@ -330,8 +405,9 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 			return NULL;
 		}
 		myfree(str);
+		str = mygetline(infd);
 	}
-	
+
 	fsync(outfd);
 	close(outfd);
 

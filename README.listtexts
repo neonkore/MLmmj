@@ -106,22 +106,38 @@ List text format
 
 They have the following format:
 
-- Subject line
+- Headers
 - Blank line
 - Body
 
 They are expected to be in UTF-8 encoding and have Unix line endings.
 
-The subject line is the text 'Subject: ' (Mlmmj expects the space, even though
-this is not ordinarily required in mail messages) followed by the subject line
-to be used for the mail. The subject line may include UTF-8 characters, which
-will automatically be escaped using the =?utf-8?q?...?= quoting mechanism.
+The headers should be formatted as they should appear in the mail message. They
+will begin the mail message. Header continuation via lines beginning with
+linear whitespace is supported.
+
+Following the headers found in the list text, Mlmmj will output the following
+default headers, unless the same header is already provided in the list text.
+
+- From:
+- To:
+- Message-ID:
+- Date:
+- Subject: mlmmj administrivia
+- MIME-Version: 1.0
+- Content-Type: text/plain; charset=utf-8
+- Content-Transfer-Encoding: 8bit
+
+The Subject: header is treated specially: it may include UTF-8 characters,
+which will automatically be escaped using the =?utf-8?q?...?= quoting
+mechanism.
 
 List text substitutions
 -----------------------
 
-Both subject and body may include the following, which are substituted prior to
-sending the message:
+Both headers and body may include the following, which are substituted prior to
+sending the message (though note that some of these substitutions are
+multi-line substitutions and would not work in a header):
 
 - $bouncenumbers$
   (available only in bounceprobe)
@@ -221,6 +237,13 @@ sending the message:
 - $subaddr$
   (available only in submod-moderator and [un]sub-confirm[-digest|-nomail])
   the address requested to be (un-)subscribed
+
+- \uNNNN
+  (NNNN are hex digits)
+  a Unicode character
+  (this is not really appropriate for use in a header, except perhaps the
+  Subject: header as Mlmmj does automatic quoting for that header as described
+  above)
 
 
 
