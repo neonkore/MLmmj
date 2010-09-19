@@ -1,3 +1,4 @@
+ o Richer MIME list texts with inline messages (English only so far)
  o Add $random0$ through $random5$ substitutions
  o Add a $subject$ substitution for list texts
  o Changes to how $originalmail$ works -- existing installations will change

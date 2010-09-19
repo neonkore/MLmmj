@@ -1,14 +1,32 @@
 Subject: Post to $listaddr$ denied
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="=_$random0$$random1$_="
+Content-Transfer-Encoding: 8bit
+
+--=_$random0$$random1$_=
+Content-Type: text/plain; charset=utf8
+Content-Transfer-Encoding: 8bit
 
 Hi, this is the mlmmj program managing the mailinglist
 
 $listaddr$
 
-I'm sorry to inform you that your message could not be delivered to the
-list. Your mail was rejected because it matched a rule set up by the
-list administrator.
+I'm sorry to inform you that your message with subject line
+
+$subject$
+
+could not be delivered to the list. Your mail was rejected because it
+matched a rule set up by the list administrator.
 
 Thanks.
 
---- Below this line are the first 100 lines of the denied message --->
- $originalmail$
+(The denied message is below.)
+
+--=_$random0$$random1$_=
+Content-Type: message/rfc822
+Content-Transfer-Encoding: 8bit
+Content-Disposition: inline; filename="message.eml"
+
+$originalmail1000000000$
+--=_$random0$$random1$_=--

@@ -1,10 +1,24 @@
 Subject: Moderation needed for $listaddr$
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="=_$random0$$random1$_="
+Content-Transfer-Encoding: 8bit
+
+--=_$random0$$random1$_=
+Content-Type: text/plain; charset=utf8
+Content-Transfer-Encoding: 8bit
 
 Hello,
 
 Someone has submitted a message for moderation to:
 
 $listaddr$
+
+with subject line:
+
+$subject$
+
+It is below.
 
 To accept it send a message to:
 
@@ -18,5 +32,10 @@ The following moderators have received this mail:
 
 $moderators$
 
---- Below this line are the first 100 lines of the message up for moderation --->
- $originalmail$
+--=_$random0$$random1$_=
+Content-Type: message/rfc822
+Content-Transfer-Encoding: 8bit
+Content-Disposition: inline; filename="message.eml"
+
+$originalmail1000000000$
+--=_$random0$$random1$_=--

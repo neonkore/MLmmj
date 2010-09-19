@@ -1,4 +1,12 @@
 Subject: Post to $listaddr$ denied due to size limit
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="=_$random0$$random1$_="
+Content-Transfer-Encoding: 8bit
+
+--=_$random0$$random1$_=
+Content-Type: text/plain; charset=utf8
+Content-Transfer-Encoding: 8bit
 
 Hi, this is the mlmmj program managing the mailinglist
 
@@ -9,5 +17,12 @@ list. Your mail was rejected due to the size limit of $maxmailsize$ bytes.
 
 Thanks.
 
---- Below this line are the first 100 lines of the denied message --->
- $originalmail$
+(The beginning of the denied message is below.)
+
+--=_$random0$$random1$_=
+Content-Type: message/rfc822
+Content-Transfer-Encoding: 8bit
+Content-Disposition: inline; filename="message.eml"
+
+$originalmail$
+--=_$random0$$random1$_=--
