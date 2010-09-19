@@ -1,0 +1,226 @@
+README.listtexts
+
+List texts in mlmmj
+===================
+
+List texts are stored in listdir/text. They specify the content of various
+automatic emails that Mlmmj sends. They are provided in a number of different
+languages. The language to use for a list is chosen when you run the
+mlmmj-make-ml.sh script and the appropriate files are copied into your
+listdir/text directory.
+
+This file documents
+
+- Supported list texts
+- List text format
+- List text substitutions
+
+Supported list texts
+--------------------
+
+The following list texts are supported by mlmmj:
+
+- access
+  sent to a poster when their post is denied because of an access rule
+
+- bounce-probe
+  sent to a subscriber after an email to them bounced to inform them of the
+  bounce and probe when the address is no longer bouncing
+
+- digest
+  sent at the start of a digest
+
+- listfaq
+  sent in response to an email to listname+faq@domain.tld
+
+- listhelp
+  sent in response to an email to listname+help@domain.tld
+
+- listsubs
+  sent in response to an email to listname+list@domain.tld from the list owner
+  (the formatted list of subscribers is automatically appended to the listtext)
+
+- maxmailsize
+  sent to the poster when a mail exceeds the maximum allowed size
+
+- moderation
+- moderation-poster
+  sent when a message is to be moderated (to the appropriate moderators or to
+  the poster)
+
+- notifysub
+- notifysub-digest
+- notifysub-nomail
+- notifyunsub
+- notifyunsub-digest
+- notifyunsub-nomail
+  sent to the list owner when somebody is (un-)subscribed
+
+- notintocc
+  sent to the poster when the list address is not found in a To: or CC: header
+
+- sub-confirm
+- sub-confirm-digest
+- sub-confirm-nomail
+  sent to a requester to allow them to confirm a subscription request
+
+- sub-deny-digest
+- sub-deny-nomail
+  sent when a subscription request is received for the digest or nomail version
+  of a list when that version is disabled
+
+- sub-ok
+- sub-ok-digest
+- sub-ok-nomail
+  sent to the new subscriber when a subscription succeeds
+
+- sub-subscribed
+  sent to a person sending a subscription request when they are already
+  subscribed to the list
+
+- submod-moderator
+- submod-requester
+  sent when a subscription is to be moderated (to the appropriate moderators
+  or to the requester)
+
+- subonlypost
+  sent to the poster when they attempt to post to a subonlypost list without
+  being subscribed
+
+- unsub-confirm
+- unsub-confirm-digest
+- unsub-confirm-nomail
+  sent to a subscriber to allow them to confirm an unsubscription request
+
+- unsub-notsubscribed
+  sent to a person sending an unsubscription request when they are not actually
+  subscribed to the list
+
+- unsub-ok
+- unsub-ok-digest
+- unsub-ok-nomail
+  sent to the old subscriber when an unsubscription succeeds
+
+List text format
+----------------
+
+They have the following format:
+
+- Subject line
+- Blank line
+- Body
+
+They are expected to be in UTF-8 encoding and have Unix line endings.
+
+The subject line is the text 'Subject: ' (Mlmmj expects the space, even though
+this is not ordinarily required in mail messages) followed by the subject line
+to be used for the mail. The subject line may include UTF-8 characters, which
+will automatically be escaped using the =?utf-8?q?...?= quoting mechanism.
+
+List text substitutions
+-----------------------
+
+Both subject and body may include the following, which are substituted prior to
+sending the message:
+
+- $bouncenumbers$
+  (available only in bounceprobe)
+  the formatted list of indexes of messages which may not have been received as
+  they bounced
+
+- $confaddr$
+  (available only in [un]sub-confirm[-digest|-nomail])
+  the address to which to send mail to confirm the (un-)subscription in
+  question
+
+- $digestfirst$
+  (available only in digest)
+  index of the first message included in a digest
+
+- $digestinterval$
+  (available only in digest)
+  indexes of the first and last messages included in a digest (e.g. 1-5), or
+  just the index if only a single message is included
+
+- $digestissue$
+  (available only in digest)
+  the issue number of the digest
+
+- $digestlast$
+  (available only in digest)
+  index of the last message included in a digest
+
+- $digestsubaddr$
+  listname+subscribe-digest@domain.tld
+
+- $digestthreads$
+  (available only in digest)
+  the list of threads included in the digest
+
+- $digestunsubaddr$
+  listname+unsubscribe-digest@domain.tld
+
+- $faqaddr$
+  listname+faq@domain.tld
+
+- $helpaddr$
+  listname+help@domain.tld
+
+- $listaddr$
+  listname@domain.tld
+
+- $listgetN$
+  listname+get-N@domain.tld
+  (the N here is nothing special, so this won't actually work, but is used to
+  explain to users how to use the +get functionality)
+
+- $listowner$
+  listname+owner@domain.tld
+
+- $listsubaddr$
+  listname+subscribe@domain.tld
+
+- $listunsubaddr$
+  listname+unsubscribe@domain.tld
+
+- $maxmailsize$
+  (available only in maxmailsize)
+  the maximum size of mail that Mlmmj will accept
+
+- $moderateaddr$
+  (available only in moderation and submod-moderator)
+  the address to which to send mail to approve the post or subscription in
+  question
+
+- $moderators$
+  (available only in moderation, moderation-poster and submod)
+  the formatted list of moderators to whom the moderation request has been sent
+
+- $newsub$
+  (available only in notifysub, notifysub-digest and notifysub-nomail)
+  the address that has been subscribed
+
+- $nomailsubaddr$
+  listname+subscribe-nomail@domain.tld
+
+- $nomailunsubaddr$
+  listname+unsubscribe-nomail@domain.tld
+
+- $oldsub$
+  (available only in notifyunsub, notifyunsub-digest and notifyunsub-nomail)
+  the address that has been unsubscribed
+
+- $originalmail$
+  the first 100 lines (including headers)
+  of the email message being processed (usually a mail being moderated)
+
+- $posteraddr$
+  (available only in subonlypost)
+  the from address of the message that was received as determined by Mlmmj
+
+- $subaddr$
+  (available only in submod-moderator and [un]sub-confirm[-digest|-nomail])
+  the address requested to be (un-)subscribed
+
+
+

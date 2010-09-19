@@ -1,3 +1,4 @@
+ o Documented listtexts
  o Makes the random strings produced always the same length rather the
    smaller random numbers producing shorter strings which could be
    problematic
