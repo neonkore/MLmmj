@@ -241,6 +241,16 @@ multi-line substitutions and would not work in a header):
   subonlypost)
   the from address of the message that was received as determined by Mlmmj
 
+- $random0$
+- $random1$
+- $random2$
+- $random3$
+- $random4$
+- $random5$
+  these are 6 distinct random strings; they allow list texts to be constructed
+  that are MIME messages with attachments by using creating boundaries that are
+  unlikely to appear in the attached messages
+
 - $subaddr$
   (available only in submod-moderator and [un]sub-confirm[-digest|-nomail])
   the address requested to be (un-)subscribed

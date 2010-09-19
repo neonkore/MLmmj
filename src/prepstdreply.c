@@ -194,6 +194,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	char *listaddr, *listdelim, *tmp, *retstr = NULL;
 	char *listfqdn, *line, *utfline, *utfsub, *utfsub2;
 	char *str = NULL;
+	char **moredata;
 	char *headers[10] = { NULL }; /* relies on NULL to flag end */
 
 	if ((infd = open_listtext(listdir, filename)) < 0) {
@@ -206,7 +207,8 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 
 	do {
 		tmp = random_str();
-		myfree(retstr);
+		if (retstr)
+			myfree(retstr);
 		retstr = concatstr(3, listdir, "/queue/", tmp);
 		myfree(tmp);
 
@@ -219,15 +221,27 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		myfree(listaddr);
 		myfree(listdelim);
 		myfree(listfqdn);
+		myfree(retstr);
 		return NULL;
 	}
 
+	moredata = mymalloc(2*(tokencount+6) * sizeof(char *));
+	for (i=0; i<2*tokencount; i++) {
+		moredata[i] = data[i];
+	}
+	for (i=0; i<6; i++) {
+		moredata[2*(tokencount+i)] = mystrdup("randomN");
+		moredata[2*(tokencount+i)][6] = '0' + i;
+		moredata[2*(tokencount+i)+1] = random_str();
+	}
+	tokencount += 6;
+
 	tmp = substitute(from, listaddr, listdelim,
-	                 tokencount, data);
+	                 tokencount, moredata);
 	headers[0] = concatstr(2, "From: ", tmp);
 	myfree(tmp);
 	tmp = substitute(to, listaddr, listdelim,
-	                 tokencount, data);
+	                 tokencount, moredata);
 	headers[1] = concatstr(2, "To: ", tmp);
 	myfree(tmp);
 	headers[2] = genmsgid(listfqdn);
@@ -241,7 +255,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 
 	if(replyto) {
 		tmp = substitute(replyto, listaddr, listdelim,
-		                 tokencount, data);
+		                 tokencount, moredata);
 		headers[8] = concatstr(2, "Reply-To: ", tmp);
 		myfree(tmp);
 	}
@@ -265,7 +279,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 			   continuation of previous header line */
 			utfsub = unistr_escaped_to_utf8(line);
 			str = substitute(utfsub, listaddr, listdelim,
-			                 tokencount, data);
+			                 tokencount, moredata);
 			myfree(utfsub);
 			len = strlen(str);
 			str[len] = '\n';
@@ -273,10 +287,9 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 				log_error(LOG_ARGS, "Could not write std mail");
 				myfree(str);
 				myfree(line);
-				myfree(listaddr);
-				myfree(listdelim);
-				myfree(listfqdn);
-				return NULL;
+				myfree(retstr);
+				retstr = NULL;
+				goto freeandreturn;
 			}
 			myfree(str);
 		} else {
@@ -308,7 +321,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 			utfsub = unistr_escaped_to_utf8(tmp);
 			*tmp = '\0';
 			utfsub2 = substitute(utfsub, listaddr, listdelim,
-			                     tokencount, data);
+			                     tokencount, moredata);
 			myfree(utfsub);
 			if (strncasecmp(line, "Subject:", len) == 0) {
 				tmp = unistr_utf8_to_header(utfsub2);
@@ -325,10 +338,9 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 				log_error(LOG_ARGS, "Could not write std mail");
 				myfree(str);
 				myfree(line);
-				myfree(listaddr);
-				myfree(listdelim);
-				myfree(listfqdn);
-				return NULL;
+				myfree(retstr);
+				retstr = NULL;
+				goto freeandreturn;
 			}
 			myfree(str);
 		}
@@ -343,10 +355,9 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 			if (line)
 				myfree(line);
 			myfree(str);
-			myfree(listaddr);
-			myfree(listdelim);
-			myfree(listfqdn);
-			return NULL;
+			myfree(retstr);
+			retstr = NULL;
+			goto freeandreturn;
 		}
 	}
 
@@ -356,10 +367,9 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		myfree(str);
 		if (line)
 			myfree(line);
-		myfree(listaddr);
-		myfree(listdelim);
-		myfree(listfqdn);
-		return NULL;
+		myfree(retstr);
+		retstr = NULL;
+		goto freeandreturn;
 	}
 
 	if (line) {
@@ -399,11 +409,10 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 				        if(writen(outfd,str,strlen(str)) < 0) {
 				            myfree(str);
 				            myfree(utfline);
-				            myfree(listaddr);
-				            myfree(listdelim);
-				            myfree(listfqdn);
 				            log_error(LOG_ARGS, "Could not write std mail");
-				            return NULL;
+					    myfree(retstr);
+					    retstr = NULL;
+					    goto freeandreturn;
 				        }
 				        myfree(str);
 				        i++;
@@ -418,15 +427,14 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 			myfree(utfline);
 		} else {
 			str = substitute(utfline, listaddr, listdelim,
-			                 tokencount, data);
+			                 tokencount, moredata);
 			myfree(utfline);
 			if(writen(outfd, str, strlen(str)) < 0) {
 				myfree(str);
-				myfree(listaddr);
-				myfree(listdelim);
-				myfree(listfqdn);
 				log_error(LOG_ARGS, "Could not write std mail");
-				return NULL;
+				myfree(retstr);
+				retstr = NULL;
+				goto freeandreturn;
 			}
 			myfree(str);
 		}
@@ -437,9 +445,16 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	fsync(outfd);
 	close(outfd);
 
+freeandreturn:
 	myfree(listaddr);
 	myfree(listdelim);
 	myfree(listfqdn);
+
+	for (i=tokencount-6; i<tokencount; i++) {
+		myfree(moredata[2*i]);
+		myfree(moredata[2*i+1]);
+	}
+	myfree(moredata);
 
 	return retstr;
 }
