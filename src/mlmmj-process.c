@@ -52,6 +52,7 @@
 #include "memory.h"
 #include "log_oper.h"
 #include "chomp.h"
+#include "unistr.h"
 
 enum action {
 	ALLOW,
@@ -71,14 +72,16 @@ static char *action_strs[] = {
 
 
 void newmoderated(const char *listdir, const char *mailfilename,
-		  const char *mlmmjsend, const char *efromsender)
+		  const char *mlmmjsend, const char *efromsender,
+		  size_t tokencount, char **data)
 {
+	size_t i;
 	char *from, *listfqdn, *listname, *moderators = NULL;
 	char *buf, *replyto, *listaddr = getlistaddr(listdir), *listdelim;
 	char *queuefilename = NULL, *moderatorsfilename, *efromismod = NULL;
 	char *mailbasename = mybasename(mailfilename), *tmp, *to;
 	int moderatorsfd, foundaddr = 0, notifymod = 0, status;
-	char *maildata[4] = { "moderateaddr", NULL, "moderators", NULL };
+	char *maildata[10] = { "moderateaddr", NULL, "moderators", NULL };
 	pid_t childpid, pid;
 #if 0
 	printf("mailfilename = [%s], mailbasename = [%s]\n", mailfilename,
@@ -86,6 +89,13 @@ void newmoderated(const char *listdir, const char *mailfilename,
 #endif
 	listfqdn = genlistfqdn(listaddr);
 	listname = genlistname(listaddr);
+
+	MY_ASSERT(tokencount<=3)
+	for (i=0; i<tokencount; i++) {
+		maildata[4+2*i] = data[2*i];
+		maildata[5+2*i] = data[1+2*i];
+	}
+	tokencount += 2;
 
 	moderatorsfilename = concatstr(2, listdir, "/control/moderators");
 	if((moderatorsfd = open(moderatorsfilename, O_RDONLY)) < 0) {
@@ -133,7 +143,7 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	myfree(listfqdn);
 
 	queuefilename = prepstdreply(listdir, "moderation", "$listowner$",
-				     to, replyto, 2, maildata,
+				     to, replyto, tokencount, maildata,
 				     mailfilename);
 
 	/* we might need to exec more than one mlmmj-send */
@@ -176,7 +186,7 @@ void newmoderated(const char *listdir, const char *mailfilename,
 
 	queuefilename = prepstdreply(listdir, "moderation-poster",
 				     "$listowner$", efromsender,
-				     NULL, 1, maildata+2, mailfilename);
+				     NULL, tokencount-1, maildata+2, mailfilename);
 
 	execlp(mlmmjsend, mlmmjsend,
 			"-l", "1",
@@ -385,7 +395,8 @@ int main(int argc, char **argv)
 	char *listfqdn, *listname, *fromaddr;
 	char *queuefilename, *recipextra = NULL, *owner = NULL;
 	char *maxmailsizestr;
-	char *maildata[4] = { "posteraddr", NULL, "maxmailsize", NULL };
+	char *maildata[6] = { "subject", NULL,
+		"posteraddr", NULL, "maxmailsize", NULL };
 	char *envstr, *efrom;
 	struct stat st;
 	uid_t uid;
@@ -404,6 +415,7 @@ int main(int argc, char **argv)
 		{ "Cc:", 0, NULL },
 		{ "Return-Path:", 0, NULL },
 		{ "Delivered-To:", 0, NULL },
+		{ "Subject:", 0, NULL },
 		{ NULL, 0, NULL }
 	};
 
@@ -538,6 +550,8 @@ int main(int argc, char **argv)
 	for(i = 0; i < readhdrs[0].valuecount; i++) {
 		find_email_adr(readhdrs[0].values[i], &fromemails);
 	}
+	if (fromemails.emailcount)
+		maildata[3] = fromemails.emaillist[0];
 
 	/* To: addresses */
 	for(i = 0; i < readhdrs[1].valuecount; i++) {
@@ -558,6 +572,12 @@ int main(int argc, char **argv)
 	for(i = 0; i < readhdrs[4].valuecount; i++) {
 		find_email_adr(readhdrs[4].values[i], &dtemails);
 	}
+
+	/* Subject: */
+	if (readhdrs[5].valuecount)
+		maildata[1] = unistr_header_to_utf8(readhdrs[5].values[0]);
+	if (!maildata[1])
+		maildata[1] = mystrdup("");
 
 	/* envelope from */
 	if((envstr = getenv("SENDER")) != NULL) {
@@ -635,7 +655,7 @@ int main(int argc, char **argv)
 			close(rawmailfd);
 			close(donemailfd);
 			unlink(mailfile);
-			log_oper(listdir, OPLOGFNAME, "mlmmj-recieve: sending"
+			log_oper(listdir, OPLOGFNAME, "mlmmj-process: sending"
 					" mail from %s to owner",
 					efrom);
 			execlp(mlmmjsend, mlmmjsend,
@@ -692,11 +712,11 @@ int main(int argc, char **argv)
 			listfqdn = genlistfqdn(listaddr);
 			fromaddr = concatstr(4, listname, listdelim,
 					"bounces-help@", listfqdn);
-			maildata[3] = maxmailsizestr;
+			maildata[5] = maxmailsizestr;
 			queuefilename = prepstdreply(listdir,
 					"maxmailsize", "$listowner$",
 					fromemails.emaillist[0],
-					NULL, 1, maildata+2, donemailname);
+					NULL, 1, maildata+4, donemailname);
 			MY_ASSERT(queuefilename)
 			myfree(listdelim);
 			myfree(listname);
@@ -811,7 +831,7 @@ int main(int argc, char **argv)
 				     listfqdn);
 		queuefilename = prepstdreply(listdir, "notintocc",
 					"$listowner$", fromemails.emaillist[0],
-					     NULL, 0, NULL, donemailname);
+					     NULL, 2, maildata, donemailname);
 		MY_ASSERT(queuefilename)
 		myfree(listdelim);
 		myfree(listname);
@@ -867,12 +887,11 @@ int main(int argc, char **argv)
 			listdelim = getlistdelim(listdir);
 			listname = genlistname(listaddr);
 			listfqdn = genlistfqdn(listaddr);
-			maildata[1] = fromemails.emaillist[0];
 			fromaddr = concatstr(4, listname, listdelim,
 					"bounces-help@", listfqdn);
 			queuefilename = prepstdreply(listdir, "subonlypost",
 					"$listowner$", fromemails.emaillist[0],
-						     NULL, 1, maildata, donemailname);
+						     NULL, 2, maildata, donemailname);
 			MY_ASSERT(queuefilename)
 			myfree(listaddr);
 			myfree(listdelim);
@@ -927,7 +946,7 @@ startaccess:
 			queuefilename = prepstdreply(listdir, "access",
 							"$listowner$",
 							fromemails.emaillist[0],
-						     NULL, 0, NULL, donemailname);
+						     NULL, 2, maildata, donemailname);
 			MY_ASSERT(queuefilename)
 			myfree(listaddr);
 			myfree(listdelim);
@@ -1004,7 +1023,7 @@ startaccess:
 			fsync(omitfd);
 			close(omitfd);
 		}
-		newmoderated(listdir, mqueuename, mlmmjsend, efrom);
+		newmoderated(listdir, mqueuename, mlmmjsend, efrom, 2, maildata);
 		return EXIT_SUCCESS;
 	}
 

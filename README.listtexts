@@ -237,12 +237,18 @@ multi-line substitutions and would not work in a header):
   number like 1000000000.
 
 - $posteraddr$
-  (available only in subonlypost)
+  (available only in access, notintocc, moderation, moderation-poster and
+  subonlypost)
   the from address of the message that was received as determined by Mlmmj
 
 - $subaddr$
   (available only in submod-moderator and [un]sub-confirm[-digest|-nomail])
   the address requested to be (un-)subscribed
+
+- $subject$
+  (available only in access, notintocc, moderation, moderation-poster and
+  subonlypost)
+  the subject line of the message in question
 
 - \uNNNN
   (NNNN are hex digits)
