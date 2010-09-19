@@ -321,7 +321,7 @@ errdighdrs:
 
 		tmp = concatstr(3, "\n--", boundary,
 				"\nContent-Type: text/plain; charset=UTF-8"
-				"\nContent-Encoding: 8bit"
+				"\nContent-Transfer-Encoding: 8bit"
 				"\n\n");
 		if (writen(fd, tmp, strlen(tmp)) == -1) {
 			log_error(LOG_ARGS, "Could not write digest text/plain"
@@ -375,6 +375,8 @@ errdighdrs:
 			} while ((line = mygetline(txtfd)));
 		}
 
+		close(txtfd);
+	} else if (txtfd > 0) {
 		close(txtfd);
 	}
 
