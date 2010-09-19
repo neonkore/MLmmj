@@ -25,10 +25,9 @@
 #define PREPSTDREPLY_H
 
 char *substitute(const char *line, const char *listaddr, const char *listdelim,
-		size_t datacount, char **data, const char* mailname);
+		size_t datacount, char **data);
 char *substitute_one(const char *line, const char *listaddr,
-		const char *listdelim, size_t datacount, char **data,
-		const char* mailname);
+		const char *listdelim, size_t datacount, char **data);
 int open_listtext(const char *listdir, const char *filename);
 char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		const char *to, const char *replyto, size_t tokencount,

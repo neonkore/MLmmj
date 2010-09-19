@@ -227,8 +227,14 @@ multi-line substitutions and would not work in a header):
   the address that has been unsubscribed
 
 - $originalmail$
-  the first 100 lines (including headers)
-  of the email message being processed (usually a mail being moderated)
+- $originalmailN$
+  the email message being processed (usually a mail being moderated); this must
+  appear first on a line, optionally preceded by whitespace: any preceding
+  whitespace is prepended to each line of the mail that is included and the
+  rest of the line following originalmail$ is ignored; N represents a number,
+  which is how many lines of the message (including headers) to include: if
+  omitted, 100 will be used, and to include the whole message, use a large
+  number like 1000000000.
 
 - $posteraddr$
   (available only in subonlypost)

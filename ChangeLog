@@ -1,3 +1,6 @@
+ o Changes to how $originalmail$ works -- existing installations will change
+   behaviour due to this; prepending a space to the lines currently containing
+   $originalmail$ in the listtexts will generally retain current behaviour
  o Allow arbitrary headers in list texts
  o Ensure digest listtext is always closed
  o Fix Content-Transfer-Encoding: header for digests and list texts
