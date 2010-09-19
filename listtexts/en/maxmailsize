@@ -10,4 +10,4 @@ list. Your mail was rejected due to the size limit of $maxmailsize$ bytes.
 Thanks.
 
 --- Below this line are the first 100 lines of the denied message --->
-$originalmail$
+ $originalmail$
