@@ -696,7 +696,7 @@ int main(int argc, char **argv)
 			queuefilename = prepstdreply(listdir,
 					"maxmailsize", "$listowner$",
 					fromemails.emaillist[0],
-					NULL, 2, maildata, NULL, donemailname);
+					NULL, 1, maildata+2, NULL, donemailname);
 			MY_ASSERT(queuefilename)
 			myfree(listdelim);
 			myfree(listname);
