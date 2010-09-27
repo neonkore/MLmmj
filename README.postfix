@@ -62,13 +62,16 @@ POSTFIX SETUP
             /^(mlmmj-test.*)@example\.com$/          ${1}
             /^(another-list.*)@sample\.com$/         ${1}
 
-    
     One line needs to be in the virtual map for each list the 'mlmmj' id
     is to handle.  The regex formula is:
 
         /^(list-name.*)@(domain\.com)$/              ${1}
 
-   
+    If you want to host multiple domains in a hierarchical structure,
+    you can alternatively use:
+
+        /^(list-name.*)@(domain\.com)$/        domain--${1}
+
     Next we make sure that postfix can invoke the mlmmj executables as
     the 'mlmmj' user.  This is where the transport map comes in.  So we
     add a transport map and a configuration option that instructs the
@@ -88,6 +91,10 @@ POSTFIX SETUP
     the transport 'mlmmj' and setting 'nexthop' to the value in $1.
     Which in this case is the mailing list name.  'nexthop' is special
     variable for transports.
+
+    For the hierarchical multi-domain solution, use this variant:
+
+        /^(domain--list-name).*$/              mlmmj:domain/list-name
 
     Now we setup the 'mlmmj' transport.  The 'mlmmj' in mlmmj:$1 above
     indicates a transport listed in the postfix master.cf file.  We are
@@ -117,7 +124,10 @@ POSTFIX SETUP
 
     $nexthop gets set to what was on the right had side of the ':' in
     the transport file.  The way we have that configured is that
-    $nexthop will get set to the name of the mailing list.
+    $nexthop will get set to the name of the mailing list (or domain
+    and name).  Your list directories, then, should be at
+    /var/spool/mlmmj/list-name as usual, or for the hierarchical
+    multi-domain version, in /var/spool/mlmmj/domain/list-name.
 
     Restart postfix and enjoy your new lists.
 
