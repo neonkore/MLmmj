@@ -51,7 +51,11 @@ To use mlmmj, do the following:
 
     http://faqs.org/faqs/mail/addressing/
 
-    The mmj TUNABLE "delimiter" configures this on a per list basis
+    The mlmmj TUNABLE "delimiter" configures this on a per list basis
+
+    NOTE: Using '-' as a delimiter is unlikely to work. Mlmmj uses '-' as its
+    own kind of minor delimiter. Of course, you also cannot use the delimiter
+    in your list names or you will encounter problems.
 
  2) Create the mailinglist.  There's a script, mlmmj-make-ml, that will make
     a mailinglist for mlmmj. It is highly recommended to use this script to make
