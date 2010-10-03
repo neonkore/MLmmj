@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# mlmmj-make-ml.sh - henne@hennevogel.de
+# mlmmj-make-ml - henne@hennevogel.de
 #
 
 VERSION="0.1"

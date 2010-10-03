@@ -1,3 +1,4 @@
+ o Remove .sh from mlmmj-make-ml.sh; symlink original name
  o Correct spelling of 'receive' and 'voodoo' throughout the code and
    documentation, making mlmmj-recieve a symlink to mlmmj-receive (Chris Webb)
  o Richer MIME list texts with inline messages (English only so far)

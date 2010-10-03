@@ -20,7 +20,7 @@ Conventions:
 
 Configuration:
 - the first thing you've to do is to create the list, using the
-  mlmmj-make-ml.sh script (follow the classic procedure to do this step)
+  mlmmj-make-ml script (follow the classic procedure to do this step)
 - enter the control directory for the list (${LISTDIR}/control/), and execute
   the following command:
    # cd ${LISTDIR}/control/; echo '-' > delimiter
@@ -42,7 +42,7 @@ Example:
 - Configuring mlmmj to handle ml@programmazione.it mailing list using qmail as
   MTA and vpopmail for virtual domain support:
 
-# mlmmj-make-ml.sh -c vpopmail:vchkpw -L ml
+# mlmmj-make-ml -c vpopmail:vchkpw -L ml
 Creating Directorys below /var/spool/mlmmj. Use '-s spooldir' to change
 The Domain for the List? [] : programmazione.it
 The emailaddress of the list owner? [postmaster] : postmaster@programmazione.it

@@ -6,7 +6,7 @@ List texts in mlmmj
 List texts are stored in listdir/text. They specify the content of various
 automatic emails that Mlmmj sends. They are provided in a number of different
 languages. The language to use for a list is chosen when you run the
-mlmmj-make-ml.sh script and the appropriate files are copied into your
+mlmmj-make-ml script and the appropriate files are copied into your
 listdir/text directory.
 
 This file documents

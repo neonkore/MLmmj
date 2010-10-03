@@ -53,7 +53,7 @@ To use mlmmj, do the following:
 
     The mmj TUNABLE "delimiter" configures this on a per list basis
 
- 2) Create the mailinglist.  There's a script, mlmmj-make-ml.sh, that will make
+ 2) Create the mailinglist.  There's a script, mlmmj-make-ml, that will make
     a mailinglist for mlmmj. It is highly recommended to use this script to make
     the lists! What is does is described here:
 
@@ -81,7 +81,7 @@ To use mlmmj, do the following:
     files as nobody:nogroup or nobody:nobody
 
  3) Make the changes to your mailserver aliases that came as output from
-    mlmmj-make-ml.sh. Following the example above they will look like this:
+    mlmmj-make-ml. Following the example above they will look like this:
 
     mlmmj-test:     "|/usr/bin/mlmmj-receive -L /var/spool/mlmmj/mlmmj-test"
 

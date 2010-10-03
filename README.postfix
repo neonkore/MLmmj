@@ -39,7 +39,7 @@ MLMMJ SETUP
     everywhere in this file replace /var/spool/mlmmj with your spool
     directory.
 
-    Create a mailing list using mlmmj-make-ml.sh.  Make sure to use the
+    Create a mailing list using mlmmj-make-ml.  Make sure to use the
     -s flag to set the spool directory if it isn't /var/spool/mlmmj
 
 POSTFIX SETUP

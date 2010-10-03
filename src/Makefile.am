@@ -8,9 +8,9 @@ INCLUDES = -I$(srcdir)/../include
 bin_PROGRAMS = mlmmj-send mlmmj-receive mlmmj-process mlmmj-sub \
                mlmmj-unsub mlmmj-bounce mlmmj-maintd mlmmj-list
 
-bin_SCRIPTS = mlmmj-make-ml.sh
+bin_SCRIPTS = mlmmj-make-ml
 
-EXTRA_DIST = mlmmj-make-ml.sh
+EXTRA_DIST = mlmmj-make-ml
 
 mlmmj_send_SOURCES = mlmmj-send.c writen.c mail-functions.c itoa.c chomp.c \
                      incindexfile.c checkwait_smtpreply.c getlistaddr.c \
@@ -62,3 +62,4 @@ mlmmj_list_SOURCES = mlmmj-list.c strgen.c writen.c print-version.c memory.c \
 
 install-exec-hook:
 	ln -f -s mlmmj-receive $(DESTDIR)$(bindir)/mlmmj-recieve
+	ln -f -s mlmmj-make-ml $(DESTDIR)$(bindir)/mlmmj-make-ml.sh

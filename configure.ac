@@ -45,7 +45,7 @@ AC_CHECK_FUNCS([nanosleep time strftime syslog regcomp regexec])
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([src/Makefile])
-AC_CONFIG_FILES([src/mlmmj-make-ml.sh])
+AC_CONFIG_FILES([src/mlmmj-make-ml])
 AC_CONFIG_FILES([listtexts/Makefile])
 AC_CONFIG_FILES([contrib/Makefile])
 AC_CONFIG_FILES([contrib/receivestrip/Makefile])
