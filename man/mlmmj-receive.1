@@ -1,8 +1,8 @@
-.TH mlmmj-recieve "1" "September 2004" mlmmj-recieve
+.TH mlmmj-receive "1" "September 2004" mlmmj-receive
 .SH NAME
-mlmmj-recieve \- recieve mails for an mlmmj managed mailinglist
+mlmmj-receive \- receive mails for an mlmmj managed mailinglist
 .SH SYNOPSIS
-.B mlmmj-recieve
+.B mlmmj-receive
 \fI-L /path/to/listdir \fR[\fI-h\fR] [\fI-V\fR] [\fI-P\fR] [\fI-F\fR]
 .HP
 \fB\-h\fR: This help
@@ -15,13 +15,13 @@ mlmmj-recieve \- recieve mails for an mlmmj managed mailinglist
 .HP
 \fB\-V\fR: Print version
 .SH DESCRIPTION
-The mlmmj-recieve binary is the one specified in the mailserver configuration
+The mlmmj-receive binary is the one specified in the mailserver configuration
 file (aliases file), which writes the mail to the <listdir>/incoming directory
 and invokes mlmmj-process unless the \fB\-P\fR option is specified. On systems
 using mailservers supporting the \fB/etc/aliases\fR file, a line to activate
 an mlmmj managed mailinglist would look like this:
 .LP
-list: "|/usr/bin/mlmmj-recieve -L /var/spool/mlmmj/list/"
+list: "|/usr/bin/mlmmj-receive -L /var/spool/mlmmj/list/"
 
 It's very important to specify the full path to the binary, or the mailinglist
 will not function.

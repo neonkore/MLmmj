@@ -76,7 +76,7 @@ dnslookup:
   domains = !+mlmmj_domains : !+local_domains
 [...]
 
-5. Somewhere in the transports section. (Change the path of mlmmj-recieve if you
+5. Somewhere in the transports section. (Change the path of mlmmj-receive if you
 don't use the default location!):
 
 mlmmj_transport:
@@ -86,7 +86,7 @@ mlmmj_transport:
   group = mlmmj
   home_directory = MLMMJ_HOME
   current_directory = MLMMJ_HOME
-  command = /usr/local/bin/mlmmj-recieve -F -L MLMMJ_HOME/${lc:$local_part}
+  command = /usr/local/bin/mlmmj-receive -F -L MLMMJ_HOME/${lc:$local_part}
 
 If you want VERP to be done by your MTA, also add this:
 

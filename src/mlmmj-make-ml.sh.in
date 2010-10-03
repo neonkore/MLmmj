@@ -120,9 +120,9 @@ echo "$OWNER" > "$LISTDIR"/"control/owner"
 LISTADDRESS="$LISTNAME@$FQDN"
 echo "$LISTADDRESS" > "$LISTDIR"/control/"listaddress"
 
-MLMMJRECIEVE=`which mlmmj-recieve 2>/dev/null`
-if [ -z "$MLMMJRECIEVE" ]; then
-	MLMMJRECIEVE="/path/to/mlmmj-recieve"
+MLMMJRECEIVE=`which mlmmj-receive 2>/dev/null`
+if [ -z "$MLMMJRECEIVE" ]; then
+	MLMMJRECEIVE="/path/to/mlmmj-receive"
 fi
 
 MLMMJMAINTD=`which mlmmj-maintd 2>/dev/null`
@@ -130,7 +130,7 @@ if [ -z "$MLMMJMAINTD" ]; then
 	MLMMJMAINTD="/path/to/mlmmj-maintd"
 fi
 
-ALIAS="$LISTNAME:  \"|$MLMMJRECIEVE -L $SPOOLDIR/$LISTNAME/\""
+ALIAS="$LISTNAME:  \"|$MLMMJRECEIVE -L $SPOOLDIR/$LISTNAME/\""
 CRONENTRY="0 */2 * * * \"$MLMMJMAINTD -F -L $SPOOLDIR/$LISTNAME/\""
 
 if [ -n "$A_CREATE" ]; then

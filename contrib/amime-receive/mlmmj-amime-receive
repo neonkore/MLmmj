@@ -2,12 +2,12 @@
 # 
 # mlmmj-amime-receive
 #
-# Take mail from stdin, pipe it through altermime and then to mlmmj-recieve
+# Take mail from stdin, pipe it through altermime and then to mlmmj-receive
 # needed to add footers in a MIME-aware way
 #
 # requires altermime, see http://www.pldaniels.com/altermime/
 #
-# just replace mlmmj-recieve (sic) with mlmmj-amime-receive, e.g. in /etc/aliases:
+# just replace mlmmj-receive with mlmmj-amime-receive, e.g. in /etc/aliases:
 # myml:   "|/usr/bin/mlmmj-amime-receive -L /var/spool/mlmmj/myml/"
 #
 # put the footer-text for the different MIME-types into 
@@ -20,12 +20,12 @@
 # Licensed under MIT License, see LICENSE file coming with mlmmj
 #
 
-MLMMJRECIEVE=/usr/bin/mlmmj-recieve
+MLMMJRECEIVE=/usr/bin/mlmmj-receive
 ALTERMIME=/usr/bin/altermime
 
 # check executables
-if ! [ -x $MLMMJRECIEVE ]; then
-    echo "can't find $MLMMJRECIEVE executable, aborting"
+if ! [ -x $MLMMJRECEIVE ]; then
+    echo "can't find $MLMMJRECEIVE executable, aborting"
     exit 1
 fi
 
@@ -86,4 +86,4 @@ PARAM="${PARAM} --altersigned --log-syslog"
 cd $MLPATH
 
 # pipe the calls
-$ALTERMIME --input=- ${PARAM} | $MLMMJRECIEVE "$@"
+$ALTERMIME --input=- ${PARAM} | $MLMMJRECEIVE "$@"

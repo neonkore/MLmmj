@@ -19,7 +19,7 @@
  * IN THE SOFTWARE.
  */
 
-/* a version of mlmmj-recieve that parses the mail on the fly and strips unwanted
+/* a version of mlmmj-receive that parses the mail on the fly and strips unwanted
    mime parts
    opens the files control/mimedeny and control/mimestrip for a list of mime
    types for body parts that should be denied or stripped.
@@ -361,7 +361,7 @@ static int dump_mail(int infd, int outfd,char* listdir) {
 
 	/* dump rest of mail */
         if(dumpfd2fd(infd, outfd) != 0) {
-		log_error(LOG_ARGS, "Could not recieve mail");
+		log_error(LOG_ARGS, "Could not receive mail");
 		return -1;
         }
 
@@ -479,12 +479,12 @@ int main(int argc, char **argv)
 	}
 
 	if(dump_mail(fileno(stdin), fd, listdir) != 0) {
-		log_error(LOG_ARGS, "Could not recieve mail");
+		log_error(LOG_ARGS, "Could not receive mail");
 		exit(EXIT_FAILURE);
 	}
 
 #if 0
-	log_oper(listdir, OPLOGFNAME, "mlmmj-recieve got %s", infilename);
+	log_oper(listdir, OPLOGFNAME, "mlmmj-receive got %s", infilename);
 #endif
 	fsync(fd);
 	close(fd);
@@ -498,7 +498,7 @@ int main(int argc, char **argv)
 	 * Now we fork so we can exit with success since it could potentially
 	 * take a long time for mlmmj-send to finish delivering the mails and
 	 * returning, making it susceptible to getting a SIGKILL from the
-	 * mailserver invoking mlmmj-recieve.
+	 * mailserver invoking mlmmj-receive.
 	 */
 	if (!nofork) {
 		childpid = fork();

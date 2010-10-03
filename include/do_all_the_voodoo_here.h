@@ -1,4 +1,4 @@
-/* Copyright (C) 2002, 2003 Mads Martin Joergensen <mmj at mmj.dk>
+/* Copyright (C) 2004 Mads Martin Joergensen <mmj at mmj.dk>
  *
  * $Id$
  *
@@ -21,10 +21,15 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef MMJML_RECIEVE_H
-#define MMJML_RECIEVE_H
+#ifndef DO_ALL_THE_VOODOO_HERE_H
+#define DO_ALL_THE_VOODOO_HERE_H
 
-void free_str_array(char **to_free);
+#include "mlmmj.h" /* For struct mailhdr and struct strlist */
 
+int findit(const char *line, const char **headers);
+void getinfo(const char *line, struct mailhdr *readhdrs);
+int do_all_the_voodoo_here(int infd, int outfd, int hdrfd, int footfd,
+	      const char **delhdrs, struct mailhdr *readhdrs,
+	      struct strlist *allhdrs, const char *subjectprefix);
 
-#endif /* MMJML_RECIEVE_H */
+#endif /* DO_ALL_THE_VOODOO_HERE_H */

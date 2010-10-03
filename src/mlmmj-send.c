@@ -446,7 +446,7 @@ int send_mail_verp(int sockfd, struct strlist *addrs, char *mailmap,
 	}
 	for(i = 0; i < addrs->count; i++) {
 		if(gotsigterm) {
-			log_error(LOG_ARGS, "TERM signal recieved, "
+			log_error(LOG_ARGS, "TERM signal received, "
 					"shutting down.");
 			return -1;
 		}
@@ -640,7 +640,7 @@ int send_mail_many_list(int sockfd, const char *from, const char *replyto,
 		}
 		if(gotsigterm && listaddr && archivefilename) {
 			/* we got SIGTERM, so save the addresses and bail */
-			log_error(LOG_ARGS, "TERM signal recieved, "
+			log_error(LOG_ARGS, "TERM signal received, "
 						"shutting down.");
 			index = get_index_from_filename(archivefilename);
 			status = requeuemail(listdir, index, addrs, i);

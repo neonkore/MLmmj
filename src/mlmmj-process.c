@@ -40,7 +40,7 @@
 #include "getlistdelim.h"
 #include "listcontrol.h"
 #include "strgen.h"
-#include "do_all_the_voodo_here.h"
+#include "do_all_the_voodoo_here.h"
 #include "log_error.h"
 #include "mygetline.h"
 #include "statctrl.h"
@@ -501,13 +501,13 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-    /* hdrfd is checked in do_all_the_voodo_here(), because the
+    /* hdrfd is checked in do_all_the_voodoo_here(), because the
      * customheaders file might not exist */
 	headerfilename = concatstr(2, listdir, "/control/customheaders");
 	hdrfd = open(headerfilename, O_RDONLY);
 	myfree(headerfilename);
 
-    /* footfd is checked in do_all_the_voodo_here(), see above */
+    /* footfd is checked in do_all_the_voodoo_here(), see above */
 	footerfilename = concatstr(2, listdir, "/control/footer");
 	footfd = open(footerfilename, O_RDONLY);
 	myfree(footerfilename);
@@ -527,10 +527,10 @@ int main(int argc, char **argv)
 
 	subjectprefix = ctrlvalue(listdir, "prefix");
 
-	if(do_all_the_voodo_here(rawmailfd, donemailfd, hdrfd, footfd,
+	if(do_all_the_voodoo_here(rawmailfd, donemailfd, hdrfd, footfd,
 				(const char**)delheaders->strs, readhdrs,
 				&allheaders, subjectprefix) < 0) {
-		log_error(LOG_ARGS, "Error in do_all_the_voodo_here");
+		log_error(LOG_ARGS, "Error in do_all_the_voodoo_here");
 		exit(EXIT_FAILURE);
 	}
 
@@ -646,10 +646,10 @@ int main(int argc, char **argv)
 						    "output mail file");
 				exit(EXIT_FAILURE);
 			}
-			if(do_all_the_voodo_here(rawmailfd, donemailfd, -1,
+			if(do_all_the_voodoo_here(rawmailfd, donemailfd, -1,
 					-1, (const char**)delheaders->strs,
 					NULL, &allheaders, NULL) < 0) {
-				log_error(LOG_ARGS, "do_all_the_voodo_here");
+				log_error(LOG_ARGS, "do_all_the_voodoo_here");
 				exit(EXIT_FAILURE);
 			}
 			close(rawmailfd);

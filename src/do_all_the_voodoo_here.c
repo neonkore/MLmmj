@@ -31,7 +31,7 @@
 #include "strgen.h"
 #include "chomp.h"
 #include "ctrlvalue.h"
-#include "do_all_the_voodo_here.h"
+#include "do_all_the_voodoo_here.h"
 #include "log_error.h"
 #include "wrappers.h"
 #include "memory.h"
@@ -75,7 +75,7 @@ void getinfo(const char *line, struct mailhdr *readhdrs)
 	}
 }
 
-int do_all_the_voodo_here(int infd, int outfd, int hdrfd, int footfd,
+int do_all_the_voodoo_here(int infd, int outfd, int hdrfd, int footfd,
 		 const char **delhdrs, struct mailhdr *readhdrs,
 		 struct strlist *allhdrs, const char *prefix)
 {

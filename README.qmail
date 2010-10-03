@@ -26,7 +26,7 @@ Configuration:
    # cd ${LISTDIR}/control/; echo '-' > delimiter
 - chown and chmod the file according to the mlmmj configuration
 - create dot-qmail files for the list to handle direct requests and extensions:
-   # echo -e "|${BINDIR}/mlmmj-recieve -L ${LISTDIR}" > ${DQFILE}
+   # echo -e "|${BINDIR}/mlmmj-receive -L ${LISTDIR}" > ${DQFILE}
 - chown and chmod the files according to the qmail (and vpopmail) configuration
 
 WARNING: REMEMBER that the delimiter is -, so do not use + when composing mail
@@ -53,7 +53,7 @@ chown -R vpopmail:vchkpw /var/spool/mlmmj/ml? [y/n]: y
 # echo '-' > delimiter
 # chown vpopmail:vchkpw delimiter
 # cd /home/vpopmail/domains/programmazione.it/
-# echo -e "|/usr/local/bin/mlmmj-recieve -L /var/spool/mlmmj/ml/" > .qmail-ml
+# echo -e "|/usr/local/bin/mlmmj-receive -L /var/spool/mlmmj/ml/" > .qmail-ml
 # cp -a .qmail-ml .qmail-ml-default
 # cat *-default
 # chown vpopmail:vchkpw .qmail-ml .qmail-ml-default

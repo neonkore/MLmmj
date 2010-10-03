@@ -26,7 +26,7 @@ regex:
 ^src/mlmmj-list$
 ^src/mlmmj-maintd$
 ^src/mlmmj-process$
-^src/mlmmj-recieve$
+^src/mlmmj-receive$
 ^src/mlmmj-send$
 ^src/mlmmj-sub$
 ^src/mlmmj-unsub$

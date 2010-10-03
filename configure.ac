@@ -5,7 +5,7 @@ VERSION=$PACKAGE_VERSION
 AC_SUBST(VERSION)
 
 AM_INIT_AUTOMAKE(mlmmj, $VERSION)
-AC_CONFIG_SRCDIR([src/mlmmj-recieve.c])
+AC_CONFIG_SRCDIR([src/mlmmj-receive.c])
 AM_CONFIG_HEADER([config.h])
 
 # Checks for programs.
@@ -33,10 +33,10 @@ exec_prefix=$savex
 
 AC_SUBST(textlibdir)
 
-AC_ARG_ENABLE([recieve-strip],
-  AS_HELP_STRING([--enable-recieve-strip],
-                 [build mlmmj-recieve-strip (default is no)]))
-AM_CONDITIONAL(WANT_RECIEVESTRIP, test x"$enable_recieve_strip" = xyes)
+AC_ARG_ENABLE([receive-strip],
+  AS_HELP_STRING([--enable-receive-strip],
+                 [build mlmmj-receive-strip (default is no)]))
+AM_CONDITIONAL(WANT_RECEIVESTRIP, test x"$enable_receive_strip" = xyes)
 
 # Checks for library functions.
 AC_FUNC_MALLOC
@@ -48,5 +48,5 @@ AC_CONFIG_FILES([src/Makefile])
 AC_CONFIG_FILES([src/mlmmj-make-ml.sh])
 AC_CONFIG_FILES([listtexts/Makefile])
 AC_CONFIG_FILES([contrib/Makefile])
-AC_CONFIG_FILES([contrib/recievestrip/Makefile])
+AC_CONFIG_FILES([contrib/receivestrip/Makefile])
 AC_OUTPUT

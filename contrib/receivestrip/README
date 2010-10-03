@@ -1,11 +1,11 @@
-mlmmj-recieve-strip is a replacement for mlmmj-recieve
+mlmmj-receive-strip is a replacement for mlmmj-receive
 
 It opens the files control/mimedeny and control/mimestrip to get a list of mimetypes
 for parts of multipart/mime messages that should be denied or stripped
 
-The parts then get stripped directly when the mail is recieved.
+The parts then get stripped directly when the mail is received.
 
-mlmmj-recieve-strip also appends an extra header
+mlmmj-receive-strip also appends an extra header
 
 X-ThisMailContainsUnwantedMimeParts: Y when the mail contains unwanted mime parts
 
