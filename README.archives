@@ -1,0 +1,31 @@
+README.archives
+
+Generating web-browseable archives of Mlmmj lists
+=================================================
+
+There are a couple of options for making web-browseable archives of Mlmmj
+lists.
+
+mlmmj-webarchiver (mhonarc)
+---------------------------
+
+Andreas Schneider has created mlmmj-webarchiver, based on mhonarc and perl.
+
+You can get it here:
+
+http://git.cynapses.org/projects/mlmmj-webarchiver.git/
+
+And see the kind of output it gives here:
+
+http://www.libssh.org/archive/
+
+hypermail
+---------
+
+Wolf Bergenheim has written some scripts which use hypermail to create
+web-browseable archives.
+
+The scripts and details can be found here:
+
+http://mlmmj.org/archive/mlmmj/2010-08/1710.html
+
