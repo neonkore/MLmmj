@@ -26,8 +26,8 @@
  * IN THE SOFTWARE.
  */
 
-require("../conf/config.php");
-require("class.rFastTemplate.php");
+require(dirname(dirname(__FILE__))."/conf/config.php");
+require(dirname(__FILE__)."/class.rFastTemplate.php");
 
 function mlmmj_boolean($name, $nicename, $text)
 {
@@ -93,10 +93,7 @@ die("non-existent list");
 $tpl->define(array("main" => "save.html"));
 $tpl->assign(array("LIST" => htmlentities($list)));
 
-$handle = fopen("$templatedir/../conf/tunables.pl", "r");
-$tunables = fread($handle, filesize("$templatedir/../conf/tunables.pl"));
-fclose($handle);
-
+$tunables = file_get_contents($confdir.'/tunables.pl');
 eval($tunables);
 
 $tpl->parse("MAIN","main");
