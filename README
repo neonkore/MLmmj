@@ -103,6 +103,11 @@ To use mlmmj, do the following:
     If you have several lists below /var/spool/mlmmj you can use -d:
     /usr/bin/mlmmj-maintd -F -d /var/spool/mlmmj
 
+    If you have lists more deeply nested below /var/spool/mlmmj, use
+    something like:
+    find /var/spool/mlmmj/ -mindepth 1 -maxdepth 1 -type d \
+        /usr/bin/mlmmj-maintd -F -d {} \;
+
 That's it! You probably want to go through the next steps too.
 
  5) Subscribe some people
@@ -139,7 +144,7 @@ Tunables in include/mlmmj.h:
    non-strict defaults, so depending on your BOFH rate you might want to tweak.
    The defaults should be good for most people though.
 
-Have a fun!
+Have fun!
 
 	Mads Martin Joergensen <mmj at mmj dot dk>
 	Morten K. Poulsen <morten at afdelingp dot dk>
