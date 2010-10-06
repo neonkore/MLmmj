@@ -31,5 +31,6 @@
 char *myfgetline(FILE *infile);
 #endif
 char *mygetline(int fd);
+char *mygetcontent(int fd);
 
 #endif /* #ifndef MYGETLINE_H */

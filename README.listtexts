@@ -149,6 +149,11 @@ multi-line substitutions and would not work in a header):
   the address to which to send mail to confirm the (un-)subscription in
   question
 
+- $controlN$
+  the contents of the control file named N, with its final newline stripped; N
+  represents the name of the file to be found in the list's control
+  subdirectory; the name may only include letters and digits
+
 - $digestfirst$
   (available only in digest)
   index of the first message included in a digest

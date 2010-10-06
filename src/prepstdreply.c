@@ -32,6 +32,7 @@
 #include <errno.h>
 
 #include "prepstdreply.h"
+#include "ctrlvalue.h"
 #include "strgen.h"
 #include "chomp.h"
 #include "log_error.h"
@@ -44,13 +45,15 @@
 #include "unistr.h"
 
 char *substitute(const char *line, const char *listaddr, const char *listdelim,
-		 size_t datacount, char **data)
+		 size_t datacount, char **data, const char *listdir)
 {
 	char *s1, *s2;
 
-	s1 = substitute_one(line, listaddr, listdelim, datacount, data);
+	s1 = substitute_one(line, listaddr, listdelim, datacount, data,
+			listdir);
 	while(s1) {
-		s2 = substitute_one(s1, listaddr, listdelim, datacount, data);
+		s2 = substitute_one(s1, listaddr, listdelim, datacount, data,
+				listdir);
 		if(s2) {
 			myfree(s1);
 			s1 = s2;
@@ -62,7 +65,8 @@ char *substitute(const char *line, const char *listaddr, const char *listdelim,
 }
 
 char *substitute_one(const char *line, const char *listaddr,
-			const char *listdelim, size_t datacount, char **data)
+			const char *listdelim, size_t datacount, char **data,
+			const char *listdir)
 {
 	char *fqdn, *listname, *d1, *d2, *token, *value = NULL;
 	char *retstr, *origline;
@@ -131,6 +135,27 @@ char *substitute_one(const char *line, const char *listaddr,
 	} else if(strcmp(token, "nomailsubaddr") == 0) {
 		value = concatstr(4, listname, listdelim, "subscribe-nomail@",
 				  fqdn);
+		goto concatandreturn;
+	} else if(strncmp(token, "control", 7) == 0) {
+		value = token + 7;
+		if(*value == '\0') {
+			value = mystrdup("");
+			goto concatandreturn;
+		}
+		for(; *value != '\0'; value++) {
+			if(*value >= '0' && *value <= '9') continue;
+			if(*value >= 'A' && *value <= 'Z') continue;
+			if(*value >= 'a' && *value <= 'z') continue;
+			break;
+		}
+		if(*value != '\0') {
+			value = mystrdup(token + 7);
+			goto concatandreturn;
+		}
+		value = token + 7;
+		value = ctrlcontent(listdir, value);
+		if (value == NULL)
+			value = mystrdup("");
 		goto concatandreturn;
 	}
 	if(data) {
@@ -229,7 +254,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	for (i=0; i<2*tokencount; i++) {
 		moredata[i] = data[i];
 	}
-	for (i=0; i<6; i++) {
+	for (i=0; i<6; i++) { 
 		moredata[2*(tokencount+i)] = mystrdup("randomN");
 		moredata[2*(tokencount+i)][6] = '0' + i;
 		moredata[2*(tokencount+i)+1] = random_str();
@@ -237,11 +262,11 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 	tokencount += 6;
 
 	tmp = substitute(from, listaddr, listdelim,
-	                 tokencount, moredata);
+	                 tokencount, moredata, listdir);
 	headers[0] = concatstr(2, "From: ", tmp);
 	myfree(tmp);
 	tmp = substitute(to, listaddr, listdelim,
-	                 tokencount, moredata);
+	                 tokencount, moredata, listdir);
 	headers[1] = concatstr(2, "To: ", tmp);
 	myfree(tmp);
 	headers[2] = genmsgid(listfqdn);
@@ -255,7 +280,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 
 	if(replyto) {
 		tmp = substitute(replyto, listaddr, listdelim,
-		                 tokencount, moredata);
+		                 tokencount, moredata, listdir);
 		headers[8] = concatstr(2, "Reply-To: ", tmp);
 		myfree(tmp);
 	}
@@ -279,7 +304,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 			   continuation of previous header line */
 			utfsub = unistr_escaped_to_utf8(line);
 			str = substitute(utfsub, listaddr, listdelim,
-			                 tokencount, moredata);
+			                 tokencount, moredata, listdir);
 			myfree(utfsub);
 			len = strlen(str);
 			str[len] = '\n';
@@ -321,7 +346,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 			utfsub = unistr_escaped_to_utf8(tmp);
 			*tmp = '\0';
 			utfsub2 = substitute(utfsub, listaddr, listdelim,
-			                     tokencount, moredata);
+			                     tokencount, moredata, listdir);
 			myfree(utfsub);
 			if (strncasecmp(line, "Subject:", len) == 0) {
 				tmp = unistr_utf8_to_header(utfsub2);
@@ -427,7 +452,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 			myfree(utfline);
 		} else {
 			str = substitute(utfline, listaddr, listdelim,
-			                 tokencount, moredata);
+			                 tokencount, moredata, listdir);
 			myfree(utfline);
 			if(writen(outfd, str, strlen(str)) < 0) {
 				myfree(str);

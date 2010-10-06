@@ -33,10 +33,10 @@
 #include "chomp.h"
 #include "memory.h"
 
-char *ctrlvalue(const char *listdir, const char *ctrlstr)
+static char *ctrlval(const char *listdir, const char *ctrlstr, int oneline)
 {
 	char *filename, *value = NULL;
-	int ctrlfd;
+	int ctrlfd, i;
 
 	if(listdir == NULL)
 		return NULL;
@@ -47,13 +47,33 @@ char *ctrlvalue(const char *listdir, const char *ctrlstr)
 
 	if(ctrlfd < 0)
 		return NULL;
-		
-	value = mygetline(ctrlfd);
+
+	if (oneline) {
+		value = mygetline(ctrlfd);
+		chomp(value);
+	} else {
+		value = mygetcontent(ctrlfd);
+		i = strlen(value) - 1;
+		if (i >= 0 && value[i] == '\n') {
+			value[i] = '\0';
+			i--;
+		}
+		if (i >= 0 && value[i] == '\r') {
+			value[i] = '\0';
+			i--;
+		}
+	}
 	close(ctrlfd);
-	chomp(value);
 
 	return value;
 }
 
-	
-	
+char *ctrlvalue(const char *listdir, const char *ctrlstr)
+{
+	return ctrlval(listdir, ctrlstr, 1);
+}
+
+char *ctrlcontent(const char *listdir, const char *ctrlstr)
+{
+	return ctrlval(listdir, ctrlstr, 0);
+}

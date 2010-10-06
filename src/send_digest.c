@@ -263,7 +263,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 		utfsub = unistr_escaped_to_utf8(line + 9);
 	}
 
-	utfsub2 = substitute(utfsub, listaddr, listdelim, 5, subst_data);
+	utfsub2 = substitute(utfsub, listaddr, listdelim, 5, subst_data, listdir);
 	subject = unistr_utf8_to_header(utfsub2);
 	myfree(utfsub);
 	myfree(utfsub2);
@@ -362,7 +362,7 @@ errdighdrs:
 				myfree(line);
 
 				tmp = substitute(utfline, listaddr, listdelim,
-						5, subst_data);
+						5, subst_data, listdir);
 				myfree(utfline);
 
 				if(writen(fd, tmp, strlen(tmp)) < 0) {

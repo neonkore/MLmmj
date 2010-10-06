@@ -37,19 +37,19 @@ mlmmj_sub_SOURCES = mlmmj-sub.c writen.c mylocking.c \
 			subscriberfuncs.c print-version.c \
 			log_error.c mygetline.c prepstdreply.c memory.c \
 			statctrl.c readn.c getlistdelim.c ctrlvalues.c \
-			unistr.c
+			unistr.c ctrlvalue.c
 
 mlmmj_unsub_SOURCES = mlmmj-unsub.c writen.c mylocking.c \
 			getlistaddr.c chomp.c subscriberfuncs.c random-int.c \
 			strgen.c print-version.c log_error.c mygetline.c \
 			prepstdreply.c memory.c statctrl.c readn.c \
-			getlistdelim.c unistr.c
+			getlistdelim.c unistr.c ctrlvalue.c
 			
 mlmmj_bounce_SOURCES = mlmmj-bounce.c print-version.c log_error.c \
 		       subscriberfuncs.c strgen.c random-int.c writen.c \
 		       prepstdreply.c mygetline.c chomp.c getlistaddr.c \
 		       memory.c find_email_adr.c gethdrline.c readn.c \
-		       getlistdelim.c unistr.c
+		       getlistdelim.c unistr.c ctrlvalue.c
 
 mlmmj_maintd_SOURCES = mlmmj-maintd.c print-version.c log_error.c mygetline.c \
 		       strgen.c random-int.c chomp.c writen.c memory.c \
