@@ -31,7 +31,7 @@ char *chomp(char *str)
 	if(str == NULL)
 		return NULL;
 
-	if(*str == '\0' || *str == '\n') {
+	if(*str == '\0' || *str == '\n' || *str == '\r') {
 		*str = '\0';
 		return str;
 	}
