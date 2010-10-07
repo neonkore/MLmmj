@@ -672,9 +672,10 @@ int send_mail_many_list(int sockfd, const char *from, const char *replyto,
 
 static void print_help(const char *prg)
 {
-	printf("Usage: %s [-L /path/to/list || -l listctrl] \n"
-	       "       -m /path/to/mail [-a] [-D] [-F] [-h] [-o] [-r] [-R] "
-	       "[-R] [-s] [-T] [-V]\n"
+	printf("Usage: %s [-L /path/to/list -m /path/to/mail | -l listctrl]\n"
+	       "       [-a] [-D] [-F sender@example.org] [-h] [-o address@example.org]\n"
+	       "       [-r 127.0.0.1] [-R reply@example.org] [-s /path/to/subscribers]\n"
+	       "       [-T recipient@example.org] [-V]\n"
 	       " -a: Don't archive the mail\n"
 	       " -D: Don't delete the mail after it's sent\n"
 	       " -F: What to use as MAIL FROM:\n"
@@ -686,8 +687,8 @@ static void print_help(const char *prg)
 	       "    '4' means 'send to file with recipients'\n"
 	       "    '5' means 'bounceprobe'\n"
 	       "    '6' means 'single listmail to single recipient'\n"
-	       "    '7' means 'digest'\n"
-	       " -L: Full path to list directory\n"
+	       "    '7' means 'digest'\n");
+	printf(" -L: Full path to list directory\n"
 	       " -m: Full path to mail file\n"
 	       " -o: Address to omit from distribution (normal mail only)\n"
 	       " -r: Relayhost IP address (defaults to 127.0.0.1)\n"

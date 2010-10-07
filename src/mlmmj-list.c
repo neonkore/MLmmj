@@ -39,8 +39,8 @@
 
 static void print_help(const char *prg)
 {
-        printf("Usage: %s -L /path/to/listdir [-c] [-d] [-h] [-m] [-n] "
-			"[-o] [-s] [-V]\n"
+	printf("Usage: %s -L /path/to/listdir\n"
+	       "       [-c] [-d] [-h] [-m] [-n] [-o] [-s] [-V]\n"
 	       " -L: Full path to list directory\n"
 	       " -c: Print subscriber count\n"
 	       " -d: Print for digesters list\n"

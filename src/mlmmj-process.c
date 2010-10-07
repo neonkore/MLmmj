@@ -368,7 +368,8 @@ static char *recipient_extra(const char *listdir, const char *addr)
 
 static void print_help(const char *prg)
 {
-        printf("Usage: %s -L /path/to/list -m /path/to/mail [-h] [-P] [-V]\n"
+	printf("Usage: %s -L /path/to/list\n"
+	       "       -m /path/to/mail [-h] [-P] [-V]\n"
 	       " -h: This help\n"
 	       " -L: Full path to list directory\n"
 	       " -m: Full path to mail file\n"

@@ -42,7 +42,8 @@ extern char *optarg;
 
 static void print_help(const char *prg)
 {
-        printf("Usage: %s -L /path/to/listdir [-s sender@example.org] [-e extension] [-h] [-V] [-P] [-F]\n"
+	printf("Usage: %s -L /path/to/listdir\n"
+	       "       [-s sender@example.org] [-e extension] [-h] [-V] [-P] [-F]\n"
 	       " -h: This help\n"
 	       " -F: Don't fork in the background\n"
 	       " -L: Full path to list directory\n"
