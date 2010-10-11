@@ -105,7 +105,7 @@ To use mlmmj, do the following:
 
     If you have lists more deeply nested below /var/spool/mlmmj, use
     something like:
-    find /var/spool/mlmmj/ -mindepth 1 -maxdepth 1 -type d \
+    find /var/spool/mlmmj -mindepth 1 -maxdepth 1 -type d \
         -exec /usr/bin/mlmmj-maintd -F -d {} \;
 
 That's it! You probably want to go through the next steps too.
