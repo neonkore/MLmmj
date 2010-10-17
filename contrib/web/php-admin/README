@@ -7,25 +7,27 @@ To use this web-interface you have to:
    don't want the webinterface in the root of your website it is recommended to
    make an alias in your web server configuration in order to keep the conf
    directory at the same level as the htdocs directory and still outside
-   webscope.
+   webscope. If you want to keep it somewhere else, you will need to modify
+   the first line of code in index.php, edit.php and save.php.
 
-2) Change the permissions of the listdir/control directories of any list you
+2) If your lists are stored somewhere other than /var/spool/mlmmj, edit
+   conf/config.php to reflect this.
+
+3) Change the permissions of the listdir/control directories of any list you
    want to control using the web-interface, so the web server can write in it:
 
      # chown -R wwwrun /var/spool/mlmmj/mlmmj-test/control/
 
-
-3) If the web server does not run as the same user the mailserver writes as
+4) If the web server does not run as the same user the mailserver writes as
    you need to create a group (eg. mlmmj) and add both users to it. The
    subscribers.d directory then needs to be writable by that group:
 
      # chgrp -R mlmmj /var/spool/mlmmj/mlmmj-test/subscribers.d/
      # chmod -R g+w /var/spool/mlmmj/mlmmj-test/subscribers.d/
 
-To enable access control on Apache you have to:
-
-3) Rename dot.htaccess to .htaccess and edit the path inside the file to point
-   to a htpasswd file somewhere outside the webscope.
+5) To enable access control on Apache you have to rename dot.htaccess to
+   .htaccess and edit the path inside the file to point to a htpasswd file
+   somewhere outside the webscope.
 
    If you don't have one already, you can create one like this
 
@@ -33,4 +35,4 @@ To enable access control on Apache you have to:
 
    It will then ask you for a password for the given username.
 
-4) That is it, you are ready to use the interface.
+6) That is it, you are ready to use the interface.

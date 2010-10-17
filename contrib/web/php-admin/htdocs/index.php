@@ -26,8 +26,8 @@
  * IN THE SOFTWARE.
  */
 
-require("class.rFastTemplate.php");
-require("../conf/config.php");
+require(dirname(dirname(__FILE__))."/conf/config.php");
+require(dirname(__FILE__)."/class.rFastTemplate.php");
 
 $tpl = new rFastTemplate($templatedir);
 

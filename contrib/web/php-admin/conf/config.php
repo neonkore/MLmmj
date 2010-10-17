@@ -1,6 +1,7 @@
 <?php
 
 $topdir = "/var/spool/mlmmj";
-$templatedir = "/home/mlmmj/templates";
+$confdir = dirname(__FILE__);
+$templatedir = dirname(dirname(__FILE__))."/templates";
 
 ?>
