@@ -62,7 +62,7 @@ function mlmmj_list($name, $nicename, $text)
 	if (!$fp = fopen($file, "w"))
 	    die("Couldn't open ".$file." for writing");
 
-	fwrite($fp, preg_replace('/\\r\\n/',"\n",$HTTP_POST_VARS[$name]));
+	fwrite($fp, preg_replace('/\\r/',"",$HTTP_POST_VARS[$name]));
 	fclose($fp);
 
 	if (!chmod($file, 0644))
