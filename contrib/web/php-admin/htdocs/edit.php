@@ -53,12 +53,10 @@ function mlmmj_string($name, $nicename, $text)
     $file = $topdir."/".$list."/control/".$name;
     $value = "";
 
-    if(!is_file($file))
-	$lines = array("");
-    else
+    if(is_file($file)) {
 	$lines = file($file);
-
-    $value = $lines[0];
+	$value = $lines[0];
+    }
     
     $tpl->assign(array("NAME" => htmlentities($name),
 		       "NICENAME" => htmlentities($nicename),
@@ -75,15 +73,8 @@ function mlmmj_list($name, $nicename, $text)
     $file = "$topdir/$list/control/$name";
     $value = "";
 
-    if(!is_file($file))
-	$lines = array();
-    else
-	$lines = file($file);
-
-    foreach ($lines as $line) 
-    {
-	$value .= $line;
-    }
+    if(is_file($file))
+	$value = file_get_contents($file);
 
     $tpl->assign(array("NAME" => htmlentities($name),
 		       "NICENAME" => htmlentities($nicename),
