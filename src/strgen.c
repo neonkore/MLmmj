@@ -62,7 +62,7 @@ char *random_plus_addr(const char *addr)
 	MY_ASSERT(atsign);
 	*atsign = '=';
 
-	snprintf(dest, len, "%x%x-%s", random_int(), random_int(), tmpstr);
+	snprintf(dest, len, "%08x%08x-%s", random_int(), random_int(), tmpstr);
 
 	myfree(tmpstr);
 	
@@ -268,7 +268,7 @@ char *genmsgid(const char *fqdn)
 {
 	char buf[256];
 
-	snprintf(buf, sizeof(buf), "Message-ID: <%ld-%d-mlmmj-%x@%s>\n",
+	snprintf(buf, sizeof(buf), "Message-ID: <%ld-%d-mlmmj-%08x@%s>\n",
 			(long int)time(NULL), (int)getpid(), random_int(), fqdn);
 
 	return mystrdup(buf);
