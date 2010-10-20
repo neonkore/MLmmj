@@ -682,8 +682,6 @@ int main(int argc, char **argv)
 	}
 	subbed = is_subbed_in(subddirname, address);
 	listdelim = getlistdelim(listdir);
-	if(modstr == NULL)
-		submod = !force && statctrl(listdir, "submod");
 	
 	if(subbed) {
 		if(subconfirm) {
@@ -694,6 +692,8 @@ int main(int argc, char **argv)
 			generate_subconfirm(listdir, listaddr, listdelim,
 					    address, mlmmjsend, typesub);
 		} else {
+			if(modstr == NULL)
+				submod = !force && statctrl(listdir, "submod");
 			if(submod) {
 				close(subfilefd);
 				close(sublockfd);
