@@ -17,7 +17,7 @@
  o Ensure digest listtext is always closed
  o Fix Content-Transfer-Encoding: header for digests and list texts
  o Fixed a bug that could cause a crash if $posteraddr$ appeared in the
-   maxmaiilsize listtext
+   maxmailsize listtext
  o Documented listtexts
  o Makes the random strings produced always the same length rather the
    smaller random numbers producing shorter strings which could be
