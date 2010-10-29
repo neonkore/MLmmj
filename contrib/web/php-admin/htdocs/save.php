@@ -31,11 +31,11 @@ require(dirname(__FILE__)."/class.rFastTemplate.php");
 
 function mlmmj_boolean($name, $nicename, $text)
 {
-    global $tpl, $topdir, $list, $HTTP_POST_VARS;
+    global $tpl, $topdir, $list;
     
     $file = $topdir."/".$list."/control/".$name;
     
-    if (isset($HTTP_POST_VARS[$name])) 
+    if(isset($_POST[$name]) && !empty($_POST[$name]))
     {
 	if(!touch($file))
 	    die("Couldn't open ".$file." for writing");
@@ -53,16 +53,16 @@ function mlmmj_string ($name, $nicename, $text)
 
 function mlmmj_list($name, $nicename, $text) 
 {
-    global $tpl, $topdir, $list,$HTTP_POST_VARS;
+    global $tpl, $topdir, $list;
 
     $file = $topdir."/".$list."/control/".$name;
     
-    if(!empty($HTTP_POST_VARS[$name]))
+    if(isset($_POST[$name]) && !empty($_POST[$name]))
     {
 	if (!$fp = fopen($file, "w"))
 	    die("Couldn't open ".$file." for writing");
 
-	fwrite($fp, preg_replace('/\\r/',"",$HTTP_POST_VARS[$name]));
+       fwrite($fp, preg_replace('/\\r/',"",$_POST[$name]));
 	fclose($fp);
 
 	if (!chmod($file, 0644))
@@ -79,7 +79,7 @@ function encode_entities($str) { return htmlentities($str); }
 
 $tpl = new rFastTemplate($templatedir);
 
-$list = $HTTP_POST_VARS["list"];
+$list = $_POST["list"];
 
 if(!isset($list))
 die("no list specified");

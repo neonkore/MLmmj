@@ -90,7 +90,7 @@ function encode_entities($str) { return htmlentities($str); }
 
 $tpl = new rFastTemplate($templatedir);
 
-$list = $HTTP_GET_VARS["list"];
+$list = $_GET["list"];
 
 if(!isset($list))
 die("no list specified");
