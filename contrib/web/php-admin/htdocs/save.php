@@ -37,13 +37,14 @@ function mlmmj_boolean($name, $nicename, $text)
     
     if(isset($_POST[$name]) && !empty($_POST[$name]))
     {
-	if(!touch($file))
-	    die("Couldn't open ".$file." for writing");
-	if (!chmod($file, 0644))
-	    die("Couldn't chmod ".$file);
+       if(!touch($file))
+          die("Couldn't open ".$file." for writing");
+       if (!chmod($file, 0644))
+          die("Couldn't chmod ".$file);
     }
-    else
-	@unlink($file);
+    else {
+       @unlink($file);
+    }
 }
 
 function mlmmj_string ($name, $nicename, $text) 
@@ -59,17 +60,18 @@ function mlmmj_list($name, $nicename, $text)
     
     if(isset($_POST[$name]) && !empty($_POST[$name]))
     {
-	if (!$fp = fopen($file, "w"))
-	    die("Couldn't open ".$file." for writing");
+       if (!$fp = fopen($file, "w"))
+          die("Couldn't open ".$file." for writing");
 
        fwrite($fp, preg_replace('/\\r/',"",$_POST[$name]));
-	fclose($fp);
+       fclose($fp);
 
-	if (!chmod($file, 0644))
-	    die("Couldn't chmod ".$file);
+       if (!chmod($file, 0644))
+          die("Couldn't chmod ".$file);
     }
-    else
-	@unlink($file);
+    else {
+       @unlink($file);
+    }
     
 }
 

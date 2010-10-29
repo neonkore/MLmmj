@@ -34,9 +34,9 @@ function mlmmj_boolean($name, $nicename, $text)
     global $tpl, $topdir, $list;
 
     if(is_file($topdir."/".$list."/control/".$name))
-	$checked = TRUE;
+       $checked = TRUE;
     else
-	$checked = FALSE;
+       $checked = FALSE;
 
     $tpl->assign(array("NAME" => htmlentities($name),
 		       "NICENAME" => htmlentities($nicename),
@@ -54,8 +54,8 @@ function mlmmj_string($name, $nicename, $text)
     $value = "";
 
     if(is_file($file)) {
-	$lines = file($file);
-	$value = $lines[0];
+       $lines = file($file);
+       $value = $lines[0];
     }
     
     $tpl->assign(array("NAME" => htmlentities($name),
@@ -74,7 +74,7 @@ function mlmmj_list($name, $nicename, $text)
     $value = "";
 
     if(is_file($file))
-	$value = file_get_contents($file);
+       $value = file_get_contents($file);
 
     $tpl->assign(array("NAME" => htmlentities($name),
 		       "NICENAME" => htmlentities($nicename),
