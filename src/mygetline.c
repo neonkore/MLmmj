@@ -26,11 +26,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdio.h>
 
 #include "mygetline.h"
 #include "memory.h"
 
-static char *mygetuntil(int fd, char eof)
+static char *mygetuntil(int fd, int eof)
 {
 	size_t i = 0, res, buf_size = BUFSIZE;  /* initial buffer size */
 	char *buf, ch;
@@ -62,7 +63,7 @@ static char *mygetuntil(int fd, char eof)
 			buf = myrealloc(buf, buf_size);
 		}
 		buf[i++] = ch;
-		if(ch == eof) {
+		if(eof != EOF && ch == eof) {
 			buf[i] = '\0';
 			return buf;
 		}
@@ -76,5 +77,5 @@ char *mygetline(int fd)
 
 char *mygetcontent(int fd)
 {
-	return mygetuntil(fd, '\0');
+	return mygetuntil(fd, EOF);
 }
