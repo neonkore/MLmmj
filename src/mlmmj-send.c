@@ -420,7 +420,6 @@ int endsmtp(int *sockfd)
 	}
 
 	close(*sockfd);
-
 	*sockfd = -1;
 
 	return retval;
@@ -1008,11 +1007,11 @@ int main(int argc, char **argv)
 	case '1': /* A single mail is to be sent */
 	case '6':
 		initsmtp(&sockfd, relay, smtpport);
-		sendres = send_mail(sockfd, bounceaddr, to_addr, replyto,
+		if(send_mail(sockfd, bounceaddr, to_addr, replyto,
 				mailmap, st.st_size, listdir, NULL,
-				hdrs, hdrslen, body, bodylen);
-		endsmtp(&sockfd);
-		if(sendres) {
+				hdrs, hdrslen, body, bodylen)) {
+			close(sockfd);
+			sockfd = -1;
 			/* error, so keep it in the queue */
 			deletewhensent = 0;
 			/* dump data we want when resending first check
@@ -1060,6 +1059,8 @@ int main(int argc, char **argv)
 				}
 				close(tmpfd);
 			}
+		} else {
+			endsmtp(&sockfd);
 		}
 		break;
 	case '2': /* Moderators */
@@ -1067,20 +1068,24 @@ int main(int argc, char **argv)
 		if(send_mail_many_fd(sockfd, bounceaddr, NULL, mailmap,
 				     st.st_size, subfd, NULL, NULL, NULL,
 				     listdir, NULL, hdrs, hdrslen,
-				     body, bodylen))
+				     body, bodylen)) {
 			close(sockfd);
-		else
+			sockfd = -1;
+		} else {
 			endsmtp(&sockfd);
+		}
 		break;
 	case '3': /* resending earlier failed mails */
 		initsmtp(&sockfd, relay, smtpport);
 		if(send_mail_many_fd(sockfd, NULL, NULL, mailmap, st.st_size,
 				subfd, listaddr, listdelim, mailfilename,
 				listdir, mlmmjbounce, hdrs, hdrslen,
-				body, bodylen))
+				body, bodylen)) {
 			close(sockfd);
-		else
+			sockfd = -1;
+		} else {
 			endsmtp(&sockfd);
+		}
 		unlink(subfilename);
 		break;
 	case '4': /* send mails to owner */
@@ -1088,18 +1093,20 @@ int main(int argc, char **argv)
 		if(send_mail_many_fd(sockfd, bounceaddr, NULL, mailmap,
 				st.st_size, subfd, listaddr, listdelim,
 				mailfilename, listdir, mlmmjbounce,
-				hdrs, hdrslen, body, bodylen))
+				hdrs, hdrslen, body, bodylen)) {
 			close(sockfd);
-		else
+			sockfd = -1;
+		} else {
 			endsmtp(&sockfd);
+		}
 		break;
 	case '5': /* bounceprobe - handle relayhost local users bouncing*/
 		initsmtp(&sockfd, relay, smtpport);
-		sendres = send_mail(sockfd, bounceaddr, to_addr, replyto,
+		if(send_mail(sockfd, bounceaddr, to_addr, replyto,
 				mailmap, st.st_size, listdir, NULL,
-				hdrs, hdrslen, body, bodylen);
-		endsmtp(&sockfd);
-		if(sendres) {
+				hdrs, hdrslen, body, bodylen)) {
+			close(sockfd);
+			sockfd = -1;
 			/* error, so remove the probefile */
 			tmpstr = mystrdup(to_addr);
 			a = strchr(tmpstr, '@');
@@ -1110,6 +1117,8 @@ int main(int argc, char **argv)
 			unlink(probefile);
 			myfree(probefile);
 			myfree(tmpstr);
+		} else {
+			endsmtp(&sockfd);
 		}
 		break;
 	case '7':
@@ -1173,6 +1182,8 @@ int main(int argc, char **argv)
 					verp = NULL;
 				}
 			}
+			/* We can't be in SMTP DATA state or anything like
+			 * that, so should be able to safely QUIT. */
 			endsmtp(&sockfd);
 		}
 
@@ -1238,7 +1249,12 @@ int main(int argc, char **argv)
 								hdrs, hdrslen,
 								body, bodylen);
 					}
-					endsmtp(&sockfd);
+				    	if (sendres) {
+					    	close(sockfd);
+					    	sockfd = -1;
+				    	} else {
+					    	endsmtp(&sockfd);
+				    	}
 					for(i = 0; i < stl.count; i++)
 						myfree(stl.strs[i]);
 					stl.count = 0;
@@ -1266,20 +1282,15 @@ int main(int argc, char **argv)
 						mlmmjbounce, hdrs, hdrslen,
 						body, bodylen);
 			}
-			endsmtp(&sockfd);
+			if (sendres) {
+				close(sockfd);
+				sockfd = -1;
+			} else {
+				endsmtp(&sockfd);
+			}
 			for(i = 0; i < stl.count; i++)
 				myfree(stl.strs[i]);
 			stl.count = 0;
-		}
-
-		if (sendres) {
-			/* If send_mail_many() failed we close the
-			 * connection to the mail server in a brutal
-			 * manner, because we could be in any state
-			 * (DATA for instance). */
-			close(sockfd);
-		} else {
-			endsmtp(&sockfd);
 		}
 		myfree(stl.strs);
 		myfree(verpfrom);
@@ -1296,7 +1307,6 @@ int main(int argc, char **argv)
 	myfree(hdrs);
 	myfree(body);
 	myfree(mlmmjbounce);
-	close(sockfd);
 	munmap(mailmap, st.st_size);
 	close(mailfd);
 	myfree(verp);

@@ -1,3 +1,4 @@
+ o Improved and more consistent closing of SMTP sessions in error cases
  o Check the relayhost gives a reply before reading it to avoid a crash
  o Avoid checking addresses multiple times for notmetoo and make it work even
    when delivering messages individually
