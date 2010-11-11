@@ -248,7 +248,7 @@ int send_mail(int sockfd, const char *from, const char *to,
 	      size_t bodylen)
 {
 	int retval = 0;
-	char *reply, *tohdr;
+	char *reply, *reply2, *tohdr;
 
 	if(strchr(to, '@') == NULL) {
 		errno = 0;
@@ -268,7 +268,8 @@ int send_mail(int sockfd, const char *from, const char *to,
 				reply);
 		myfree(reply);
 		write_rset(sockfd);
-		checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		reply2 = checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		if (reply2 != NULL) myfree(reply2);
 		return MLMMJ_FROM;
 	}
 	retval = write_rcpt_to(sockfd, to);
@@ -280,7 +281,8 @@ int send_mail(int sockfd, const char *from, const char *to,
 	reply = checkwait_smtpreply(sockfd, MLMMJ_RCPTTO);
 	if(reply) {
 		write_rset(sockfd);
-		checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		reply2 = checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		if (reply2 != NULL) myfree(reply2);
 		if(mlmmjbounce && ((reply[0] == '4') || (reply[0] == '5'))
 				&& (reply[1] == '5')) {
 			myfree(reply);
@@ -304,7 +306,8 @@ int send_mail(int sockfd, const char *from, const char *to,
 		log_error(LOG_ARGS, "Error with DATA. Reply = [%s]", reply);
 		myfree(reply);
 		write_rset(sockfd);
-		checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		reply2 = checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		if (reply2 != NULL) myfree(reply2);
 		return MLMMJ_DATA;
 	}
 
@@ -362,7 +365,8 @@ int send_mail(int sockfd, const char *from, const char *to,
 				"avail. Reply = [%s]", reply);
 		myfree(reply);
 		write_rset(sockfd);
-		checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		reply2 = checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		if (reply2 != NULL) myfree(reply2);
 		return MLMMJ_DOT;
 	}
 
@@ -428,7 +432,7 @@ int send_mail_verp(int sockfd, struct strlist *addrs, char *mailmap,
 		   size_t bodylen, const char *verpextra)
 {
 	int retval, i;
-	char *reply;
+	char *reply, *reply2;
 
 	retval = write_mail_from(sockfd, from, verpextra);
 	if(retval) {
@@ -441,7 +445,8 @@ int send_mail_verp(int sockfd, struct strlist *addrs, char *mailmap,
 				reply);
 		myfree(reply);
 		write_rset(sockfd);
-		checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		reply2 = checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		if (reply2 != NULL) myfree(reply2);
 		return MLMMJ_FROM;
 	}
 	for(i = 0; i < addrs->count; i++) {
@@ -482,7 +487,8 @@ int send_mail_verp(int sockfd, struct strlist *addrs, char *mailmap,
 		log_error(LOG_ARGS, "Error with DATA. Reply = [%s]", reply);
 		myfree(reply);
 		write_rset(sockfd);
-		checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		reply2 = checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		if (reply2 != NULL) myfree(reply2);
 		return MLMMJ_DATA;
 	}
 
@@ -519,7 +525,8 @@ int send_mail_verp(int sockfd, struct strlist *addrs, char *mailmap,
 				"avail. Reply = [%s]", reply);
 		myfree(reply);
 		write_rset(sockfd);
-		checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		reply2 = checkwait_smtpreply(sockfd, MLMMJ_RSET);
+		if (reply2 != NULL) myfree(reply2);
 		return MLMMJ_DOT;
 	}
 
