@@ -1303,10 +1303,23 @@ int main(int argc, char **argv)
 		} else {
 			len = strlen(listdir) + 9 + 20 + 9;
 		  	requeuefilename = mymalloc(len);
-		  	snprintf(requeuefilename, len, "%s/requeue/%d/mailfile", listdir,
-				mindex);
-			if (rename(mailfilename, requeuefilename) < 0)
+			snprintf(requeuefilename, len, "%s/requeue/%d",
+				listdir, mindex);
+			if(stat(requeuefilename, &st) < 0) {
+				/* Nothing was requeued and we don't keep
+				 * mail for a noarchive list. */
 				unlink(mailfilename);
+			} else {
+				snprintf(requeuefilename, len,
+					"%s/requeue/%d/mailfile",
+					listdir, mindex);
+				if (rename(mailfilename, requeuefilename) < 0) {
+					log_error(LOG_ARGS,
+							"Could not rename(%s,%s);",
+							mailfilename,
+							requeuefilename);
+				}
+			}
 			myfree(requeuefilename);
 		}
 		myfree(archivefilename);
