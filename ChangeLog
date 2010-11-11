@@ -1,3 +1,5 @@
+ o Avoid checking addresses multiple times for notmetoo and make it work even
+   when delivering messages individually
  o Fixed small memory leaks when SMTP errors occur
  o Improved error logging when requeuing
  o Fix php-admin to work when topdir contains a symlink (e.g. on Mac)

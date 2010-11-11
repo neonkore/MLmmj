@@ -1189,10 +1189,11 @@ int main(int argc, char **argv)
 				continue;
 			}
 			do {
+				i = stl.count;
 				res = getaddrsfromfd(&stl, subfd,
 						maxverprecips);
-				if(omit != NULL && maxverprecips > 1) {
-					for(i = 0; i < stl.count; i++) {
+				if(omit != NULL) {
+					while(i < stl.count) {
 						if(strcmp(stl.strs[i], omit)
 							== 0) {
 						    myfree(stl.strs[i]);
@@ -1205,6 +1206,7 @@ int main(int argc, char **argv)
 						    stl.strs[stl.count] = NULL;
 						    break;
 						}
+						i++;
 					}
 				}
 				if(stl.count == maxverprecips) {
