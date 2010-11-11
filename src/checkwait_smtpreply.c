@@ -36,6 +36,12 @@ char *checkwait_smtpreply(int sockfd, int replytype)
 	char *smtpreply;
 
 	smtpreply = mygetline(sockfd);
+	if(smtpreply == NULL) {
+		/* This will never be a valid SMTP response so will always be returned,
+		 * but is more descriptive than an empty string. */
+		smtpreply = mystrdup("none / error / closed connection");
+	}
+
 #if 0
 	printf("replytype = [%d], smtpreply = [%s]\n", replytype, smtpreply);
 	fprintf(stderr, "%s", smtpreply);
