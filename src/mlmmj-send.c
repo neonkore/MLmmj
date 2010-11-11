@@ -1299,10 +1299,6 @@ int main(int argc, char **argv)
 		break;
 	}
 	
-	for(i = 0; i < stl.count; i++)
-		myfree(stl.strs[i]);
-	stl.count = 0;
-
 	myfree(listdelim);
 	myfree(hdrs);
 	myfree(body);
