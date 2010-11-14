@@ -423,7 +423,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 				if (str != tmp)
 					len = atol(str);
 				if (mailname && 
-		     		   ((mailfd = open(mailname, O_RDONLY)) > 0)){
+		     		   ((mailfd = open(mailname, O_RDONLY)) >= 0)){
 		     		    str = NULL;
 				    i = 0;
 				    while (i < len &&
