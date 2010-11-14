@@ -1,10 +1,10 @@
 README.postfix                                                   Dec 16th 2009
 
 POSTFIX ISSUES
-   
-    The main issue with Postfix and mlmmj is the mlmmj requirement that
-    the mlmmj executables must be executed by root or the owner of the
-    list directory.  
+
+    The main issue with Postfix and Mlmmj is the Mlmmj requirement that
+    the Mlmmj executables must be executed by root or the owner of the
+    list directory.
 
     This is at odds with Postfix.  The standard local delivery mechanism
     for Postfix is local(8) that ships with Postfix.  According to
@@ -19,15 +19,27 @@ POSTFIX ISSUES
     files are disabled as a security precaution in aliases files for
     delivering to external programs.
 
-    This leaves us with a conundrum on how to execute the mlmmj
-    executables as an 'mlmmj' user without using alias files.  One
-    answer is to use a postfix transport.
+    So Postfix then falls back to executing with the user specified by
+    the configuration option 'default_privs'.  The default setting for
+    this option is the user 'nobody'.  You can make Mlmmj work by having
+    your lists owned by 'nobody', but this is not recommended.  Other
+    programs and daemons may use 'nobody' as a user who should not have
+    access to anything; most notably, some NFS implementations use this
+    user when somebody connects but fails to authenticate.  Such users
+    should not be able to access your mailing lists.  Changing
+    'default_privs' to an 'mlmmj' user may open other security holes,
+    and may not be appropriate if Postfix is used for other external
+    programs besides Mlmmj.
+
+    This leaves us with a conundrum on how to execute the Mlmmj
+    executables as an 'mlmmj' user.  One answer is to use a Postfix
+    transport.
 
     First we'll get the 'mlmmj' user setup and then move onto the
-    postfix configuration:
+    Postfix configuration:
 
 MLMMJ SETUP
-    
+
     Create a 'mlmmj' user that will own all the lists.  Use whatever
     user creation app/script is provided by your system.  Generally
     'useradd'.
@@ -43,7 +55,7 @@ MLMMJ SETUP
     -s flag to set the spool directory if it isn't /var/spool/mlmmj
 
 POSTFIX SETUP
-  
+
     First thing is to make sure that the postfix server accepts mail for
     the mailing lists.  For a server that handles mail for multiple
     domains, this is done with a 'virtual_alias_map'.  This is how I'll
@@ -51,13 +63,13 @@ POSTFIX SETUP
 
     Add a virtual_alias_map file to main.cf configuration.  We'll use a
     regular expression map since we need to be able to match all the
-    various mjmml delimiter addresses (list-subscribe, list-unsubscribe,
-    etc)
+    various Mlmmj delimiter addresses (list-subscribe, list-unsubscribe,
+    confsub-0123456789abcdef, etc.).
 
         main.cf:
-            virtual_alias_maps = hash:/etc/postfix/virtual, 
+            virtual_alias_maps = hash:/etc/postfix/virtual,
                                  regexp:/var/spool/mlmmj/virtual.regexp
-           
+
         /var/spool/mlmmj/virtual.regexp:
             /^(mlmmj-test.*)@example\.com$/          ${1}
             /^(another-list.*)@sample\.com$/         ${1}
@@ -72,16 +84,16 @@ POSTFIX SETUP
 
         /^(list-name.*)@(domain\.com)$/        domain--${1}
 
-    Next we make sure that postfix can invoke the mlmmj executables as
+    Next we make sure that Postfix can invoke the mlmmj executables as
     the 'mlmmj' user.  This is where the transport map comes in.  So we
     add a transport map and a configuration option that instructs the
     transport to only deliver one file at a time.  See transport(5) for
     more information on transports.
 
         main.cf:
-            transport_maps = regexp:/var/spool/mlmmj/transport 
+            transport_maps = regexp:/var/spool/mlmmj/transport
             mlmmj_destination_recipient_limit = 1
-          
+
         /var/spool/mlmmj/transport:
             /^(list-test).*$/                        mlmmj:list-test
             /^(another-list).*$/                     mlmmj:another-list
@@ -97,7 +109,7 @@ POSTFIX SETUP
         /^(domain--list-name).*$/              mlmmj:domain/list-name
 
     Now we setup the 'mlmmj' transport.  The 'mlmmj' in mlmmj:$1 above
-    indicates a transport listed in the postfix master.cf file.  We are
+    indicates a transport listed in the Postfix master.cf file.  We are
     just going to create a transport called 'mlmmj' but it is nothing
     more than a pipe(8) to the mlmmj-receive program that is invoked as
     the 'mlmmj' user.
@@ -107,7 +119,7 @@ POSTFIX SETUP
             mlmmj   unix  -       n       n       -       -       pipe
                 flags=DORhu user=mlmmj argv=/usr/local/bin/mlmmj-receive -F -L /var/spool/mlmmj/$nexthop/
 
-    This takes the pipe(8) postfix delivery agent and tells it to invoke
+    This takes the pipe(8) Postfix delivery agent and tells it to invoke
     '/usr/local/bin/mlmmj-receive' as the 'mlmmj' user and pipe the
     email to it on stdin.  This mode of transportation is given the name
     'mlmmj'.
@@ -129,6 +141,6 @@ POSTFIX SETUP
     /var/spool/mlmmj/list-name as usual, or for the hierarchical
     multi-domain version, in /var/spool/mlmmj/domain/list-name.
 
-    Restart postfix and enjoy your new lists.
+    Restart Postfix and enjoy your new lists.
 
 
