@@ -31,6 +31,9 @@ regex:
 ^src/mlmmj-sub$
 ^src/mlmmj-unsub$
 
+# Other generated files
+(^|/)TAGS$
+
 # Vim swap files
 (^|/)\..*\.swp$
 
