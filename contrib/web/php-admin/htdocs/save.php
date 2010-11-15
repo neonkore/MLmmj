@@ -43,14 +43,17 @@ function mlmmj_boolean($name, $nicename, $text)
           die("Couldn't chmod ".$file);
     }
     else {
-       @unlink($file);
+       if (file_exists($file)) {
+          if (!unlink($file))
+             die("Couldn't unlink ".$file);
+       }
     }
 }
 
 function mlmmj_string ($name, $nicename, $text) 
 {
     mlmmj_list($name, $nicename, $text);
-}   
+}
 
 function mlmmj_list($name, $nicename, $text) 
 {
@@ -58,21 +61,34 @@ function mlmmj_list($name, $nicename, $text)
 
     $file = $topdir."/".$list."/control/".$name;
     
-    if(isset($_POST[$name]) && !empty($_POST[$name]))
+    if(isset($_POST[$name]) && !empty($_POST[$name]) && !preg_match('/^\s*$/',$_POST[$name]))
     {
+       // remove all \r
+       $_POST[$name]=preg_replace('/\r/',"",$_POST[$name]);
+
+       // no trailing \n?, then we add one
+       if (!preg_match('/\n$/',$_POST[$name]))
+          $_POST[$name].="\n";
+
+       // we don't like whitespace before a \n
+       $_POST[$name]=preg_replace('/\s*\n/',"\n",$_POST[$name]);
+
        if (!$fp = fopen($file, "w"))
           die("Couldn't open ".$file." for writing");
 
-       fwrite($fp, preg_replace('/\\r/',"",$_POST[$name]));
+       // write the result in a file
+       fwrite($fp, $_POST[$name]);
        fclose($fp);
 
        if (!chmod($file, 0644))
           die("Couldn't chmod ".$file);
     }
     else {
-       @unlink($file);
+       if (file_exists($file)) {
+          if (!unlink($file))
+             die("Couldn't unlink ".$file);
+       }
     }
-    
 }
 
 // Perl's encode_entities (to be able to use tunables.pl)

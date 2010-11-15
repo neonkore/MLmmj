@@ -57,6 +57,9 @@ function mlmmj_string($name, $nicename, $text)
        $lines = file($file);
        $value = $lines[0];
     }
+
+    // remove trailing \n if any, just to be sure
+    $value = preg_replace('/\n$/',"",$value);
     
     $tpl->assign(array("NAME" => htmlentities($name),
 		       "NICENAME" => htmlentities($nicename),
@@ -75,6 +78,10 @@ function mlmmj_list($name, $nicename, $text)
 
     if(is_file($file))
        $value = file_get_contents($file);
+
+    // the last \n would result in an extra empty line in the list box,
+    // so we remove it
+    $value = preg_replace('/\n$/',"",$value);
 
     $tpl->assign(array("NAME" => htmlentities($name),
 		       "NICENAME" => htmlentities($nicename),

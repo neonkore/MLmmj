@@ -1,3 +1,5 @@
+ o Better end-of-line handling and error reporting in php-admin (Franky Van
+   Liedekerke)
  o Avoid losing mail when connecting to relayhost fails
  o Improved and more consistent closing of SMTP sessions in error cases
  o Check the relayhost gives a reply before reading it to avoid a crash
