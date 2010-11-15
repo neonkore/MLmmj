@@ -250,6 +250,9 @@ int send_mail(int sockfd, const char *from, const char *to,
 	int retval = 0;
 	char *reply, *reply2, *tohdr;
 
+	if(sockfd == -1)
+		return EBADF;
+
 	if(strchr(to, '@') == NULL) {
 		errno = 0;
 		log_error(LOG_ARGS, "No @ in address, ignoring %s",
@@ -378,9 +381,12 @@ int initsmtp(int *sockfd, const char *relayhost, unsigned short port)
 	int retval = 0;
 	char *reply = NULL;
 	char *myhostname = hostnamestr();
-	
+
 	init_sockfd(sockfd, relayhost, port);
-	
+
+	if(*sockfd == -1)
+		return EBADF;
+
 	if((reply = checkwait_smtpreply(*sockfd, MLMMJ_CONNECT)) != NULL) {
 		log_error(LOG_ARGS, "No proper greeting to our connect"
 			  "Reply: [%s]", reply);
@@ -432,6 +438,9 @@ int send_mail_verp(int sockfd, struct strlist *addrs, char *mailmap,
 {
 	int retval, i;
 	char *reply, *reply2;
+
+	if(sockfd == -1)
+		return EBADF;
 
 	retval = write_mail_from(sockfd, from, verpextra);
 	if(retval) {
@@ -1167,24 +1176,33 @@ int main(int argc, char **argv)
 		
 		if(verp) {
 			initsmtp(&sockfd, relay, smtpport);
-			if(write_mail_from(sockfd, verpfrom, verp)) {
+			if(sockfd > -1) {
+			    if(write_mail_from(sockfd, verpfrom, verp)) {
 				log_error(LOG_ARGS,
-						"Could not write MAIL FROM\n");
+					    "Could not write VERP MAIL FROM. "
+					    "Not sending with VERP.");
 				verp = NULL;
-			} else {
+			    } else {
 				reply = checkwait_smtpreply(sockfd, MLMMJ_FROM);
 				if(reply) {
 					log_error(LOG_ARGS,
 						"Mailserver did not "
-						"accept verp mail from. "
+						"accept VERP MAIL FROM. "
 						"Not sending with VERP.");
 					myfree(reply);
 					verp = NULL;
 				}
+			    }
+			    /* We can't be in SMTP DATA state or anything like
+			     * that, so should be able to safely QUIT. */
+			    endsmtp(&sockfd);
+			} else {
+			    log_error(LOG_ARGS,
+				    "Could not connect to "
+				    "write VERP MAIL FROM. "
+				    "Not sending with VERP.");
+			    verp = NULL;
 			}
-			/* We can't be in SMTP DATA state or anything like
-			 * that, so should be able to safely QUIT. */
-			endsmtp(&sockfd);
 		}
 
 		while((dp = readdir(subddir)) != NULL) {

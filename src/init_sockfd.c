@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
@@ -45,16 +46,17 @@ void init_sockfd(int *sockfd, const char *relayhost, unsigned short port)
 	*sockfd = socket(PF_INET, SOCK_STREAM, 0);
 	if(*sockfd == -1) {
 		log_error(LOG_ARGS, "Could not get socket");
-		exit(EXIT_FAILURE);
+		return;
 	}
 	addr.sin_family = PF_INET;
 	addr.sin_addr.s_addr = inet_addr(relayhost);
 	addr.sin_port = htons(port);
 	len = sizeof(addr);
 	if(connect(*sockfd, (struct sockaddr *)&addr, len) == -1) {
-		log_error(LOG_ARGS, "Could not connect to %s, "
-				    "exiting ... ", relayhost);
-		exit(EXIT_FAILURE);
+		log_error(LOG_ARGS, "Could not connect to %s", relayhost);
+		close(*sockfd);
+		*sockfd = -1;
+		return;
 	}
 
 	on = 1;
