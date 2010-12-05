@@ -756,6 +756,7 @@ int main(int argc, char **argv)
 		notify_sub(listdir, listaddr, listdelim, address, mlmmjsend,
 				typesub);
 
+	myfree(address);
 	myfree(listaddr);
 	myfree(listdelim);
 
