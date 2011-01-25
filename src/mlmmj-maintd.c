@@ -356,6 +356,10 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 						"-T", to,
 						"-a", (char *)NULL);
 			}
+			log_error(LOG_ARGS, "Could not execlp %s",
+						mlmmjsend);
+			/* This is the child. Exit on failure. */
+			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -474,6 +478,10 @@ int resend_requeue(const char *listdir, const char *mlmmjsend)
 					"-s", subnewname,
 					"-a",
 					"-D", (char *)NULL);
+			log_error(LOG_ARGS, "Could not execlp %s",
+						mlmmjsend);
+			/* This is the child. Exit on failure. */
+			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -618,7 +626,8 @@ int probe_bouncers(const char *listdir, const char *mlmmjbounce)
 					"-p", (char *)NULL);
 			log_error(LOG_ARGS, "Could not execlp %s",
 						mlmmjbounce);
-			return 1;
+			/* This is the child. Exit on failure. */
+			exit(EXIT_FAILURE);
 		}
 	}
 	closedir(bouncedir);
@@ -757,7 +766,8 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 					"-b", "-a", address, (char *)NULL);
 			log_error(LOG_ARGS, "Could not execlp %s",
 						mlmmjunsub);
-			return 1;
+			/* This is the child. Exit on failure. */
+			exit(EXIT_FAILURE);
 		}
 	}
 	closedir(bouncedir);
