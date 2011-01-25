@@ -315,6 +315,9 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		if(t - st.st_mtime > bouncelife) {
 			unlink(mailname);
 			myfree(mailname);
+			myfree(from);
+			myfree(to);
+			myfree(repto);
 			continue;
 		}
 
