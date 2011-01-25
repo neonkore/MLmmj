@@ -731,6 +731,7 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		a = strchr(firstbounce, ':');
 		if(a == NULL) {
 			myfree(firstbounce);
+			myfree(bouncedata);
 			continue;
 		}
 
@@ -738,14 +739,17 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		bouncetime = (time_t)strtol(a, NULL, 10);
 		myfree(firstbounce);
 		t = time(NULL);
-		if(t - bouncetime < bouncelife + WAITPROBE)
+		if(t - bouncetime < bouncelife + WAITPROBE) {
+			myfree(bouncedata);
 			continue; /* ok, don't unsub this one */
+		}
 		
 		/* Ok, go ahead and unsubscribe the address */
 		address = mystrdup(dp->d_name);
 		a = strchr(address, '=');
 		if(a == NULL) { /* skip malformed */
 			myfree(address);
+			myfree(bouncedata);
 			continue;
 		}
 		*a = '@';
@@ -754,6 +758,8 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		
 		if(childpid < 0) {
 			log_error(LOG_ARGS, "Could not fork");
+			myfree(address);
+			myfree(bouncedata);
 			continue;
 		}
 
