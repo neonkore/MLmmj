@@ -521,14 +521,16 @@ int clean_nolongerbouncing(const char *listdir)
 		   (strcmp(dp->d_name, ".") == 0))
 				continue;
 
-		if(stat(dp->d_name, &st) < 0) {
-			log_error(LOG_ARGS, "Could not stat(%s)", dp->d_name);
-			continue;
-		}
-
 		filename = mystrdup(dp->d_name);
 
 		if((s = strstr(filename, "-probe"))) {
+			if(stat(filename, &st) < 0) {
+				log_error(LOG_ARGS, "Could not stat(%s)",
+					  filename);
+				myfree(filename);
+				continue;
+			}
+
 			probefd = open(filename, O_RDONLY);
 			if(probefd < 0)
 				continue;
@@ -586,11 +588,6 @@ int probe_bouncers(const char *listdir, const char *mlmmjbounce)
 		   (strcmp(dp->d_name, ".") == 0))
 				continue;
 
-		if(stat(dp->d_name, &st) < 0) {
-			log_error(LOG_ARGS, "Could not stat(%s)", dp->d_name);
-			continue;
-		}
-		
 		if(strstr(dp->d_name, "-probe"))
 			continue;
 
@@ -598,6 +595,11 @@ int probe_bouncers(const char *listdir, const char *mlmmjbounce)
 		if(s && (strcmp(s, ".lastmsg") == 0))
 			continue;
 			
+		if(stat(dp->d_name, &st) < 0) {
+			log_error(LOG_ARGS, "Could not stat(%s)", dp->d_name);
+			continue;
+		}
+		
 		probefile = concatstr(2, dp->d_name, "-probe");
 		
 		/* Skip files which already have a probe out */
@@ -675,17 +677,17 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		   (strcmp(dp->d_name, ".") == 0))
 				continue;
 
-		if(stat(dp->d_name, &st) < 0) {
-			log_error(LOG_ARGS, "Could not stat(%s)", dp->d_name);
-			continue;
-		}
-		
 		if(strstr(dp->d_name, "-probe"))
 			continue;
 
 		a = strrchr(dp->d_name, '.');
 		if(a && (strcmp(a, ".lastmsg") == 0))
 			continue;
+		
+		if(stat(dp->d_name, &st) < 0) {
+			log_error(LOG_ARGS, "Could not stat(%s)", dp->d_name);
+			continue;
+		}
 		
 		probefile = concatstr(2, dp->d_name, "-probe");
 		
