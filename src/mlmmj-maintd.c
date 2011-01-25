@@ -1104,6 +1104,9 @@ int main(int argc, char **argv)
 		if(chdir(dirlists) < 0) {
 			log_error(LOG_ARGS, "Could not chdir(%s).",
 					dirlists);
+			myfree(mlmmjbounce);
+			myfree(mlmmjsend);
+			myfree(mlmmjunsub);
 			exit(EXIT_FAILURE);
 		}
 
