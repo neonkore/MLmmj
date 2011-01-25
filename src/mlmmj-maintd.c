@@ -532,11 +532,15 @@ int clean_nolongerbouncing(const char *listdir)
 			}
 
 			probefd = open(filename, O_RDONLY);
-			if(probefd < 0)
+			if(probefd < 0) {
+				myfree(filename);
 				continue;
+			}
 			probetimestr = mygetline(probefd);
-			if(probetimestr == NULL)
+			if(probetimestr == NULL) {
+				myfree(filename);
 				continue;
+			}
 			close(probefd);
 			chomp(probetimestr);
 			probetime = (time_t)strtol(probetimestr, NULL, 10);
