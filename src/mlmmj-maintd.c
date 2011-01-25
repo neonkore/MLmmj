@@ -548,6 +548,7 @@ int clean_nolongerbouncing(const char *listdir)
 			t = time(NULL);
 			if(t - probetime > WAITPROBE) {
 				unlink(filename);
+				/* remove -probe onwards from filename */
 				*s = '\0';
 				unlink(filename);
 				s = concatstr(2, filename, ".lastmsg");
