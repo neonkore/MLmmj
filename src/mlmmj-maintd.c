@@ -526,7 +526,8 @@ int clean_nolongerbouncing(const char *listdir)
 
 		filename = mystrdup(dp->d_name);
 
-		if((s = strstr(filename, "-probe"))) {
+		s = strrchr(filename, '-');
+		if(s && (strcmp(s, "-probe") == 0)) {
 			if(stat(filename, &st) < 0) {
 				log_error(LOG_ARGS, "Could not stat(%s)",
 					  filename);
@@ -596,7 +597,8 @@ int probe_bouncers(const char *listdir, const char *mlmmjbounce)
 		   (strcmp(dp->d_name, ".") == 0))
 				continue;
 
-		if(strstr(dp->d_name, "-probe"))
+		s = strrchr(dp->d_name, '-');
+		if(s && (strcmp(s, "-probe") == 0))
 			continue;
 
 		s = strrchr(dp->d_name, '.');
@@ -685,7 +687,8 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		   (strcmp(dp->d_name, ".") == 0))
 				continue;
 
-		if(strstr(dp->d_name, "-probe"))
+		a = strrchr(dp->d_name, '-');
+		if(a && (strcmp(a, "-probe") == 0))
 			continue;
 
 		a = strrchr(dp->d_name, '.');
