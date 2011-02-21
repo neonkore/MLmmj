@@ -100,39 +100,59 @@ char *substitute_one(const char *line, const char *listaddr,
 	listname = genlistname(listaddr);
 
 	if(strcmp(token, "listaddr") == 0) {
+		/* DEPRECATED: use $list$@$domain$ instead */
 		value = mystrdup(listaddr);
 		goto concatandreturn;
+	} else if(strcmp(token, "list+") == 0) {
+		value = concatstr(2, listname, listdelim);
+		goto concatandreturn;
+	} else if(strcmp(token, "list") == 0) {
+		value = mystrdup(listname);
+		goto concatandreturn;
+	} else if(strcmp(token, "domain") == 0) {
+		value = mystrdup(fqdn);
+		goto concatandreturn;
 	} else if(strcmp(token, "listowner") == 0) {
+		/* DEPRECATED: use $list+$owner@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "owner@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "helpaddr") == 0) {
+		/* DEPRECATED: use $list+$help@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "help@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "faqaddr") == 0) {
+		/* DEPRECATED: use $list+$faq@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "faq@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "listgetN") == 0) {
+		/* DEPRECATED: use $list+$get-N@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "get-N@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "listunsubaddr") == 0) {
+		/* DEPRECATED: use $list+$unsubscribe@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "unsubscribe@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "digestunsubaddr") == 0) {
+		/* DEPRECATED: use $list+$unsubscribe-digest@$domain$ instead */
 		value = concatstr(4, listname, listdelim,
 				  "unsubscribe-digest@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "nomailunsubaddr") == 0) {
+		/* DEPRECATED: use $list+$unsubscribe-nomail@$domain$ instead */
 		value = concatstr(4, listname, listdelim,
 				  "unsubscribe-nomail@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "listsubaddr") == 0) {
+		/* DEPRECATED: use $list+$subscribe@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "subscribe@", fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "digestsubaddr") == 0) {
+		/* DEPRECATED: use $list+$subscribe-digest@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "subscribe-digest@",
 				  fqdn);
 		goto concatandreturn;
 	} else if(strcmp(token, "nomailsubaddr") == 0) {
+		/* DEPRECATED: use $list+$subscribe-nomail@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "subscribe-nomail@",
 				  fqdn);
 		goto concatandreturn;

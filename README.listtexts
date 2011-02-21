@@ -173,6 +173,7 @@ multi-line substitutions and would not work in a header):
 
 - $digestsubaddr$
   listname+subscribe-digest@domain.tld
+  DEPRECATED: use $list+$subscribe-digest@$domain$ instead
 
 - $digestthreads$
   (available only in digest)
@@ -180,29 +181,46 @@ multi-line substitutions and would not work in a header):
 
 - $digestunsubaddr$
   listname+unsubscribe-digest@domain.tld
+  DEPRECATED: use $list+$unsubscribe-digest@$domain$ instead
+
+- $domain$
+  domain.tld
 
 - $faqaddr$
   listname+faq@domain.tld
+  DEPRECATED: use $list+$faq@$domain$ instead
 
 - $helpaddr$
   listname+help@domain.tld
+  DEPRECATED: use $list+$help@$domain$ instead
+
+- $list$
+  listname
+
+- $list+$
+  listname+
 
 - $listaddr$
   listname@domain.tld
+  DEPRECATED: use $list$@$domain$ instead
 
 - $listgetN$
   listname+get-N@domain.tld
   (the N here is nothing special, so this won't actually work, but is used to
   explain to users how to use the +get functionality)
+  DEPRECATED: use $list+$get-N@$domain$ instead
 
 - $listowner$
   listname+owner@domain.tld
+  DEPRECATED: use $list+$owner@$domain$ instead
 
 - $listsubaddr$
   listname+subscribe@domain.tld
+  DEPRECATED: use $list+$subscribe@$domain$ instead
 
 - $listunsubaddr$
   listname+unsubscribe@domain.tld
+  DEPRECATED: use $list+$unsubscribe@$domain$ instead
 
 - $maxmailsize$
   (available only in maxmailsize)
@@ -223,9 +241,11 @@ multi-line substitutions and would not work in a header):
 
 - $nomailsubaddr$
   listname+subscribe-nomail@domain.tld
+  DEPRECATED: use $list+$subscribe-nomail@$domain$ instead
 
 - $nomailunsubaddr$
   listname+unsubscribe-nomail@domain.tld
+  DEPRECATED: use $list+$unsubscribe-nomail@$domain$ instead
 
 - $oldsub$
   (available only in notifyunsub, notifyunsub-digest and notifyunsub-nomail)
