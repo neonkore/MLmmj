@@ -136,8 +136,8 @@ char *substitute_one(const char *line, const char *listaddr,
 		value = concatstr(4, listname, listdelim, "subscribe-nomail@",
 				  fqdn);
 		goto concatandreturn;
-	} else if(strncmp(token, "control", 7) == 0) {
-		value = token + 7;
+	} else if(strncmp(token, "control ", 8) == 0) {
+		value = token + 8;
 		if(*value == '\0') {
 			value = mystrdup("");
 			goto concatandreturn;
@@ -149,10 +149,10 @@ char *substitute_one(const char *line, const char *listaddr,
 			break;
 		}
 		if(*value != '\0') {
-			value = mystrdup(token + 7);
+			value = mystrdup(token + 8);
 			goto concatandreturn;
 		}
-		value = token + 7;
+		value = token + 8;
 		value = ctrlcontent(listdir, value);
 		if (value == NULL)
 			value = mystrdup("");

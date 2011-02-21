@@ -149,10 +149,10 @@ multi-line substitutions and would not work in a header):
   the address to which to send mail to confirm the (un-)subscription in
   question
 
-- $controlN$
-  the contents of the control file named N, with its final newline stripped; N
-  represents the name of the file to be found in the list's control
-  subdirectory; the name may only include letters and digits
+- $control filename$
+  the contents of the control file named 'filename', with its final newline
+  stripped; 'filename' represents the name of the file to be found in the
+  list's control subdirectory; the name may only include letters and digits
 
 - $digestfirst$
   (available only in digest)
@@ -176,7 +176,7 @@ multi-line substitutions and would not work in a header):
 
 - $digestthreads$
   (available only in digest)
-  the list of threads included in the digest
+  the formatted list of threads included in the digest
 
 - $digestunsubaddr$
   listname+unsubscribe-digest@domain.tld
