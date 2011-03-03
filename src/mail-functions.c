@@ -61,7 +61,7 @@ int write_helo(int sockfd, const char *hostname)
 	myfree(helo);
 	return 0;
 }
-/* "MAIL FROM: <>\r\n" has length 15 */
+/* "MAIL FROM: <> \r\n" has length 16 */
 #define EXTRA_FROM_LEN 16
 int write_mail_from(int sockfd, const char *from_addr, const char *extra)
 {
@@ -72,12 +72,12 @@ int write_mail_from(int sockfd, const char *from_addr, const char *extra)
 
 	mail_from = mymalloc(len);
 
-	if(extra && extra[0] == ' ')
-		snprintf(mail_from, len, "MAIL FROM: <%s>%s\r\n", from_addr,
-				extra);
-	else
+	if(extra && extra[0] != '\0') {
+		if(extra[0] == ' ') extra++;
 		snprintf(mail_from, len, "MAIL FROM: <%s> %s\r\n", from_addr,
 				extra);
+	} else
+		snprintf(mail_from, len, "MAIL FROM: <%s>\r\n", from_addr);
 
 	len = strlen(mail_from);
 
