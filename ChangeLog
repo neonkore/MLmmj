@@ -1,3 +1,4 @@
+ o Avoid trailing whitespace in MAIL FROM line (Lukas Fleischer)
  o Better end-of-line handling and error reporting in php-admin (Franky Van
    Liedekerke)
  o Avoid losing mail when connecting to relayhost fails
