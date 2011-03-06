@@ -9,102 +9,141 @@ languages. The language to use for a list is chosen when you run the
 mlmmj-make-ml script and the appropriate files are copied into your
 listdir/text directory.
 
-This file documents
+This file documents list text
 
-- Supported list texts
-- List text format
-- List text substitutions
+- Naming scheme
+- Format
+- Substitutions
 
-Supported list texts
---------------------
+Naming scheme
+-------------
 
-The following list texts are supported by mlmmj:
+List texts are named following a scheme of:
 
-- access
-  sent to a poster when their post is denied because of an access rule
+  purpose-action-reason-type
 
-- bounce-probe
-  sent to a subscriber after an email to them bounced to inform them of the
-  bounce and probe when the address is no longer bouncing
+Mlmmj will look for the full four-part name first, then for files with shorter
+names obtained by dropping parts off the end, and finally for a file with a
+compatibility filename. It will use the first one it finds. (Note that use of
+the compatibility filename is DEPRECATED and will be removed in a future
+release.)
+
+So, the complete search order is:
+
+- purpose-action-reason-type
+- purpose-action-reason
+- purpose-action
+- purpose
+- compatibility filename (DEPRECATED)
+
+The following list texts are supported. The compatibility filename (DEPRECATED)
+is given in brackets. Those with asterisks (*) are not yet used.
+
+- help (listhelp)
+  sent in response to an email to listname+help@domain.tld
+
+- faq (listfaq)
+  sent in response to an email to listname+faq@domain.tld
+
+- confirm-sub-{request|admin}-normal (sub-confirm)
+- confirm-sub-{request|admin}-digest (sub-confirm-digest)
+- confirm-sub-{request|admin}-nomail (sub-confirm-nomail)
+- confirm-unsub-{request|admin}-normal (unsub-confirm)
+- confirm-unsub-{request|admin}-digest (unsub-confirm-digest)
+- confirm-unsub-{request|admin}-nomail (unsub-confirm-nomail)
+  sent to a requester to allow them to confirm a (un-)subscription request
+
+- moderate-post-{modnonsubposts|access|moderated} (moderation)
+  sent to the appropriate moderators when moderation is required because a user
+  has submitted a post
+
+- gatekeep-sub (submod-moderator)
+  sent to the appropriate gatekeepers when gatekeeping is required because a
+  subscription request has been received
+
+- wait-post-{modnonsubposts|access|moderated} (moderation-poster)
+  sent to a person submitting a post when they need to wait for moderation
+  before it is released to the list
+
+- wait-sub (submod-requester)
+  sent to a person requesting subscription when they need to wait for
+  gatekeeping for permission to join
+
+- deny-sub-disabled-digest (sub-deny-digest)
+- deny-sub-disabled-nomail (sub-deny-nomail)
+- deny-sub-subbed (sub-subscribed)
+- deny-sub-closed *
+- deny-sub-expired *
+- deny-sub-obstruct *
+- deny-unsub-unsubbed (unsub-notsubscribed)
+- deny-post-subonlypost (subonlypost)
+- deny-post-access (access)
+- deny-post-maxmailsize (maxmailsize)
+- deny-post-tocc (notintocc)
+- deny-post-expired *
+- deny-post-reject *
+- deny-release-notfound *
+- deny-release-moderators *
+- deny-reject-notfound *
+- deny-reject-moderators *
+- deny-permit-notfound *
+- deny-permit-gatekeepers *
+- deny-obstruct-notfound *
+- deny-obstruct-gatekeepers *
+  sent to the requestor when an action is denied or fails for some reason
+  ('requestor' here means the person who requested the action, so e.g. for a
+  reject action, deny-reject will go to the moderator requesting the rejection
+  if the rejection fails; but deny-post-reject will go to the person requesting
+  the post if the rejection succeeds, causing the post to fail)
+
+- finish-sub-{request|confirm|admin|permit}-normal (sub-ok)
+- finish-sub-{request|confirm|admin|permit}-digest (sub-ok-digest)
+- finish-sub-{request|confirm|admin|permit}-nomail (sub-ok-nomail)
+- finish-unsub-{request|confirm|admin}-normal (unsub-ok)
+- finish-unsub-{request|confirm|admin}-digest (unsub-ok-digest)
+- finish-unsub-{request|confirm|admin}-nomail (unsub-ok-nomail)
+- finish-post-request *
+- finish-post-confirm *
+- finish-post-release *
+- finish-release *
+- finish-reject *
+- finish-permit *
+- finish-obstruct *
+  sent to the requestor when an action completes successfully
+  ('requestor' here means the person who requested the action, so e.g. for a
+  release action, the moderator requesting the release will receive
+  finish-release, and the person who submitted the released post will receive
+  finish-post-release because the release action caused their post action to
+  succeed)
+
+- notify-sub-{request|confirm|admin|permit}-normal (notifysub)
+- notify-sub-{request|confirm|admin|permit}-digest (notifysub-digest)
+- notify-sub-{request|confirm|admin|permit}-nomail (notifysub-nomail)
+- notify-unsub-{request|confirm|admin|bouncing}-normal (notifyunsub)
+- notify-unsub-{request|confirm|admin|bouncing}-digest (notifyunsub-digest)
+- notify-unsub-{request|confirm|admin|bouncing}-nomail (notifyunsub-nomail)
+  sent to the list owner when somebody is (un-)subscribed
 
 - digest
   sent at the start of a digest
 
-- listfaq
-  sent in response to an email to listname+faq@domain.tld
+- probe (bounce-probe)
+  sent to a subscriber after an email to them bounced to inform them of the
+  bounce and probe when the address is no longer bouncing
 
-- listhelp
-  sent in response to an email to listname+help@domain.tld
-
-- listsubs
+- list---all (listsubs)
+- list---normal *
+- list---digest *
+- list---nomail *
   sent in response to an email to listname+list@domain.tld from the list owner
   (the formatted list of subscribers is automatically appended to the listtext)
 
-- maxmailsize
-  sent to the poster when a mail exceeds the maximum allowed size
+* Not yet used.
 
-- moderation
-- moderation-poster
-  sent when a message is to be moderated (to the appropriate moderators or to
-  the poster)
+Format
+------
 
-- notifysub
-- notifysub-digest
-- notifysub-nomail
-- notifyunsub
-- notifyunsub-digest
-- notifyunsub-nomail
-  sent to the list owner when somebody is (un-)subscribed
-
-- notintocc
-  sent to the poster when the list address is not found in a To: or CC: header
-
-- sub-confirm
-- sub-confirm-digest
-- sub-confirm-nomail
-  sent to a requester to allow them to confirm a subscription request
-
-- sub-deny-digest
-- sub-deny-nomail
-  sent when a subscription request is received for the digest or nomail version
-  of a list when that version is disabled
-
-- sub-ok
-- sub-ok-digest
-- sub-ok-nomail
-  sent to the new subscriber when a subscription succeeds
-
-- sub-subscribed
-  sent to a person sending a subscription request when they are already
-  subscribed to the list
-
-- submod-moderator
-- submod-requester
-  sent when a subscription is to be moderated (to the appropriate moderators
-  or to the requester)
-
-- subonlypost
-  sent to the poster when they attempt to post to a subonlypost list without
-  being subscribed
-
-- unsub-confirm
-- unsub-confirm-digest
-- unsub-confirm-nomail
-  sent to a subscriber to allow them to confirm an unsubscription request
-
-- unsub-notsubscribed
-  sent to a person sending an unsubscription request when they are not actually
-  subscribed to the list
-
-- unsub-ok
-- unsub-ok-digest
-- unsub-ok-nomail
-  sent to the old subscriber when an unsubscription succeeds
-
-List text format
-----------------
-
-They have the following format:
+List texts have the following format:
 
 - Headers
 - Blank line
@@ -132,20 +171,20 @@ The Subject: header is treated specially: it may include UTF-8 characters,
 which will automatically be escaped using the =?utf-8?q?...?= quoting
 mechanism.
 
-List text substitutions
------------------------
+Substitutions
+-------------
 
 Both headers and body may include the following, which are substituted prior to
 sending the message (though note that some of these substitutions are
 multi-line substitutions and would not work in a header):
 
 - $bouncenumbers$
-  (available only in bounceprobe)
+  (available only in probe)
   the formatted list of indexes of messages which may not have been received as
   they bounced
 
 - $confaddr$
-  (available only in [un]sub-confirm[-digest|-nomail])
+  (available only in confirm-[un]sub-*)
   the address to which to send mail to confirm the (un-)subscription in
   question
 
@@ -223,20 +262,20 @@ multi-line substitutions and would not work in a header):
   DEPRECATED: use $list+$unsubscribe@$domain$ instead
 
 - $maxmailsize$
-  (available only in maxmailsize)
+  (available only in deny-post-maxmailsize)
   the maximum size of mail that Mlmmj will accept
 
 - $moderateaddr$
-  (available only in moderation and submod-moderator)
+  (available only in moderate-post-* and gatekeep-sub)
   the address to which to send mail to approve the post or subscription in
   question
 
 - $moderators$
-  (available only in moderation, moderation-poster and submod)
+  (available only in moderate-post-*, wait-post-*, gatekeep-sub and wait-sub)
   the formatted list of moderators to whom the moderation request has been sent
 
 - $newsub$
-  (available only in notifysub, notifysub-digest and notifysub-nomail)
+  (available only in notify-sub-*-*)
   the address that has been subscribed
 
 - $nomailsubaddr$
@@ -248,7 +287,7 @@ multi-line substitutions and would not work in a header):
   DEPRECATED: use $list+$unsubscribe-nomail@$domain$ instead
 
 - $oldsub$
-  (available only in notifyunsub, notifyunsub-digest and notifyunsub-nomail)
+  (available only in notify-nsub-*-*)
   the address that has been unsubscribed
 
 - $originalmail$
@@ -262,8 +301,8 @@ multi-line substitutions and would not work in a header):
   number like 1000000000.
 
 - $posteraddr$
-  (available only in access, notintocc, moderation, moderation-poster and
-  subonlypost)
+  (available only in deny-post-{access|tocc|subonlypost}, moderate-post-* and
+  wait-post-*)
   the from address of the message that was received as determined by Mlmmj
 
 - $random0$
@@ -277,12 +316,12 @@ multi-line substitutions and would not work in a header):
   unlikely to appear in the attached messages
 
 - $subaddr$
-  (available only in submod-moderator and [un]sub-confirm[-digest|-nomail])
+  (available only in gatekeep-sub and confirm-[un]sub-*)
   the address requested to be (un-)subscribed
 
 - $subject$
-  (available only in access, notintocc, moderation, moderation-poster and
-  subonlypost)
+  (available only in deny-post-{access|tocc|subonlypost}, moderate-post-* and
+  wait-post-*)
   the subject line of the message in question
 
 - \uNNNN
