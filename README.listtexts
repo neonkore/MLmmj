@@ -9,11 +9,14 @@ languages. The language to use for a list is chosen when you run the
 mlmmj-make-ml script and the appropriate files are copied into your
 listdir/text directory.
 
-This file documents list text
+This file documents the following aspects of list texts:
 
 - Naming scheme
+- Supported list texts
 - Format
-- Substitutions
+- Conditionals
+- Formatted substitutions
+- Unformatted substitutions
 
 Naming scheme
 -------------
@@ -35,6 +38,13 @@ So, the complete search order is:
 - purpose-action
 - purpose
 - compatibility filename (DEPRECATED)
+
+When using shortened names, the %ifaction%, %ifreason%, %iftype% and related
+conditionals can be used to customise the list text according to the values of
+the missing parts.
+
+Supported list texts
+--------------------
 
 The following list texts are supported. The compatibility filename (DEPRECATED)
 is given in brackets. Those with asterisks (*) are not yet used.
@@ -136,7 +146,6 @@ is given in brackets. Those with asterisks (*) are not yet used.
 - list---digest *
 - list---nomail *
   sent in response to an email to listname+list@domain.tld from the list owner
-  (the formatted list of subscribers is automatically appended to the listtext)
 
 * Not yet used.
 
@@ -171,27 +180,144 @@ The Subject: header is treated specially: it may include UTF-8 characters,
 which will automatically be escaped using the =?utf-8?q?...?= quoting
 mechanism.
 
-Substitutions
--------------
+Both headers and bodies of list texts may include conditionals, formatting
+directives and substitutions. These are explained in the following sections.
+ 
+Conditionals
+------------
 
-Both headers and body may include the following, which are substituted prior to
-sending the message (though note that some of these substitutions are
-multi-line substitutions and would not work in a header):
+Conditionals allow text in list texts to be included or omitted based on
+conditions. The following are available:
+
+- %ifaction A ...%
+  the action is one of those given
+
+- %ifreason R ...%
+  the reason is one of those given
+
+- %iftype T ...%
+  the type is one of those given
+
+- %ifcontrol C ...%
+  one of the given control files exists
+
+- %ifnaction A%
+  the action is not the one given
+
+- %ifnreason R%
+  the reason is not the one given
+
+- %ifntype T%
+  the type is not the one given
+
+- %ifncontrol C ...%
+  at least one of the given control files does not exist
+
+The text after the %if...% directive is only included if the condition is
+satisfied, until an %else% or %endif% is encountered. These behave as you
+would expect. The %else% is optional.
+
+If a line with any of these conditional directives (%if...%, %else% or
+%endif%), after processing, contains only whitespace, the line does not appear
+at all in the output (the newline and any whitespace is omitted).
+
+Furthermore, if the preceding processed output ends with a blank line, when an
+unsatisfied conditional is encountered which has no %else% part, that
+preceding blank line is removed (unless it is the blank line that ends the
+headers).
+
+On the whole, this is what you would want and expect, so you probably don't
+need to worry about it.
+
+Note that when multiple parameters can be given for the directives, these have
+'or' behaviour; to get 'and' behaviour, nest conditionals.
+
+Formatting and formatted substitutions
+--------------------------------------
+
+These formatting-related directives work with multiple lines, so are generally
+not appropriate for use in headers. They are:
+
+- %wrap%
+- %wrap W%
+  lines until the next blank line are all concatenated (lines after the first
+  have whitespace trimmed; a single space separates lines) and are then
+  rewrapped (by breaking them at spaces) to a width of W (or 76 if W is
+  omitted)
+
+- %text T%
+  text from the file named T in the listdir/text directory; the name may only
+  include letters and digits; note that there is an unformatted version of
+  this directive
+
+- %control C%
+  the contents of the control file named C in listir/control; the name may
+  only include letters and digits; note that there is an unformatted version
+  of this directive
+
+- %originalmail%
+- %originalmail N%
+  (available only in moderate-post-*, wait-post-* and
+  deny-post-{access|maxmailsize|tocc|subonlypost})
+  the email message being processed (usually a mail being moderated); N
+  represents a number, which is how many lines of the message (including
+  headers) to include: if omitted, 100 will be used; to include the whole
+  message, use a large number like 1000000000
+
+- %digestthreads%
+  (available only in digest)
+  the list of threads included in the digest
+
+- %gatekeepers%
+  (available only in gatekeep-sub and wait-sub)
+  the list of moderators to whom the moderation request has been sent
+
+- %subs%
+  (available only in list---*)
+  the list of subscribers
+
+- %moderators%
+  (available only in moderate-post-* and wait-post-*)
+  the list of moderators to whom the moderation request has been sent
+
+- %bouncenumbers%
+  (available only in probe)
+  the list of indexes of messages which may not have been received as they
+  bounced
+
+- %comment%
+  the rest of the line is a comment
+
+- %%
+  a single %
+
+All these directives have the behaviour that second and later lines are
+preceded with as many spaces as there were characters preceding the directive
+in the processed output. All of them except %wrap% and %wrap W% cause anything
+following them on the same line to be omitted.
+
+If a line with any of these directives, after processing, contains only
+whitespace, the line does not appear at all in the output (the newline and any
+whitespace is omitted).
+
+Unformatted substitutions
+-------------------------
 
 - $bouncenumbers$
   (available only in probe)
   the formatted list of indexes of messages which may not have been received as
   they bounced
+  DEPRECATED: use %bouncenumbers%
 
 - $confaddr$
   (available only in confirm-[un]sub-*)
   the address to which to send mail to confirm the (un-)subscription in
   question
 
-- $control filename$
-  the contents of the control file named 'filename', with its final newline
-  stripped; 'filename' represents the name of the file to be found in the
-  list's control subdirectory; the name may only include letters and digits
+- $control C$
+  the contents of the control file named C in listdir/control, with its final
+  newline stripped; the name may only include letters and digits; note that
+  there is a formatted version of this directive
 
 - $digestfirst$
   (available only in digest)
@@ -217,6 +343,7 @@ multi-line substitutions and would not work in a header):
 - $digestthreads$
   (available only in digest)
   the formatted list of threads included in the digest
+  DEPRECATED: use %digestthreads%
 
 - $digestunsubaddr$
   listname+unsubscribe-digest@domain.tld
@@ -273,6 +400,7 @@ multi-line substitutions and would not work in a header):
 - $moderators$
   (available only in moderate-post-*, wait-post-*, gatekeep-sub and wait-sub)
   the formatted list of moderators to whom the moderation request has been sent
+  DEPRECATED: use %moderators% or %gatekeepers%
 
 - $newsub$
   (available only in notify-sub-*-*)
@@ -291,14 +419,8 @@ multi-line substitutions and would not work in a header):
   the address that has been unsubscribed
 
 - $originalmail$
-- $originalmailN$
-  the email message being processed (usually a mail being moderated); this must
-  appear first on a line, optionally preceded by whitespace: any preceding
-  whitespace is prepended to each line of the mail that is included and the
-  rest of the line following originalmail$ is ignored; N represents a number,
-  which is how many lines of the message (including headers) to include: if
-  omitted, 100 will be used, and to include the whole message, use a large
-  number like 1000000000.
+  the same as %originalmail% preceded by a space
+  DEPRECATED: use %originalmail%
 
 - $posteraddr$
   (available only in deny-post-{access|tocc|subonlypost}, moderate-post-* and
@@ -312,7 +434,7 @@ multi-line substitutions and would not work in a header):
 - $random4$
 - $random5$
   these are 6 distinct random strings; they allow list texts to be constructed
-  that are MIME messages with attachments by using creating boundaries that are
+  that are MIME messages with attachments by creating boundaries that are
   unlikely to appear in the attached messages
 
 - $subaddr$
@@ -324,6 +446,14 @@ multi-line substitutions and would not work in a header):
   wait-post-*)
   the subject line of the message in question
 
+- $text T$
+  text from the file named T in the listdir/text directory, with its final
+  newline stripped; the name may only include letters and digits; note that
+  there is a formatted version of this directive
+
+- $$
+  a single $
+
 - \uNNNN
   (NNNN are hex digits)
   a Unicode character
@@ -331,5 +461,6 @@ multi-line substitutions and would not work in a header):
   Subject: header as Mlmmj does automatic quoting for that header as described
   above)
 
-
+- \\
+  a single \
 
