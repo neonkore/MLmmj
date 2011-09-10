@@ -3,8 +3,8 @@
 mlmmj-sub \- subscribe address to a mailinglist run by mlmmj
 .SH SYNOPSIS
 .B mlmmj-sub
-\fI-L /path/to/list -a john@doe.org \fR[\fI-c\fR | \fI-C\fR] \fR[\fI-d\fR | \fI-n\fR]
-[\fI-f\fR] [\fI-h\fR] [\fI-U\fR] [\fI-V\fR]
+\fI-L /path/to/list\fR [\fI-a john@doe.org\fR | \fI-m str\fR]
+[\fI-c\fR | \fI-C\fR] [\fI-d\fR | \fI-n\fR] [\fI-f\fR] [\fI-h\fR] \fR[\fI-r\fR | \fI-R\fR] [\fI-s\fR] [\fI-U\fR] [\fI-V\fR]
 .HP
 \fB\-a\fR: Email address to subscribe
 .HP
@@ -23,6 +23,10 @@ mlmmj-sub \- subscribe address to a mailinglist run by mlmmj
 \fB\-m\fR: Subscriber moderation string
 .HP
 \fB\-n\fR: Subscribe to nomail version of the list
+.HP
+\fB\-r\fR: Behave as if request arrived via email (internal use)
+.HP
+\fB\-R\fR: Behave as if confirmation arrived via email (internal use)
 .HP
 \fB\-s\fR: Don't send a mail to the subscriber if already subscribed
 .HP

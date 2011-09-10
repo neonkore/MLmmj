@@ -70,12 +70,26 @@ struct mailhdr {
 };
 
 /* Has to go here, since it's used in many places */
+
 enum subtype {
 	SUB_NORMAL,
 	SUB_DIGEST,
 	SUB_NOMAIL,
-	SUB_FILE /* For single files (moderator, owner etc.) */
+	SUB_FILE, /* For single files (moderator, owner etc.) */
+	SUB_ALL /* For listing all kinds of subscribers */
 };
+
+char *subtype_strs[5]; /* count matches enum above; defined in mlmmj-sub.c */
+
+enum subreason {
+	SUB_REQUEST,
+	SUB_CONFIRM,
+	SUB_PERMIT,
+	SUB_ADMIN,
+	SUB_BOUNCING
+};
+
+char * subreason_strs[5]; /* count matches enum above; defined in mlmmj-sub.c */
 
 void print_version(const char *prg);
 

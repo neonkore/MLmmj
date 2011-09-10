@@ -212,7 +212,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 			log_error(LOG_ARGS, "A subcribe-digest request was"
 				" denied");
 			send_help(listdir, fromemails->emaillist[0],
-				mlmmjsend, "nodigest", "sub-deny-digest");
+				mlmmjsend, "deny", "sub", "disabled", "digest", "sub-deny-digest");
 			return -1;
 		}
 		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: request for digest"
@@ -222,7 +222,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
 				"-d",
-				subswitch, (char *)NULL);
+				"-r", subswitch, (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsub);
 		exit(EXIT_FAILURE);
@@ -249,7 +249,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 			log_error(LOG_ARGS, "A subcribe-nomail request was"
 				" denied");
 			send_help(listdir, fromemails->emaillist[0],
-				mlmmjsend, "nonomail", "sub-deny-nomail");
+				mlmmjsend, "deny", "sub", "disabled", "nomail", "sub-deny-nomail");
 			return -1;
 		}
 		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: request for nomail"
@@ -259,7 +259,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
 				"-n",
-				subswitch, (char *)NULL);
+				"-r", subswitch, (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsub);
 		exit(EXIT_FAILURE);
@@ -287,7 +287,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		execlp(mlmmjsub, mlmmjsub,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
-				subswitch, (char *)NULL);
+				"-r", subswitch, (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsub);
 		exit(EXIT_FAILURE);
@@ -315,7 +315,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				"-L", listdir,
 				"-a", tmpstr,
 				"-d",
-				"-c", (char *)NULL);
+				"-R", "-c", (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 				mlmmjsub);
 		exit(EXIT_FAILURE);
@@ -343,7 +343,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				"-L", listdir,
 				"-a", tmpstr,
 				"-n",
-				"-c", (char *)NULL);
+				"-R", "-c", (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 				mlmmjsub);
 		exit(EXIT_FAILURE);
@@ -371,7 +371,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		execlp(mlmmjsub, mlmmjsub,
 				"-L", listdir,
 				"-a", tmpstr,
-				"-c", (char *)NULL);
+				"-R", "-c", (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 				mlmmjsub);
 		exit(EXIT_FAILURE);
@@ -400,7 +400,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
 				"-d",
-				subswitch, (char *)NULL);
+				"-r", subswitch, (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 				mlmmjunsub);
 		exit(EXIT_FAILURE);
@@ -429,7 +429,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
 				"-n",
-				subswitch, (char *)NULL);
+				"-r", subswitch, (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 				mlmmjunsub);
 		exit(EXIT_FAILURE);
@@ -457,7 +457,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		execlp(mlmmjunsub, mlmmjunsub,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
-				subswitch, (char *)NULL);
+				"-r", subswitch, (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 				mlmmjunsub);
 		exit(EXIT_FAILURE);
@@ -491,7 +491,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				"-L", listdir,
 				"-a", tmpstr,
 				"-d",
-				"-c", (char *)NULL);
+				"-R", "-c", (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 				mlmmjunsub);
 		exit(EXIT_FAILURE);
@@ -525,7 +525,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				"-L", listdir,
 				"-a", tmpstr,
 				"-n",
-				"-c", (char *)NULL);
+				"-R", "-c", (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 				mlmmjunsub);
 		exit(EXIT_FAILURE);
@@ -559,7 +559,7 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		execlp(mlmmjunsub, mlmmjunsub,
 				"-L", listdir,
 				"-a", tmpstr,
-				"-c", (char *)NULL);
+				"-R", "-c", (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 				mlmmjunsub);
 		exit(EXIT_FAILURE);
@@ -664,7 +664,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		}
 		log_oper(listdir, OPLOGFNAME, "%s requested help",
 				fromemails->emaillist[0]);
-		send_help(listdir, fromemails->emaillist[0], mlmmjsend, "help", "listhelp");
+		send_help(listdir, fromemails->emaillist[0], mlmmjsend,
+				"help", NULL, NULL, NULL, "listhelp");
 		break;
 
        /* listname+faq@domain.tld */
@@ -679,7 +680,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
                }
                log_oper(listdir, OPLOGFNAME, "%s requested faq",
                                fromemails->emaillist[0]);
-               send_help(listdir, fromemails->emaillist[0], mlmmjsend, "faq", "listfaq");
+               send_help(listdir, fromemails->emaillist[0], mlmmjsend,
+               		"faq", NULL, NULL, NULL, "listfaq");
                break;
 
 	/* listname+get-INDEX@domain.tld */

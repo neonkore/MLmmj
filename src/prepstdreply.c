@@ -225,26 +225,51 @@ int open_listtext(const char *listdir, const char *filename)
 	if (fd >= 0)
 		return fd;
 
-	log_error(LOG_ARGS, "Could not open listtext '%s'", filename);
 	return -1;
 }
 
 
-char *prepstdreply(const char *listdir, const char *filename, const char *from,
-		   const char *to, const char *replyto, size_t tokencount,
-		   char **data, const char *mailname)
+char *prepstdreply(const char *listdir, const char *purpose, const char *action,
+		   const char *reason, const char *type, const char *compat,
+		   const char *from, const char *to, const char *replyto,
+		   size_t tokencount, char **data, const char *mailname)
 {
-	size_t i, len;
+	size_t filenamelen, i, len;
 	int infd, outfd, mailfd;
-	char *listaddr, *listdelim, *tmp, *retstr = NULL;
+	char *filename, *listaddr, *listdelim, *tmp, *retstr = NULL;
 	char *listfqdn, *line, *utfline, *utfsub, *utfsub2;
 	char *str = NULL;
 	char **moredata;
 	char *headers[10] = { NULL }; /* relies on NULL to flag end */
 
-	if ((infd = open_listtext(listdir, filename)) < 0) {
+	filename = concatstr(7,purpose,"-",action,"-",reason,"-",type);
+	filenamelen = strlen(filename);
+	do {
+		if ((infd = open_listtext(listdir, filename)) >= 0) break;
+		len = type ? strlen(type) : 0;
+		filename[filenamelen-len-1] = '\0';
+		if ((infd = open_listtext(listdir, filename)) >= 0) break;
+		filename[filenamelen-len-1] = '-';
+		filenamelen -= len + 1;
+		len = reason ? strlen(reason) : 0;
+		filename[filenamelen-len-1] = '\0';
+		if ((infd = open_listtext(listdir, filename)) >= 0) break;
+		filename[filenamelen-len-1] = '-';
+		filenamelen -= len + 1;
+		len = action ? strlen(action) : 0;
+		filename[filenamelen-len-1] = '\0';
+		if ((infd = open_listtext(listdir, filename)) >= 0) break;
+		filename[filenamelen-len-1] = '-';
+		filenamelen -= len + 1;
+		if ((infd = open_listtext(listdir, compat)) >= 0) {
+			myfree(filename);
+			filename = mystrdup(compat);
+			break;
+		}
+		log_error(LOG_ARGS, "Could not open listtext '%s'", filename);
+		myfree(filename);
 		return NULL;
-	}
+	} while (0);
 
 	listaddr = getlistaddr(listdir);
 	listdelim = getlistdelim(listdir);
@@ -267,6 +292,7 @@ char *prepstdreply(const char *listdir, const char *filename, const char *from,
 		myfree(listdelim);
 		myfree(listfqdn);
 		myfree(retstr);
+		myfree(filename);
 		return NULL;
 	}
 
@@ -500,6 +526,8 @@ freeandreturn:
 		myfree(moredata[2*i+1]);
 	}
 	myfree(moredata);
+
+	myfree(filename);
 
 	return retstr;
 }

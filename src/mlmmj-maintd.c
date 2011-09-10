@@ -754,7 +754,7 @@ int unsub_bouncers(const char *listdir, const char *mlmmjunsub)
 		} else {
 			execlp(mlmmjunsub, mlmmjunsub,
 					"-L", listdir,
-					"-a", address, (char *)NULL);
+					"-b", "-a", address, (char *)NULL);
 			log_error(LOG_ARGS, "Could not execlp %s",
 						mlmmjunsub);
 			return 1;

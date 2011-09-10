@@ -3,10 +3,12 @@
 mlmmj-unsub \- manual page for mlmmj-unsub
 .SH SYNOPSIS
 .B mlmmj-unsub
-\fI-L /path/to/list -a john@doe.org \fR[\fI-c\fR | \fI-C\fR] [\fI-h\fR]
-\fR[\fI-d\fR | \fI-n\fR] [\fI-V\fR]
+\fI-L /path/to/list -a john@doe.org\fR [\fI-b\fR] [\fI-c\fR | \fI-C\fR]
+[\fI-d\fR | \fI-n\fR] [\fI-h\fR] [\fI-r\fR | \fI-R\fR] [\fI-s\fR] [\fI-U\fR] [\fI-V\fR]
 .HP
 \fB\-a\fR: Email address to unsubscribe
+.HP
+\fB\-b\fR: Behave as if unsubscription is due to bouncing (internal use)
 .HP
 \fB\-c\fR: Send goodbye mail
 .HP
@@ -19,6 +21,10 @@ mlmmj-unsub \- manual page for mlmmj-unsub
 \fB\-L\fR: Full path to list directory
 .HP
 \fB\-n\fR: Unsubscribe from the nomail version of the list
+.HP
+\fB\-r\fR: Behave as if request arrived via email (internal use)
+.HP
+\fB\-R\fR: Behave as if confirmation arrived via email (internal use)
 .HP
 \fB\-s\fR: Don't send a mail to the address if not subscribed
 .HP

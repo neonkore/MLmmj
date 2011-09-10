@@ -43,7 +43,8 @@
 #include "memory.h"
 
 void send_help(const char *listdir, const char *emailaddr,
-	       const char *mlmmjsend, const char *name, const char *textfile)
+	       const char *mlmmjsend, const char *purpose, const char *action,
+	       const char *reason, const char *type, const char *compat)
 {
 	char *queuefilename, *listaddr, *listdelim, *listname, *listfqdn;
 	char *fromaddr;
@@ -56,10 +57,15 @@ void send_help(const char *listdir, const char *emailaddr,
 	fromaddr = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
 	myfree(listdelim);
 
-	queuefilename = prepstdreply(listdir, textfile, "$listowner$",
-					emailaddr, NULL, 0, NULL, NULL);
+	queuefilename = prepstdreply(listdir,
+			purpose, action, reason, type, compat,
+			"$listowner$", emailaddr, NULL, 0, NULL, NULL);
 	if(queuefilename == NULL) {
-		log_error(LOG_ARGS, "Could not prepare %s mail", name);
+		if (action == NULL) action = "";
+		if (reason == NULL) reason = "";
+		if (type == NULL) type = "";
+		log_error(LOG_ARGS, "Could not prepare %s-%s-%s-%s mail",
+				purpose, action, reason, type);
 		exit(EXIT_FAILURE);
 	}
 	

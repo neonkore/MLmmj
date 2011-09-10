@@ -24,18 +24,5 @@
 #ifndef MLMMJ_SUBSCRIBE_H
 #define MLMMJ_SUBSCRIBE_H
 
-#include <mlmmj.h>
-
-void moderate_sub(const char *listdir, const char *listaddr,
-		  const char *listdelim, const char *subaddr,
-		  const char *mlmmjsend, enum subtype typesub);
-void getaddrandtype(const char *listdir, const char *modstr,
-		char **addrptr, enum subtype *subtypeptr);
-void confirm_sub(const char *listdir, const char *listaddr,
-		 const char *listdelim, const char *subaddr,
-		 const char *mlmmjsend, enum subtype typesub);
-void generate_subconfirm(const char *listdir, const char *listadr,
-		const char *listdelim, const char *subaddr,
-		const char *mlmmjsend, enum subtype typesub);
 
 #endif /* MLMMJ_SUBSCRIBE_H */

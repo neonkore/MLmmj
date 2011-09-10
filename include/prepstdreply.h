@@ -29,8 +29,9 @@ char *substitute(const char *line, const char *listaddr, const char *listdelim,
 char *substitute_one(const char *line, const char *listaddr,
 		const char *listdelim, size_t datacount, char **data, const char *listdir);
 int open_listtext(const char *listdir, const char *filename);
-char *prepstdreply(const char *listdir, const char *filename, const char *from,
-		const char *to, const char *replyto, size_t tokencount,
-		char **data, const char *mailname);
+char *prepstdreply(const char *listdir, const char *purpose, const char *action,
+		const char *reason, const char *type, const char *compat,
+		const char *from, const char *to, const char *replyto,
+		size_t tokencount, char **data, const char *mailname);
 
 #endif /* PREPSTDREPLY_H */

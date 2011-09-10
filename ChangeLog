@@ -1,3 +1,6 @@
+ o Fix bug where the normal listtext would be sent when unsubscribing from the
+   nomail version of the list
+ o New listtext naming scheme
  o Avoid trailing whitespace in MAIL FROM line (Lukas Fleischer)
  o Better end-of-line handling and error reporting in php-admin (Franky Van
    Liedekerke)

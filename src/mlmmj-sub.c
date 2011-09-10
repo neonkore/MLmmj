@@ -50,6 +50,22 @@
 #include "ctrlvalues.h"
 #include "chomp.h"
 
+char *subtype_strs[] = {
+	"normal",
+	"digest",
+	"nomail",
+	"file",
+	"all"
+};
+
+char * subreason_strs[] = {
+	"request",
+	"confirm",
+	"permit",
+	"admin",
+	"bouncing"
+};
+
 void moderate_sub(const char *listdir, const char *listaddr,
 		const char *listdelim, const char *subaddr,
 		const char *mlmmjsend, enum subtype typesub)
@@ -146,9 +162,10 @@ void moderate_sub(const char *listdir, const char *listaddr,
 	maildata[3] = replyto;
 	maildata[5] = moderators;
 
-	queuefilename = prepstdreply(listdir, "submod-moderator",
-				"$listowner$", to, replyto, 3, maildata, NULL);
-	
+	queuefilename = prepstdreply(listdir,
+			"gatekeep", "sub", NULL, NULL, "submod-moderator",
+			"$listowner$", to, replyto, 3, maildata, NULL);
+
 	myfree(maildata[1]);
 	
 	/* we might need to exec more than one mlmmj-send */
@@ -188,9 +205,10 @@ void moderate_sub(const char *listdir, const char *listaddr,
 	/* send mail to requester that the list is submod'ed */
 
 	from = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
-	queuefilename = prepstdreply(listdir, "submod-requester", "$listowner$",
-					subaddr, NULL, 0, NULL, NULL);
-	
+	queuefilename = prepstdreply(listdir,
+			"wait", "sub", NULL, NULL, "submod-requester",
+			"$listowner$", subaddr, NULL, 0, NULL, NULL);
+
 	myfree(listname);
 	myfree(listfqdn);
 	execl(mlmmjsend, mlmmjsend,
@@ -256,7 +274,7 @@ freedone:
 
 void confirm_sub(const char *listdir, const char *listaddr,
 		const char *listdelim, const char *subaddr,
-		const char *mlmmjsend, enum subtype typesub)
+		const char *mlmmjsend, enum subtype typesub, enum subreason reasonsub)
 {
 	char *queuefilename, *fromaddr, *listname, *listfqdn, *listtext;
 
@@ -281,8 +299,11 @@ void confirm_sub(const char *listdir, const char *listaddr,
 			break;
 	}
 
-	queuefilename = prepstdreply(listdir, listtext, "$helpaddr$",
-				     subaddr, NULL, 0, NULL, NULL);
+	queuefilename = prepstdreply(listdir,
+			"finish", "sub",
+			subreason_strs[reasonsub], subtype_strs[typesub],
+			listtext, "$helpaddr$", subaddr, NULL,
+			0, NULL, NULL);
 	MY_ASSERT(queuefilename);
 	myfree(listtext);
 
@@ -298,7 +319,7 @@ void confirm_sub(const char *listdir, const char *listaddr,
 
 void notify_sub(const char *listdir, const char *listaddr,
 		const char *listdelim, const char *subaddr,
-		const char *mlmmjsend, enum subtype typesub)
+		const char *mlmmjsend, enum subtype typesub, enum subreason reasonsub)
 {
 	char *maildata[2] = { "newsub", NULL };
 	char *listfqdn, *listname, *fromaddr, *tostr;
@@ -328,8 +349,11 @@ void notify_sub(const char *listdir, const char *listaddr,
 			break;
 	}
 
-	queuefilename = prepstdreply(listdir, listtext, "$listowner$",
-				"$listowner$", NULL, 1, maildata, NULL);
+	queuefilename = prepstdreply(listdir,
+			"notify", "sub",
+			subreason_strs[reasonsub], subtype_strs[typesub],
+			listtext, "$listowner$", "$listowner$", NULL,
+			1, maildata, NULL);
 	MY_ASSERT(queuefilename)
 	myfree(listtext);
 	myfree(maildata[1]);
@@ -346,7 +370,7 @@ void notify_sub(const char *listdir, const char *listaddr,
 
 void generate_subconfirm(const char *listdir, const char *listaddr,
 			 const char *listdelim, const char *subaddr,
-			 const char *mlmmjsend, enum subtype typesub)
+			 const char *mlmmjsend, enum subtype typesub, enum subreason reasonsub)
 {
 	int subconffd;
 	char *confirmaddr, *listname, *listfqdn, *confirmfilename = NULL;
@@ -415,8 +439,11 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 	maildata[1] = mystrdup(subaddr);
 	maildata[3] = mystrdup(confirmaddr);
 
-	queuefilename = prepstdreply(listdir, listtext, "$helpaddr$", subaddr,
-				     confirmaddr, 2, maildata, NULL);
+	queuefilename = prepstdreply(listdir,
+			"confirm", "sub",
+			subreason_strs[reasonsub], subtype_strs[typesub],
+			listtext, "$helpaddr$", subaddr, confirmaddr,
+			2, maildata, NULL);
 
 	myfree(maildata[1]);
 	myfree(maildata[3]);
@@ -436,8 +463,8 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 
 static void print_help(const char *prg)
 {
-	printf("Usage: %s -L /path/to/list [-a john@doe.org | -m str]\n"
-	       "       [-c] [-C] [-f] [-h] [-L] [-d | -n] [-s] [-U] [-V]\n"
+	printf("Usage: %s -L /path/to/list {-a john@doe.org | -m str}\n"
+	       "       [-c | -C] [-f] [-h] [-L] [-d | -n] [-r | -R] [-s] [-U] [-V]\n"
 	       " -a: Email address to subscribe \n"
 	       " -c: Send welcome mail\n"
 	       " -C: Request mail confirmation\n"
@@ -447,7 +474,9 @@ static void print_help(const char *prg)
 	       " -L: Full path to list directory\n"
 	       " -m: moderation string\n"
 	       " -n: Subscribe to no mail version of list\n", prg);
-	printf(" -s: Don't send a mail to subscriber if already subscribed\n"
+	printf(" -r: Behave as if request arrived via email (internal use)\n"
+	       " -R: Behave as if confirmation arrived via email (internal use)\n"
+	       " -s: Don't send a mail to subscriber if already subscribed\n"
 	       " -U: Don't switch to the user id of the listdir owner\n"
 	       " -V: Print version\n"
 	       "When no options are specified, subscription may be "
@@ -468,8 +497,9 @@ void generate_subscribed(const char *listdir, const char *subaddr,
 	fromaddr = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
 	myfree(listdelim);
 
-	queuefilename = prepstdreply(listdir, "sub-subscribed", "$helpaddr$",
-				     subaddr, NULL, 0, NULL, NULL);
+	queuefilename = prepstdreply(listdir,
+			"deny", "sub", "subbed", NULL, "sub-subscribed",
+			"$helpaddr$", subaddr, NULL, 0, NULL, NULL);
 	MY_ASSERT(queuefilename);
 
 	myfree(listaddr);
@@ -502,6 +532,7 @@ int main(int argc, char **argv)
 	pid_t pid, childpid;
 	uid_t uid;
 	enum subtype typesub = SUB_NORMAL;
+	enum subreason reasonsub = SUB_ADMIN;
 
 	CHECKFULLPATH(argv[0]);
 
@@ -511,7 +542,7 @@ int main(int argc, char **argv)
 	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
 	myfree(bindir);
 
-	while ((opt = getopt(argc, argv, "hcCdfm:nsVUL:a:")) != -1) {
+	while ((opt = getopt(argc, argv, "hcCdfm:nsVUL:a:rR")) != -1) {
 		switch(opt) {
 		case 'a':
 			address = optarg;
@@ -540,6 +571,12 @@ int main(int argc, char **argv)
 		case 'n':
 			nomail = 1;
 			break;
+		case 'r':
+			reasonsub = SUB_REQUEST;
+			break;
+		case 'R':
+			reasonsub = SUB_CONFIRM;
+			break;
 		case 's':
 			nogensubscribed = 1;
 			break;
@@ -564,8 +601,10 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	if(modstr)
+	if(modstr) {
 		getaddrandtype(listdir, modstr, &address, &typesub);
+		reasonsub = SUB_PERMIT;
+	}
 
 	if(strchr(address, '@') == NULL) {
 		log_error(LOG_ARGS, "No '@' sign in '%s', not subscribing",
@@ -586,6 +625,12 @@ int main(int argc, char **argv)
 
 	if(confirmsub && subconfirm) {
 		fprintf(stderr, "Cannot specify both -C and -c\n");
+		fprintf(stderr, "%s -h for help\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	if(reasonsub == SUB_CONFIRM && subconfirm) {
+		fprintf(stderr, "Cannot specify both -C and -R\n");
 		fprintf(stderr, "%s -h for help\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
@@ -690,7 +735,7 @@ int main(int argc, char **argv)
 			unlink(sublockname);
 			myfree(sublockname);
 			generate_subconfirm(listdir, listaddr, listdelim,
-					    address, mlmmjsend, typesub);
+					    address, mlmmjsend, typesub, reasonsub);
 		} else {
 			if(modstr == NULL)
 				submod = !force && statctrl(listdir, "submod");
@@ -734,7 +779,7 @@ int main(int argc, char **argv)
 		if(childpid < 0) {
 			log_error(LOG_ARGS, "Could not fork; owner not notified");
 			confirm_sub(listdir, listaddr, listdelim, address,
-					mlmmjsend, typesub);
+					mlmmjsend, typesub, reasonsub);
 		}
 		
 		if(childpid > 0) {
@@ -746,7 +791,7 @@ int main(int argc, char **argv)
 		/* child confirms subscription */
 		if(childpid == 0)
 			confirm_sub(listdir, listaddr, listdelim, address,
-					mlmmjsend, typesub);
+					mlmmjsend, typesub, reasonsub);
 	}
 
 	notifysub = statctrl(listdir, "notifysub");
@@ -754,7 +799,7 @@ int main(int argc, char **argv)
 	/* Notify list owner about subscription */
 	if (notifysub)
 		notify_sub(listdir, listaddr, listdelim, address, mlmmjsend,
-				typesub);
+				typesub, reasonsub);
 
 	myfree(address);
 	myfree(listaddr);

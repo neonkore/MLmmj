@@ -25,6 +25,7 @@
 #define SEND_HELP_H
 
 void send_help(const char *listdir, const char *emailaddr,
-	       const char *mlmmjsend, const char *name, const char *textfile);
+	       const char *mlmmjsend, const char *purpose, const char *action,
+	       const char *reason, const char *type, const char *compat);
 
 #endif

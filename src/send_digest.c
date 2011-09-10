@@ -226,7 +226,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	
 	txtfd = open_listtext(listdir, "digest");
 	if (txtfd < 0) {
-		log_error(LOG_ARGS, "Notice: Could not open std mail digest");
+		log_error(LOG_ARGS, "Could not open listtext 'digest'");
 	}
 
 	subst_data[0] = "digestfirst";
