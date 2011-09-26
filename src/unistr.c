@@ -530,6 +530,7 @@ char *unistr_escaped_to_utf8(char *str)
 	unistr *us;
 	char *ret;
 	char u[5];
+	int len;
 
 	us = unistr_new();
 
@@ -562,8 +563,15 @@ char *unistr_escaped_to_utf8(char *str)
 				continue;
 			}
 		} else {
-			unistr_append_usascii(us, str, 1);
+			u[0] = *str;
+			len = 1;
 			str++;
+			while (*str && (unsigned char)u[0] > 0x7F) {
+				u[0] = *str;
+				len++;
+				str++;
+			}
+			unistr_append_utf8(us, str - len, len);
 		}
 	}
 
