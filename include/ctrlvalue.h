@@ -26,5 +26,6 @@
 
 char *ctrlvalue(const char *listdir, const char *ctrlstr);
 char *ctrlcontent(const char *listdir, const char *ctrlstr);
+char *textcontent(const char *listdir, const char *ctrlstr);
 
 #endif /* CTRLVALUE_H */

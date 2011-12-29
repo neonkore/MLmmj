@@ -34,7 +34,8 @@
 #include "chomp.h"
 #include "memory.h"
 
-static char *ctrlval(const char *listdir, const char *ctrlstr, int oneline)
+static char *ctrlval(const char *listdir, const char *subdir,
+		const char *ctrlstr, int oneline)
 {
 	char *filename, *value = NULL;
 	int ctrlfd, i;
@@ -42,7 +43,7 @@ static char *ctrlval(const char *listdir, const char *ctrlstr, int oneline)
 	if(listdir == NULL)
 		return NULL;
 
-	filename = concatstr(3, listdir, "/control/", ctrlstr);
+	filename = concatstr(5, listdir, "/", subdir, "/", ctrlstr);
 	ctrlfd = open(filename, O_RDONLY);
 	myfree(filename);
 
@@ -71,10 +72,16 @@ static char *ctrlval(const char *listdir, const char *ctrlstr, int oneline)
 
 char *ctrlvalue(const char *listdir, const char *ctrlstr)
 {
-	return ctrlval(listdir, ctrlstr, 1);
+	return ctrlval(listdir, "control", ctrlstr, 1);
 }
 
 char *ctrlcontent(const char *listdir, const char *ctrlstr)
 {
-	return ctrlval(listdir, ctrlstr, 0);
+	return ctrlval(listdir, "control", ctrlstr, 0);
 }
+
+char *textcontent(const char *listdir, const char *ctrlstr)
+{
+	return ctrlval(listdir, "text", ctrlstr, 0);
+}
+

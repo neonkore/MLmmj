@@ -180,8 +180,28 @@ char *substitute_one(const char *line, const char *listaddr,
 		if (value == NULL)
 			value = mystrdup("");
 		goto concatandreturn;
-	}
-	if(data) {
+	} else if(strncmp(token, "text ", 5) == 0) {
+		value = token + 5;
+		if(*value == '\0') {
+			value = mystrdup("");
+			goto concatandreturn;
+		}
+		for(; *value != '\0'; value++) {
+			if(*value >= '0' && *value <= '9') continue;
+			if(*value >= 'A' && *value <= 'Z') continue;
+			if(*value >= 'a' && *value <= 'z') continue;
+			break;
+		}
+		if(*value != '\0') {
+			value = mystrdup(token + 5);
+			goto concatandreturn;
+		}
+		value = token + 5;
+		value = textcontent(listdir, value);
+		if (value == NULL)
+			value = mystrdup("");
+		goto concatandreturn;
+	} else if(data) {
 		for(i = 0; i < datacount; i++) {
 			if(strcmp(token, data[i*2]) == 0) {
 				value = mystrdup(data[(i*2)+1]);

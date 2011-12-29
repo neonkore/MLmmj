@@ -1,3 +1,4 @@
+ o Add $text T$ substitution
  o Add $$ substitution
  o Allow list texts to include real UTF-8 characters, as documented
  o Fix bug where the normal listtext would be sent when unsubscribing from the
@@ -17,7 +18,7 @@
  o Better techniques for locating support files in php-admin -- existing
    installations will need to have their conf/config.php altered to set
    the variable $confdir
- o Add $controlN$ substitution
+ o Add $control C$ substitution
  o Fix theoretically possible memory corruption by chomp()
  o Remove .sh from mlmmj-make-ml.sh; symlink original name
  o Correct spelling of 'receive' and 'voodoo' throughout the code and
