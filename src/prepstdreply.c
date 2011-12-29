@@ -99,7 +99,10 @@ char *substitute_one(const char *line, const char *listaddr,
 	fqdn = genlistfqdn(listaddr);
 	listname = genlistname(listaddr);
 
-	if(strcmp(token, "listaddr") == 0) {
+	if(strcmp(token, "") == 0) {
+		value = mystrdup("$");
+		goto concatandreturn;
+	} else if(strcmp(token, "listaddr") == 0) {
 		/* DEPRECATED: use $list$@$domain$ instead */
 		value = mystrdup(listaddr);
 		goto concatandreturn;
