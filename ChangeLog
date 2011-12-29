@@ -1,4 +1,5 @@
  o Allow a space in $originalmail N$ substitution
+ o Improve algorithm for list text substitutions
  o Add $text T$ substitution
  o Add $$ substitution
  o Allow list texts to include real UTF-8 characters, as documented

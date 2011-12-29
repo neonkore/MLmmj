@@ -1,5 +1,6 @@
 /* Copyright (C) 2004 Mads Martin Joergensen <mmj at mmj.dk>
  * Copyright (C) 2007 Morten K. Poulsen <morten at afdelingp.dk>
+ * Copyright (C) 2011 Ben Schmidt <mail_ben_schmidt at yahoo.com.au>
  *
  * $Id$
  *
@@ -44,184 +45,144 @@
 #include "getlistdelim.h"
 #include "unistr.h"
 
-char *substitute(const char *line, const char *listaddr, const char *listdelim,
-		 size_t datacount, char **data, const char *listdir)
-{
-	char *s1, *s2;
 
-	s1 = substitute_one(line, listaddr, listdelim, datacount, data,
-			listdir);
-	while(s1) {
-		s2 = substitute_one(s1, listaddr, listdelim, datacount, data,
-				listdir);
-		if(s2) {
-			myfree(s1);
-			s1 = s2;
-		} else
-			return s1;
+static char *alphanum_token(char *token) {
+	char *pos;
+	if (*token == '\0') return NULL;
+	for(pos = token; *pos != '\0'; pos++) {
+		if(*pos >= '0' && *pos <= '9') continue;
+		if(*pos >= 'A' && *pos <= 'Z') continue;
+		if(*pos >= 'a' && *pos <= 'z') continue;
+		break;
 	}
-		
-	return mystrdup(line);
+	if (*pos != '\0') return NULL;
+	return token;
 }
 
-char *substitute_one(const char *line, const char *listaddr,
+
+static void substitute_one(char **line_p, char **pos_p, const char *listaddr,
 			const char *listdelim, size_t datacount, char **data,
 			const char *listdir)
 {
-	char *fqdn, *listname, *d1, *d2, *token, *value = NULL;
-	char *retstr, *origline;
-	size_t len, i;
+	char *line = *line_p;
+	char *pos = *pos_p;
+	char *token = pos + 1;
+	char *endpos;
+	char *fqdn, *listname;
+	char *value = NULL;
+	size_t i;
 
-	if(line == NULL)
-		return NULL;
-
-	origline = mystrdup(line);
-
-	d1 = strchr(origline, '$');
-
-	if(d1 == NULL) {
-		myfree(origline);
-		return NULL;
-	} else
-		d2 = strchr(d1 + 1, '$');
-	
-	if(d1 && d2) {
-		len = d2 - d1;
-		token = mymalloc(len + 1);
-		snprintf(token, len, "%s", d1 + 1);
-	} else {
-		myfree(origline);
-		return NULL;
+	endpos = strchr(token, '$');
+	if (endpos == NULL) {
+		(*pos_p)++;
+		return;
 	}
 
-	*d1 = '\0';
+	*pos = '\0';
+	*endpos = '\0';
 
 	fqdn = genlistfqdn(listaddr);
 	listname = genlistname(listaddr);
 
 	if(strcmp(token, "") == 0) {
 		value = mystrdup("$");
-		goto concatandreturn;
 	} else if(strcmp(token, "listaddr") == 0) {
 		/* DEPRECATED: use $list$@$domain$ instead */
 		value = mystrdup(listaddr);
-		goto concatandreturn;
 	} else if(strcmp(token, "list+") == 0) {
 		value = concatstr(2, listname, listdelim);
-		goto concatandreturn;
 	} else if(strcmp(token, "list") == 0) {
 		value = mystrdup(listname);
-		goto concatandreturn;
 	} else if(strcmp(token, "domain") == 0) {
 		value = mystrdup(fqdn);
-		goto concatandreturn;
 	} else if(strcmp(token, "listowner") == 0) {
 		/* DEPRECATED: use $list+$owner@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "owner@", fqdn);
-		goto concatandreturn;
 	} else if(strcmp(token, "helpaddr") == 0) {
 		/* DEPRECATED: use $list+$help@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "help@", fqdn);
-		goto concatandreturn;
 	} else if(strcmp(token, "faqaddr") == 0) {
 		/* DEPRECATED: use $list+$faq@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "faq@", fqdn);
-		goto concatandreturn;
 	} else if(strcmp(token, "listgetN") == 0) {
 		/* DEPRECATED: use $list+$get-N@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "get-N@", fqdn);
-		goto concatandreturn;
 	} else if(strcmp(token, "listunsubaddr") == 0) {
 		/* DEPRECATED: use $list+$unsubscribe@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "unsubscribe@", fqdn);
-		goto concatandreturn;
 	} else if(strcmp(token, "digestunsubaddr") == 0) {
 		/* DEPRECATED: use $list+$unsubscribe-digest@$domain$ instead */
 		value = concatstr(4, listname, listdelim,
 				  "unsubscribe-digest@", fqdn);
-		goto concatandreturn;
 	} else if(strcmp(token, "nomailunsubaddr") == 0) {
 		/* DEPRECATED: use $list+$unsubscribe-nomail@$domain$ instead */
 		value = concatstr(4, listname, listdelim,
 				  "unsubscribe-nomail@", fqdn);
-		goto concatandreturn;
 	} else if(strcmp(token, "listsubaddr") == 0) {
 		/* DEPRECATED: use $list+$subscribe@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "subscribe@", fqdn);
-		goto concatandreturn;
 	} else if(strcmp(token, "digestsubaddr") == 0) {
 		/* DEPRECATED: use $list+$subscribe-digest@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "subscribe-digest@",
 				  fqdn);
-		goto concatandreturn;
 	} else if(strcmp(token, "nomailsubaddr") == 0) {
 		/* DEPRECATED: use $list+$subscribe-nomail@$domain$ instead */
 		value = concatstr(4, listname, listdelim, "subscribe-nomail@",
 				  fqdn);
-		goto concatandreturn;
 	} else if(strncmp(token, "control ", 8) == 0) {
-		value = token + 8;
-		if(*value == '\0') {
-			value = mystrdup("");
-			goto concatandreturn;
-		}
-		for(; *value != '\0'; value++) {
-			if(*value >= '0' && *value <= '9') continue;
-			if(*value >= 'A' && *value <= 'Z') continue;
-			if(*value >= 'a' && *value <= 'z') continue;
-			break;
-		}
-		if(*value != '\0') {
-			value = mystrdup(token + 8);
-			goto concatandreturn;
-		}
-		value = token + 8;
-		value = ctrlcontent(listdir, value);
-		if (value == NULL)
-			value = mystrdup("");
-		goto concatandreturn;
+		token = alphanum_token(token + 8);
+		if (token != NULL) value = ctrlcontent(listdir, token);
 	} else if(strncmp(token, "text ", 5) == 0) {
-		value = token + 5;
-		if(*value == '\0') {
-			value = mystrdup("");
-			goto concatandreturn;
-		}
-		for(; *value != '\0'; value++) {
-			if(*value >= '0' && *value <= '9') continue;
-			if(*value >= 'A' && *value <= 'Z') continue;
-			if(*value >= 'a' && *value <= 'z') continue;
-			break;
-		}
-		if(*value != '\0') {
-			value = mystrdup(token + 5);
-			goto concatandreturn;
-		}
-		value = token + 5;
-		value = textcontent(listdir, value);
-		if (value == NULL)
-			value = mystrdup("");
-		goto concatandreturn;
+		token = alphanum_token(token + 5);
+		if (token != NULL) value = textcontent(listdir, token);
 	} else if(data) {
 		for(i = 0; i < datacount; i++) {
 			if(strcmp(token, data[i*2]) == 0) {
 				value = mystrdup(data[(i*2)+1]);
-				goto concatandreturn;
+				break;
 			}
 		}
 	}
 
-	myfree(origline);
-	return NULL;
-
-concatandreturn:
-	retstr = concatstr(3, origline, value, d2 + 1);
-	myfree(origline);
-	myfree(value);
-	myfree(token);
+	if (value != NULL) {
+		line = concatstr(3, line, value, endpos + 1);
+		*pos_p = line + (*pos_p - *line_p);
+		if (strcmp(value, "$") == 0) (*pos_p)++;
+		myfree(*line_p);
+		*line_p = line;
+		myfree(value);
+	} else {
+		*pos = '$';
+		*endpos = '$';
+		(*pos_p)++;
+	}
 	myfree(fqdn);
 	myfree(listname);
+}
 
-	return retstr;
+
+char *substitute(const char *line, const char *listaddr, const char *listdelim,
+		 size_t datacount, char **data, const char *listdir)
+{
+	char *new;
+	char *pos;
+
+	new = mystrdup(line);
+	pos = new;
+
+	while (*pos != '\0') {
+		if (*pos == '$') {
+			substitute_one(&new, &pos,
+					listaddr, listdelim,
+					datacount, data, listdir);
+			/* The function sets up for the next character
+			 * to process, so continue straight away. */
+			continue;
+		}
+		pos++;
+	}
+
+	return new;
 }
 
 

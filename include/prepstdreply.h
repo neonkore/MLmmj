@@ -1,4 +1,5 @@
 /* Copyright (C) 2004 Mads Martin Joergensen <mmj at mmj.dk>
+ * Copyright (C) 2011 Ben Schmidt <mail_ben_schmidt at yahoo.com.au>
  *
  * $Id$
  *
@@ -26,8 +27,6 @@
 
 char *substitute(const char *line, const char *listaddr, const char *listdelim,
 		size_t datacount, char **data, const char *listdir);
-char *substitute_one(const char *line, const char *listaddr,
-		const char *listdelim, size_t datacount, char **data, const char *listdir);
 int open_listtext(const char *listdir, const char *filename);
 char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 		const char *reason, const char *type, const char *compat,
