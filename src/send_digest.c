@@ -180,7 +180,8 @@ static char *thread_list(const char *listdir, int firstindex, int lastindex)
 int send_digest(const char *listdir, int firstindex, int lastindex,
 		int issue, const char *addr, const char *mlmmjsend)
 {
-	int i, fd, archivefd, status, hdrfd, txtfd;
+	int i, fd, archivefd, status, hdrfd;
+	text * txt;
 	char buf[45];
 	char *tmp, *queuename = NULL, *archivename, *subject, *line = NULL;
 	char *utfsub, *utfsub2, *utfline;
@@ -224,8 +225,8 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	listfqdn = genlistfqdn(listaddr);
 	listdelim = getlistdelim(listdir);
 	
-	txtfd = open_listtext(listdir, "digest");
-	if (txtfd < 0) {
+	txt = open_text_file(listdir, "digest");
+	if (txt == NULL) {
 		log_error(LOG_ARGS, "Could not open listtext 'digest'");
 	}
 
@@ -252,7 +253,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	subst_data[8] = "digestthreads";
 	subst_data[9] = thread_list(listdir, firstindex, lastindex);
 
-	if ((txtfd < 0) || !(line = mygetline(txtfd)) ||
+	if (txt == NULL || (line = get_text_line(txt)) == NULL ||
 			(strncasecmp(line, "Subject: ", 9) != 0)) {
 
 		utfsub = mystrdup("Digest of $listaddr$ issue $digestissue$"
@@ -307,8 +308,8 @@ errdighdrs:
 		myfree(subst_data[5]);
 		myfree(subst_data[7]);
 		myfree(subst_data[9]);
-		if (txtfd > 0) {
-			close(txtfd);
+		if (txt != NULL) {
+			close_text(txt);
 			myfree(line);
 		}
 		if (hdrfd > 0) {
@@ -317,7 +318,7 @@ errdighdrs:
 		return -1;
 	}
 
-	if ((txtfd > 0) && !statctrl(listdir, "nodigesttext")) {
+	if ((txt != NULL) && !statctrl(listdir, "nodigesttext")) {
 
 		tmp = concatstr(3, "\n--", boundary,
 				"\nContent-Type: text/plain; charset=UTF-8"
@@ -339,8 +340,8 @@ errdighdrs:
 			myfree(subst_data[5]);
 			myfree(subst_data[7]);
 			myfree(subst_data[9]);
-			if (txtfd > 0) {
-				close(txtfd);
+			if (txt != NULL) {
+				close_text(txt);
 				myfree(line);
 			}
 			return -1;
@@ -349,7 +350,7 @@ errdighdrs:
 
 		if (line && (strncasecmp(line, "Subject: ", 9) == 0)) {
 			myfree(line);
-			line = mygetline(txtfd);
+			line = get_text_line(txt);
 			if (line && (strcmp(line, "\n") == 0)) {
 				/* skip empty line after Subject: */
 				line[0] = '\0';
@@ -372,12 +373,12 @@ errdighdrs:
 					break;
 				}
 				myfree(tmp);
-			} while ((line = mygetline(txtfd)));
+			} while ((line = get_text_line(txt)));
 		}
 
-		close(txtfd);
-	} else if (txtfd > 0) {
-		close(txtfd);
+		close_text(txt);
+	} else if (txt != NULL) {
+		close_text(txt);
 	}
 
 	myfree(line);

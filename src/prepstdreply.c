@@ -46,6 +46,11 @@
 #include "unistr.h"
 
 
+struct text {
+	int fd;
+};
+
+
 static char *alphanum_token(char *token) {
 	char *pos;
 	if (*token == '\0') return NULL;
@@ -186,66 +191,59 @@ char *substitute(const char *line, const char *listaddr, const char *listdelim,
 }
 
 
-int open_listtext(const char *listdir, const char *filename)
+text *open_text_file(const char *listdir, const char *filename)
 {
 	char *tmp;
-	int fd;
+	text *txt;
+
+	txt = mymalloc(sizeof(text));
 
 	tmp = concatstr(3, listdir, "/text/", filename);
-	fd = open(tmp, O_RDONLY);
+	txt->fd = open(tmp, O_RDONLY);
 	myfree(tmp);
-	if (fd >= 0)
-		return fd;
+	if (txt->fd >= 0) return txt;
 
 	tmp = concatstr(2, DEFAULTTEXTDIR "/default/", filename);
-	fd = open(tmp, O_RDONLY);
+	txt->fd = open(tmp, O_RDONLY);
 	myfree(tmp);
-	if (fd >= 0)
-		return fd;
+	if (txt->fd >= 0) return txt;
 
 	tmp = concatstr(2, DEFAULTTEXTDIR "/en/", filename);
-	fd = open(tmp, O_RDONLY);
+	txt->fd = open(tmp, O_RDONLY);
 	myfree(tmp);
-	if (fd >= 0)
-		return fd;
+	if (txt->fd >= 0) return txt;
 
-	return -1;
+	return NULL;
 }
 
 
-char *prepstdreply(const char *listdir, const char *purpose, const char *action,
-		   const char *reason, const char *type, const char *compat,
-		   const char *from, const char *to, const char *replyto,
-		   size_t tokencount, char **data, const char *mailname)
+text *open_text(const char *listdir, const char *purpose, const char *action,
+		   const char *reason, const char *type, const char *compat)
 {
-	size_t filenamelen, i, len;
-	int infd, outfd, mailfd;
-	char *filename, *listaddr, *listdelim, *tmp, *retstr = NULL;
-	char *listfqdn, *line, *utfline, *utfsub, *utfsub2;
-	char *str = NULL;
-	char **moredata;
-	char *headers[10] = { NULL }; /* relies on NULL to flag end */
+	size_t filenamelen, len;
+	char *filename;
+	text *txt;
 
 	filename = concatstr(7,purpose,"-",action,"-",reason,"-",type);
 	filenamelen = strlen(filename);
 	do {
-		if ((infd = open_listtext(listdir, filename)) >= 0) break;
+		if ((txt = open_text_file(listdir, filename)) != NULL) break;
 		len = type ? strlen(type) : 0;
 		filename[filenamelen-len-1] = '\0';
-		if ((infd = open_listtext(listdir, filename)) >= 0) break;
+		if ((txt = open_text_file(listdir, filename)) != NULL) break;
 		filename[filenamelen-len-1] = '-';
 		filenamelen -= len + 1;
 		len = reason ? strlen(reason) : 0;
 		filename[filenamelen-len-1] = '\0';
-		if ((infd = open_listtext(listdir, filename)) >= 0) break;
+		if ((txt = open_text_file(listdir, filename)) != NULL) break;
 		filename[filenamelen-len-1] = '-';
 		filenamelen -= len + 1;
 		len = action ? strlen(action) : 0;
 		filename[filenamelen-len-1] = '\0';
-		if ((infd = open_listtext(listdir, filename)) >= 0) break;
+		if ((txt = open_text_file(listdir, filename)) != NULL) break;
 		filename[filenamelen-len-1] = '-';
 		filenamelen -= len + 1;
-		if ((infd = open_listtext(listdir, compat)) >= 0) {
+		if ((txt = open_text_file(listdir, compat)) != NULL) {
 			myfree(filename);
 			filename = mystrdup(compat);
 			break;
@@ -254,6 +252,37 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 		myfree(filename);
 		return NULL;
 	} while (0);
+
+	return txt;
+}
+
+
+char *get_text_line(text *txt) {
+	return mygetline(txt->fd);
+}
+
+
+void close_text(text *txt) {
+	close(txt->fd);
+}
+
+
+char *prepstdreply(const char *listdir, const char *purpose, const char *action,
+		   const char *reason, const char *type, const char *compat,
+		   const char *from, const char *to, const char *replyto,
+		   size_t tokencount, char **data, const char *mailname)
+{
+	size_t len, i;
+	int outfd, mailfd;
+	text *txt;
+	char *listaddr, *listdelim, *tmp, *retstr = NULL;
+	char *listfqdn, *line, *utfline, *utfsub, *utfsub2;
+	char *str = NULL;
+	char **moredata;
+	char *headers[10] = { NULL }; /* relies on NULL to flag end */
+
+	txt = open_text(listdir, purpose, action, reason, type, compat);
+	if (txt == NULL) return NULL;
 
 	listaddr = getlistaddr(listdir);
 	listdelim = getlistdelim(listdir);
@@ -276,7 +305,7 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 		myfree(listdelim);
 		myfree(listfqdn);
 		myfree(retstr);
-		myfree(filename);
+		myfree(txt);
 		return NULL;
 	}
 
@@ -316,10 +345,9 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 	}
 
 	for(;;) {
-		line = mygetline(infd);
+		line = get_text_line(txt);
 		if (!line) {
-			log_error(LOG_ARGS, "No body in '%s' listtext",
-					filename);
+			log_error(LOG_ARGS, "No body in listtext");
 			break;
 		}
 		if (*line == '\n') {
@@ -356,8 +384,7 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 			}
 			if (!*tmp) {
 				log_error(LOG_ARGS, "No headers or invalid "
-						"header in '%s' listtext",
-						filename);
+						"header in listtext");
 				break;
 			}
 			tmp++;
@@ -431,7 +458,7 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 		str = concatstr(2, line, "\n");
 		myfree(line);
 	} else {
-		str = mygetline(infd);
+		str = get_text_line(txt);
 	}
 	while(str) {
 		utfline = unistr_escaped_to_utf8(str);
@@ -498,7 +525,7 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 			myfree(str);
 		}
 
-		str = mygetline(infd);
+		str = get_text_line(txt);
 	}
 
 	fsync(outfd);
@@ -515,7 +542,8 @@ freeandreturn:
 	}
 	myfree(moredata);
 
-	myfree(filename);
+	close_text(txt);
+	myfree(txt);
 
 	return retstr;
 }
