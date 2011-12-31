@@ -93,4 +93,4 @@ Delivered-To headers, sendmail needs the following patch for doing this
  };
 
 
--- lcars@gentoo.org
+Andrea Barisani <andrea@inversepath.com>
