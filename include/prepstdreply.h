@@ -33,7 +33,9 @@ char *substitute(const char *line, const char *listaddr, const char *listdelim,
 text *open_text_file(const char *listdir, const char *filename);
 text *open_text(const char *listdir, const char *purpose, const char *action,
 		   const char *reason, const char *type, const char *compat);
-char *get_text_line(text *txt);
+char *get_processed_text_line(text *txt,
+		const char *listaddr, const char *listdelim,
+		size_t datacount, char **data, const char *listdir);
 void close_text(text *txt);
 char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 		const char *reason, const char *type, const char *compat,

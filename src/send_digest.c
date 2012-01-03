@@ -181,10 +181,10 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 		int issue, const char *addr, const char *mlmmjsend)
 {
 	int i, fd, archivefd, status, hdrfd;
+	size_t len;
 	text * txt;
 	char buf[45];
-	char *tmp, *queuename = NULL, *archivename, *subject, *line = NULL;
-	char *utfsub, *utfsub2, *utfline;
+	char *tmp, *queuename = NULL, *archivename, *subject = NULL, *line = NULL;
 	char *boundary, *listaddr, *listdelim, *listname, *listfqdn;
 	char *subst_data[10];
 	pid_t childpid, pid;
@@ -253,21 +253,60 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	subst_data[8] = "digestthreads";
 	subst_data[9] = thread_list(listdir, firstindex, lastindex);
 
-	if (txt == NULL || (line = get_text_line(txt)) == NULL ||
-			(strncasecmp(line, "Subject: ", 9) != 0)) {
+	if (txt == NULL) goto fallback_subject;
 
-		utfsub = mystrdup("Digest of $listaddr$ issue $digestissue$"
-				" ($digestinterval$)");
-	} else {
+	line = get_processed_text_line(txt, listaddr, listdelim,
+			5, subst_data, listdir);
 
-		chomp(line);
-		utfsub = unistr_escaped_to_utf8(line + 9);
+	if (line == NULL) {
+		log_error(LOG_ARGS, "No content in digest listtext");
+		goto fallback_subject;
 	}
 
-	utfsub2 = substitute(utfsub, listaddr, listdelim, 5, subst_data, listdir);
-	subject = unistr_utf8_to_header(utfsub2);
-	myfree(utfsub);
-	myfree(utfsub2);
+	tmp = line;
+	len = 0;
+	while (*tmp && *tmp != ':') {
+		tmp++;
+		len++;
+	}
+	if (!*tmp) {
+		log_error(LOG_ARGS, "No subject or invalid "
+				"subject in digest listtext");
+		goto fallback_subject;
+	}
+	tmp++;
+	len++;
+	if (strncasecmp(line, "Subject:", len) == 0) {
+		tmp = unistr_utf8_to_header(tmp);
+		subject = concatstr(2, "Subject:", tmp);
+		myfree(tmp);
+		myfree(line);
+
+		/* Skip the empty line after the subject */
+		line = get_processed_text_line(txt, listaddr, listdelim,
+				5, subst_data, listdir);
+		if (line == NULL || *line != '\0') {
+			log_error(LOG_ARGS, "Too many headers "
+					"in digest listtext");
+			goto fallback_subject;
+		}
+
+		if (line != NULL) myfree(line);
+		line = NULL;
+	} else {
+		log_error(LOG_ARGS, "No subject or invalid "
+				"subject in digest listtext");
+		goto fallback_subject;
+	}
+
+fallback_subject:
+	if (subject == NULL) {
+		tmp = substitute("Digest of $listaddr$ issue $digestissue$"
+				" ($digestinterval$)", listaddr, listdelim,
+				5, subst_data, listdir);
+		subject = unistr_utf8_to_header(tmp);
+		myfree(tmp);
+	}
 
 	tmp = concatstr(10, "From: ", listname, listdelim, "help@", listfqdn,
 			   "\nMIME-Version: 1.0"
@@ -348,32 +387,19 @@ errdighdrs:
 		}
 		myfree(tmp);
 
-		if (line && (strncasecmp(line, "Subject: ", 9) == 0)) {
-			myfree(line);
-			line = get_text_line(txt);
-			if (line && (strcmp(line, "\n") == 0)) {
-				/* skip empty line after Subject: */
-				line[0] = '\0';
-			}
-		}
-
-		if (line) {
-			do {
-				utfline = unistr_escaped_to_utf8(line);
+		for (;;) {
+			line = get_processed_text_line(txt, listaddr, listdelim,
+					5, subst_data, listdir);
+			if (line == NULL) break;
+			len = strlen(line);
+			line[len] = '\n';
+			if(writen(fd, line, len+1) < 0) {
 				myfree(line);
-
-				tmp = substitute(utfline, listaddr, listdelim,
-						5, subst_data, listdir);
-				myfree(utfline);
-
-				if(writen(fd, tmp, strlen(tmp)) < 0) {
-					myfree(tmp);
-					log_error(LOG_ARGS, "Could not write"
-							" std mail");
-					break;
-				}
-				myfree(tmp);
-			} while ((line = get_text_line(txt)));
+				log_error(LOG_ARGS, "Could not write"
+						" std mail");
+				break;
+			}
+			myfree(line);
 		}
 
 		close_text(txt);
@@ -381,7 +407,7 @@ errdighdrs:
 		close_text(txt);
 	}
 
-	myfree(line);
+	if (line != NULL) myfree(line);
 	myfree(listaddr);
 	myfree(listdelim);
 	myfree(subst_data[1]);
