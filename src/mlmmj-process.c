@@ -65,6 +65,7 @@ enum action {
 
 static char *action_strs[] = {
 	"allowed",
+	"sent",
 	"denied",
 	"moderated",
 	"discarded"
