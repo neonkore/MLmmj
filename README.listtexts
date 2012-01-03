@@ -135,7 +135,9 @@ is given in brackets. Those with asterisks (*) are not yet used.
   sent to the list owner when somebody is (un-)subscribed
 
 - digest
-  sent at the start of a digest
+  sent at the start of a digest (NOTE: the only header supported in this list
+  text so far is a single-line 'Subject:' header; however, the contents of
+  control/customheaders is included when digests are sent)
 
 - probe (bounce-probe)
   sent to a subscriber after an email to them bounced to inform them of the
@@ -179,6 +181,8 @@ default headers, unless the same header is already provided in the list text.
 The Subject: header is treated specially: it may include UTF-8 characters,
 which will automatically be escaped using the =?utf-8?q?...?= quoting
 mechanism.
+
+(NOTE: the 'digest' list text is a bit different. See its description above.)
 
 Both headers and bodies of list texts may include conditionals, formatting
 directives and substitutions. These are explained in the following sections.
