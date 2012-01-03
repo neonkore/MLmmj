@@ -484,6 +484,10 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 			*tmp = '\0';
 			tmp += 13;
 			str = tmp;
+			if (*tmp == ' ') {
+				tmp++;
+				str = tmp;
+			}
 			while (*tmp >= '0' && *tmp <= '9')
 				tmp++;
 			if (*tmp == '$') {
@@ -513,10 +517,10 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 				    }
 				    close(mailfd);
 				} else {
-				    log_error(LOG_ARGS, "Could not substitute $originalmail%d$ (mailname == %s)",len,mailname);
+				    log_error(LOG_ARGS, "Could not substitute $originalmail %d$ (mailname == %s)",len,mailname);
 				}
 			} else {
-				log_error(LOG_ARGS, "Bad $originalmailNNN$ substitution");
+				log_error(LOG_ARGS, "Bad $originalmail N$ substitution");
 			}
 			myfree(utfline);
 		} else {
