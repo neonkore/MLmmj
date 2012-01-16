@@ -289,16 +289,27 @@ not appropriate for use in headers. They are:
   the list of indexes of messages which may not have been received as they
   bounced
 
+- %^%
+  start the line here; anything preceding this directive is ignored (useful for
+  using indentation for readability without ruining the formatting of the text
+  when it is processed)
+
 - %comment%
-  the rest of the line is a comment
+- %$%
+  end the line here; anything following this directive is ignored
 
 - %%
   a single %
 
-All these directives have the behaviour that second and later lines are
-preceded with as many spaces as there were characters preceding the directive
-in the processed output. All of them except %wrap% and %wrap W% cause anything
-following them on the same line to be omitted.
+Directives which include a list of items have the behaviour that each item is
+preceded and followed by the same text as preceded and followed the directive
+on its line. Only one such directive is supported per line.
+
+The %wrap% and %wrap W% directives, as well as those which include a block of
+text, have the behaviour that second and later lines are preceded with as many
+spaces as there were characters preceding the directive. Apart from the
+%wrap% and %wrap W% directives, any text following the directive on the same
+line is omitted.
 
 If a line with any of these directives, after processing, contains only
 whitespace, the line does not appear at all in the output (the newline and any

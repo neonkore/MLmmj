@@ -1,3 +1,4 @@
+ o Add %%, %^%, %comment%, %control C% and %text T% formatting directives
  o Allow a space in $originalmail N$ substitution
  o Improve algorithm for list text substitutions
  o Add $text T$ substitution

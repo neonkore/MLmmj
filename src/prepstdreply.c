@@ -46,8 +46,19 @@
 #include "unistr.h"
 
 
-struct text {
+struct source;
+typedef struct source source;
+struct source {
+	source *prev;
+	char *upcoming;
+	char *prefix;
+	char *suffix;
 	int fd;
+};
+
+
+struct text {
+	source *src;
 };
 
 
@@ -197,21 +208,26 @@ text *open_text_file(const char *listdir, const char *filename)
 	text *txt;
 
 	txt = mymalloc(sizeof(text));
+	txt->src = mymalloc(sizeof(source));
+	txt->src->prev = NULL;
+	txt->src->upcoming = NULL;
+	txt->src->prefix = NULL;
+	txt->src->suffix = NULL;
 
 	tmp = concatstr(3, listdir, "/text/", filename);
-	txt->fd = open(tmp, O_RDONLY);
+	txt->src->fd = open(tmp, O_RDONLY);
 	myfree(tmp);
-	if (txt->fd >= 0) return txt;
+	if (txt->src->fd >= 0) return txt;
 
 	tmp = concatstr(2, DEFAULTTEXTDIR "/default/", filename);
-	txt->fd = open(tmp, O_RDONLY);
+	txt->src->fd = open(tmp, O_RDONLY);
 	myfree(tmp);
-	if (txt->fd >= 0) return txt;
+	if (txt->src->fd >= 0) return txt;
 
 	tmp = concatstr(2, DEFAULTTEXTDIR "/en/", filename);
-	txt->fd = open(tmp, O_RDONLY);
+	txt->src->fd = open(tmp, O_RDONLY);
 	myfree(tmp);
-	if (txt->fd >= 0) return txt;
+	if (txt->src->fd >= 0) return txt;
 
 	return NULL;
 }
@@ -257,32 +273,205 @@ text *open_text(const char *listdir, const char *purpose, const char *action,
 }
 
 
+static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
+		const char *filename) {
+	char *line = *line_p;
+	char *pos = *pos_p;
+	char *tmp;
+	source *src;
+	int fd;
+	size_t len;
+
+	/* Save any later lines for use after finishing the source */
+	while (*pos != '\0' && *pos != '\r' && *pos != '\n') pos++;
+	if (*pos == '\r') pos++;
+	if (*pos == '\n') pos++;
+	if (*pos != '\0') txt->src->upcoming = mystrdup(pos);
+
+	fd = open(filename, O_RDONLY);
+	if (fd < 0) {
+		/* Act as if the source were an empty line */
+		**pos_p = '\0';
+		return;
+	}
+
+	src = mymalloc(sizeof(source));
+	src->prev = txt->src;
+	src->upcoming = NULL;
+	len = strlen(line);
+	src->prefix = mymalloc((len + 1) * sizeof(char));
+	for (tmp = src->prefix; len > 0; ++tmp, --len) *tmp = ' ';
+	*tmp = '\0';
+	src->suffix = NULL;
+	src->fd = fd;
+	txt->src = src;
+	tmp = mygetline(fd);
+	line = concatstr(2, line, tmp);
+	*pos_p = line + (*pos_p - *line_p);
+	myfree(*line_p);
+	*line_p = line;
+	myfree(tmp);
+}
+
+
+static void handle_directive(text *txt, char **line_p, char **pos_p,
+		const char *listdir) {
+	char *line = *line_p;
+	char *pos = *pos_p;
+	char *token = pos + 1;
+	char *endpos;
+	char *filename;
+
+	endpos = strchr(token, '%');
+	if (endpos == NULL) {
+		(*pos_p)++;
+		return;
+	}
+
+	*pos = '\0';
+	*endpos = '\0';
+
+	if(strcmp(token, "") == 0) {
+		line = concatstr(3, line, "%", endpos + 1);
+		*pos_p = line + (*pos_p - *line_p) + 1;
+		myfree(*line_p);
+		*line_p = line;
+		return;
+	} else if(strcmp(token, "^") == 0) {
+		if (txt->src->prefix != NULL) {
+			line[strlen(txt->src->prefix)] = '\0';
+			line = concatstr(2, line, endpos + 1);
+		} else {
+			line = mystrdup(endpos + 1);
+		}
+		*pos_p = line;
+		myfree(*line_p);
+		*line_p = line;
+		return;
+	} else if(strcmp(token, "comment") == 0 || strcmp(token, "$") == 0 ) {
+		/* Skip the rest of the line; the earlier part which we
+		 * will return has already been truncated; the caller
+		 * will save the next line for later use if necessary. */
+		pos = endpos + 1;
+		while (*pos != '\0' && *pos != '\r' && *pos != '\n') pos++;
+		*pos_p = pos;
+		return;
+	} else if(strncmp(token, "control ", 8) == 0) {
+		token = alphanum_token(token + 8);
+		if (token != NULL) {
+			filename = concatstr(3, listdir, "/control/", token);
+			begin_new_source_file(txt, line_p, pos_p, filename);
+			myfree(filename);
+			return;
+		}
+	} else if(strncmp(token, "text ", 5) == 0) {
+		token = alphanum_token(token + 5);
+		if (token != NULL) {
+			filename = concatstr(3, listdir, "/text/", token);
+			begin_new_source_file(txt, line_p, pos_p, filename);
+			myfree(filename);
+			return;
+		}
+	}
+	if (token == NULL) {
+		/* We have encountered a directive, but not been able to deal
+		 * with it, so just advance through the string. */
+		*pos = '%';
+		*endpos = '%';
+		(*pos_p)++;
+		return;
+	}
+
+	/* No recognised directive; just advance through the string. */
+	*pos = '%';
+	*endpos = '%';
+	(*pos_p)++;
+	return;
+}
+
+
 char *get_processed_text_line(text *txt,
 		const char *listaddr, const char *listdelim,
 		size_t datacount, char **data, const char *listdir)
 {
-	char *line;
+	char *line = NULL;
+	char *pos;
 	char *tmp;
-	char *retstr;
+	source *src;
 
-	line = mygetline(txt->fd);
+	while (txt->src != NULL) {
+		if (txt->src->upcoming != NULL) {
+			if (txt->src->prefix != NULL) {
+				line = concatstr(2, txt->src->prefix, txt->src->upcoming);
+				myfree(txt->src->upcoming);
+			} else {
+				line = txt->src->upcoming;
+			}
+			txt->src->upcoming = NULL;
+			break;
+		}
+		txt->src->upcoming = mygetline(txt->src->fd);
+		if (txt->src->upcoming != NULL) continue;
+		close(txt->src->fd);
+		src = txt->src;
+		txt->src = txt->src->prev;
+		myfree(src);
+	}
 	if (line == NULL) return NULL;
-
-	chomp(line);
 
 	tmp = unistr_escaped_to_utf8(line);
 	myfree(line);
+	line = tmp;
 
-	retstr = substitute(tmp, listaddr, listdelim,
-	                 datacount, data, listdir);
-	myfree(tmp);
+	pos = line;
+	while (*pos != '\0') {
+		if (*pos == '\r') {
+			*pos = '\0';
+			pos++;
+			if (*pos == '\n') pos++;
+			if (*pos == '\0') break;
+			txt->src->upcoming = mystrdup(pos);
+			break;
+		} else if (*pos == '\n') {
+			*pos = '\0';
+			pos++;
+			if (*pos == '\0') break;
+			txt->src->upcoming = mystrdup(pos);
+			break;
+		} else if (*pos == '$') {
+			substitute_one(&line, &pos,
+					listaddr, listdelim,
+					datacount, data, listdir);
+			/* The function sets up for the next character
+			 * to process, so continue straight away. */
+			continue;
+		} else if (*pos == '%') {
+			handle_directive(txt, &line, &pos, listdir);
+			/* The function sets up for the next character
+			 * to process, so continue straight away. */
+			continue;
+		}
+		pos++;
+	}
 
-	return retstr;
+	if (txt->src->suffix != NULL) {
+		tmp = concatstr(2, line, txt->src->suffix);
+		myfree(line);
+		return tmp;
+	} else {
+		return line;
+	}
 }
 
 
 void close_text(text *txt) {
-	close(txt->fd);
+	source *tmp;
+	while (txt->src != NULL) {
+		close(txt->src->fd);
+		tmp = txt->src;
+		txt->src = txt->src->prev;
+		myfree(tmp);
+	}
 }
 
 
