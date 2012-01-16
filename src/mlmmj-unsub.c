@@ -53,6 +53,7 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 		   const char *mlmmjsend,
 		   enum subtype typesub, enum subreason reasonsub)
 {
+	text *txt;
 	char *queuefilename, *fromaddr, *listname, *listfqdn, *listtext;
 
 	listname = genlistname(listaddr);
@@ -76,12 +77,16 @@ void confirm_unsub(const char *listdir, const char *listaddr,
 			break;
 	}
 
-	queuefilename = prepstdreply(listdir,
-			"finish", "unsub",
+	txt = open_text(listdir, "finish", "unsub",
 			subreason_strs[reasonsub], subtype_strs[typesub],
-			listtext, "$helpaddr$", subaddr, NULL, 0, NULL, NULL);
-	MY_ASSERT(queuefilename);
+			listtext);
 	myfree(listtext);
+	MY_ASSERT(txt);
+	register_unformatted(txt, "subaddr", subaddr);
+	queuefilename = prepstdreply(txt, listdir,
+			"$helpaddr$", subaddr, NULL);
+	MY_ASSERT(queuefilename);
+	close_text(txt);
 
 	execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
@@ -99,14 +104,12 @@ void notify_unsub(const char *listdir, const char *listaddr,
 		  const char *mlmmjsend,
 		  enum subtype typesub, enum subreason reasonsub)
 {
-        char *maildata[4] = { "oldsub", NULL };
         char *listfqdn, *listname, *fromaddr, *tostr;
+	text *txt;
         char *queuefilename = NULL, *listtext;
 
         listname = genlistname(listaddr);
         listfqdn = genlistfqdn(listaddr);
-
-        maildata[1] = mystrdup(subaddr);
 
         fromaddr = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
 	tostr = concatstr(4, listname, listdelim, "owner@", listfqdn);
@@ -127,14 +130,17 @@ void notify_unsub(const char *listdir, const char *listaddr,
 			break;
 	}
 	
-	queuefilename = prepstdreply(listdir,
-			"notify", "unsub",
+	txt = open_text(listdir, "notify", "unsub",
 			subreason_strs[reasonsub], subtype_strs[typesub],
-			listtext, "$listowner$", "$listowner$", NULL,
-			1, maildata, NULL);
-	MY_ASSERT(queuefilename);
+			listtext);
 	myfree(listtext);
-	myfree(maildata[1]);
+	MY_ASSERT(txt);
+	register_unformatted(txt, "subaddr", subaddr);
+	register_unformatted(txt, "oldsub", subaddr); /* DEPRECATED */
+	queuefilename = prepstdreply(txt, listdir,
+			"$listowner$", "$listowner$", NULL);
+	MY_ASSERT(queuefilename);
+	close_text(txt);
 
 	execlp(mlmmjsend, mlmmjsend,
 			"-l", "1",
@@ -154,9 +160,9 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 			   enum subtype typesub, enum subreason reasonsub)
 {
 	char *confirmaddr, *listname, *listfqdn, *tmpstr;
+	text *txt;
 	char *queuefilename, *fromaddr;
 	char *randomstr = NULL, *confirmfilename = NULL, *listtext;
-	char *maildata[4] = { "subaddr", NULL, "confaddr", NULL };
 	int subconffd;
 
 	listname = genlistname(listaddr);
@@ -217,17 +223,18 @@ void generate_unsubconfirm(const char *listdir, const char *listaddr,
 	myfree(randomstr);
 	myfree(tmpstr);
 
-	maildata[1] = mystrdup(subaddr);
-	maildata[3] = mystrdup(confirmaddr);
-
-	queuefilename = prepstdreply(listdir,
-			"confirm", "unsub",
+	txt = open_text(listdir, "confirm", "unsub",
 			subreason_strs[reasonsub], subtype_strs[typesub],
-			listtext, "$helpaddr$", subaddr, confirmaddr,
-			2, maildata, NULL);
-
-	myfree(maildata[1]);
-	myfree(maildata[3]);
+			listtext);
+	myfree(listtext);
+	MY_ASSERT(txt);
+	register_unformatted(txt, "subaddr", subaddr);
+	register_unformatted(txt, "confaddr", confirmaddr); /* DEPRECATED */
+	register_unformatted(txt, "confirmaddr", confirmaddr);
+	queuefilename = prepstdreply(txt, listdir,
+			"$helpaddr$", subaddr, confirmaddr);
+	MY_ASSERT(queuefilename);
+	close_text(txt);
 
 	myfree(listname);
 	myfree(listfqdn);
@@ -308,6 +315,7 @@ static void print_help(const char *prg)
 void generate_notsubscribed(const char *listdir, const char *subaddr,
 		const char *mlmmjsend)
 {
+	text *txt;
 	char *queuefilename, *fromaddr, *listname, *listfqdn, *listaddr;
 	char *listdelim = getlistdelim(listdir);
 
@@ -318,11 +326,15 @@ void generate_notsubscribed(const char *listdir, const char *subaddr,
 	fromaddr = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
 	myfree(listdelim);
 
-	queuefilename = prepstdreply(listdir,
+	txt = open_text(listdir,
 			"deny", "unsub", "unsubbed", NULL,
-			"unsub-notsubscribed", "$helpaddr$", subaddr, NULL,
-			0, NULL, NULL);
+			"unsub-notsubscribed");
+	MY_ASSERT(txt);
+	register_unformatted(txt, "subaddr", subaddr);
+	queuefilename = prepstdreply(txt, listdir,
+			"$helpaddr$", subaddr, NULL);
 	MY_ASSERT(queuefilename);
+	close_text(txt);
 
 	myfree(listaddr);
 	myfree(listname);

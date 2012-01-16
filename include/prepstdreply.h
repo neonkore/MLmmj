@@ -29,18 +29,16 @@ struct text;
 typedef struct text text;
 
 char *substitute(const char *line, const char *listaddr, const char *listdelim,
-		size_t datacount, char **data, const char *listdir);
+		const char *listdir, text *txt);
 text *open_text_file(const char *listdir, const char *filename);
 text *open_text(const char *listdir, const char *purpose, const char *action,
 		   const char *reason, const char *type, const char *compat);
+void register_unformatted(text *txt, const char *token, const char *subst);
+void register_originalmail(text *txt, const char *mailname);
 char *get_processed_text_line(text *txt,
-		const char *listaddr, const char *listdelim,
-		size_t datacount, char **data, const char *listdir,
-		const char *mailname);
+		const char *listaddr, const char *listdelim, const char *listdir);
 void close_text(text *txt);
-char *prepstdreply(const char *listdir, const char *purpose, const char *action,
-		const char *reason, const char *type, const char *compat,
-		const char *from, const char *to, const char *replyto,
-		size_t tokencount, char **data, const char *mailname);
+char *prepstdreply(text *txt, const char *listdir,
+		const char *from, const char *to, const char *replyto);
 
 #endif /* PREPSTDREPLY_H */

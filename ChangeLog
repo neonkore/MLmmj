@@ -1,3 +1,7 @@
+ o Deprecate various list text substitutions such as $newsub$, $oldsub$,
+   $moderateaddr$
+ o Add $permitaddr$ and $releaseaddr$ substitutions
+ o Make $subject$, $posteraddr$ and $subaddr$ more widely available
  o Fix potential crash when mail to the owner arrives with no From: header
  o Add %originalmail% directive and restore backward compatibility of
    $originalmail$

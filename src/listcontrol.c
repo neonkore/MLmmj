@@ -36,6 +36,7 @@
 #include "find_email_adr.h"
 #include "getlistdelim.h"
 #include "strgen.h"
+#include "prepstdreply.h"
 #include "send_help.h"
 #include "send_list.h"
 #include "log_error.h"
@@ -116,6 +117,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	unsigned int ctrl;
 	struct strlist *owners;
 	int owner_idx;
+	text *txt;
+	char *queuefilename;
 	
 	/* A closed list doesn't allow subscribtion and unsubscription */
 	closedlist = statctrl(listdir, "closedlist");
@@ -209,10 +212,20 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		}
 		if (statctrl(listdir, "nodigestsub")) {
 			errno = 0;
-			log_error(LOG_ARGS, "A subcribe-digest request was"
+			log_error(LOG_ARGS, "A subscribe-digest request was"
 				" denied");
-			send_help(listdir, fromemails->emaillist[0],
-				mlmmjsend, "deny", "sub", "disabled", "digest", "sub-deny-digest");
+			txt = open_text(listdir, "deny", "sub", "disabled",
+					"digest", "sub-deny-digest");
+			MY_ASSERT(txt);
+			register_unformatted(txt, "subaddr",
+					fromemails->emaillist[0]);
+			queuefilename = prepstdreply(txt, listdir,
+					"$listowner$",
+					fromemails->emaillist[0], NULL);
+			MY_ASSERT(queuefilename);
+			close_text(txt);
+			send_help(listdir, queuefilename,
+					fromemails->emaillist[0], mlmmjsend);
 			return -1;
 		}
 		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: request for digest"
@@ -246,10 +259,20 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		}
 		if (statctrl(listdir, "nonomailsub")) {
 			errno = 0;
-			log_error(LOG_ARGS, "A subcribe-nomail request was"
+			log_error(LOG_ARGS, "A subscribe-nomail request was"
 				" denied");
-			send_help(listdir, fromemails->emaillist[0],
-				mlmmjsend, "deny", "sub", "disabled", "nomail", "sub-deny-nomail");
+			txt = open_text(listdir, "deny", "sub", "disabled",
+					"nomail", "sub-deny-nomail");
+			MY_ASSERT(txt);
+			register_unformatted(txt, "subaddr",
+					fromemails->emaillist[0]);
+			queuefilename = prepstdreply(txt, listdir,
+					"$listowner$",
+					fromemails->emaillist[0], NULL);
+			MY_ASSERT(queuefilename);
+			close_text(txt);
+			send_help(listdir, queuefilename,
+					fromemails->emaillist[0], mlmmjsend);
 			return -1;
 		}
 		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: request for nomail"
@@ -664,8 +687,14 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		}
 		log_oper(listdir, OPLOGFNAME, "%s requested help",
 				fromemails->emaillist[0]);
-		send_help(listdir, fromemails->emaillist[0], mlmmjsend,
-				"help", NULL, NULL, NULL, "listhelp");
+		txt = open_text(listdir, "help", NULL, NULL, NULL, "listhelp");
+		MY_ASSERT(txt);
+		queuefilename = prepstdreply(txt, listdir,
+				"$listowner$", fromemails->emaillist[0], NULL);
+		MY_ASSERT(queuefilename);
+		close_text(txt);
+		send_help(listdir, queuefilename,
+				fromemails->emaillist[0], mlmmjsend);
 		break;
 
        /* listname+faq@domain.tld */
@@ -680,8 +709,14 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
                }
                log_oper(listdir, OPLOGFNAME, "%s requested faq",
                                fromemails->emaillist[0]);
-               send_help(listdir, fromemails->emaillist[0], mlmmjsend,
-               		"faq", NULL, NULL, NULL, "listfaq");
+		txt = open_text(listdir, "faq", NULL, NULL, NULL, "listfaq");
+		MY_ASSERT(txt);
+		queuefilename = prepstdreply(txt, listdir,
+				"$listowner$", fromemails->emaillist[0], NULL);
+		MY_ASSERT(queuefilename);
+		close_text(txt);
+		send_help(listdir, queuefilename,
+				fromemails->emaillist[0], mlmmjsend);
                break;
 
 	/* listname+get-INDEX@domain.tld */

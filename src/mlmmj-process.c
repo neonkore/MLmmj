@@ -86,17 +86,17 @@ static char *modreason_strs[] = {
 };
 
 
-void newmoderated(const char *listdir, const char *mailfilename,
+static void newmoderated(const char *listdir, const char *mailfilename,
 		  const char *mlmmjsend, const char *efromsender,
-		  size_t tokencount, char **data, enum modreason modreason)
+		  const char *subject, const char *posteraddr,
+		  enum modreason modreason)
 {
-	size_t i;
 	char *from, *listfqdn, *listname, *moderators = NULL;
 	char *buf, *replyto, *listaddr = getlistaddr(listdir), *listdelim;
+	text *txt;
 	char *queuefilename = NULL, *moderatorsfilename, *efromismod = NULL;
 	char *mailbasename = mybasename(mailfilename), *tmp, *to;
 	int moderatorsfd, foundaddr = 0, notifymod = 0, status;
-	char *maildata[10] = { "moderateaddr", NULL, "moderators", NULL };
 	pid_t childpid, pid;
 #if 0
 	printf("mailfilename = [%s], mailbasename = [%s]\n", mailfilename,
@@ -104,13 +104,6 @@ void newmoderated(const char *listdir, const char *mailfilename,
 #endif
 	listfqdn = genlistfqdn(listaddr);
 	listname = genlistname(listaddr);
-
-	MY_ASSERT(tokencount<=3)
-	for (i=0; i<tokencount; i++) {
-		maildata[4+2*i] = data[2*i];
-		maildata[5+2*i] = data[1+2*i];
-	}
-	tokencount += 2;
 
 	moderatorsfilename = concatstr(2, listdir, "/control/moderators");
 	if((moderatorsfd = open(moderatorsfilename, O_RDONLY)) < 0) {
@@ -143,13 +136,6 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	replyto = concatstr(6, listname, listdelim, "moderate-", mailbasename,
 			    "@", listfqdn);
 
-	maildata[1] = replyto;
-	if(efromismod) {
-		myfree(moderators);
-		maildata[3] = efromismod;
-	} else
-		maildata[3] = moderators;
-
 	from = concatstr(4, listname, listdelim, "owner@", listfqdn);
 	to = concatstr(3, listname, "-moderators@", listfqdn); /* FIXME JFA: Should this be converted? Why, why not? */
 
@@ -157,10 +143,19 @@ void newmoderated(const char *listdir, const char *mailfilename,
 	myfree(listname);
 	myfree(listfqdn);
 
-	queuefilename = prepstdreply(listdir,
-			"moderate", "post", modreason_strs[modreason], NULL,
-			"moderation", "$listowner$", to, replyto,
-			tokencount, maildata, mailfilename);
+	txt = open_text(listdir, "moderate", "post",
+			modreason_strs[modreason], NULL, "moderation");
+	MY_ASSERT(txt);
+	register_unformatted(txt, "subject", subject);
+	register_unformatted(txt, "posteraddr", posteraddr);
+	register_unformatted(txt, "moderateaddr", replyto); /* DEPRECATED */
+	register_unformatted(txt, "releaseaddr", replyto);
+	if(efromismod) register_unformatted(txt, "moderators", efromismod);
+	else register_unformatted(txt, "moderators", moderators);
+	register_originalmail(txt, mailfilename);
+	queuefilename = prepstdreply(txt, listdir, "$listowner$", to, replyto);
+	MY_ASSERT(queuefilename);
+	close_text(txt);
 
 	/* we might need to exec more than one mlmmj-send */
 	
@@ -200,10 +195,18 @@ void newmoderated(const char *listdir, const char *mailfilename,
 
 	/* send mail to poster that the list is moderated */
 
-	queuefilename = prepstdreply(listdir,
-			"wait", "post", modreason_strs[modreason], NULL,
-			"moderation-poster", "$listowner$", efromsender,
-			NULL, tokencount-1, maildata+2, mailfilename);
+	txt = open_text(listdir, "wait", "post",
+			modreason_strs[modreason], NULL, "moderation-poster");
+	MY_ASSERT(txt);
+	register_unformatted(txt, "subject", subject);
+	register_unformatted(txt, "posteraddr", posteraddr);
+	if(efromismod) register_unformatted(txt, "moderators", efromismod);
+	else register_unformatted(txt, "moderators", moderators);
+	register_originalmail(txt, mailfilename);
+	queuefilename = prepstdreply(txt, listdir,
+			"$listowner$", efromsender, NULL);
+	MY_ASSERT(queuefilename);
+	close_text(txt);
 
 	execlp(mlmmjsend, mlmmjsend,
 			"-l", "1",
@@ -412,10 +415,10 @@ int main(int argc, char **argv)
 	char *mlmmjsend, *mlmmjsub, *mlmmjunsub, *mlmmjbounce;
 	char *bindir, *subjectprefix, *discardname, *listaddr, *listdelim;
 	char *listfqdn, *listname, *fromaddr;
+	text *txt;
 	char *queuefilename, *recipextra = NULL, *owner = NULL;
 	char *maxmailsizestr;
-	char *maildata[6] = { "subject", NULL,
-		"posteraddr", NULL, "maxmailsize", NULL };
+	char *subject = NULL, *posteraddr = NULL;
 	char *envstr, *efrom;
 	struct stat st;
 	uid_t uid;
@@ -591,10 +594,7 @@ int main(int argc, char **argv)
 		/* TODO: free emailstructs */
 		exit(EXIT_SUCCESS);
 	}
-	maildata[3] = fromemails.emaillist[0];
-
-	if (fromemails.emailcount)
-		maildata[3] = fromemails.emaillist[0];
+	posteraddr = fromemails.emaillist[0];
 
 	/* To: addresses */
 	for(i = 0; i < readhdrs[1].valuecount; i++) {
@@ -618,9 +618,8 @@ int main(int argc, char **argv)
 
 	/* Subject: */
 	if (readhdrs[5].valuecount)
-		maildata[1] = unistr_header_to_utf8(readhdrs[5].values[0]);
-	if (!maildata[1])
-		maildata[1] = mystrdup("");
+			subject = unistr_header_to_utf8(readhdrs[5].values[0]);
+	if (!subject) subject = mystrdup("");
 
 	/* envelope from */
 	if((envstr = getenv("SENDER")) != NULL) {
@@ -755,13 +754,17 @@ int main(int argc, char **argv)
 			listfqdn = genlistfqdn(listaddr);
 			fromaddr = concatstr(4, listname, listdelim,
 					"bounces-help@", listfqdn);
-			maildata[5] = maxmailsizestr;
-			queuefilename = prepstdreply(listdir,
-					"deny", "post", "maxmailsize", NULL,
-					"maxmailsize", "$listowner$",
-					fromemails.emaillist[0],
-					NULL, 1, maildata+4, donemailname);
-			MY_ASSERT(queuefilename)
+			txt = open_text(listdir, "deny", "post",
+					"maxmailsize", NULL, "maxmailsize");
+			MY_ASSERT(txt);
+			register_unformatted(txt, "subject", subject);
+			register_unformatted(txt, "posteraddr", posteraddr);
+			register_unformatted(txt, "maxmailsize", maxmailsizestr);
+			register_originalmail(txt, donemailname);
+			queuefilename = prepstdreply(txt, listdir,
+					"$listowner$", posteraddr, NULL);
+			MY_ASSERT(queuefilename);
+			close_text(txt);
 			myfree(listdelim);
 			myfree(listname);
 			myfree(listfqdn);
@@ -772,7 +775,7 @@ int main(int argc, char **argv)
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "1",
 					"-L", listdir,
-					"-T", fromemails.emaillist[0],
+					"-T", posteraddr,
 					"-F", fromaddr,
 					"-m", queuefilename, (char *)NULL);
 
@@ -835,7 +838,7 @@ int main(int argc, char **argv)
 		/* Don't send a mail about denial to the list, but silently
 		 * discard and exit. Also don't in case of it being turned off
 		 */
-		if ((strcasecmp(listaddr, fromemails.emaillist[0]) == 0) ||
+		if ((strcasecmp(listaddr, posteraddr) == 0) ||
 				notoccdenymails) {
 			log_error(LOG_ARGS, "Discarding %s because list"
 					" address was not in To: or Cc:,"
@@ -852,11 +855,16 @@ int main(int argc, char **argv)
 		listfqdn = genlistfqdn(listaddr);
 		fromaddr = concatstr(4, listname, listdelim, "bounces-help@",
 				     listfqdn);
-		queuefilename = prepstdreply(listdir,
-				"deny", "post", "notintocc", NULL, "notintocc",
-				"$listowner$", fromemails.emaillist[0], NULL,
-				2, maildata, donemailname);
+		txt = open_text(listdir, "deny", "post",
+				"notintocc", NULL, "notintocc");
+		MY_ASSERT(txt);
+		register_unformatted(txt, "subject", subject);
+		register_unformatted(txt, "posteraddr", posteraddr);
+		register_originalmail(txt, donemailname);
+		queuefilename = prepstdreply(txt, listdir,
+				"$listowner$", posteraddr, NULL);
 		MY_ASSERT(queuefilename)
+		close_text(txt);
 		myfree(listdelim);
 		myfree(listname);
 		myfree(listfqdn);
@@ -865,7 +873,7 @@ int main(int argc, char **argv)
 		execlp(mlmmjsend, mlmmjsend,
 				"-l", "1",
 				"-L", listdir,
-				"-T", fromemails.emaillist[0],
+				"-T", posteraddr,
 				"-F", fromaddr,
 				"-m", queuefilename, (char *)NULL);
 
@@ -877,7 +885,7 @@ int main(int argc, char **argv)
 	if(subonlypost) {
 		/* Don't send a mail about denial to the list, but silently
 		 * discard and exit. */
-		if (strcasecmp(listaddr, fromemails.emaillist[0]) == 0) {
+		if (strcasecmp(listaddr, posteraddr) == 0) {
 			log_error(LOG_ARGS, "Discarding %s because"
 					" subonlypost was set and From: was"
 					" the list address",
@@ -887,7 +895,7 @@ int main(int argc, char **argv)
 			myfree(donemailname);
 			exit(EXIT_SUCCESS);
 		}
-		if(is_subbed(listdir, fromemails.emaillist[0]) != 0) {
+		if(is_subbed(listdir, posteraddr) != 0) {
 			modnonsubposts = statctrl(listdir,
 					"modnonsubposts");
 			if(modnonsubposts) {
@@ -914,12 +922,16 @@ int main(int argc, char **argv)
 			listfqdn = genlistfqdn(listaddr);
 			fromaddr = concatstr(4, listname, listdelim,
 					"bounces-help@", listfqdn);
-			queuefilename = prepstdreply(listdir,
-					"deny", "post", "subonlypost", NULL,
-					"subonlypost", "$listowner$",
-					fromemails.emaillist[0], NULL,
-					2, maildata, donemailname);
+			txt = open_text(listdir, "deny", "post",
+					"subonlypost", NULL, "subonlypost");
+			MY_ASSERT(txt);
+			register_unformatted(txt, "subject", subject);
+			register_unformatted(txt, "posteraddr", posteraddr);
+			register_originalmail(txt, donemailname);
+			queuefilename = prepstdreply(txt, listdir,
+					"$listowner$", posteraddr, NULL);
 			MY_ASSERT(queuefilename)
+			close_text(txt);
 			myfree(listaddr);
 			myfree(listdelim);
 			myfree(listname);
@@ -928,7 +940,7 @@ int main(int argc, char **argv)
 			myfree(donemailname);
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "1",
-					"-T", fromemails.emaillist[0],
+					"-T", posteraddr,
 					"-F", fromaddr,
 					"-m", queuefilename, (char *)NULL);
 
@@ -954,10 +966,10 @@ startaccess:
 		/* Don't send a mail about denial to the list, but silently
 		 * discard and exit. Also do this in case it's turned off */
 		accret = do_access(access_rules, &allheaders,
-					fromemails.emaillist[0], listdir);
+					posteraddr, listdir);
 		if (accret == DENY) {
-			if ((strcasecmp(listaddr, fromemails.emaillist[0]) ==
-						0) || noaccessdenymails) {
+			if ((strcasecmp(listaddr, posteraddr) == 0) ||
+					noaccessdenymails) {
 				log_error(LOG_ARGS, "Discarding %s because"
 						" it was denied by an access"
 						" rule, and From: was the list"
@@ -974,12 +986,16 @@ startaccess:
 			listfqdn = genlistfqdn(listaddr);
 			fromaddr = concatstr(4, listname, listdelim,
 					"bounces-help@", listfqdn);
-			queuefilename = prepstdreply(listdir,
-					"deny", "post", "access", NULL,
-					"access", "$listowner$",
-					fromemails.emaillist[0], NULL,
-					2, maildata, donemailname);
+			txt = open_text(listdir, "deny", "post",
+					"access", NULL, "access");
+			MY_ASSERT(txt);
+			register_unformatted(txt, "subject", subject);
+			register_unformatted(txt, "posteraddr", posteraddr);
+			register_originalmail(txt, donemailname);
+			queuefilename = prepstdreply(txt, listdir,
+					"$listowner$", posteraddr, NULL);
 			MY_ASSERT(queuefilename)
+			close_text(txt);
 			myfree(listaddr);
 			myfree(listdelim);
 			myfree(listname);
@@ -990,7 +1006,7 @@ startaccess:
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "1",
 					"-L", listdir,
-					"-T", fromemails.emaillist[0],
+					"-T", posteraddr,
 					"-F", fromaddr,
 					"-m", queuefilename, (char *)NULL);
 
@@ -1046,8 +1062,7 @@ startaccess:
 				exit(EXIT_FAILURE);
 			}
 			myfree(omitfilename);
-			if(writen(omitfd, fromemails.emaillist[0],
-					strlen(fromemails.emaillist[0])) < 0) {
+			if(writen(omitfd, posteraddr, strlen(posteraddr)) < 0) {
 				log_error(LOG_ARGS,
 						"could not write omit file");
 				myfree(mqueuename);
@@ -1057,7 +1072,8 @@ startaccess:
 			close(omitfd);
 		}
 		newmoderated(listdir, mqueuename,
-				mlmmjsend, efrom, 2, maildata, modreason);
+				mlmmjsend, efrom, subject, posteraddr,
+				modreason);
 		return EXIT_SUCCESS;
 	}
 
@@ -1072,7 +1088,7 @@ startaccess:
 	if (notmetoo)
 		execlp(mlmmjsend, mlmmjsend,
 				"-L", listdir,
-				"-o", fromemails.emaillist[0],
+				"-o", posteraddr,
 				"-m", donemailname, (char *)NULL);
 	else
 		execlp(mlmmjsend, mlmmjsend,

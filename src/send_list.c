@@ -86,6 +86,7 @@ static void print_subs(int cur_fd, char *dirname)
 void send_list(const char *listdir, const char *emailaddr,
 	       const char *mlmmjsend)
 {
+	text *txt;
 	char *queuefilename, *listaddr, *listdelim, *listname, *listfqdn;
 	char *fromaddr, *subdir, *nomaildir, *digestdir;
 	int fd;
@@ -98,14 +99,12 @@ void send_list(const char *listdir, const char *emailaddr,
 	fromaddr = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
 	myfree(listdelim);
 
-	queuefilename = prepstdreply(listdir,
-			"list", NULL, NULL, subtype_strs[SUB_ALL],
-			"listsubs", "$listowner$", emailaddr, NULL,
-			0, NULL, NULL);
-	if(queuefilename == NULL) {
-		log_error(LOG_ARGS, "Could not prepare sub list mail");
-		exit(EXIT_FAILURE);
-	}
+	txt = open_text(listdir, "list", NULL, NULL, subtype_strs[SUB_ALL],
+			"listsubs");
+	MY_ASSERT(txt);
+	queuefilename = prepstdreply(txt, listdir, "$listowner$", emailaddr, NULL);
+	MY_ASSERT(queuefilename);
+	close_text(txt);
 
 	fd = open(queuefilename, O_WRONLY);
 	if(fd < 0) {
@@ -114,7 +113,7 @@ void send_list(const char *listdir, const char *emailaddr,
 	}
 
 	if(lseek(fd, 0, SEEK_END) < 0) {
-		log_error(LOG_ARGS, "Could not seek to send of file");
+		log_error(LOG_ARGS, "Could not seek to end of file");
 		exit(EXIT_FAILURE);
 	}
 

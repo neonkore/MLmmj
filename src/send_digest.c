@@ -183,10 +183,9 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	int i, fd, archivefd, status, hdrfd;
 	size_t len;
 	text * txt;
-	char buf[45];
+	char buf[100];
 	char *tmp, *queuename = NULL, *archivename, *subject = NULL, *line = NULL;
 	char *boundary, *listaddr, *listdelim, *listname, *listfqdn;
-	char *subst_data[10];
 	pid_t childpid, pid;
 
 	if (addr) {
@@ -228,35 +227,29 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	txt = open_text_file(listdir, "digest");
 	if (txt == NULL) {
 		log_error(LOG_ARGS, "Could not open listtext 'digest'");
+		goto fallback_subject;
 	}
 
-	subst_data[0] = "digestfirst";
 	snprintf(buf, sizeof(buf), "%d", firstindex);
-	subst_data[1] = mystrdup(buf);
+	register_unformatted(txt, "digestfirst", buf);
 
-	subst_data[2] = "digestlast";
 	snprintf(buf, sizeof(buf), "%d", lastindex);
-	subst_data[3] = mystrdup(buf);
+	register_unformatted(txt, "digestlast", buf);
 
-	subst_data[4] = "digestinterval";
 	if (lastindex == firstindex) {
 		snprintf(buf, sizeof(buf), "%d", firstindex);
 	} else {
 		snprintf(buf, sizeof(buf), "%d-%d", firstindex, lastindex);
 	}
-	subst_data[5] = mystrdup(buf);
+	register_unformatted(txt, "digestinterval", buf);
 
-	subst_data[6] = "digestissue";
 	snprintf(buf, sizeof(buf), "%d", issue);
-	subst_data[7] = mystrdup(buf);
+	register_unformatted(txt, "digestissue", buf);
 
-	subst_data[8] = "digestthreads";
-	subst_data[9] = thread_list(listdir, firstindex, lastindex);
+	tmp = thread_list(listdir, firstindex, lastindex);
+	register_unformatted(txt, "digestthreads", tmp);
 
-	if (txt == NULL) goto fallback_subject;
-
-	line = get_processed_text_line(txt, listaddr, listdelim,
-			5, subst_data, listdir, NULL);
+	line = get_processed_text_line(txt, listaddr, listdelim, listdir);
 
 	if (line == NULL) {
 		log_error(LOG_ARGS, "No content in digest listtext");
@@ -284,7 +277,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 
 		/* Skip the empty line after the subject */
 		line = get_processed_text_line(txt, listaddr, listdelim,
-				5, subst_data, listdir, NULL);
+				listdir);
 		if (line == NULL || *line != '\0') {
 			log_error(LOG_ARGS, "Too many headers "
 					"in digest listtext");
@@ -301,10 +294,15 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 
 fallback_subject:
 	if (subject == NULL) {
-		tmp = substitute("Digest of $listaddr$ issue $digestissue$"
-				" ($digestinterval$)", listaddr, listdelim,
-				5, subst_data, listdir);
-		subject = unistr_utf8_to_header(tmp);
+		if (lastindex == firstindex) {
+			snprintf(buf, sizeof(buf), "%d", firstindex);
+		} else {
+			snprintf(buf, sizeof(buf), "%d-%d", firstindex, lastindex);
+		}
+		tmp = mystrdup(buf);
+		snprintf(buf, sizeof(buf), "Digest of %s issue %d (%s)",
+				listaddr, issue, tmp);
+		subject = unistr_utf8_to_header(buf);
 		myfree(tmp);
 	}
 
@@ -342,11 +340,6 @@ errdighdrs:
 		myfree(listaddr);
 		myfree(listname);
 		myfree(listdelim);
-		myfree(subst_data[1]);
-		myfree(subst_data[3]);
-		myfree(subst_data[5]);
-		myfree(subst_data[7]);
-		myfree(subst_data[9]);
 		if (txt != NULL) {
 			close_text(txt);
 			myfree(line);
@@ -374,11 +367,6 @@ errdighdrs:
 			myfree(listaddr);
 			myfree(listname);
 			myfree(listdelim);
-			myfree(subst_data[1]);
-			myfree(subst_data[3]);
-			myfree(subst_data[5]);
-			myfree(subst_data[7]);
-			myfree(subst_data[9]);
 			if (txt != NULL) {
 				close_text(txt);
 				myfree(line);
@@ -389,7 +377,7 @@ errdighdrs:
 
 		for (;;) {
 			line = get_processed_text_line(txt, listaddr, listdelim,
-					5, subst_data, listdir, NULL);
+					listdir);
 			if (line == NULL) break;
 			len = strlen(line);
 			line[len] = '\n';
@@ -410,11 +398,6 @@ errdighdrs:
 	if (line != NULL) myfree(line);
 	myfree(listaddr);
 	myfree(listdelim);
-	myfree(subst_data[1]);
-	myfree(subst_data[3]);
-	myfree(subst_data[5]);
-	myfree(subst_data[7]);
-	myfree(subst_data[9]);
 
 	for (i=firstindex; i<=lastindex; i++) {
 		snprintf(buf, sizeof(buf), "%d", i);

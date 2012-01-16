@@ -108,9 +108,9 @@ char *fetchindexes(const char *bouncefile)
 
 void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 {
+	text *txt;
 	char *myaddr, *from, *a, *indexstr, *queuefilename, *listaddr;
 	char *listfqdn, *listname, *probefile, *listdelim=getlistdelim(listdir);
-	char *maildata[] = { "bouncenumbers", NULL };
 	int fd;
 	time_t t;
 
@@ -144,12 +144,13 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 		exit(EXIT_FAILURE);
 	}
 
-	maildata[1] = indexstr;
-	queuefilename = prepstdreply(listdir,
-			"probe", NULL, NULL, NULL, "bounce-probe",
-			"$listowner$", myaddr, NULL, 1, maildata, NULL);
-	MY_ASSERT(queuefilename);
+	txt = open_text(listdir, "probe", NULL, NULL, NULL, "bounce-probe");
+	MY_ASSERT(txt);
+	register_unformatted(txt, "bouncenumbers", indexstr);
 	myfree(indexstr);
+	queuefilename = prepstdreply(txt, listdir, "$listowner$", myaddr, NULL);
+	MY_ASSERT(queuefilename);
+	close_text(txt);
 
 	probefile = concatstr(4, listdir, "/bounce/", addr, "-probe");
 	MY_ASSERT(probefile);

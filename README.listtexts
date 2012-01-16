@@ -324,9 +324,11 @@ Unformatted substitutions
   DEPRECATED: use %bouncenumbers%
 
 - $confaddr$
+- $confirmaddr$
   (available only in confirm-[un]sub-*)
   the address to which to send mail to confirm the (un-)subscription in
   question
+  NOTE: the short version of this substitution is DEPRECATED
 
 - $control C$
   the contents of the control file named C in listdir/control, with its final
@@ -410,15 +412,17 @@ Unformatted substitutions
   (available only in moderate-post-* and gatekeep-sub)
   the address to which to send mail to approve the post or subscription in
   question
+  DEPRECATED: use $releaseaddr$ or $permitaddr$ instead
 
 - $moderators$
   (available only in moderate-post-*, wait-post-*, gatekeep-sub and wait-sub)
   the formatted list of moderators to whom the moderation request has been sent
-  DEPRECATED: use %moderators% or %gatekeepers%
+  DEPRECATED: use %moderators% or %gatekeepers% instead
 
 - $newsub$
   (available only in notify-sub-*-*)
   the address that has been subscribed
+  DEPRECATED: use $subaddr$ instead
 
 - $nomailsubaddr$
   listname+subscribe-nomail@domain.tld
@@ -429,16 +433,21 @@ Unformatted substitutions
   DEPRECATED: use $list+$unsubscribe-nomail@$domain$ instead
 
 - $oldsub$
-  (available only in notify-nsub-*-*)
+  (available only in notify-sub-*-*)
   the address that has been unsubscribed
+  DEPRECATED: use $subaddr$ instead
 
 - $originalmail$
   the same as %originalmail 100% preceded by a space
   DEPRECATED: use %originalmail%
 
+- $permitaddr$
+  (available only in gatekeep-sub)
+  the address to which to send mail to permit the subscription in question
+
 - $posteraddr$
-  (available only in deny-post-{access|tocc|subonlypost}, moderate-post-* and
-  wait-post-*)
+  (available only in deny-post-{access|tocc|subonlypost|maxmailsize},
+  moderate-post-* and wait-post-*)
   the from address of the message that was received as determined by Mlmmj
 
 - $random0$
@@ -451,13 +460,18 @@ Unformatted substitutions
   that are MIME messages with attachments by creating boundaries that are
   unlikely to appear in the attached messages
 
+- $releaseaddr$
+  (available only in moderate-post-*)
+  the address to which to send mail to release the post in question
+
 - $subaddr$
-  (available only in gatekeep-sub and confirm-[un]sub-*)
+  (available only in gatekeep-sub, confirm-[un]sub-*, finish-[un]sub-*,
+  notify-[un]sub-* and deny-[un]sub-*)
   the address requested to be (un-)subscribed
 
 - $subject$
-  (available only in deny-post-{access|tocc|subonlypost}, moderate-post-* and
-  wait-post-*)
+  (available only in deny-post-{access|tocc|subonlypost|maxmailsize},
+  moderate-post-* and wait-post-*)
   the subject line of the message in question
 
 - $text T$

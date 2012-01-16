@@ -59,8 +59,19 @@ struct source {
 };
 
 
+struct substitution;
+typedef struct substitution substitution;
+struct substitution {
+	char *token;
+	char *subst;
+	substitution *next;
+};
+
+
 struct text {
 	source *src;
+	substitution *substs;
+	char *mailname;
 };
 
 
@@ -94,8 +105,7 @@ static char *numeric_token(char *token) {
 
 
 static void substitute_one(char **line_p, char **pos_p, const char *listaddr,
-			const char *listdelim, size_t datacount, char **data,
-			const char *listdir)
+			const char *listdelim, const char *listdir, text *txt)
 {
 	char *line = *line_p;
 	char *pos = *pos_p;
@@ -103,7 +113,7 @@ static void substitute_one(char **line_p, char **pos_p, const char *listaddr,
 	char *endpos;
 	char *fqdn, *listname;
 	char *value = NULL;
-	size_t i;
+	substitution *subst;
 
 	endpos = strchr(token, '$');
 	if (endpos == NULL) {
@@ -171,12 +181,14 @@ static void substitute_one(char **line_p, char **pos_p, const char *listaddr,
 	} else if(strcmp(token, "originalmail") == 0) {
 		/* DEPRECATED: use %originalmail% instead */
 		value = mystrdup(" %originalmail 100%");
-	} else if(data) {
-		for(i = 0; i < datacount; i++) {
-			if(strcmp(token, data[i*2]) == 0) {
-				value = mystrdup(data[(i*2)+1]);
+	} else {
+		subst = txt->substs;
+		while (subst != NULL) {
+			if(strcmp(token, subst->token) == 0) {
+				value = mystrdup(subst->subst);
 				break;
 			}
+			subst = subst->next;
 		}
 	}
 
@@ -198,7 +210,7 @@ static void substitute_one(char **line_p, char **pos_p, const char *listaddr,
 
 
 char *substitute(const char *line, const char *listaddr, const char *listdelim,
-		 size_t datacount, char **data, const char *listdir)
+		const char *listdir, text *txt)
 {
 	char *new;
 	char *pos;
@@ -209,8 +221,7 @@ char *substitute(const char *line, const char *listaddr, const char *listdelim,
 	while (*pos != '\0') {
 		if (*pos == '$') {
 			substitute_one(&new, &pos,
-					listaddr, listdelim,
-					datacount, data, listdir);
+					listaddr, listdelim, listdir, txt);
 			/* The function sets up for the next character
 			 * to process, so continue straight away. */
 			continue;
@@ -235,6 +246,8 @@ text *open_text_file(const char *listdir, const char *filename)
 	txt->src->suffix = NULL;
 	txt->src->transparent = 0;
 	txt->src->limit = -1;
+	txt->substs = NULL;
+	txt->mailname = NULL;
 
 	tmp = concatstr(3, listdir, "/text/", filename);
 	txt->src->fd = open(tmp, O_RDONLY);
@@ -295,6 +308,22 @@ text *open_text(const char *listdir, const char *purpose, const char *action,
 }
 
 
+void register_unformatted(text *txt, const char *token, const char *replacement)
+{
+	substitution * subst = mymalloc(sizeof(substitution));
+	subst->token = mystrdup(token);
+	subst->subst = mystrdup(replacement);
+	subst->next = txt->substs;
+	txt->substs = subst;
+}
+
+
+void register_originalmail(text *txt, const char *mailname)
+{
+	txt->mailname = mystrdup(mailname);
+}
+
+
 static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
 		const char *filename) {
 	char *line = *line_p;
@@ -339,7 +368,7 @@ static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
 
 
 static void handle_directive(text *txt, char **line_p, char **pos_p,
-		const char *listdir, const char *mailname) {
+		const char *listdir) {
 	char *line = *line_p;
 	char *pos = *pos_p;
 	char *token = pos + 1;
@@ -397,7 +426,8 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 			myfree(filename);
 			return;
 		}
-	} else if(strncmp(token, "originalmail", 12) == 0 && mailname != NULL) {
+	} else if(strncmp(token, "originalmail", 12) == 0 &&
+			txt->mailname != NULL) {
 		token += 12;
 		limit = 0;
 		if (*token == '\0') {
@@ -410,7 +440,8 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 			if (token != NULL) limit = atol(token);
 		}
 		if (limit != 0) {
-			begin_new_source_file(txt, line_p, pos_p, mailname);
+			begin_new_source_file(txt, line_p, pos_p,
+					txt->mailname);
 			txt->src->transparent = 1;
 			if (limit == -1) txt->src->limit = -1;
 			else txt->src->limit = limit - 1;
@@ -436,8 +467,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 
 char *get_processed_text_line(text *txt,
 		const char *listaddr, const char *listdelim,
-		size_t datacount, char **data, const char *listdir,
-		const char *mailname)
+		const char *listdir)
 {
 	char *line = NULL;
 	char *pos;
@@ -493,13 +523,12 @@ char *get_processed_text_line(text *txt,
 			 * transparently */
 		} else if (*pos == '$') {
 			substitute_one(&line, &pos,
-					listaddr, listdelim,
-					datacount, data, listdir);
+					listaddr, listdelim, listdir, txt);
 			/* The function sets up for the next character
 			 * to process, so continue straight away. */
 			continue;
 		} else if (*pos == '%') {
-			handle_directive(txt, &line, &pos, listdir, mailname);
+			handle_directive(txt, &line, &pos, listdir);
 			/* The function sets up for the next character
 			 * to process, so continue straight away. */
 			continue;
@@ -519,31 +548,34 @@ char *get_processed_text_line(text *txt,
 
 void close_text(text *txt) {
 	source *tmp;
+	substitution *subst;
 	while (txt->src != NULL) {
 		close(txt->src->fd);
 		tmp = txt->src;
 		txt->src = txt->src->prev;
 		myfree(tmp);
 	}
+	while (txt->substs != NULL) {
+		subst = txt->substs;
+		myfree(subst->token);
+		myfree(subst->subst);
+		txt->substs = txt->substs->next;
+		myfree(subst);
+	}
+	if (txt->mailname != NULL) myfree(txt->mailname);
+	myfree(txt);
 }
 
 
-char *prepstdreply(const char *listdir, const char *purpose, const char *action,
-		   const char *reason, const char *type, const char *compat,
-		   const char *from, const char *to, const char *replyto,
-		   size_t tokencount, char **data, const char *mailname)
+char *prepstdreply(text *txt, const char *listdir,
+		   const char *from, const char *to, const char *replyto)
 {
 	size_t len, i;
 	int outfd;
-	text *txt;
 	char *listaddr, *listdelim, *tmp, *retstr = NULL;
 	char *listfqdn, *line;
 	char *str;
-	char **moredata;
 	char *headers[10] = { NULL }; /* relies on NULL to flag end */
-
-	txt = open_text(listdir, purpose, action, reason, type, compat);
-	if (txt == NULL) return NULL;
 
 	listaddr = getlistaddr(listdir);
 	listdelim = getlistdelim(listdir);
@@ -570,23 +602,19 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 		return NULL;
 	}
 
-	moredata = mymalloc(2*(tokencount+6) * sizeof(char *));
-	for (i=0; i<2*tokencount; i++) {
-		moredata[i] = data[i];
-	}
 	for (i=0; i<6; i++) { 
-		moredata[2*(tokencount+i)] = mystrdup("randomN");
-		moredata[2*(tokencount+i)][6] = '0' + i;
-		moredata[2*(tokencount+i)+1] = random_str();
+		tmp = mystrdup("randomN");
+		tmp[6] = '0' + i;
+		str = random_str();
+		register_unformatted(txt, tmp, str);
+		myfree(tmp);
+		myfree(str);
 	}
-	tokencount += 6;
 
-	tmp = substitute(from, listaddr, listdelim,
-	                 tokencount, moredata, listdir);
+	tmp = substitute(from, listaddr, listdelim, listdir, txt);
 	headers[0] = concatstr(2, "From: ", tmp);
 	myfree(tmp);
-	tmp = substitute(to, listaddr, listdelim,
-	                 tokencount, moredata, listdir);
+	tmp = substitute(to, listaddr, listdelim, listdir, txt);
 	headers[1] = concatstr(2, "To: ", tmp);
 	myfree(tmp);
 	headers[2] = genmsgid(listfqdn);
@@ -599,15 +627,14 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 	headers[7] = mystrdup("Content-Transfer-Encoding: 8bit");
 
 	if(replyto) {
-		tmp = substitute(replyto, listaddr, listdelim,
-		                 tokencount, moredata, listdir);
+		tmp = substitute(replyto, listaddr, listdelim, listdir, txt);
 		headers[8] = concatstr(2, "Reply-To: ", tmp);
 		myfree(tmp);
 	}
 
 	for(;;) {
 		line = get_processed_text_line(txt, listaddr, listdelim,
-				tokencount, moredata, listdir, NULL);
+				listdir);
 		if (!line) {
 			log_error(LOG_ARGS, "No body in listtext");
 			break;
@@ -700,7 +727,7 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 
 	if (line == NULL) {
 		line = get_processed_text_line(txt, listaddr, listdelim,
-				tokencount, moredata, listdir, mailname);
+				listdir);
 	}
 	while(line) {
 			len = strlen(line);
@@ -714,7 +741,7 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 			}
 		myfree(line);
 		line = get_processed_text_line(txt, listaddr, listdelim,
-				tokencount, moredata, listdir, mailname);
+				listdir);
 	}
 
 	fsync(outfd);
@@ -724,15 +751,6 @@ freeandreturn:
 	myfree(listaddr);
 	myfree(listdelim);
 	myfree(listfqdn);
-
-	for (i=tokencount-6; i<tokencount; i++) {
-		myfree(moredata[2*i]);
-		myfree(moredata[2*i+1]);
-	}
-	myfree(moredata);
-
-	close_text(txt);
-	myfree(txt);
 
 	return retstr;
 }
