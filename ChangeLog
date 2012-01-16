@@ -1,3 +1,5 @@
+ o Add %originalmail% directive and restore backward compatibility of
+   $originalmail$
  o Allow more characters in control and text filenames for substitutions
  o Add %%, %^%, %comment%, %control C% and %text T% formatting directives
  o Allow a space in $originalmail N$ substitution
@@ -30,9 +32,7 @@
  o Richer MIME list texts with inline messages (English only so far)
  o Add $random0$ through $random5$ substitutions
  o Add a $subject$ substitution for list texts
- o Changes to how $originalmail$ works -- existing installations will change
-   behaviour due to this; prepending a space to the lines currently containing
-   $originalmail$ in the listtexts will generally retain current behaviour
+ o Changes to how $originalmail$ works
  o Allow arbitrary headers in list texts
  o Ensure digest listtext is always closed
  o Fix Content-Transfer-Encoding: header for digests and list texts

@@ -54,6 +54,8 @@ struct source {
 	char *prefix;
 	char *suffix;
 	int fd;
+	int transparent;
+	int limit;
 };
 
 
@@ -72,6 +74,18 @@ static char *filename_token(char *token) {
 		if(*pos == '_') continue;
 		if(*pos == '-') continue;
 		if(*pos == '.') continue;
+		break;
+	}
+	if (*pos != '\0') return NULL;
+	return token;
+}
+
+
+static char *numeric_token(char *token) {
+	char *pos;
+	if (*token == '\0') return NULL;
+	for(pos = token; *pos != '\0'; pos++) {
+		if(*pos >= '0' && *pos <= '9') continue;
 		break;
 	}
 	if (*pos != '\0') return NULL;
@@ -154,6 +168,9 @@ static void substitute_one(char **line_p, char **pos_p, const char *listaddr,
 	} else if(strncmp(token, "text ", 5) == 0) {
 		token = filename_token(token + 5);
 		if (token != NULL) value = textcontent(listdir, token);
+	} else if(strcmp(token, "originalmail") == 0) {
+		/* DEPRECATED: use %originalmail% instead */
+		value = mystrdup(" %originalmail 100%");
 	} else if(data) {
 		for(i = 0; i < datacount; i++) {
 			if(strcmp(token, data[i*2]) == 0) {
@@ -216,6 +233,8 @@ text *open_text_file(const char *listdir, const char *filename)
 	txt->src->upcoming = NULL;
 	txt->src->prefix = NULL;
 	txt->src->suffix = NULL;
+	txt->src->transparent = 0;
+	txt->src->limit = -1;
 
 	tmp = concatstr(3, listdir, "/text/", filename);
 	txt->src->fd = open(tmp, O_RDONLY);
@@ -307,6 +326,8 @@ static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
 	*tmp = '\0';
 	src->suffix = NULL;
 	src->fd = fd;
+	src->transparent = 0;
+	src->limit = -1;
 	txt->src = src;
 	tmp = mygetline(fd);
 	line = concatstr(2, line, tmp);
@@ -318,12 +339,13 @@ static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
 
 
 static void handle_directive(text *txt, char **line_p, char **pos_p,
-		const char *listdir) {
+		const char *listdir, const char *mailname) {
 	char *line = *line_p;
 	char *pos = *pos_p;
 	char *token = pos + 1;
 	char *endpos;
 	char *filename;
+	int limit;
 
 	endpos = strchr(token, '%');
 	if (endpos == NULL) {
@@ -375,6 +397,25 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 			myfree(filename);
 			return;
 		}
+	} else if(strncmp(token, "originalmail", 12) == 0 && mailname != NULL) {
+		token += 12;
+		limit = 0;
+		if (*token == '\0') {
+			limit = -1;
+		} else if (*token == ' ') {
+			token = numeric_token(token + 1);
+			if (token != NULL) limit = atol(token);
+		} else {
+			token = numeric_token(token);
+			if (token != NULL) limit = atol(token);
+		}
+		if (limit != 0) {
+			begin_new_source_file(txt, line_p, pos_p, mailname);
+			txt->src->transparent = 1;
+			if (limit == -1) txt->src->limit = -1;
+			else txt->src->limit = limit - 1;
+			return;
+		}
 	}
 	if (token == NULL) {
 		/* We have encountered a directive, but not been able to deal
@@ -395,7 +436,8 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 
 char *get_processed_text_line(text *txt,
 		const char *listaddr, const char *listdelim,
-		size_t datacount, char **data, const char *listdir)
+		size_t datacount, char **data, const char *listdir,
+		const char *mailname)
 {
 	char *line = NULL;
 	char *pos;
@@ -413,7 +455,12 @@ char *get_processed_text_line(text *txt,
 			txt->src->upcoming = NULL;
 			break;
 		}
-		txt->src->upcoming = mygetline(txt->src->fd);
+		if (txt->src->limit != 0) {
+			txt->src->upcoming = mygetline(txt->src->fd);
+			if (txt->src->limit > 0) txt->src->limit--;
+		} else {
+			txt->src->upcoming = NULL;
+		}
 		if (txt->src->upcoming != NULL) continue;
 		close(txt->src->fd);
 		src = txt->src;
@@ -441,6 +488,9 @@ char *get_processed_text_line(text *txt,
 			if (*pos == '\0') break;
 			txt->src->upcoming = mystrdup(pos);
 			break;
+		} else if (txt->src->transparent) {
+			/* Do nothing if the file is to be included
+			 * transparently */
 		} else if (*pos == '$') {
 			substitute_one(&line, &pos,
 					listaddr, listdelim,
@@ -449,7 +499,7 @@ char *get_processed_text_line(text *txt,
 			 * to process, so continue straight away. */
 			continue;
 		} else if (*pos == '%') {
-			handle_directive(txt, &line, &pos, listdir);
+			handle_directive(txt, &line, &pos, listdir, mailname);
 			/* The function sets up for the next character
 			 * to process, so continue straight away. */
 			continue;
@@ -484,7 +534,7 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 		   size_t tokencount, char **data, const char *mailname)
 {
 	size_t len, i;
-	int outfd, mailfd;
+	int outfd;
 	text *txt;
 	char *listaddr, *listdelim, *tmp, *retstr = NULL;
 	char *listfqdn, *line;
@@ -557,7 +607,7 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 
 	for(;;) {
 		line = get_processed_text_line(txt, listaddr, listdelim,
-				tokencount, moredata, listdir);
+				tokencount, moredata, listdir, NULL);
 		if (!line) {
 			log_error(LOG_ARGS, "No body in listtext");
 			break;
@@ -650,55 +700,9 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 
 	if (line == NULL) {
 		line = get_processed_text_line(txt, listaddr, listdelim,
-				tokencount, moredata, listdir);
+				tokencount, moredata, listdir, mailname);
 	}
 	while(line) {
-		tmp = line;
-		while (*tmp && (*tmp == ' ' || *tmp == '\t')) {
-			tmp++;
-		}
-		if (strncmp(tmp,"$originalmail",13) == 0) {
-			*tmp = '\0';
-			tmp += 13;
-			str = tmp;
-			if (*tmp == ' ') {
-				tmp++;
-				str = tmp;
-			}
-			while (*tmp >= '0' && *tmp <= '9')
-				tmp++;
-			if (*tmp == '$') {
-				*tmp = '\0';
-				len = 100;
-				if (str != tmp)
-					len = atol(str);
-				if (mailname && 
-		     		   ((mailfd = open(mailname, O_RDONLY)) >= 0)){
-		     		    str = NULL;
-				    i = 0;
-				    while (i < len &&
-				           (str = mygetline(mailfd))) {
-				        tmp = str;
-				        str = concatstr(2,line,str);
-				        myfree(tmp);
-				        if(writen(outfd,str,strlen(str)) < 0) {
-				            myfree(str);
-				            log_error(LOG_ARGS, "Could not write std mail");
-					    myfree(retstr);
-					    retstr = NULL;
-					    goto freeandreturn;
-				        }
-				        myfree(str);
-				        i++;
-				    }
-				    close(mailfd);
-				} else {
-				    log_error(LOG_ARGS, "Could not substitute $originalmail %d$ (mailname == %s)",len,mailname);
-				}
-			} else {
-				log_error(LOG_ARGS, "Bad $originalmail N$ substitution");
-			}
-		} else {
 			len = strlen(line);
 			line[len] = '\n';
 			if(writen(outfd, line, len+1) < 0) {
@@ -708,11 +712,9 @@ char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 				retstr = NULL;
 				goto freeandreturn;
 			}
-		}
-
 		myfree(line);
 		line = get_processed_text_line(txt, listaddr, listdelim,
-				tokencount, moredata, listdir);
+				tokencount, moredata, listdir, mailname);
 	}
 
 	fsync(outfd);

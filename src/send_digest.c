@@ -256,7 +256,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	if (txt == NULL) goto fallback_subject;
 
 	line = get_processed_text_line(txt, listaddr, listdelim,
-			5, subst_data, listdir);
+			5, subst_data, listdir, NULL);
 
 	if (line == NULL) {
 		log_error(LOG_ARGS, "No content in digest listtext");
@@ -284,7 +284,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 
 		/* Skip the empty line after the subject */
 		line = get_processed_text_line(txt, listaddr, listdelim,
-				5, subst_data, listdir);
+				5, subst_data, listdir, NULL);
 		if (line == NULL || *line != '\0') {
 			log_error(LOG_ARGS, "Too many headers "
 					"in digest listtext");
@@ -389,7 +389,7 @@ errdighdrs:
 
 		for (;;) {
 			line = get_processed_text_line(txt, listaddr, listdelim,
-					5, subst_data, listdir);
+					5, subst_data, listdir, NULL);
 			if (line == NULL) break;
 			len = strlen(line);
 			line[len] = '\n';

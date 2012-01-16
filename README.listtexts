@@ -265,8 +265,7 @@ not appropriate for use in headers. They are:
   deny-post-{access|maxmailsize|tocc|subonlypost})
   the email message being processed (usually a mail being moderated); N
   represents a number, which is how many lines of the message (including
-  headers) to include: if omitted, 100 will be used; to include the whole
-  message, use a large number like 1000000000
+  headers) to include: if omitted, the whole message will be included
 
 - %digestthreads%
   (available only in digest)
@@ -434,7 +433,7 @@ Unformatted substitutions
   the address that has been unsubscribed
 
 - $originalmail$
-  the same as %originalmail% preceded by a space
+  the same as %originalmail 100% preceded by a space
   DEPRECATED: use %originalmail%
 
 - $posteraddr$

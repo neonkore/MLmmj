@@ -35,7 +35,8 @@ text *open_text(const char *listdir, const char *purpose, const char *action,
 		   const char *reason, const char *type, const char *compat);
 char *get_processed_text_line(text *txt,
 		const char *listaddr, const char *listdelim,
-		size_t datacount, char **data, const char *listdir);
+		size_t datacount, char **data, const char *listdir,
+		const char *mailname);
 void close_text(text *txt);
 char *prepstdreply(const char *listdir, const char *purpose, const char *action,
 		const char *reason, const char *type, const char *compat,
