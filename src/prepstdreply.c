@@ -62,13 +62,16 @@ struct text {
 };
 
 
-static char *alphanum_token(char *token) {
+static char *filename_token(char *token) {
 	char *pos;
 	if (*token == '\0') return NULL;
 	for(pos = token; *pos != '\0'; pos++) {
 		if(*pos >= '0' && *pos <= '9') continue;
 		if(*pos >= 'A' && *pos <= 'Z') continue;
 		if(*pos >= 'a' && *pos <= 'z') continue;
+		if(*pos == '_') continue;
+		if(*pos == '-') continue;
+		if(*pos == '.') continue;
 		break;
 	}
 	if (*pos != '\0') return NULL;
@@ -146,10 +149,10 @@ static void substitute_one(char **line_p, char **pos_p, const char *listaddr,
 		value = concatstr(4, listname, listdelim, "subscribe-nomail@",
 				  fqdn);
 	} else if(strncmp(token, "control ", 8) == 0) {
-		token = alphanum_token(token + 8);
+		token = filename_token(token + 8);
 		if (token != NULL) value = ctrlcontent(listdir, token);
 	} else if(strncmp(token, "text ", 5) == 0) {
-		token = alphanum_token(token + 5);
+		token = filename_token(token + 5);
 		if (token != NULL) value = textcontent(listdir, token);
 	} else if(data) {
 		for(i = 0; i < datacount; i++) {
@@ -357,7 +360,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 		*pos_p = pos;
 		return;
 	} else if(strncmp(token, "control ", 8) == 0) {
-		token = alphanum_token(token + 8);
+		token = filename_token(token + 8);
 		if (token != NULL) {
 			filename = concatstr(3, listdir, "/control/", token);
 			begin_new_source_file(txt, line_p, pos_p, filename);
@@ -365,7 +368,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 			return;
 		}
 	} else if(strncmp(token, "text ", 5) == 0) {
-		token = alphanum_token(token + 5);
+		token = filename_token(token + 5);
 		if (token != NULL) {
 			filename = concatstr(3, listdir, "/text/", token);
 			begin_new_source_file(txt, line_p, pos_p, filename);

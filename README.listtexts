@@ -251,13 +251,13 @@ not appropriate for use in headers. They are:
 
 - %text T%
   text from the file named T in the listdir/text directory; the name may only
-  include letters and digits; note that there is an unformatted version of
-  this directive
+  include letters, digits, underscore, dot and hyphen; note that there is an
+  unformatted version of this directive
 
 - %control C%
-  the contents of the control file named C in listir/control; the name may
-  only include letters and digits; note that there is an unformatted version
-  of this directive
+  the contents of the control file named C in listir/control; the name may only
+  include letters, digits, underscore, dot and hyphen; note that there is an
+  unformatted version of this directive
 
 - %originalmail%
 - %originalmail N%
@@ -331,8 +331,8 @@ Unformatted substitutions
 
 - $control C$
   the contents of the control file named C in listdir/control, with its final
-  newline stripped; the name may only include letters and digits; note that
-  there is a formatted version of this directive
+  newline stripped; the name may only include letters, digits, underscore, dot
+  and hyphen; note that there is a formatted version of this directive
 
 - $digestfirst$
   (available only in digest)
@@ -463,8 +463,8 @@ Unformatted substitutions
 
 - $text T$
   text from the file named T in the listdir/text directory, with its final
-  newline stripped; the name may only include letters and digits; note that
-  there is a formatted version of this directive
+  newline stripped; the name may only include letters, digits, underscore, dot
+  and hyphen; note that there is a formatted version of this directive
 
 - $$
   a single $

@@ -1,3 +1,4 @@
+ o Allow more characters in control and text filenames for substitutions
  o Add %%, %^%, %comment%, %control C% and %text T% formatting directives
  o Allow a space in $originalmail N$ substitution
  o Improve algorithm for list text substitutions
