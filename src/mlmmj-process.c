@@ -569,6 +569,30 @@ int main(int argc, char **argv)
 	for(i = 0; i < readhdrs[0].valuecount; i++) {
 		find_email_adr(readhdrs[0].values[i], &fromemails);
 	}
+	/* discard malformed mail with invalid From: unless it's a bounce */
+	if(fromemails.emailcount != 1 &&
+			(recipextra == NULL ||
+			strncmp(recipextra, "bounces", 7) != 0)) {
+		for(i = 0; i < fromemails.emailcount; i++)
+			printf("fromemails.emaillist[%d] = %s\n",
+					i, fromemails.emaillist[i]);
+		discardname = concatstr(3, listdir,
+				"/queue/discarded/", randomstr);
+		log_error(LOG_ARGS, "Discarding %s due to invalid From:",
+				mailfile);
+		for(i = 0; i < fromemails.emailcount; i++)
+			log_error(LOG_ARGS, "fromemails.emaillist[%d] = %s\n",
+					i, fromemails.emaillist[i]);
+		rename(mailfile, discardname);
+		unlink(donemailname);
+		myfree(donemailname);
+		myfree(discardname);
+		myfree(randomstr);
+		/* TODO: free emailstructs */
+		exit(EXIT_SUCCESS);
+	}
+	maildata[3] = fromemails.emaillist[0];
+
 	if (fromemails.emailcount)
 		maildata[3] = fromemails.emaillist[0];
 
@@ -755,27 +779,6 @@ int main(int argc, char **argv)
 			log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
 			exit(EXIT_FAILURE);
 		}
-	}
-
-	/* discard malformed mail with invalid From: */
-	if(fromemails.emailcount != 1) {
-		for(i = 0; i < fromemails.emailcount; i++)
-			printf("fromemails.emaillist[%d] = %s\n",
-					i, fromemails.emaillist[i]);
-		discardname = concatstr(3, listdir,
-				"/queue/discarded/", randomstr);
-		log_error(LOG_ARGS, "Discarding %s due to invalid From:",
-				mailfile);
-		for(i = 0; i < fromemails.emailcount; i++)
-			log_error(LOG_ARGS, "fromemails.emaillist[%d] = %s\n",
-					i, fromemails.emaillist[i]);
-		rename(mailfile, discardname);
-		unlink(donemailname);
-		myfree(donemailname);
-		myfree(discardname);
-		myfree(randomstr);
-		/* TODO: free emailstructs */
-		exit(EXIT_SUCCESS);
 	}
 
 	myfree(delheaders);
