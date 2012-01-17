@@ -49,67 +49,12 @@
 #include "find_email_adr.h"
 #include "gethdrline.h"
 
-char *fetchindexes(const char *bouncefile)
-{
-	int fd;
-	char *indexstr = NULL, *s, *start, *line, *cur, *colon, *next;
-	size_t len;
-	struct stat st;
-
-	fd = open(bouncefile, O_RDONLY);
-	if(fd < 0) {
-		log_error(LOG_ARGS, "Could not open bounceindexfile %s",
-				bouncefile);
-		return NULL;
-	}
-
-	if(fstat(fd, &st) < 0) {
-		log_error(LOG_ARGS, "Could not open bounceindexfile %s",
-					bouncefile);
-	}
-
-	if(st.st_size == 0) {
-		log_error(LOG_ARGS, "Bounceindexfile %s is size 0",
-					bouncefile);
-		return NULL;
-	}
-
-	start = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
-	if(start == MAP_FAILED) {
-		log_error(LOG_ARGS, "Could not mmap bounceindexfile");
-		return NULL;
-	}
-
-
-	for(next = cur = start; next < start + st.st_size; next++) {
-		if(*next == '\n') {
-			len = next - cur;
-			line = mymalloc(len + 1);
-			strncpy(line, cur, len);
-			line[len] = '\0';
-			cur = next + 1;
-		} else
-	 		continue;
-
-		colon = strchr(line, ':');
-		MY_ASSERT(colon);
-		*colon = '\0';
-		s = indexstr;
-		indexstr = concatstr(4, s, "        ", line, "\n");
-		myfree(s);
-		myfree(line);
-	}
-
-	munmap(start, st.st_size);
-	close(fd);
-
-	return indexstr;
-}
 
 void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 {
 	text *txt;
-	char *myaddr, *from, *a, *indexstr, *queuefilename, *listaddr;
+	file_lines_state *fls;
+	char *myaddr, *from, *a, *queuefilename, *listaddr;
 	char *listfqdn, *listname, *probefile, *listdelim=getlistdelim(listdir);
 	int fd;
 	time_t t;
@@ -138,19 +83,17 @@ void do_probe(const char *listdir, const char *mlmmjsend, const char *addr)
 	}
 	*a = '@';
 
-	indexstr = fetchindexes(addr);
-	if(indexstr == NULL) {
-		log_error(LOG_ARGS, "Could not fetch bounceindexes");
-		exit(EXIT_FAILURE);
-	}
-
 	txt = open_text(listdir, "probe", NULL, NULL, NULL, "bounce-probe");
 	MY_ASSERT(txt);
-	register_unformatted(txt, "bouncenumbers", indexstr);
-	myfree(indexstr);
+	register_unformatted(txt, "bouncenumbers", "%bouncenumbers%"); /* DEPRECATED */
+	fls = init_truncated_file_lines(addr, 0, ':');
+	register_formatted(txt, "bouncenumbers",
+			rewind_file_lines, get_file_line, fls);
 	queuefilename = prepstdreply(txt, listdir, "$listowner$", myaddr, NULL);
 	MY_ASSERT(queuefilename);
 	close_text(txt);
+
+	finish_file_lines(fls);
 
 	probefile = concatstr(4, listdir, "/bounce/", addr, "-probe");
 	MY_ASSERT(probefile);

@@ -15,7 +15,7 @@ This file documents the following aspects of list texts:
 - Supported list texts
 - Format
 - Conditionals
-- Formatted substitutions
+- Formatting and formatted substitutions
 - Unformatted substitutions
 
 Naming scheme
@@ -148,6 +148,10 @@ is given in brackets. Those with asterisks (*) are not yet used.
 - list---digest *
 - list---nomail *
   sent in response to an email to listname+list@domain.tld from the list owner
+  (DEPRECATED: if none of %listsubs%, %digestsubs% and %nomailsubs% is
+  encountered in the text, then they will be automatically added with some
+  default formatting; this functionality is expected to be removed in the
+  future)
 
 * Not yet used.
 
@@ -275,9 +279,17 @@ not appropriate for use in headers. They are:
   (available only in gatekeep-sub and wait-sub)
   the list of moderators to whom the moderation request has been sent
 
-- %subs%
+- %listsubs%
   (available only in list---*)
-  the list of subscribers
+  the list of normal subscribers
+
+- %digestsubs%
+  (available only in list---*)
+  the list of digest subscribers
+
+- %nomailsubs%
+  (available only in list---*)
+  the list of nomail subscribers
 
 - %moderators%
   (available only in moderate-post-* and wait-post-*)

@@ -43,50 +43,119 @@
 #include "memory.h"
 
 
-
-static void print_subs(int cur_fd, char *dirname)
-{
-	char *fileiter;
+struct subs_list_state;
+typedef struct subs_list_state subs_list_state;
+struct subs_list_state {
+	char *dirname;
 	DIR *dirp;
-	struct dirent *dp;
-	int subfd;
+	int fd;
+	char *line;
+	int used;
+};
 
-	dirp = opendir(dirname);
-	if(dirp == NULL) {
-		fprintf(stderr, "Could not opendir(%s);\n", dirname);
-		exit(EXIT_FAILURE);
-	}
-	while((dp = readdir(dirp)) != NULL) {
-		if((strcmp(dp->d_name, "..") == 0) ||
-		   (strcmp(dp->d_name, ".") == 0))
-			continue;
 
-		fileiter = concatstr(2, dirname, dp->d_name);
-		subfd = open(fileiter, O_RDONLY);
-		if(subfd < 0) {
-			log_error(LOG_ARGS, "Could not open %s for reading",
-					fileiter);
-			myfree(fileiter);
-			continue;
-		}
-		if(dumpfd2fd(subfd, cur_fd) < 0) {
-			log_error(LOG_ARGS, "Error dumping subfile content"
-					" of %s to sub list mail",
-					fileiter);
-		}
-
-		close(subfd);
-		myfree(fileiter);
-	}
-	closedir(dirp);
+static subs_list_state *init_subs_list(const char *dirname)
+{
+	/* We use a static variable rather than dynamic allocation as
+	 * there will never be two lists in use simultaneously */
+	static subs_list_state s;
+	s.dirname = mystrdup(dirname);
+	s.dirp = NULL;
+	s.fd = -1;
+	s.used = 0;
+	return &s;
 }
 
+
+static void rewind_subs_list(void *state)
+{
+	subs_list_state *s = (subs_list_state *)state;
+	if (s == NULL) return;
+	if (s->dirp != NULL) closedir(s->dirp);
+	s->dirp = opendir(s->dirname);
+	if(s->dirp == NULL) {
+		log_error(LOG_ARGS, "Could not opendir(%s);\n", s->dirname);
+	}
+	s->used = 1;
+}
+
+
+static const char *get_sub(void *state)
+{
+	subs_list_state *s = (subs_list_state *)state;
+	char *filename;
+	struct dirent *dp;
+
+	if (s == NULL) return NULL;
+	if (s->dirp == NULL) return NULL;
+
+	if (s->line != NULL) {
+		myfree(s->line);
+		s->line = NULL;
+	}
+
+	for (;;) {
+		if (s->fd == -1) {
+			dp = readdir(s->dirp);
+			if (dp == NULL) {
+				closedir(s->dirp);
+				s->dirp = NULL;
+				return NULL;
+			}
+			if ((strcmp(dp->d_name, "..") == 0) ||
+					(strcmp(dp->d_name, ".") == 0))
+					continue;
+			filename = concatstr(2, s->dirname, dp->d_name);
+			s->fd = open(filename, O_RDONLY);
+			if(s->fd < 0) {
+				log_error(LOG_ARGS,
+						"Could not open %s for reading",
+						filename);
+				myfree(filename);
+				continue;
+			}
+			myfree(filename);
+		}
+		s->line = mygetline(s->fd);
+		if (s->line == NULL) {
+			close(s->fd);
+			s->fd = -1;
+			continue;
+		}
+		chomp(s->line);
+		return s->line;
+	}
+}
+
+
+static void finish_subs_list(subs_list_state *s)
+{
+	if (s == NULL) return;
+	if (s->line != NULL) myfree(s->line);
+	if (s->fd != -1) close(s->fd);
+	if (s->dirp != NULL) closedir(s->dirp);
+	myfree(s->dirname);
+}
+
+
+static void print_subs(int fd, subs_list_state *s)
+{
+	const char *sub;
+	rewind_subs_list(s);
+	while ((sub = get_sub(s)) != NULL) {
+		if (writen(fd, sub, strlen(sub)) < 0) {
+			log_error(LOG_ARGS, "error writing subs list");
+		}
+		writen(fd, "\n", 1);
+	}
+}
 
 
 void send_list(const char *listdir, const char *emailaddr,
 	       const char *mlmmjsend)
 {
 	text *txt;
+	subs_list_state *subsls, *digestsls, *nomailsls;
 	char *queuefilename, *listaddr, *listdelim, *listname, *listfqdn;
 	char *fromaddr, *subdir, *nomaildir, *digestdir;
 	int fd;
@@ -99,37 +168,53 @@ void send_list(const char *listdir, const char *emailaddr,
 	fromaddr = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
 	myfree(listdelim);
 
+	subdir = concatstr(2, listdir, "/subscribers.d/");
+	digestdir = concatstr(2, listdir, "/digesters.d/");
+	nomaildir = concatstr(2, listdir, "/nomailsubs.d/");
+	subsls = init_subs_list(subdir);
+	digestsls = init_subs_list(digestdir);
+	nomailsls = init_subs_list(nomaildir);
+	myfree(subdir);
+	myfree(digestdir);
+	myfree(nomaildir);
+
 	txt = open_text(listdir, "list", NULL, NULL, subtype_strs[SUB_ALL],
 			"listsubs");
 	MY_ASSERT(txt);
+	register_formatted(txt, "subs",
+			rewind_subs_list, get_sub, subsls);
+	register_formatted(txt, "digestsubs",
+			rewind_subs_list, get_sub, digestsls);
+	register_formatted(txt, "nomailsubs",
+			rewind_subs_list, get_sub, nomailsls);
 	queuefilename = prepstdreply(txt, listdir, "$listowner$", emailaddr, NULL);
 	MY_ASSERT(queuefilename);
 	close_text(txt);
 
-	fd = open(queuefilename, O_WRONLY);
-	if(fd < 0) {
-		log_error(LOG_ARGS, "Could not open sub list mail");
-		exit(EXIT_FAILURE);
+	/* DEPRECATED */
+	/* Add lists manually if they weren't encountered in the list text */
+	if (!subsls->used && !digestsls->used && !nomailsls->used) {
+		fd = open(queuefilename, O_WRONLY);
+		if(fd < 0) {
+			log_error(LOG_ARGS, "Could not open sub list mail");
+			exit(EXIT_FAILURE);
+		}
+		if(lseek(fd, 0, SEEK_END) < 0) {
+			log_error(LOG_ARGS, "Could not seek to end of file");
+			exit(EXIT_FAILURE);
+		}
+		print_subs(fd, subsls);
+		writen(fd, "\n-- \n", 5);
+		print_subs(fd, nomailsls);
+		writen(fd, "\n-- \n", 5);
+		print_subs(fd, digestsls);
+		writen(fd, "\n-- \nend of output\n", 19);
+		close(fd);
 	}
 
-	if(lseek(fd, 0, SEEK_END) < 0) {
-		log_error(LOG_ARGS, "Could not seek to end of file");
-		exit(EXIT_FAILURE);
-	}
-
-	subdir = concatstr(2, listdir, "/subscribers.d/");
-	nomaildir = concatstr(2, listdir, "/nomailsubs.d/");
-	digestdir = concatstr(2, listdir, "/digesters.d/");
-
-	print_subs(fd, subdir);
-	writen(fd, "\n-- \n", 5);
-	print_subs(fd, nomaildir);
-	writen(fd, "\n-- \n", 5);
-	print_subs(fd, digestdir);
-	writen(fd, "\n-- \nend of output\n", 19);
-
-	close(fd);
-
+	finish_subs_list(subsls);
+	finish_subs_list(digestsls);
+	finish_subs_list(nomailsls);
 	myfree(listaddr);
 	myfree(listname);
 	myfree(listfqdn);

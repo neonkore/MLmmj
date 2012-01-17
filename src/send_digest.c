@@ -59,20 +59,57 @@ struct thread {
 };
 
 
-static char *thread_list(const char *listdir, int firstindex, int lastindex)
+struct thread_list_state;
+typedef struct thread_list_state thread_list_state;
+struct thread_list_state {
+	const char *listdir;
+	int firstindex;
+	int lastindex;
+	int num_threads;
+	struct thread *threads;
+	int cur_thread;
+	int cur_mail;
+};
+
+
+static thread_list_state *init_thread_list(
+		const char *listdir, int firstindex, int lastindex)
 {
+	/* We use a static variable rather than dynamic allocation as
+	 * there will never be two lists in use simultaneously */
+	static thread_list_state s;
+	s.listdir = listdir;
+	s.firstindex = firstindex;
+	s.lastindex = lastindex;
+	s.num_threads = 0;
+	s.threads = NULL;
+	s.cur_thread = -1;
+	return &s;
+}
+
+
+static void rewind_thread_list(void * state)
+{
+	thread_list_state *s = (thread_list_state *)state;
 	int i, j, archivefd, thread_idx;
-	char *ret, *line, *tmp, *subj, *from;
+	char *line, *tmp, *subj, *from;
 	char *archivename;
 	int num_threads = 0;
 	struct thread *threads = NULL;
 	char buf[45];
 
-	for (i=firstindex; i<=lastindex; i++) {
+	if (s->cur_thread != -1) {
+		/* We have gathered the data already; just rewind */
+		s->cur_thread = 0;
+		s->cur_mail = -1;
+		return;
+	}
+
+	for (i=s->firstindex; i<=s->lastindex; i++) {
 
 		snprintf(buf, sizeof(buf), "%d", i);
 
-		archivename = concatstr(3, listdir, "/archive/", buf);
+		archivename = concatstr(3, s->listdir, "/archive/", buf);
 		archivefd = open(archivename, O_RDONLY);
 		myfree(archivename);
 
@@ -131,7 +168,7 @@ static char *thread_list(const char *listdir, int firstindex, int lastindex)
 			num_threads++;
 			threads = myrealloc(threads,
 					num_threads*sizeof(struct thread));
-			threads[num_threads-1].subject = mystrdup(tmp);
+			threads[num_threads-1].subject = concatstr(2,tmp,"\n");
 			threads[num_threads-1].num_mails = 0;
 			threads[num_threads-1].mails = NULL;
 			thread_idx = num_threads-1;
@@ -150,30 +187,47 @@ static char *thread_list(const char *listdir, int firstindex, int lastindex)
 		close(archivefd);
 	}
 
-	ret = mystrdup("");
+	s->num_threads = num_threads;
+	s->threads = threads;
+	s->cur_thread = 0;
+	s->cur_mail = -1;
+}
 
-	for (i=0; i<num_threads; i++) {
 
-		tmp = concatstr(3, ret, threads[i].subject, "\n");
-		myfree(ret);
-		ret = tmp;
-		myfree(threads[i].subject);
+static const char *get_thread_list_line(void * state)
+{
+	thread_list_state *s = (thread_list_state *)state;
 
-		for (j=0; j<threads[i].num_mails; j++) {
-			tmp = concatstr(2, ret, threads[i].mails[j].from);
-			myfree(ret);
-			ret = tmp;
-			myfree(threads[i].mails[j].from);
-		}
-		myfree(threads[i].mails);
+	if (s->cur_thread >= s->num_threads) return NULL;
 
-		tmp = concatstr(2, ret, "\n");
-		myfree(ret);
-		ret = tmp;
+	if (s->cur_mail == -1) {
+		s->cur_mail = 0;
+		return s->threads[s->cur_thread].subject;
 	}
-	myfree(threads);
 
-	return ret;
+	if (s->cur_mail >= s->threads[s->cur_thread].num_mails) {
+		s->cur_thread++;
+		s->cur_mail = -1;
+		return "\n";
+	}
+
+	return s->threads[s->cur_thread].mails[s->cur_mail++].from;
+}
+
+
+static void finish_thread_list(thread_list_state * s)
+{
+	int i, j;
+	if (s->threads == NULL) return;
+	for (i=0; i<s->num_threads; i++) {
+		myfree(s->threads[i].subject);
+		for (j=0; j<s->threads[i].num_mails; j++) {
+			myfree(s->threads[i].mails[j].from);
+		}
+		myfree(s->threads[i].mails);
+	}
+	myfree(s->threads);
+	s->threads = NULL;
 }
 
 
@@ -187,6 +241,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	char *tmp, *queuename = NULL, *archivename, *subject = NULL, *line = NULL;
 	char *boundary, *listaddr, *listdelim, *listname, *listfqdn;
 	pid_t childpid, pid;
+	thread_list_state * tls;
 
 	if (addr) {
 		errno = 0;
@@ -246,8 +301,11 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	snprintf(buf, sizeof(buf), "%d", issue);
 	register_unformatted(txt, "digestissue", buf);
 
-	tmp = thread_list(listdir, firstindex, lastindex);
-	register_unformatted(txt, "digestthreads", tmp);
+	register_unformatted(txt, "digestthreads", "%digestthreads%"); /* DEPRECATED */
+
+	tls = init_thread_list(listdir, firstindex, lastindex);
+	register_formatted(txt, "digestthreads", rewind_thread_list,
+			get_thread_list_line, tls);
 
 	line = get_processed_text_line(txt, listaddr, listdelim, listdir);
 
@@ -390,8 +448,10 @@ errdighdrs:
 			myfree(line);
 		}
 
+		finish_thread_list(tls);
 		close_text(txt);
 	} else if (txt != NULL) {
+		finish_thread_list(tls);
 		close_text(txt);
 	}
 

@@ -46,19 +46,6 @@
 #include "unistr.h"
 
 
-struct source;
-typedef struct source source;
-struct source {
-	source *prev;
-	char *upcoming;
-	char *prefix;
-	char *suffix;
-	int fd;
-	int transparent;
-	int limit;
-};
-
-
 struct substitution;
 typedef struct substitution substitution;
 struct substitution {
@@ -68,11 +55,199 @@ struct substitution {
 };
 
 
+struct formatted;
+typedef struct formatted formatted;
+struct formatted {
+	char *token;
+	rewind_function rew;
+	get_function get;
+	void *state;
+	formatted *next;
+};
+
+
+struct source;
+typedef struct source source;
+struct source {
+	source *prev;
+	char *upcoming;
+	char *prefix;
+	char *suffix;
+	int fd;
+	formatted *fmt;
+	int transparent;
+	int limit;
+};
+
+
 struct text {
 	source *src;
 	substitution *substs;
 	char *mailname;
+	formatted *fmts;
 };
+
+
+struct memory_lines_state {
+	char *lines;
+	char *pos;
+};
+
+
+struct file_lines_state {
+	char *filename;
+	int fd;
+	char truncate;
+	char *line;
+};
+
+
+memory_lines_state *init_memory_lines(const char *lines)
+{
+	/* We use a static variable rather than dynamic allocation as
+	 * there will never be two lists in use simultaneously */
+	static memory_lines_state s;
+	size_t len;
+
+	/* Ensure there *is* a trailing newline */
+	s.pos = NULL;
+	len = strlen(lines);
+	if (lines[len-1] == '\n') {
+		s.lines = mystrdup(lines);
+		return &s;
+	}
+	s.lines = mymalloc((len + 2) * sizeof(char));
+	strcpy(s.lines, lines);
+	s.lines[len] = '\n';
+	s.lines[len+1] = '\0';
+	return &s;
+}
+
+
+void rewind_memory_lines(void *state)
+{
+	memory_lines_state *s = (memory_lines_state *)state;
+	if (s == NULL) return;
+	s->pos = NULL;
+}
+
+
+const char *get_memory_line(void *state)
+{
+	memory_lines_state *s = (memory_lines_state *)state;
+	char *line, *pos;
+
+	if (s == NULL) return NULL;
+
+	if (s->pos != NULL) *s->pos++ = '\n';
+	else s->pos = s->lines;
+
+	line = s->pos;
+	pos = line;
+
+	if (*pos == '\0') {
+		s->pos = NULL;
+		return NULL;
+	}
+
+	while (*pos != '\n') pos++;
+	*pos = '\0';
+
+	s->pos = pos;
+	return line;
+}
+
+
+void finish_memory_lines(memory_lines_state *s)
+{
+	if (s == NULL) return;
+	myfree(s->lines);
+}
+
+
+file_lines_state *init_file_lines(const char *filename, int open_now)
+{
+	/* We use a static variable rather than dynamic allocation as
+	 * there will never be two lists in use simultaneously */
+	static file_lines_state s;
+
+	if (open_now) {
+		s.fd = open(filename, O_RDONLY);
+		s.filename = NULL;
+		if (s.fd < 0) return NULL;
+	} else {
+		s.filename = mystrdup(filename);
+		s.fd = -1;
+	}
+
+	s.truncate = '\0';
+	s.line = NULL;
+	return &s;
+}
+
+
+file_lines_state *init_truncated_file_lines(const char *filename, int open_now,
+		char truncate)
+{
+	file_lines_state *s;
+	s = init_file_lines(filename, open_now);
+	if (s == NULL) return NULL;
+	s->truncate = truncate;
+	return s;
+}
+
+
+void rewind_file_lines(void *state)
+{
+	file_lines_state *s = (file_lines_state *)state;
+	if (s == NULL) return;
+	if (s->filename != NULL) {
+		s->fd = open(s->filename, O_RDONLY);
+		myfree(s->filename);
+		s->filename = NULL;
+	}
+	if (s->fd >= 0) {
+		if(lseek(s->fd, 0, SEEK_SET) < 0) {
+			log_error(LOG_ARGS, "Could not seek to start of file");
+			close(s->fd);
+			s->fd = -1;
+		}
+	}
+}
+
+
+const char *get_file_line(void *state)
+{
+	file_lines_state *s = (file_lines_state *)state;
+	char *end;
+	if (s == NULL) return NULL;
+	if (s->line != NULL) {
+		myfree(s->line);
+		s->line = NULL;
+	}
+	if (s->fd >= 0) {
+		s->line = mygetline(s->fd);
+		if (s->line == NULL) return NULL;
+		if (s->truncate != '\0') {
+			end = strchr(s->line, s->truncate);
+			if (end == NULL) return NULL;
+			*end = '\0';
+		} else {
+			chomp(s->line);
+		}
+		return s->line;
+	}
+	return NULL;
+}
+
+
+void finish_file_lines(file_lines_state *s)
+{
+	if (s == NULL) return;
+	if (s->line != NULL) myfree(s->line);
+	if (s->fd >= 0) close(s->fd);
+	if (s->filename != NULL) myfree(s->filename);
+}
 
 
 static char *filename_token(char *token) {
@@ -246,8 +421,10 @@ text *open_text_file(const char *listdir, const char *filename)
 	txt->src->suffix = NULL;
 	txt->src->transparent = 0;
 	txt->src->limit = -1;
+	txt->src->fmt = NULL;
 	txt->substs = NULL;
 	txt->mailname = NULL;
+	txt->fmts = NULL;
 
 	tmp = concatstr(3, listdir, "/text/", filename);
 	txt->src->fd = open(tmp, O_RDONLY);
@@ -308,6 +485,17 @@ text *open_text(const char *listdir, const char *purpose, const char *action,
 }
 
 
+void close_source(text *txt) {
+	source *tmp;
+	if (txt->src->fd != -1) close(txt->src->fd);
+	if (txt->src->prefix != NULL) myfree(txt->src->prefix);
+	if (txt->src->suffix != NULL) myfree(txt->src->suffix);
+	tmp = txt->src;
+	txt->src = txt->src->prev;
+	myfree(tmp);
+}
+
+
 void register_unformatted(text *txt, const char *token, const char *replacement)
 {
 	substitution * subst = mymalloc(sizeof(substitution));
@@ -321,6 +509,19 @@ void register_unformatted(text *txt, const char *token, const char *replacement)
 void register_originalmail(text *txt, const char *mailname)
 {
 	txt->mailname = mystrdup(mailname);
+}
+
+
+void register_formatted(text *txt, const char *token,
+		rewind_function rew, get_function get, void *state)
+{
+	formatted * fmt = mymalloc(sizeof(formatted));
+	fmt->token = mystrdup(token);
+	fmt->rew = rew;
+	fmt->get = get;
+	fmt->state = state;
+	fmt->next = txt->fmts;
+	txt->fmts = fmt;
 }
 
 
@@ -355,15 +556,69 @@ static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
 	*tmp = '\0';
 	src->suffix = NULL;
 	src->fd = fd;
+	src->fmt = NULL;
 	src->transparent = 0;
 	src->limit = -1;
 	txt->src = src;
 	tmp = mygetline(fd);
+	if (tmp == NULL) {
+		close_source(txt);
+		**pos_p = '\0';
+		return;
+	}
 	line = concatstr(2, line, tmp);
 	*pos_p = line + (*pos_p - *line_p);
 	myfree(*line_p);
 	*line_p = line;
 	myfree(tmp);
+}
+
+
+static void begin_new_formatted_source(text *txt, char **line_p, char **pos_p,
+		char *suffix, formatted *fmt) {
+	char *line = *line_p;
+	char *pos = *pos_p;
+	const char *str;
+	source *src;
+
+	/* Save any later lines for use after finishing the source */
+	while (*pos != '\0' && *pos != '\r' && *pos != '\n') pos++;
+	if (*pos == '\r') pos++;
+	if (*pos == '\n') pos++;
+	if (*pos != '\0') txt->src->upcoming = mystrdup(pos);
+
+	(*fmt->rew)(fmt->state);
+
+	src = mymalloc(sizeof(source));
+	src->prev = txt->src;
+	src->upcoming = NULL;
+	if (*line == '\0') {
+		src->prefix = NULL;
+	} else {
+		src->prefix = mystrdup(line);
+	}
+	if (*suffix == '\0' || *suffix == '\r' || *suffix == '\n') {
+		src->suffix = NULL;
+	} else {
+		src->suffix = mystrdup(suffix);
+	}
+	src->fd = -1;
+	src->fmt = fmt;
+	src->transparent = 0;
+	src->limit = -1;
+	txt->src = src;
+	str = (*fmt->get)(fmt->state);
+	if (str == NULL) {
+		close_source(txt);
+		**line_p = '\0';
+		*pos_p = *line_p;
+		return;
+	}
+	line = concatstr(2, line, str);
+	/* The suffix will be added back in get_processed_text_line() */
+	*pos_p = line + strlen(line);
+	myfree(*line_p);
+	*line_p = line;
 }
 
 
@@ -375,6 +630,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 	char *endpos;
 	char *filename;
 	int limit;
+	formatted *fmt;
 
 	endpos = strchr(token, '%');
 	if (endpos == NULL) {
@@ -457,6 +713,16 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 		return;
 	}
 
+	fmt = txt->fmts;
+	while (fmt != NULL) {
+		if (strcmp(token, fmt->token) == 0) {
+			begin_new_formatted_source(txt, line_p, pos_p,
+					endpos + 1, fmt);
+			return;
+		}
+		fmt = fmt->next;
+	}
+
 	/* No recognised directive; just advance through the string. */
 	*pos = '%';
 	*endpos = '%';
@@ -472,7 +738,7 @@ char *get_processed_text_line(text *txt,
 	char *line = NULL;
 	char *pos;
 	char *tmp;
-	source *src;
+	const char *item;
 
 	while (txt->src != NULL) {
 		if (txt->src->upcoming != NULL) {
@@ -486,16 +752,22 @@ char *get_processed_text_line(text *txt,
 			break;
 		}
 		if (txt->src->limit != 0) {
-			txt->src->upcoming = mygetline(txt->src->fd);
+			if (txt->src->fd != -1) {
+				txt->src->upcoming = mygetline(txt->src->fd);
+			} else if (txt->src->fmt != NULL) {
+				item = (*txt->src->fmt->get)(
+						txt->src->fmt->state);
+				if (item == NULL) txt->src->upcoming = NULL;
+				else txt->src->upcoming = mystrdup(item);
+			} else {
+				txt->src->upcoming = NULL;
+			}
 			if (txt->src->limit > 0) txt->src->limit--;
 		} else {
 			txt->src->upcoming = NULL;
 		}
 		if (txt->src->upcoming != NULL) continue;
-		close(txt->src->fd);
-		src = txt->src;
-		txt->src = txt->src->prev;
-		myfree(src);
+		close_source(txt);
 	}
 	if (line == NULL) return NULL;
 
@@ -547,13 +819,10 @@ char *get_processed_text_line(text *txt,
 
 
 void close_text(text *txt) {
-	source *tmp;
 	substitution *subst;
+	formatted *fmt;
 	while (txt->src != NULL) {
-		close(txt->src->fd);
-		tmp = txt->src;
-		txt->src = txt->src->prev;
-		myfree(tmp);
+		close_source(txt);
 	}
 	while (txt->substs != NULL) {
 		subst = txt->substs;
@@ -563,6 +832,12 @@ void close_text(text *txt) {
 		myfree(subst);
 	}
 	if (txt->mailname != NULL) myfree(txt->mailname);
+	while (txt->fmts != NULL) {
+		fmt = txt->fmts;
+		myfree(fmt->token);
+		txt->fmts = txt->fmts->next;
+		myfree(fmt);
+	}
 	myfree(txt);
 }
 

@@ -94,6 +94,7 @@ static void newmoderated(const char *listdir, const char *mailfilename,
 	char *from, *listfqdn, *listname, *moderators = NULL;
 	char *buf, *replyto, *listaddr = getlistaddr(listdir), *listdelim;
 	text *txt;
+	memory_lines_state *mls;
 	char *queuefilename = NULL, *moderatorsfilename, *efromismod = NULL;
 	char *mailbasename = mybasename(mailfilename), *tmp, *to;
 	int moderatorsfd, foundaddr = 0, notifymod = 0, status;
@@ -130,7 +131,11 @@ static void newmoderated(const char *listdir, const char *mailfilename,
 		efromismod = NULL;
 	}
 
+	if(efromismod) mls = init_memory_lines(efromismod);
+	else mls = init_memory_lines(moderators);
+
 	close(moderatorsfd);
+	myfree(moderators);
 
 	listdelim = getlistdelim(listdir);
 	replyto = concatstr(6, listname, listdelim, "moderate-", mailbasename,
@@ -150,8 +155,9 @@ static void newmoderated(const char *listdir, const char *mailfilename,
 	register_unformatted(txt, "posteraddr", posteraddr);
 	register_unformatted(txt, "moderateaddr", replyto); /* DEPRECATED */
 	register_unformatted(txt, "releaseaddr", replyto);
-	if(efromismod) register_unformatted(txt, "moderators", efromismod);
-	else register_unformatted(txt, "moderators", moderators);
+	register_unformatted(txt, "moderators", "%moderators%"); /* DEPRECATED */
+	register_formatted(txt, "moderators",
+			rewind_memory_lines, get_memory_line, mls);
 	register_originalmail(txt, mailfilename);
 	queuefilename = prepstdreply(txt, listdir, "$listowner$", to, replyto);
 	MY_ASSERT(queuefilename);
@@ -174,6 +180,9 @@ static void newmoderated(const char *listdir, const char *mailfilename,
 				pid = waitpid(childpid, &status, 0);
 			while(pid == -1 && errno == EINTR);
 		}
+
+		finish_memory_lines(mls);
+
 		if(efromismod)
 			execlp(mlmmjsend, mlmmjsend,
 					"-l", "1",
@@ -200,13 +209,16 @@ static void newmoderated(const char *listdir, const char *mailfilename,
 	MY_ASSERT(txt);
 	register_unformatted(txt, "subject", subject);
 	register_unformatted(txt, "posteraddr", posteraddr);
-	if(efromismod) register_unformatted(txt, "moderators", efromismod);
-	else register_unformatted(txt, "moderators", moderators);
+	register_unformatted(txt, "moderators", "%moderators%"); /* DEPRECATED */
+	register_formatted(txt, "moderators",
+			rewind_memory_lines, get_memory_line, mls);
 	register_originalmail(txt, mailfilename);
 	queuefilename = prepstdreply(txt, listdir,
 			"$listowner$", efromsender, NULL);
 	MY_ASSERT(queuefilename);
 	close_text(txt);
+
+	finish_memory_lines(mls);
 
 	execlp(mlmmjsend, mlmmjsend,
 			"-l", "1",

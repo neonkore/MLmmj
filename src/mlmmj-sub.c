@@ -72,6 +72,7 @@ void moderate_sub(const char *listdir, const char *listaddr,
 {
 	int i, fd, status, nosubmodmails = 0;
 	text *txt;
+	memory_lines_state *mls;
 	char *a = NULL, *queuefilename, *from, *listname, *listfqdn, *str;
 	char *modfilename, *randomstr, *mods, *to, *replyto, *moderators = NULL;
 	char *modfilebase;
@@ -156,6 +157,8 @@ void moderate_sub(const char *listdir, const char *listaddr,
 		moderators = concatstr(3, moderators, submods->strs[i], "\n");
 		myfree(str);
 	}
+	mls = init_memory_lines(moderators);
+	myfree(moderators);
 
 	txt = open_text(listdir,
 			"gatekeep", "sub", NULL, NULL, "submod-moderator");
@@ -163,7 +166,9 @@ void moderate_sub(const char *listdir, const char *listaddr,
 	register_unformatted(txt, "subaddr", subaddr);
 	register_unformatted(txt, "moderateaddr", replyto); /* DEPRECATED */
 	register_unformatted(txt, "permitaddr", replyto);
-	register_unformatted(txt, "moderators", moderators);
+	register_unformatted(txt, "moderators", "%gatekeepers"); /* DEPRECATED */
+	register_formatted(txt, "gatekeepers",
+			rewind_memory_lines, get_memory_line, mls);
 	queuefilename = prepstdreply(txt, listdir, "$listowner$", to, replyto);
 	MY_ASSERT(queuefilename);
 	close_text(txt);
@@ -186,6 +191,7 @@ void moderate_sub(const char *listdir, const char *listaddr,
 				pid = waitpid(childpid, &status, 0);
 			while(pid == -1 && errno == EINTR);
 		}
+		finish_memory_lines(mls);
 		execl(mlmmjsend, mlmmjsend,
 				"-a",
 				"-l", "4",
@@ -209,15 +215,17 @@ void moderate_sub(const char *listdir, const char *listaddr,
 			"wait", "sub", NULL, NULL, "submod-requester");
 	MY_ASSERT(txt);
 	register_unformatted(txt, "subaddr", subaddr);
-	register_unformatted(txt, "moderators", moderators);
+	register_unformatted(txt, "moderators", "%gatekeepers"); /* DEPRECATED */
+	register_formatted(txt, "gatekeepers",
+			rewind_memory_lines, get_memory_line, mls);
 	queuefilename = prepstdreply(txt, listdir,
 			"$listowner$", subaddr, NULL);
 	MY_ASSERT(queuefilename);
 	close_text(txt);
 
+	finish_memory_lines(mls);
 	myfree(listname);
 	myfree(listfqdn);
-	myfree(moderators);
 	execl(mlmmjsend, mlmmjsend,
 				"-l", "1",
 				"-L", listdir,
