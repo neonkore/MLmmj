@@ -33,6 +33,7 @@
 #include <errno.h>
 
 #include "prepstdreply.h"
+#include "statctrl.h"
 #include "ctrlvalue.h"
 #include "strgen.h"
 #include "chomp.h"
@@ -80,13 +81,35 @@ struct source {
 };
 
 
+struct conditional;
+typedef struct conditional conditional;
+struct conditional {
+	int satisfied;
+	int elsepart;
+	conditional *outer;
+};
+
+
+enum conditional_target {
+	ACTION,
+	REASON,
+	TYPE,
+	CONTROL
+};
+
+
 struct text {
+	char *action;
+	char *reason;
+	char *type;
 	source *src;
 	substitution *substs;
 	char *mailname;
 	formatted *fmts;
 	size_t wrapindent;
 	size_t wrapwidth;
+	conditional *cond;
+	conditional *skip;
 };
 
 
@@ -424,11 +447,16 @@ text *open_text_file(const char *listdir, const char *filename)
 	txt->src->transparent = 0;
 	txt->src->limit = -1;
 	txt->src->fmt = NULL;
+	txt->action = NULL;
+	txt->reason = NULL;
+	txt->type = NULL;
 	txt->substs = NULL;
 	txt->mailname = NULL;
 	txt->fmts = NULL;
 	txt->wrapindent = 0;
 	txt->wrapwidth = 0;
+	txt->cond = NULL;
+	txt->skip = NULL;
 
 	tmp = concatstr(3, listdir, "/text/", filename);
 	txt->src->fd = open(tmp, O_RDONLY);
@@ -484,6 +512,10 @@ text *open_text(const char *listdir, const char *purpose, const char *action,
 		myfree(filename);
 		return NULL;
 	} while (0);
+
+	txt->action = action != NULL ? mystrdup(action) : NULL;
+	txt->reason = reason != NULL ? mystrdup(reason) : NULL;
+	txt->type = type != NULL ? mystrdup(type) : NULL;
 
 	return txt;
 }
@@ -626,6 +658,91 @@ static void begin_new_formatted_source(text *txt, char **line_p, char **pos_p,
 }
 
 
+static int handle_conditional(text *txt, char **line_p, char **pos_p,
+		char *token, int neg, enum conditional_target tgt, int multi,
+		const char *listdir)
+{
+	char *line = *line_p;
+	char *pos;
+	int satisfied = 0;
+	int matches;
+	conditional *cond;
+
+	if (txt->skip == NULL) {
+		for (;;) {
+			if (*token == '\0') break;
+			for (pos = token;
+					*pos != '\0' && (!multi || *pos != ' ');
+					pos++) {
+				if(*pos >= '0' && *pos <= '9') continue;
+				if(*pos >= 'A' && *pos <= 'Z') continue;
+				if(*pos >= 'a' && *pos <= 'z') continue;
+				if(*pos == '_') continue;
+				if(*pos == '-') continue;
+				if(*pos == '.') continue;
+				break;
+			}
+			if (*pos == ' ') {
+				*pos = '\0';
+			} else {
+				multi = 0;
+			}
+			if (*pos != '\0') return 1;
+
+			matches = 0;
+			if (tgt == ACTION) {
+				if (txt->action == NULL) return 1;
+				if (strcasecmp(token, txt->action) == 0)
+						matches = 1;
+			} else if (tgt == REASON) {
+				if (txt->reason == NULL) return 1;
+				if (strcasecmp(token, txt->reason) == 0)
+						matches = 1;
+			} else if (tgt == TYPE) {
+				if (txt->type == NULL) return 1;
+				if (strcasecmp(token, txt->type) == 0)
+						matches = 1;
+			} else if (tgt == CONTROL) {
+				if (statctrl(listdir, token))
+						matches = 1;
+			}
+			if ((matches && !neg) || (!matches && neg)) {
+				satisfied = 1;
+				break;
+			}
+
+			if (!multi) break;
+			*pos = ' ';
+			pos++;
+		}
+	} else {
+		satisfied = 1;
+		pos = token + 1;
+		while (*pos != '\0') pos++;
+		multi = 0;
+	}
+
+	cond = mymalloc(sizeof(conditional));
+	cond->satisfied = satisfied;
+	cond->elsepart = 0;
+	cond->outer = txt->cond;
+	txt->cond = cond;
+	if (!satisfied) txt->skip = cond;
+
+	if (multi) {
+		*pos = ' ';
+		pos++;
+		while (*pos != '\0') pos++;
+	}
+	line = concatstr(2, line, pos + 1);
+	*pos_p = line + (*pos_p - *line_p);
+	myfree(*line_p);
+	*line_p = line;
+
+	return 0;
+}
+
+
 static void handle_directive(text *txt, char **line_p, char **pos_p,
 		const char *listdir) {
 	char *line = *line_p;
@@ -635,6 +752,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 	char *filename;
 	int limit;
 	formatted *fmt;
+	conditional *cond;
 
 	endpos = strchr(token, '%');
 	if (endpos == NULL) {
@@ -644,6 +762,72 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 
 	*pos = '\0';
 	*endpos = '\0';
+
+	if(strncmp(token, "ifaction ", 9) == 0) {
+		token += 9;
+		if (handle_conditional(txt, line_p, pos_p, token,
+				0, ACTION, 1, listdir) == 0) return;
+	} else if(strncmp(token, "ifreason ", 9) == 0) {
+		token += 9;
+		if (handle_conditional(txt, line_p, pos_p, token,
+				0, REASON, 1, listdir) == 0) return;
+	} else if(strncmp(token, "iftype ", 7) == 0) {
+		token += 7;
+		if (handle_conditional(txt, line_p, pos_p, token,
+				0, TYPE, 1, listdir) == 0) return;
+	} else if(strncmp(token, "ifcontrol ", 10) == 0) {
+		token += 10;
+		if (handle_conditional(txt, line_p, pos_p, token,
+				0, CONTROL, 1, listdir) == 0) return;
+	} else if(strncmp(token, "ifnaction ", 10) == 0) {
+		token += 10;
+		if (handle_conditional(txt, line_p, pos_p, token,
+				1, ACTION, 0, listdir) == 0) return;
+	} else if(strncmp(token, "ifnreason ", 10) == 0) {
+		token += 10;
+		if (handle_conditional(txt, line_p, pos_p, token,
+				1, REASON, 0, listdir) == 0) return;
+	} else if(strncmp(token, "ifntype ", 8) == 0) {
+		token += 8;
+		if (handle_conditional(txt, line_p, pos_p, token,
+				1, TYPE, 0, listdir) == 0) return;
+	} else if(strncmp(token, "ifncontrol ", 11) == 0) {
+		token += 11;
+		if (handle_conditional(txt, line_p, pos_p, token,
+				1, CONTROL, 1, listdir) == 0) return;
+	} else if(strcmp(token, "else") == 0) {
+		if (txt->cond != NULL) {
+			if (txt->skip == txt->cond) txt->skip = NULL;
+			else if (txt->skip == NULL) txt->skip = txt->cond;
+			txt->cond->elsepart = 1;
+			line = concatstr(2, line, endpos + 1);
+			*pos_p = line + (*pos_p - *line_p);
+			myfree(*line_p);
+			*line_p = line;
+			return;
+		}
+	} else if(strcmp(token, "endif") == 0) {
+		if (txt->cond != NULL) {
+			if (txt->skip == txt->cond) txt->skip = NULL;
+			cond = txt->cond;
+			txt->cond = txt->cond->outer;
+			myfree(cond);
+			line = concatstr(2, line, endpos + 1);
+			*pos_p = line + (*pos_p - *line_p);
+			myfree(*line_p);
+			*line_p = line;
+			return;
+		}
+	}
+
+	if (txt->skip != NULL) {
+		/* We don't process anything but conditionals if we're
+		 * already skipping text in one. */
+		*pos = '%';
+		*endpos = '%';
+		(*pos_p)++;
+		return;
+	}
 
 	if(strcmp(token, "") == 0) {
 		line = concatstr(3, line, "%", endpos + 1);
@@ -764,6 +948,7 @@ char *get_processed_text_line(text *txt,
 	char *pos;
 	char *tmp, *spc;
 	char *prev = NULL;
+	int incision;
 	size_t len, i;
 
 	for (;;) {
@@ -845,9 +1030,11 @@ char *get_processed_text_line(text *txt,
 			pos = line;
 		}
 
+		incision = txt->skip != NULL ? pos - line : -1;
 		spc = NULL;
 		while (*pos != '\0') {
-			if (txt->wrapwidth != 0 && len > txt->wrapwidth) break;
+			if (txt->wrapwidth != 0 && len > txt->wrapwidth &&
+					txt->skip == NULL) break;
 			if (*pos == '\r') {
 				*pos = '\0';
 				pos++;
@@ -866,7 +1053,7 @@ char *get_processed_text_line(text *txt,
 			} else if (txt->src->transparent) {
 				/* Do nothing if the file is to be included
 			 	 * transparently */
-			} else if (*pos == '$') {
+			} else if (*pos == '$' && txt->skip == NULL) {
 				substitute_one(&line, &pos, listaddr,
 						listdelim, listdir, txt);
 				len = pos - line;
@@ -878,12 +1065,52 @@ char *get_processed_text_line(text *txt,
 				handle_directive(txt, &line, &pos, listdir);
 				len = pos - line;
 				spc = NULL;
-				/* The function sets up for the next character
-				 * to process, so continue straight away. */
+				if (txt->skip != NULL) {
+					if (incision == -1) {
+						/* We have to cut a bit out
+						 * later */
+						incision = pos - line;
+					}
+				} else {
+					if (incision != -1) {
+					    /* Time to cut */
+					    if (pos-line != incision) {
+						line[incision] = '\0';
+						tmp = concatstr(2, line, pos);
+						pos = tmp + incision;
+						myfree(line);
+						line = tmp;
+					    }
+					    incision = -1;
+					}
+				}
+				/* handle_directive() sets up for the next
+				 * character to process, so continue straight
+				 * away. */
 				continue;
 			}
 			len++;
 			pos++;
+		}
+
+		if (incision == 0) {
+			/* The whole line was skipped; nothing to return yet;
+			 * keep reading */
+			incision = -1;
+			myfree(line);
+			continue;
+		}
+
+		if (incision != -1) {
+			/* Time to cut */
+			if (pos - line != incision) {
+				line[incision] = '\0';
+				tmp = mystrdup(line);
+				pos = tmp + incision;
+				myfree(line);
+				line = tmp;
+			}
+			incision = -1;
 		}
 
 		if (txt->wrapwidth != 0) {
@@ -944,6 +1171,7 @@ char *get_processed_text_line(text *txt,
 void close_text(text *txt) {
 	substitution *subst;
 	formatted *fmt;
+	conditional *cond;
 	while (txt->src != NULL) {
 		close_source(txt);
 	}
@@ -960,6 +1188,11 @@ void close_text(text *txt) {
 		myfree(fmt->token);
 		txt->fmts = txt->fmts->next;
 		myfree(fmt);
+	}
+	while (txt->cond != NULL) {
+		cond = txt->cond;
+		txt->cond = txt->cond->outer;
+		myfree(cond);
 	}
 	myfree(txt);
 }
