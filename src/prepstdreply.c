@@ -85,6 +85,8 @@ struct text {
 	substitution *substs;
 	char *mailname;
 	formatted *fmts;
+	size_t wrapindent;
+	size_t wrapwidth;
 };
 
 
@@ -425,6 +427,8 @@ text *open_text_file(const char *listdir, const char *filename)
 	txt->substs = NULL;
 	txt->mailname = NULL;
 	txt->fmts = NULL;
+	txt->wrapindent = 0;
+	txt->wrapwidth = 0;
 
 	tmp = concatstr(3, listdir, "/text/", filename);
 	txt->src->fd = open(tmp, O_RDONLY);
@@ -659,13 +663,33 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 		*line_p = line;
 		return;
 	} else if(strcmp(token, "comment") == 0 || strcmp(token, "$") == 0 ) {
-		/* Skip the rest of the line; the earlier part which we
-		 * will return has already been truncated; the caller
-		 * will save the next line for later use if necessary. */
 		pos = endpos + 1;
 		while (*pos != '\0' && *pos != '\r' && *pos != '\n') pos++;
-		*pos_p = pos;
+		line = concatstr(2, line, pos);
+		*pos_p = line + (*pos_p - *line_p);
+		myfree(*line_p);
+		*line_p = line;
 		return;
+	} else if(strncmp(token, "wrap", 4) == 0) {
+		token += 4;
+		limit = 0;
+		if (*token == '\0') {
+			limit = 76;
+		} else if (*token == ' ') {
+			token = numeric_token(token + 1);
+			if (token != NULL) limit = atol(token);
+		}
+		if (limit != 0) {
+			txt->wrapindent = strlen(line);
+			if (txt->src->prefix != NULL)
+					txt->wrapindent -= strlen(txt->src->prefix);
+			txt->wrapwidth = limit;
+			line = concatstr(2, line, endpos + 1);
+			*pos_p = line + (*pos_p - *line_p);
+			myfree(*line_p);
+			*line_p = line;
+			return;
+		}
 	} else if(strncmp(token, "control ", 8) == 0) {
 		token = filename_token(token + 8);
 		if (token != NULL) {
@@ -736,84 +760,183 @@ char *get_processed_text_line(text *txt,
 		const char *listdir)
 {
 	char *line = NULL;
-	char *pos;
-	char *tmp;
 	const char *item;
+	char *pos;
+	char *tmp, *spc;
+	char *prev = NULL;
+	size_t len, i;
 
-	while (txt->src != NULL) {
-		if (txt->src->upcoming != NULL) {
-			if (txt->src->prefix != NULL) {
-				line = concatstr(2, txt->src->prefix, txt->src->upcoming);
-				myfree(txt->src->upcoming);
-			} else {
-				line = txt->src->upcoming;
+	for (;;) {
+		while (txt->src != NULL) {
+			if (txt->src->upcoming != NULL) {
+				if (txt->src->prefix != NULL) {
+					line = concatstr(2, txt->src->prefix,
+							txt->src->upcoming);
+					myfree(txt->src->upcoming);
+				} else {
+					line = txt->src->upcoming;
+				}
+				txt->src->upcoming = NULL;
+				break;
 			}
-			txt->src->upcoming = NULL;
-			break;
-		}
-		if (txt->src->limit != 0) {
-			if (txt->src->fd != -1) {
-				txt->src->upcoming = mygetline(txt->src->fd);
-			} else if (txt->src->fmt != NULL) {
-				item = (*txt->src->fmt->get)(
-						txt->src->fmt->state);
-				if (item == NULL) txt->src->upcoming = NULL;
-				else txt->src->upcoming = mystrdup(item);
+			if (txt->src->limit != 0) {
+				if (txt->src->fd != -1) {
+					txt->src->upcoming =
+							mygetline(txt->src->fd);
+				} else if (txt->src->fmt != NULL) {
+					item = (*txt->src->fmt->get)(
+							txt->src->fmt->state);
+					if (item==NULL) txt->src->upcoming=NULL;
+					else txt->src->upcoming=mystrdup(item);
+				} else {
+					txt->src->upcoming = NULL;
+				}
+				if (txt->src->limit > 0) txt->src->limit--;
 			} else {
 				txt->src->upcoming = NULL;
 			}
-			if (txt->src->limit > 0) txt->src->limit--;
-		} else {
-			txt->src->upcoming = NULL;
+			if (txt->src->upcoming != NULL) continue;
+			close_source(txt);
 		}
-		if (txt->src->upcoming != NULL) continue;
-		close_source(txt);
-	}
-	if (line == NULL) return NULL;
+		if (line == NULL) return NULL;
 
-	tmp = unistr_escaped_to_utf8(line);
-	myfree(line);
-	line = tmp;
-
-	pos = line;
-	while (*pos != '\0') {
-		if (*pos == '\r') {
-			*pos = '\0';
-			pos++;
-			if (*pos == '\n') pos++;
-			if (*pos == '\0') break;
-			txt->src->upcoming = mystrdup(pos);
-			break;
-		} else if (*pos == '\n') {
-			*pos = '\0';
-			pos++;
-			if (*pos == '\0') break;
-			txt->src->upcoming = mystrdup(pos);
-			break;
-		} else if (txt->src->transparent) {
-			/* Do nothing if the file is to be included
-			 * transparently */
-		} else if (*pos == '$') {
-			substitute_one(&line, &pos,
-					listaddr, listdelim, listdir, txt);
-			/* The function sets up for the next character
-			 * to process, so continue straight away. */
-			continue;
-		} else if (*pos == '%') {
-			handle_directive(txt, &line, &pos, listdir);
-			/* The function sets up for the next character
-			 * to process, so continue straight away. */
-			continue;
-		}
-		pos++;
-	}
-
-	if (txt->src->suffix != NULL) {
-		tmp = concatstr(2, line, txt->src->suffix);
+		tmp = unistr_escaped_to_utf8(line);
 		myfree(line);
-		return tmp;
-	} else {
-		return line;
+		line = tmp;
+
+		if (prev != NULL) {
+			/* Wrapping */
+			len = strlen(prev);
+			pos = prev + len - 1;
+			while (pos > prev && (*pos == ' ' || *pos == '\t'))
+					pos--;
+			pos++;
+			*pos = '\0';
+			len = pos - prev;
+			if (*line == '\r' || *line == '\n' || *line == '\0') {
+				/* Blank line; stop wrapping, finish
+				   the last line and save the blank
+				   line for later. */
+				txt->wrapwidth = 0;
+				txt->src->upcoming = line;
+				line = prev;
+				pos = line + len;
+			} else {
+				pos = line;
+				while (*pos == ' ' || *pos == '\t') pos++;
+				if (*pos == '\0') {
+					myfree(line);
+					continue;
+				}
+				if (*prev == '\0') {
+					tmp = mystrdup(pos);
+				} else {
+					tmp = concatstr(3, prev, " ", pos);
+				}
+				myfree(line);
+				line = tmp;
+				myfree(prev);
+				len++;
+				pos = line + len;
+			}
+			prev = NULL;
+		} else {
+			len = 0;
+			pos = line;
+		}
+
+		spc = NULL;
+		while (*pos != '\0') {
+			if (txt->wrapwidth != 0 && len > txt->wrapwidth) break;
+			if (*pos == '\r') {
+				*pos = '\0';
+				pos++;
+				if (*pos == '\n') pos++;
+				if (*pos == '\0') break;
+				txt->src->upcoming = mystrdup(pos);
+				break;
+			} else if (*pos == '\n') {
+				*pos = '\0';
+				pos++;
+				if (*pos == '\0') break;
+				txt->src->upcoming = mystrdup(pos);
+				break;
+			} else if (*pos == ' ') {
+				spc = pos;
+			} else if (txt->src->transparent) {
+				/* Do nothing if the file is to be included
+			 	 * transparently */
+			} else if (*pos == '$') {
+				substitute_one(&line, &pos, listaddr,
+						listdelim, listdir, txt);
+				len = pos - line;
+				spc = NULL;
+				/* The function sets up for the next character
+				 * to process, so continue straight away. */
+				continue;
+			} else if (*pos == '%') {
+				handle_directive(txt, &line, &pos, listdir);
+				len = pos - line;
+				spc = NULL;
+				/* The function sets up for the next character
+				 * to process, so continue straight away. */
+				continue;
+			}
+			len++;
+			pos++;
+		}
+
+		if (txt->wrapwidth != 0) {
+			if (len <= txt->wrapwidth) {
+				prev = line;
+				continue;
+			}
+			if (spc == NULL) {
+				pos = line + len - 1;
+				while (pos >= line) {
+					if (*pos == ' ') {
+						spc = pos;
+						break;
+					}
+					pos--;
+				}
+			}
+			if (spc == NULL) {
+				spc = line + txt->wrapwidth - 1;
+			} else {
+				*spc = '\0';
+				spc++;
+			}
+			len = strlen(spc);
+			if (txt->src->upcoming == NULL) {
+				tmp = mymalloc((len + txt->wrapindent + 1) *
+						sizeof(char));
+			} else {
+				tmp = mymalloc((len + txt->wrapindent + 1 +
+						strlen(txt->src->upcoming)) *
+						sizeof(char));
+			}
+			pos = tmp;
+			for (i = txt->wrapindent; i > 0; i--) *pos++ = ' ';
+			strcpy(pos, spc);
+			if (txt->src->upcoming != NULL) {
+				strcpy(pos + len, txt->src->upcoming);
+				myfree(txt->src->upcoming);
+			}
+			txt->src->upcoming = tmp;
+			*spc = '\0';
+			tmp = mystrdup(line);
+			myfree(line);
+			line = tmp;
+		}
+
+		if (txt->src->suffix != NULL) {
+			tmp = concatstr(2, line, txt->src->suffix);
+			myfree(line);
+			return tmp;
+		} else {
+			return line;
+		}
 	}
 }
 

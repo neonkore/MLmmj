@@ -248,10 +248,11 @@ not appropriate for use in headers. They are:
 
 - %wrap%
 - %wrap W%
-  lines until the next blank line are all concatenated (lines after the first
-  have whitespace trimmed; a single space separates lines) and are then
-  rewrapped (by breaking them at spaces) to a width of W (or 76 if W is
-  omitted)
+  lines until the next blank line are concatenated (lines have whitespace
+  trimmed, then a single space is used to separate them) and are then rewrapped
+  (by breaking them at spaces) to a width of W (or 76 if W is omitted); the
+  width is reckoned including characters preceding the directive so it is an
+  absolute maximum width
 
 - %text T%
   text from the file named T in the listdir/text directory; the name may only

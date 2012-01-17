@@ -1,3 +1,4 @@
+ o Add %wrap% and %wrap W% formatting directives
  o Add %digestthreads%, %gatekeepers%, %listsubs%, %digestsubs%, %nomailsubs%,
    %moderators% and %bouncenumbers%
  o Deprecate various list text substitutions such as $newsub$, $oldsub$,
