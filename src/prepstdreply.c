@@ -950,6 +950,7 @@ char *get_processed_text_line(text *txt,
 	char *prev = NULL;
 	int incision;
 	size_t len, i;
+	int directive;
 
 	for (;;) {
 		while (txt->src != NULL) {
@@ -1032,6 +1033,7 @@ char *get_processed_text_line(text *txt,
 
 		incision = txt->skip != NULL ? pos - line : -1;
 		spc = NULL;
+		directive = 0;
 		while (*pos != '\0') {
 			if (txt->wrapwidth != 0 && len > txt->wrapwidth &&
 					txt->skip == NULL) break;
@@ -1062,6 +1064,7 @@ char *get_processed_text_line(text *txt,
 				 * to process, so continue straight away. */
 				continue;
 			} else if (*pos == '%') {
+				directive = 1;
 				handle_directive(txt, &line, &pos, listdir);
 				len = pos - line;
 				spc = NULL;
@@ -1155,6 +1158,14 @@ char *get_processed_text_line(text *txt,
 			tmp = mystrdup(line);
 			myfree(line);
 			line = tmp;
+		} else if (directive) {
+			pos = line;
+			while (*pos == ' ' || *pos == '\t') pos++;
+			if (*pos == '\0') {
+				/* Omit whitespace-only line with directives */
+				myfree(line);
+				continue;
+			}
 		}
 
 		if (txt->src->suffix != NULL) {
