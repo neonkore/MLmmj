@@ -307,7 +307,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	register_formatted(txt, "digestthreads", rewind_thread_list,
 			get_thread_list_line, tls);
 
-	line = get_processed_text_line(txt, listaddr, listdelim, listdir);
+	line = get_processed_text_line(txt, 1, listaddr, listdelim, listdir);
 
 	if (line == NULL) {
 		log_error(LOG_ARGS, "No content in digest listtext");
@@ -334,7 +334,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 		myfree(line);
 
 		/* Skip the empty line after the subject */
-		line = get_processed_text_line(txt, listaddr, listdelim,
+		line = get_processed_text_line(txt, 1, listaddr, listdelim,
 				listdir);
 		if (line == NULL || *line != '\0') {
 			log_error(LOG_ARGS, "Too many headers "
@@ -434,7 +434,7 @@ errdighdrs:
 		myfree(tmp);
 
 		for (;;) {
-			line = get_processed_text_line(txt, listaddr, listdelim,
+			line = get_processed_text_line(txt, 0, listaddr, listdelim,
 					listdir);
 			if (line == NULL) break;
 			len = strlen(line);

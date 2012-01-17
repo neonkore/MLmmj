@@ -716,6 +716,9 @@ static int handle_conditional(text *txt, char **line_p, char **pos_p,
 			pos++;
 		}
 	} else {
+		/* We consider nested conditionals as successful while skipping
+		 * text so they don't register themselves as the reason for
+		 * skipping, nor trigger swallowing blank lines */
 		satisfied = 1;
 		pos = token + 1;
 		while (*pos != '\0') pos++;
@@ -743,8 +746,12 @@ static int handle_conditional(text *txt, char **line_p, char **pos_p,
 }
 
 
-static void handle_directive(text *txt, char **line_p, char **pos_p,
-		const char *listdir) {
+static int handle_directive(text *txt, char **line_p, char **pos_p,
+		int conditionalsonly, const char *listdir) {
+	/* This function returns 1 to swallow a preceding blank line, i.e. if
+	 * we just finished processing a failed conditional without an else
+	 * part, -1 if we did nothing due to only processing conditionals, and
+	 * 0 otherwise. */
 	char *line = *line_p;
 	char *pos = *pos_p;
 	char *token = pos + 1;
@@ -753,11 +760,13 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 	int limit;
 	formatted *fmt;
 	conditional *cond;
+	int swallow;
 
 	endpos = strchr(token, '%');
 	if (endpos == NULL) {
+		if (conditionalsonly) return -1;
 		(*pos_p)++;
-		return;
+		return 0;
 	}
 
 	*pos = '\0';
@@ -766,35 +775,35 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 	if(strncmp(token, "ifaction ", 9) == 0) {
 		token += 9;
 		if (handle_conditional(txt, line_p, pos_p, token,
-				0, ACTION, 1, listdir) == 0) return;
+				0, ACTION, 1, listdir) == 0) return 0;
 	} else if(strncmp(token, "ifreason ", 9) == 0) {
 		token += 9;
 		if (handle_conditional(txt, line_p, pos_p, token,
-				0, REASON, 1, listdir) == 0) return;
+				0, REASON, 1, listdir) == 0) return 0;
 	} else if(strncmp(token, "iftype ", 7) == 0) {
 		token += 7;
 		if (handle_conditional(txt, line_p, pos_p, token,
-				0, TYPE, 1, listdir) == 0) return;
+				0, TYPE, 1, listdir) == 0) return 0;
 	} else if(strncmp(token, "ifcontrol ", 10) == 0) {
 		token += 10;
 		if (handle_conditional(txt, line_p, pos_p, token,
-				0, CONTROL, 1, listdir) == 0) return;
+				0, CONTROL, 1, listdir) == 0) return 0;
 	} else if(strncmp(token, "ifnaction ", 10) == 0) {
 		token += 10;
 		if (handle_conditional(txt, line_p, pos_p, token,
-				1, ACTION, 0, listdir) == 0) return;
+				1, ACTION, 0, listdir) == 0) return 0;
 	} else if(strncmp(token, "ifnreason ", 10) == 0) {
 		token += 10;
 		if (handle_conditional(txt, line_p, pos_p, token,
-				1, REASON, 0, listdir) == 0) return;
+				1, REASON, 0, listdir) == 0) return 0;
 	} else if(strncmp(token, "ifntype ", 8) == 0) {
 		token += 8;
 		if (handle_conditional(txt, line_p, pos_p, token,
-				1, TYPE, 0, listdir) == 0) return;
+				1, TYPE, 0, listdir) == 0) return 0;
 	} else if(strncmp(token, "ifncontrol ", 11) == 0) {
 		token += 11;
 		if (handle_conditional(txt, line_p, pos_p, token,
-				1, CONTROL, 1, listdir) == 0) return;
+				1, CONTROL, 1, listdir) == 0) return 0;
 	} else if(strcmp(token, "else") == 0) {
 		if (txt->cond != NULL) {
 			if (txt->skip == txt->cond) txt->skip = NULL;
@@ -804,20 +813,27 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 			*pos_p = line + (*pos_p - *line_p);
 			myfree(*line_p);
 			*line_p = line;
-			return;
+			return 0;
 		}
 	} else if(strcmp(token, "endif") == 0) {
 		if (txt->cond != NULL) {
 			if (txt->skip == txt->cond) txt->skip = NULL;
 			cond = txt->cond;
-			txt->cond = txt->cond->outer;
+			swallow = (!cond->satisfied && !cond->elsepart)?1:0;
+			txt->cond = cond->outer;
 			myfree(cond);
 			line = concatstr(2, line, endpos + 1);
 			*pos_p = line + (*pos_p - *line_p);
 			myfree(*line_p);
 			*line_p = line;
-			return;
+			return swallow;
 		}
+	}
+
+	if (conditionalsonly) {
+		*pos = '%';
+		*endpos = '%';
+		return -1;
 	}
 
 	if (txt->skip != NULL) {
@@ -826,7 +842,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 		*pos = '%';
 		*endpos = '%';
 		(*pos_p)++;
-		return;
+		return 0;
 	}
 
 	if(strcmp(token, "") == 0) {
@@ -834,7 +850,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 		*pos_p = line + (*pos_p - *line_p) + 1;
 		myfree(*line_p);
 		*line_p = line;
-		return;
+		return 0;
 	} else if(strcmp(token, "^") == 0) {
 		if (txt->src->prefix != NULL) {
 			line[strlen(txt->src->prefix)] = '\0';
@@ -845,7 +861,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 		*pos_p = line;
 		myfree(*line_p);
 		*line_p = line;
-		return;
+		return 0;
 	} else if(strcmp(token, "comment") == 0 || strcmp(token, "$") == 0 ) {
 		pos = endpos + 1;
 		while (*pos != '\0' && *pos != '\r' && *pos != '\n') pos++;
@@ -853,7 +869,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 		*pos_p = line + (*pos_p - *line_p);
 		myfree(*line_p);
 		*line_p = line;
-		return;
+		return 0;
 	} else if(strncmp(token, "wrap", 4) == 0) {
 		token += 4;
 		limit = 0;
@@ -872,7 +888,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 			*pos_p = line + (*pos_p - *line_p);
 			myfree(*line_p);
 			*line_p = line;
-			return;
+			return 0;
 		}
 	} else if(strncmp(token, "control ", 8) == 0) {
 		token = filename_token(token + 8);
@@ -880,7 +896,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 			filename = concatstr(3, listdir, "/control/", token);
 			begin_new_source_file(txt, line_p, pos_p, filename);
 			myfree(filename);
-			return;
+			return 0;
 		}
 	} else if(strncmp(token, "text ", 5) == 0) {
 		token = filename_token(token + 5);
@@ -888,7 +904,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 			filename = concatstr(3, listdir, "/text/", token);
 			begin_new_source_file(txt, line_p, pos_p, filename);
 			myfree(filename);
-			return;
+			return 0;
 		}
 	} else if(strncmp(token, "originalmail", 12) == 0 &&
 			txt->mailname != NULL) {
@@ -909,7 +925,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 			txt->src->transparent = 1;
 			if (limit == -1) txt->src->limit = -1;
 			else txt->src->limit = limit - 1;
-			return;
+			return 0;
 		}
 	}
 	if (token == NULL) {
@@ -918,7 +934,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 		*pos = '%';
 		*endpos = '%';
 		(*pos_p)++;
-		return;
+		return 0;
 	}
 
 	fmt = txt->fmts;
@@ -926,7 +942,7 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 		if (strcmp(token, fmt->token) == 0) {
 			begin_new_formatted_source(txt, line_p, pos_p,
 					endpos + 1, fmt);
-			return;
+			return 0;
 		}
 		fmt = fmt->next;
 	}
@@ -935,11 +951,11 @@ static void handle_directive(text *txt, char **line_p, char **pos_p,
 	*pos = '%';
 	*endpos = '%';
 	(*pos_p)++;
-	return;
+	return 0;
 }
 
 
-char *get_processed_text_line(text *txt,
+char *get_processed_text_line(text *txt, int headers,
 		const char *listaddr, const char *listdelim,
 		const char *listdir)
 {
@@ -951,6 +967,8 @@ char *get_processed_text_line(text *txt,
 	int incision;
 	size_t len, i;
 	int directive;
+	int peeking = 0; /* for a failed conditional without an else */
+	int swallow;
 
 	for (;;) {
 		while (txt->src != NULL) {
@@ -1036,7 +1054,7 @@ char *get_processed_text_line(text *txt,
 		directive = 0;
 		while (*pos != '\0') {
 			if (txt->wrapwidth != 0 && len > txt->wrapwidth &&
-					txt->skip == NULL) break;
+					txt->skip == NULL && !peeking) break;
 			if (*pos == '\r') {
 				*pos = '\0';
 				pos++;
@@ -1052,10 +1070,14 @@ char *get_processed_text_line(text *txt,
 				break;
 			} else if (*pos == ' ') {
 				spc = pos;
+			} else if (*pos == '\t') {
+				/* Avoid breaking due to peeking */
 			} else if (txt->src->transparent) {
 				/* Do nothing if the file is to be included
 			 	 * transparently */
+				if (peeking && txt->skip == NULL) break;
 			} else if (*pos == '$' && txt->skip == NULL) {
+				if (peeking) break;
 				substitute_one(&line, &pos, listaddr,
 						listdelim, listdir, txt);
 				len = pos - line;
@@ -1065,9 +1087,12 @@ char *get_processed_text_line(text *txt,
 				continue;
 			} else if (*pos == '%') {
 				directive = 1;
-				handle_directive(txt, &line, &pos, listdir);
+				swallow = handle_directive(txt, &line, &pos,
+						peeking, listdir);
 				len = pos - line;
 				spc = NULL;
+				if (swallow == 1) peeking = 0;
+				if (swallow == -1) break;
 				if (txt->skip != NULL) {
 					if (incision == -1) {
 						/* We have to cut a bit out
@@ -1091,6 +1116,8 @@ char *get_processed_text_line(text *txt,
 				 * character to process, so continue straight
 				 * away. */
 				continue;
+			} else if (peeking && txt->skip == NULL) {
+				break;
 			}
 			len++;
 			pos++;
@@ -1116,7 +1143,7 @@ char *get_processed_text_line(text *txt,
 			incision = -1;
 		}
 
-		if (txt->wrapwidth != 0) {
+		if (txt->wrapwidth != 0 && !peeking) {
 			if (len <= txt->wrapwidth) {
 				prev = line;
 				continue;
@@ -1158,13 +1185,39 @@ char *get_processed_text_line(text *txt,
 			tmp = mystrdup(line);
 			myfree(line);
 			line = tmp;
-		} else if (directive) {
-			pos = line;
-			while (*pos == ' ' || *pos == '\t') pos++;
-			if (*pos == '\0') {
-				/* Omit whitespace-only line with directives */
+		} else {
+			if (directive) {
+				pos = line;
+				while (*pos == ' ' || *pos == '\t') pos++;
+				if (*pos == '\0') {
+					/* Omit whitespace-only line with
+					 * directives */
+					myfree(line);
+					continue;
+				}
+			}
+			if (*line == '\0' && !headers && !peeking) {
+				/* Non-wrapped bona fide blank line that isn't
+				 * ending the headers; peek ahead to check it's
+				 * not followed by an unsatisfied conditional
+				 * without an else */
+				peeking = 1;
 				myfree(line);
 				continue;
+			} else if (peeking) {
+				/* We found something; return preceding blank
+				 * line */
+				if (txt->src->upcoming == NULL) {
+					txt->src->upcoming = line;
+				} else {
+					tmp = txt->src->upcoming;
+					txt->src->upcoming = concatstr(3,
+							line, "\n",
+							txt->src->upcoming);
+					myfree(line);
+					myfree(tmp);
+				}
+				line = mystrdup("");
 			}
 		}
 
@@ -1275,7 +1328,7 @@ char *prepstdreply(text *txt, const char *listdir,
 	}
 
 	for(;;) {
-		line = get_processed_text_line(txt, listaddr, listdelim,
+		line = get_processed_text_line(txt, 1, listaddr, listdelim,
 				listdir);
 		if (!line) {
 			log_error(LOG_ARGS, "No body in listtext");
@@ -1368,7 +1421,7 @@ char *prepstdreply(text *txt, const char *listdir,
 	}
 
 	if (line == NULL) {
-		line = get_processed_text_line(txt, listaddr, listdelim,
+		line = get_processed_text_line(txt, 0, listaddr, listdelim,
 				listdir);
 	}
 	while(line) {
@@ -1382,7 +1435,7 @@ char *prepstdreply(text *txt, const char *listdir,
 				goto freeandreturn;
 			}
 		myfree(line);
-		line = get_processed_text_line(txt, listaddr, listdelim,
+		line = get_processed_text_line(txt, 0, listaddr, listdelim,
 				listdir);
 	}
 

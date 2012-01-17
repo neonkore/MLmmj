@@ -1,3 +1,5 @@
+ o Automatically skip blank lines followed by unsatisfied conditionals with no
+   else part in list texts
  o Automatically skip lines with only whitespace and directives in list texts
  o Add support for conditionals in list texts
  o Add %wrap% and %wrap W% formatting directives

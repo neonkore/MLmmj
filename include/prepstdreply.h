@@ -60,7 +60,7 @@ void register_unformatted(text *txt, const char *token, const char *subst);
 void register_originalmail(text *txt, const char *mailname);
 void register_formatted(text *txt, const char *token,
 		rewind_function rew, get_function get, void * state);
-char *get_processed_text_line(text *txt,
+char *get_processed_text_line(text *txt, int headers,
 		const char *listaddr, const char *listdelim, const char *listdir);
 char *prepstdreply(text *txt, const char *listdir,
 		const char *from, const char *to, const char *replyto);
