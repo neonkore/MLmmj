@@ -21,7 +21,7 @@ while getopts ":hL:s:azc:" Option
 do
 case "$Option" in 
 	h )
-	echo -e "$USAGE"
+	echo "$USAGE"
 	exit 0
 	;;
 	z )
@@ -42,7 +42,8 @@ case "$Option" in
 	CHOWN="$OPTARG"
 	;;
 	* )
-	echo -e "$0: invalid option\nTry $0 -h for more information."
+	echo "$0: invalid option"
+	echo "Try $0 -h for more information."
 	exit 1
 esac
 done
