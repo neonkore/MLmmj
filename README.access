@@ -28,7 +28,7 @@ mail may still be held for moderation, if it would have been so without access
 rules.
 
 The action "send" will send the mail unconditionally. It will not be
-moderated.
+moderated, nor subject to subonlypost, nor modnonsubposts.
 
 The action "deny" will not send the mail to the mailing list, but will send a
 rejection mail to the sender.
@@ -42,7 +42,7 @@ IMPORTANT: if "moderate" is used then don't forget to add people who should
            function as moderators in listdir/control/moderators
 
 
-The flow through the access system is like this:
+The flow through the access system is something like this:
 
                deny       +------+
        +----------------->| deny |
@@ -58,11 +58,14 @@ The flow through the access system is like this:
     +--------+            +------+ confirm   +------+
        |  |                   ^                ^  ^
        |  |                   | yes            |  |
-       |  |    allow      +------------+ no    |  |
-       |  +-------------->| moderation |-------+  |
-       |                  +------------+          |
+       |  |    allow      +--------------+ no  |  |
+       |  +-------------->| moderation * |-----+  |
+       |                  +--------------+        |
        |       send                               |
        +------------------------------------------+
+
+* modnonsubposts is also processed here, and subonlypost (the flow
+  may be to deny or discard for subonlypost without modnonsubposts).
 
 
 First a simple example. This rule set will reject any mail that is NOT plain

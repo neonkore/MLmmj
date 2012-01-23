@@ -416,13 +416,11 @@ static void print_help(const char *prg)
 
 int main(int argc, char **argv)
 {
-	int i, j, opt, noprocess = 0, moderated = 0;
+	int i, j, opt, noprocess = 0, moderated = 0, send = 0;
 	enum modreason modreason;
 	int hdrfd, footfd, rawmailfd, donemailfd, omitfd;
-	int subonlypost = 0, addrtocc = 1, intocc = 0, modnonsubposts = 0;
+	int addrtocc = 1, intocc = 0;
 	int maxmailsize = 0;
-	int notoccdenymails = 0, noaccessdenymails = 0, nosubonlydenymails = 0;
-	int nomaxmailsizedenymails = 0;
 	int notmetoo = 0;
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
@@ -751,8 +749,7 @@ int main(int argc, char **argv)
 
 		if(st.st_size > maxmailsize) {
 
-			nomaxmailsizedenymails = statctrl(listdir, "nomaxmailsizedenymails");
-			if (nomaxmailsizedenymails) {
+			if (statctrl(listdir, "nomaxmailsizedenymails")) {
 				errno = 0;
 				log_error(LOG_ARGS, "Discarding %s due to"
 						" size limit (%d bytes too big)",
@@ -849,14 +846,12 @@ int main(int argc, char **argv)
 	for(i = 0; i < alternates->count; i++)
 		myfree(alternates->strs[i]);
 
-	notoccdenymails = statctrl(listdir, "notoccdenymails");
-
 	if(addrtocc && !intocc) {
 		/* Don't send a mail about denial to the list, but silently
 		 * discard and exit. Also don't in case of it being turned off
 		 */
 		if ((strcasecmp(listaddr, posteraddr) == 0) ||
-				notoccdenymails) {
+				statctrl(listdir, "notoccdenymails")) {
 			log_error(LOG_ARGS, "Discarding %s because list"
 					" address was not in To: or Cc:,"
 					" and From: was the list or"
@@ -898,85 +893,6 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	subonlypost = statctrl(listdir, "subonlypost");
-	if(subonlypost) {
-		/* Don't send a mail about denial to the list, but silently
-		 * discard and exit. */
-		if (strcasecmp(listaddr, posteraddr) == 0) {
-			log_error(LOG_ARGS, "Discarding %s because"
-					" subonlypost was set and From: was"
-					" the list address",
-					mailfile);
-			myfree(listaddr);
-			unlink(donemailname);
-			myfree(donemailname);
-			exit(EXIT_SUCCESS);
-		}
-		if(is_subbed(listdir, posteraddr) == SUB_NONE) {
-			modnonsubposts = statctrl(listdir,
-					"modnonsubposts");
-			if(modnonsubposts) {
-				moderated = 1;
-				modreason = MODNONSUBPOSTS;
-				goto startaccess;
-			}
-
-			nosubonlydenymails = statctrl(listdir,
-					"nosubonlydenymails");
-
-			if(nosubonlydenymails) {
-				log_error(LOG_ARGS, "Discarding %s because"
-						" subonlypost and"
-						" nosubonlydenymails was set",
-						mailfile);
-				myfree(listaddr);
-				unlink(donemailname);
-				myfree(donemailname);
-				exit(EXIT_SUCCESS);
-			}
-			listdelim = getlistdelim(listdir);
-			listname = genlistname(listaddr);
-			listfqdn = genlistfqdn(listaddr);
-			fromaddr = concatstr(4, listname, listdelim,
-					"bounces-help@", listfqdn);
-			txt = open_text(listdir, "deny", "post",
-					"subonlypost", NULL, "subonlypost");
-			MY_ASSERT(txt);
-			register_unformatted(txt, "subject", subject);
-			register_unformatted(txt, "posteraddr", posteraddr);
-			register_originalmail(txt, donemailname);
-			queuefilename = prepstdreply(txt, listdir,
-					"$listowner$", posteraddr, NULL);
-			MY_ASSERT(queuefilename)
-			close_text(txt);
-			myfree(listaddr);
-			myfree(listdelim);
-			myfree(listname);
-			myfree(listfqdn);
-			unlink(donemailname);
-			myfree(donemailname);
-			execlp(mlmmjsend, mlmmjsend,
-					"-l", "1",
-					"-T", posteraddr,
-					"-F", fromaddr,
-					"-m", queuefilename, (char *)NULL);
-
-			log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
-			exit(EXIT_FAILURE);
-		}
-	}
-
-startaccess:
-
-	if(!moderated) {
-		if(statctrl(listdir, "moderated")) {
-			moderated = 1;
-			modreason = MODERATED;
-		}
-	}
-
-	noaccessdenymails = statctrl(listdir, "noaccessdenymails");
-
 	access_rules = ctrlvalues(listdir, "access");
 	if (access_rules) {
 		enum action accret;
@@ -986,13 +902,13 @@ startaccess:
 					posteraddr, listdir);
 		if (accret == DENY) {
 			if ((strcasecmp(listaddr, posteraddr) == 0) ||
-					noaccessdenymails) {
+				    statctrl(listdir, "noaccessdenymails")) {
 				log_error(LOG_ARGS, "Discarding %s because"
-						" it was denied by an access"
-						" rule, and From: was the list"
-						" address or noaccessdenymails"
-						" was set",
-						mailfile);
+					" it was denied by an access"
+					" rule, and From: was the list"
+					" address or noaccessdenymails"
+					" was set",
+					mailfile);
 				myfree(listaddr);
 				unlink(donemailname);
 				myfree(donemailname);
@@ -1048,9 +964,78 @@ startaccess:
 			myfree(discardname);
                 	exit(EXIT_SUCCESS);
 		} else if (accret == SEND) {
-			moderated = 0;
+			send = 1;
 		} else if (accret == ALLOW) {
 			/* continue processing as normal */
+		}
+	}
+
+	if(!send && (statctrl(listdir, "subonlypost") ||
+			statctrl(listdir, "modnonsubposts"))) {
+		/* Don't send a mail about denial to the list, but silently
+		 * discard and exit. */
+		if (strcasecmp(listaddr, posteraddr) == 0) {
+			log_error(LOG_ARGS, "Discarding %s because"
+					" subonlypost was set and From: was"
+					" the list address",
+					mailfile);
+			myfree(listaddr);
+			unlink(donemailname);
+			myfree(donemailname);
+			exit(EXIT_SUCCESS);
+		}
+		if(is_subbed(listdir, posteraddr) == SUB_NONE) {
+			if(statctrl(listdir, "modnonsubposts")) {
+				moderated = 1;
+				modreason = MODNONSUBPOSTS;
+			} else {
+				if(statctrl(listdir, "nosubonlydenymails")) {
+				    log_error(LOG_ARGS, "Discarding %s because"
+					    " subonlypost and"
+					    " nosubonlydenymails was set",
+					    mailfile);
+				    myfree(listaddr);
+				    unlink(donemailname);
+				    myfree(donemailname);
+				    exit(EXIT_SUCCESS);
+				}
+				listdelim = getlistdelim(listdir);
+				listname = genlistname(listaddr);
+				listfqdn = genlistfqdn(listaddr);
+				fromaddr = concatstr(4, listname, listdelim,
+					"bounces-help@", listfqdn);
+				txt = open_text(listdir, "deny", "post",
+					"subonlypost", NULL, "subonlypost");
+				MY_ASSERT(txt);
+				register_unformatted(txt, "subject", subject);
+				register_unformatted(txt, "posteraddr", posteraddr);
+				register_originalmail(txt, donemailname);
+				queuefilename = prepstdreply(txt, listdir,
+					"$listowner$", posteraddr, NULL);
+				MY_ASSERT(queuefilename)
+				close_text(txt);
+				myfree(listaddr);
+				myfree(listdelim);
+				myfree(listname);
+				myfree(listfqdn);
+				unlink(donemailname);
+				myfree(donemailname);
+				execlp(mlmmjsend, mlmmjsend,
+					"-l", "1",
+					"-T", posteraddr,
+					"-F", fromaddr,
+					"-m", queuefilename, (char *)NULL);
+
+				log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
+
+	if(!send && !moderated) {
+		if(statctrl(listdir, "moderated")) {
+			moderated = 1;
+			modreason = MODERATED;
 		}
 	}
 
