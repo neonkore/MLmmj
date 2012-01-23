@@ -959,7 +959,7 @@ char *get_processed_text_line(text *txt, int headers,
 		const char *listaddr, const char *listdelim,
 		const char *listdir)
 {
-	char *line = NULL;
+	char *line;
 	const char *item;
 	char *pos;
 	char *tmp, *spc;
@@ -971,6 +971,7 @@ char *get_processed_text_line(text *txt, int headers,
 	int swallow;
 
 	for (;;) {
+		line = NULL;
 		while (txt->src != NULL) {
 			if (txt->src->upcoming != NULL) {
 				if (txt->src->prefix != NULL) {
@@ -1002,7 +1003,11 @@ char *get_processed_text_line(text *txt, int headers,
 			if (txt->src->upcoming != NULL) continue;
 			close_source(txt);
 		}
-		if (line == NULL) return NULL;
+		if (line == NULL) {
+			if (peeking) return mystrdup("");
+			if (prev != NULL) return prev;
+			return NULL;
+		}
 
 		tmp = unistr_escaped_to_utf8(line);
 		myfree(line);
