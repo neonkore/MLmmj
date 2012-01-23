@@ -1036,11 +1036,11 @@ char *get_processed_text_line(text *txt, int headers,
 					tmp = mystrdup(pos);
 				} else {
 					tmp = concatstr(3, prev, " ", pos);
+					len++;
 				}
 				myfree(line);
 				line = tmp;
 				myfree(prev);
-				len++;
 				pos = line + len;
 			}
 			prev = NULL;
