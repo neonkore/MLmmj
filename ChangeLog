@@ -1,3 +1,7 @@
+ o Introduce \<space> to indicate line-break positions to enable sensible
+   wrapping of Chinese and similar text.
+ o Allow lines to be longer than the wrapping width if there are no spaces,
+   as generated email addresses (e.g. for moderation) won't work if split.
  o Add rejection of posts and obstruction of subscriptions.
  o Avoid bogus error messages when logging that the list address has been
    found in To: or CC: headers.

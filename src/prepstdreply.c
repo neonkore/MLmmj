@@ -106,8 +106,8 @@ struct text {
 	substitution *substs;
 	char *mailname;
 	formatted *fmts;
-	size_t wrapindent;
-	size_t wrapwidth;
+	int wrapindent;
+	int wrapwidth;
 	conditional *cond;
 	conditional *skip;
 };
@@ -961,11 +961,11 @@ char *get_processed_text_line(text *txt, int headers,
 {
 	char *line;
 	const char *item;
-	char *pos;
-	char *tmp, *spc;
+	char *pos, *subpos;
+	char *tmp;
 	char *prev = NULL;
-	int incision;
-	size_t len, i;
+	int incision, spc, spcnext;
+	int len, i;
 	int directive;
 	int peeking = 0; /* for a failed conditional without an else */
 	int swallow;
@@ -1060,11 +1060,27 @@ char *get_processed_text_line(text *txt, int headers,
 		} else {
 			incision = -1;
 		}
-		spc = NULL;
+		spc = -1;
+		spcnext = 0;
 		directive = 0;
 		while (*pos != '\0') {
-			if (txt->wrapwidth != 0 && len > txt->wrapwidth &&
-					!peeking) break;
+			if (txt->wrapwidth != 0 && len >= txt->wrapwidth &&
+					!peeking) {
+				if (spcnext < txt->wrapwidth || spc == -1) {
+					subpos = line + spcnext;
+					while (subpos < pos) {
+						if (*subpos == ' ') {
+							spc = subpos - line;
+						}
+						spcnext++;
+						if (spcnext >= txt->wrapwidth &&
+								spc != -1)
+								break;
+						subpos++;
+					}
+				}
+				if (spc != -1) break;
+			}
 			if (*pos == '\r') {
 				*pos = '\0';
 				pos++;
@@ -1079,7 +1095,21 @@ char *get_processed_text_line(text *txt, int headers,
 				txt->src->upcoming = mystrdup(pos);
 				break;
 			} else if (*pos == ' ') {
-				spc = pos;
+				if (txt->skip == NULL) {
+					spc = pos - line;
+					spcnext = spc + 1;
+				}
+			} else if (*pos == '\\' && *(pos + 1) == ' ') {
+				if (txt->skip == NULL) {
+					spc = pos - line - 1;
+					spcnext = spc + 1;
+				}
+				*pos = '\0';
+				tmp = concatstr(2, line, pos + 2);
+				pos = tmp + (pos - line);
+				myfree(line);
+				line = tmp;
+				continue;
 			} else if (*pos == '\t') {
 				/* Avoid breaking due to peeking */
 			} else if (txt->src->transparent) {
@@ -1091,7 +1121,6 @@ char *get_processed_text_line(text *txt, int headers,
 				substitute_one(&line, &pos, listaddr,
 						listdelim, listdir, txt);
 				len = pos - line;
-				spc = NULL;
 				/* The function sets up for the next character
 				 * to process, so continue straight away. */
 				continue;
@@ -1099,7 +1128,6 @@ char *get_processed_text_line(text *txt, int headers,
 				directive = 1;
 				swallow = handle_directive(txt, &line, &pos,
 						peeking, listdir);
-				spc = NULL;
 				if (swallow == 1) peeking = 0;
 				if (swallow == -1) break;
 				if (txt->skip != NULL) {
@@ -1130,7 +1158,10 @@ char *get_processed_text_line(text *txt, int headers,
 			} else if (peeking && txt->skip == NULL) {
 				break;
 			}
-			if (txt->skip == NULL) len++;
+			if (txt->skip == NULL) {
+				if (spcnext == len) spcnext++;
+				len++;
+			}
 			pos++;
 		}
 
@@ -1155,44 +1186,36 @@ char *get_processed_text_line(text *txt, int headers,
 		}
 
 		if (txt->wrapwidth != 0 && !peeking) {
-			if (len <= txt->wrapwidth) {
+			if (len < txt->wrapwidth) {
 				prev = line;
 				continue;
 			}
-			if (spc == NULL) {
-				pos = line + len - 1;
-				while (pos >= line) {
-					if (*pos == ' ') {
-						spc = pos;
-						break;
-					}
-					pos--;
-				}
-			}
-			if (spc == NULL) {
-				spc = line + txt->wrapwidth - 1;
-			} else {
-				*spc = '\0';
+			if (spc != -1) {
+				if (line[spc] == ' ') line[spc] = '\0';
 				spc++;
+				if (line[spc] == '\0') spc = -1;
 			}
-			len = strlen(spc);
-			if (txt->src->upcoming == NULL) {
-				tmp = mymalloc((len + txt->wrapindent + 1) *
-						sizeof(char));
-			} else {
-				tmp = mymalloc((len + txt->wrapindent + 1 +
-						strlen(txt->src->upcoming)) *
-						sizeof(char));
+			if (spc != -1) {
+				len = strlen(line + spc);
+				if (txt->src->upcoming == NULL) {
+				    tmp = mymalloc((len + txt->wrapindent + 1) *
+					    sizeof(char));
+				} else {
+				    tmp = mymalloc((len + txt->wrapindent + 1 +
+					    strlen(txt->src->upcoming)) *
+					    sizeof(char));
+				}
+				pos = tmp;
+				for (i = txt->wrapindent; i > 0; i--)
+					*pos++ = ' ';
+				strcpy(pos, line + spc);
+				if (txt->src->upcoming != NULL) {
+				    strcpy(pos + len, txt->src->upcoming);
+				    myfree(txt->src->upcoming);
+				}
+				txt->src->upcoming = tmp;
 			}
-			pos = tmp;
-			for (i = txt->wrapindent; i > 0; i--) *pos++ = ' ';
-			strcpy(pos, spc);
-			if (txt->src->upcoming != NULL) {
-				strcpy(pos + len, txt->src->upcoming);
-				myfree(txt->src->upcoming);
-			}
-			txt->src->upcoming = tmp;
-			*spc = '\0';
+			line[spc] = '\0';
 			tmp = mystrdup(line);
 			myfree(line);
 			line = tmp;

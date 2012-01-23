@@ -248,11 +248,13 @@ not appropriate for use in headers. They are:
 
 - %wrap%
 - %wrap W%
-  lines until the next blank line are concatenated (lines have whitespace
-  trimmed, then a single space is used to separate them) and are then rewrapped
-  (by breaking them at spaces) to a width of W (or 76 if W is omitted); the
-  width is reckoned including characters preceding the directive so it is an
-  absolute maximum width
+  lines until the next blank line are concatenated and are then rewrapped to a
+  width of W (or 76 if W is omitted); lines have whitespace trimmed before
+  being joined with a single space; lines are broken at spaces or at points
+  marked for breaking with \<space>; the width is reckoned including any text
+  preceding the directive and any indentation preserved from a file which
+  included the current one, so it is an absolute maximum width; it is measured
+  in bytes
 
 - %text T%
   text from the file named T in the listdir/text directory; the name may only
@@ -502,6 +504,8 @@ Unformatted substitutions
   Subject: header as Mlmmj does automatic quoting for that header as described
   above)
 
+- \<space>
+  nothing, but allow the line to be broken here when wrapping
+
 - \\
   a single \
-
