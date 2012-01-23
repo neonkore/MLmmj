@@ -820,6 +820,7 @@ int main(int argc, char **argv)
 	addrtocc = !(statctrl(listdir, "tocc"));
 	if(addrtocc) {
 		for(i = 0; i < toemails.emailcount; i++) {
+			errno = 0;
 			log_error(LOG_ARGS, "Found To: %s",
 				toemails.emaillist[i]);
 			for(j = 0; j < alternates->count; j++) {
@@ -830,6 +831,7 @@ int main(int argc, char **argv)
 			}
 		}
 		for(i = 0; i < ccemails.emailcount; i++) {
+			errno = 0;
 			log_error(LOG_ARGS, "Found Cc: %s",
 				ccemails.emaillist[i]);
 			for(j = 0; j < alternates->count; j++) {

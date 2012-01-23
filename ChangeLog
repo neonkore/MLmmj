@@ -1,3 +1,5 @@
+ o Avoid bogus error messages when logging that the list address has been
+   found in To: or CC: headers.
  o Escape dashes in man pages.
  o Remove 'bashisms' from mlmmj-make-ml script (patch from Dan forwarded by
    Thomas Goirand).
