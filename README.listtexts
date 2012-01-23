@@ -81,11 +81,11 @@ is given in brackets. Those with asterisks (*) are not yet used.
 
 - deny-sub-disabled-digest (sub-deny-digest)
 - deny-sub-disabled-nomail (sub-deny-nomail)
-- deny-sub-subbed (sub-subscribed)
+- deny-sub-subbed-{normal|digest|nomail} (sub-subscribed)
 - deny-sub-closed *
 - deny-sub-expired *
 - deny-sub-obstruct *
-- deny-unsub-unsubbed (unsub-notsubscribed)
+- deny-unsub-unsubbed-{normal|digest|nomail|all} (unsub-notsubscribed)
 - deny-post-subonlypost (subonlypost)
 - deny-post-access (access)
 - deny-post-maxmailsize (maxmailsize)
@@ -106,9 +106,9 @@ is given in brackets. Those with asterisks (*) are not yet used.
   if the rejection fails; but deny-post-reject will go to the person requesting
   the post if the rejection succeeds, causing the post to fail)
 
-- finish-sub-{request|confirm|admin|permit}-normal (sub-ok)
-- finish-sub-{request|confirm|admin|permit}-digest (sub-ok-digest)
-- finish-sub-{request|confirm|admin|permit}-nomail (sub-ok-nomail)
+- finish-sub-{request|confirm|admin|permit|switch}-normal (sub-ok)
+- finish-sub-{request|confirm|admin|permit|switch}-digest (sub-ok-digest)
+- finish-sub-{request|confirm|admin|permit|switch}-nomail (sub-ok-nomail)
 - finish-unsub-{request|confirm|admin}-normal (unsub-ok)
 - finish-unsub-{request|confirm|admin}-digest (unsub-ok-digest)
 - finish-unsub-{request|confirm|admin}-nomail (unsub-ok-nomail)

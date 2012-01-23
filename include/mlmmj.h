@@ -76,20 +76,22 @@ enum subtype {
 	SUB_DIGEST,
 	SUB_NOMAIL,
 	SUB_FILE, /* For single files (moderator, owner etc.) */
-	SUB_ALL /* For listing all kinds of subscribers */
+	SUB_ALL, /* For listing or unsubscribing all kinds of subscribers */
+	SUB_NONE /* For when an address is not subscribed at all */
 };
 
-char *subtype_strs[5]; /* count matches enum above; defined in mlmmj-sub.c */
+char *subtype_strs[6]; /* count matches enum above; defined in mlmmj-sub.c */
 
 enum subreason {
 	SUB_REQUEST,
 	SUB_CONFIRM,
 	SUB_PERMIT,
 	SUB_ADMIN,
-	SUB_BOUNCING
+	SUB_BOUNCING,
+	SUB_SWITCH
 };
 
-char * subreason_strs[5]; /* count matches enum above; defined in mlmmj-sub.c */
+char * subreason_strs[6]; /* count matches enum above; defined in mlmmj-sub.c */
 
 void print_version(const char *prg);
 

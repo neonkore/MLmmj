@@ -4,7 +4,7 @@ mlmmj-unsub \- unsubscribe address from a mailinglist run by mlmmj
 .SH SYNOPSIS
 .B mlmmj-unsub
 \fI\-L /path/to/list \-a john@doe.org\fR [\fI\-b\fR] [\fI\-c\fR | \fI\-C\fR]
-[\fI\-d\fR | \fI\-n\fR] [\fI\-h\fR] [\fI\-r\fR | \fI\-R\fR] [\fI\-s\fR] [\fI\-U\fR] [\fI\-V\fR]
+[\fI\-d\fR | \fI\-n\fR | \fI\-N\fR] [\fI\-h\fR] [\fI\-q\fR] [\fI\-r\fR | \fI\-R\fR] [\fI\-s\fR] [\fI\-U\fR] [\fI\-V\fR]
 .HP
 \fB\-a\fR: Email address to unsubscribe
 .HP
@@ -22,6 +22,10 @@ mlmmj-unsub \- unsubscribe address from a mailinglist run by mlmmj
 .HP
 \fB\-n\fR: Unsubscribe from the nomail version of the list
 .HP
+\fB\-N\fR: Unsubscribe from the normal version of the list
+.HP
+\fB\-q\fR: Be quiet (don't notify owner about the unsubscribe)
+.HP
 \fB\-r\fR: Behave as if request arrived via email (internal use)
 .HP
 \fB\-R\fR: Behave as if confirmation arrived via email (internal use)
@@ -34,7 +38,9 @@ mlmmj-unsub \- unsubscribe address from a mailinglist run by mlmmj
 .SH DESCRIPTION
 This utility is used to unsubscribe people from the specified mailinglist. It
 will remove the specified email address from every file in the
-<listdir>/subscribers.d/ directory.
+<listdir>/subscribers.d/, <listdir>/digesters.d/ and <listdir>/nomailsubs.d/
+directories (or if the \-d, \-n or \-N switch is given, only the one relevant
+directory).
 
 Unless the \fB\-U\fR switch is used it will switch its user id to the user id
 owning the list directory. This is done to make sure that new files created are
@@ -44,8 +50,11 @@ Normally a mail is sent to the person being unsubscribed if the address is not
 subscribed to the list. If the \fB\-s\fR switch is used such a mail will not be
 sent.
 
-When neither \fB\-c\fR nor \fB\-C\fR are specified, unsubscription silently
-happens.
+When neither \fB\-c\fR nor \fB\-C\fR is specified, unsubscription happens
+silently from the point of view of the subscriber. When \fB\-q\fR is specified,
+unsubscription happens silently from the point of view of the list owner. Use
+of \fB\-s\fR is recommended to ensure you don't spam unsubscribed addresses by
+accident.
 .SH "SEE ALSO"
 mlmmj-sub(1)
 .SH AUTHORS

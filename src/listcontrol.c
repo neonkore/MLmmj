@@ -118,7 +118,6 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	char *omitfilename;
 	char *omit = NULL;
 	char *c, *archivefilename, *sendfilename;
-	const char *subswitch;
 	struct stat stbuf;
 	int closedlist, nosubconfirm, tmpfd, noget, i, closedlistsub,
 	    subonlyget = 0;
@@ -136,10 +135,6 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 	closedlistsub = statctrl(listdir, "closedlistsub");
 
 	nosubconfirm = statctrl(listdir, "nosubconfirm");
-	if(nosubconfirm)
-		subswitch = "-c";
-	else
-		subswitch = "-C";
 	
 #if 0
 	log_error(LOG_ARGS, "controlstr = [%s]\n", controlstr);
@@ -244,7 +239,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
 				"-d",
-				"-r", subswitch, (char *)NULL);
+				"-r", "-c",
+				(nosubconfirm ? (char *)NULL : "-C"),
+				(char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsub);
 		exit(EXIT_FAILURE);
@@ -291,7 +288,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
 				"-n",
-				"-r", subswitch, (char *)NULL);
+				"-r", "-c",
+				(nosubconfirm ? (char *)NULL : "-C"),
+				(char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsub);
 		exit(EXIT_FAILURE);
@@ -319,7 +318,9 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		execlp(mlmmjsub, mlmmjsub,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
-				"-r", subswitch, (char *)NULL);
+				"-r", "-c",
+				(nosubconfirm ? (char *)NULL : "-C"),
+				(char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsub);
 		exit(EXIT_FAILURE);
@@ -409,64 +410,10 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		exit(EXIT_FAILURE);
 		break;
 
-	/* listname+unsubscribe-digest@domain.tld */
+	/* DEPRECATED: listname+unsubscribe-digest@domain.tld */
 	case CTRL_UNSUBSCRIBE_DIGEST:
-		if (closedlist) {
-			errno = 0;
-			log_error(LOG_ARGS, "An unsubscribe-digest request was"
-				" sent to a closed list. Ignoring mail");
-			return -1;
-		}
-		if (!strchr(fromemails->emaillist[0], '@')) {
-			/* Not a valid From: address */
-			errno = 0;
-			log_error(LOG_ARGS, "An unsubscribe-digest request was"
-				" sent with an invalid From: header."
-				" Ignoring mail");
-			return -1;
-		}
-		log_oper(listdir, OPLOGFNAME, "mlmmj-unsub: %s requests"
-					" unsubscribe from digest",
-					fromemails->emaillist[0]);
-		execlp(mlmmjunsub, mlmmjunsub,
-				"-L", listdir,
-				"-a", fromemails->emaillist[0],
-				"-d",
-				"-r", subswitch, (char *)NULL);
-		log_error(LOG_ARGS, "execlp() of '%s' failed",
-				mlmmjunsub);
-		exit(EXIT_FAILURE);
-		break;
-
-	/* listname+unsubscribe-nomail@domain.tld */
+	/* DEPRECATED: listname+unsubscribe-nomail@domain.tld */
 	case CTRL_UNSUBSCRIBE_NOMAIL:
-		if (closedlist) {
-			errno = 0;
-			log_error(LOG_ARGS, "An unsubscribe-nomail request was"
-				" sent to a closed list. Ignoring mail");
-			return -1;
-		}
-		if (!strchr(fromemails->emaillist[0], '@')) {
-			/* Not a valid From: address */
-			errno = 0;
-			log_error(LOG_ARGS, "An unsubscribe-nomail request was"
-				" sent with an invalid From: header."
-				" Ignoring mail");
-			return -1;
-		}
-		log_oper(listdir, OPLOGFNAME, "mlmmj-unsub: %s requests"
-					" unsubscribe from nomail",
-					fromemails->emaillist[0]);
-		execlp(mlmmjunsub, mlmmjunsub,
-				"-L", listdir,
-				"-a", fromemails->emaillist[0],
-				"-n",
-				"-r", subswitch, (char *)NULL);
-		log_error(LOG_ARGS, "execlp() of '%s' failed",
-				mlmmjunsub);
-		exit(EXIT_FAILURE);
-		break;
-
 	/* listname+unsubscribe@domain.tld */
 	case CTRL_UNSUBSCRIBE:
 		if (closedlist) {
@@ -484,12 +431,13 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 			return -1;
 		}
 		log_oper(listdir, OPLOGFNAME, "mlmmj-unsub: %s requests"
-					" unsubscribe from regular list",
+					" unsubscribe",
 					fromemails->emaillist[0]);
 		execlp(mlmmjunsub, mlmmjunsub,
 				"-L", listdir,
 				"-a", fromemails->emaillist[0],
-				"-r", subswitch, (char *)NULL);
+				"-r", (nosubconfirm ? "-c" : "-C"),
+				(char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 				mlmmjunsub);
 		exit(EXIT_FAILURE);
@@ -815,7 +763,8 @@ permit:
 		}
 		subonlyget = statctrl(listdir, "subonlyget");
 		if(subonlyget) {
-			if(is_subbed(listdir, fromemails->emaillist[0]) != 0) {
+			if(is_subbed(listdir, fromemails->emaillist[0]) ==
+					SUB_NONE) {
 				errno = 0;
 				log_error(LOG_ARGS, "A get request was sent"
 					" from a non-subscribed address to a"

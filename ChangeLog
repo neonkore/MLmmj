@@ -1,3 +1,9 @@
+ o Make +unsubscribe remove the requester from all versions of the list.
+ o Make mlmmj-unsub default to removing the requester from all versions of the
+   list.
+ o Make mlmmj-sub and +subscribe[-digest|-nomail] switch existing
+   subscriptions.
+ o Add a switch to bypass notifying the owner on subscribe/unsubscribe.
  o Introduce \<space> to indicate line-break positions to enable sensible
    wrapping of Chinese and similar text.
  o Allow lines to be longer than the wrapping width if there are no spaces,

@@ -4,13 +4,13 @@ mlmmj-sub \- subscribe address to a mailinglist run by mlmmj
 .SH SYNOPSIS
 .B mlmmj-sub
 \fI\-L /path/to/list\fR [\fI\-a john@doe.org\fR | \fI\-m str\fR]
-[\fI\-c\fR | \fI\-C\fR] [\fI\-d\fR | \fI\-n\fR] [\fI\-f\fR] [\fI\-h\fR] \fR[\fI\-r\fR | \fI\-R\fR] [\fI\-s\fR] [\fI\-U\fR] [\fI\-V\fR]
+[\fI\-c\fR] [\fI\-C\fR] [\fI\-d\fR | \fI\-n\fR] [\fI\-f\fR] [\fI\-h\fR] [\fI\-q\fR] \fR[\fI\-r\fR | \fI\-R\fR] [\fI\-s\fR] [\fI\-U\fR] [\fI\-V\fR]
 .HP
 \fB\-a\fR: Email address to subscribe
 .HP
-\fB\-c\fR: Send welcome mail
+\fB\-c\fR: Send welcome mail (unless requesting confirmation)
 .HP
-\fB\-C\fR: Request mail confirmation
+\fB\-C\fR: Request mail confirmation (unless switching versions)
 .HP
 \fB\-d\fR: Subscribe to digest version of the list
 .HP
@@ -23,6 +23,8 @@ mlmmj-sub \- subscribe address to a mailinglist run by mlmmj
 \fB\-m\fR: Moderation string
 .HP
 \fB\-n\fR: Subscribe to nomail version of the list
+.HP
+\fB\-q\fR: Be quiet (don't notify owner about the subscription)
 .HP
 \fB\-r\fR: Behave as if request arrived via email (internal use)
 .HP
@@ -38,23 +40,35 @@ This utility is used to subscribe people to the specified mailinglist. It will
 write the email address in a file with the name of the beginning letter of the
 email address getting subscribed in the <listdir>/subscribers.d/ directory.
 
-Unless the \fB\-U\fR switch is used it will switch its user id to the user id
-owning the list directory. This is done to make sure that new files created are
-having correct permissions.
+The digest version of the list is a list version where people receive postings
+to the list periodically (e.g. once a day) or when a large number of posts have
+accumulated. Digest subscribers are in the <listdir>/digesters.d/ directory.
 
 The nomail version of the list is a list version where people are subscribed
 like usual, but they won't receive any postings to the list. This is useful for
 people who read the mailinglist through a news gateway, but want to be able to
-post to the list.
+post to the list. Nomail subscribers are in the <listdir>/nomailsubs.d/
+directory.
 
-Normally a mail is sent to the subscriber if the address is already subscribed
-to the list. If the \fB\-s\fR switch is used such a mail will not be sent.
+Unless the \fB\-U\fR switch is used it will switch its user id to the user id
+owning the list directory. This is done to make sure that new files created are
+having correct permissions.
+
+If the given address is already subscribed to the list, but to a different
+version, the subscription is switched to that version, and confirmation and
+moderation are bypassed. If the address is already subscribed to the version
+requested, a mail is sent to the subscriber, unless the \fB\-s\fR switch is
+used.
 
 Subscription may be moderated (if <listdir>/control/submod exists) unless the
-\fB\-f\fR switch is given.
+\fB\-f\fR switch is given. When a subscription is permitted by a gatekeeper,
+welcome messages are sent to the subscriber as usual, regardless of options
+given now.
 
-To ensure a silent subscription, use \fB\-f\fR, but neither \fB\-c\fR
-nor \fB\-C\fR.
+To ensure subscription is silent from the point of view of the subscriber, use
+\fB\-f\fR, but neither \fB\-c\fR nor \fB\-C\fR. To inhibit notification of the
+owner, use \fB\-q\fR. Use of \fB\-s\fR is recommended to ensure you don't spam
+already-subscribed addresses by accident.
 .SH "SEE ALSO"
 mlmmj-unsub(1), setuid(2)
 .SH AUTHORS

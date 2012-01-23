@@ -912,7 +912,7 @@ int main(int argc, char **argv)
 			myfree(donemailname);
 			exit(EXIT_SUCCESS);
 		}
-		if(is_subbed(listdir, posteraddr) != 0) {
+		if(is_subbed(listdir, posteraddr) == SUB_NONE) {
 			modnonsubposts = statctrl(listdir,
 					"modnonsubposts");
 			if(modnonsubposts) {

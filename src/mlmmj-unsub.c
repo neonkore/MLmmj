@@ -293,7 +293,7 @@ ssize_t unsubscribe(int subreadfd, int subwritefd, const char *address)
 static void print_help(const char *prg)
 {
 	printf("Usage: %s -L /path/to/list -a john@doe.org\n"
-	       "       [-b] [-c | -C] [-h] [-L] [-d | -n] [-r | -R] [-s] [-V]\n"
+	       "       [-b] [-c | -C] [-h] [-L] [-d | -n | -N] [-q] [-r | -R] [-s] [-V]\n"
 	       " -a: Email address to unsubscribe \n"
 	       " -b: Behave as if unsubscription is due to bouncing (internal use)\n"
 	       " -c: Send goodbye mail\n"
@@ -301,19 +301,20 @@ static void print_help(const char *prg)
 	       " -d: Unsubscribe from digest of list\n"
 	       " -h: This help\n"
 	       " -L: Full path to list directory\n"
-	       " -n: Unsubscribe from no mail version of list\n", prg);
-	printf(" -r: Behave as if request arrived via email (internal use)\n"
+	       " -n: Unsubscribe from no mail version of list\n" 
+	       " -N: Unsubscribe from normal version of list\n", prg);
+	printf(" -q: Be quiet (don't notify owner about the subscription)\n"
+	       " -r: Behave as if request arrived via email (internal use)\n"
 	       " -R: Behave as if confirmation arrived via email (internal use)\n"
 	       " -s: Don't send a mail to the address if not subscribed\n"
 	       " -U: Don't switch to the user id of the listdir owner\n"
 	       " -V: Print version\n"
-	       "When no options are specified, unsubscription silently "
-	       "happens\n");
+	       "To ensure a silent unsubscription, use -q -s\n");
 	exit(EXIT_SUCCESS);
 }
 
-void generate_notsubscribed(const char *listdir, const char *subaddr,
-		const char *mlmmjsend)
+static void generate_notsubscribed(const char *listdir, const char *subaddr,
+		const char *mlmmjsend, enum subtype typesub)
 {
 	text *txt;
 	char *queuefilename, *fromaddr, *listname, *listfqdn, *listaddr;
@@ -327,7 +328,7 @@ void generate_notsubscribed(const char *listdir, const char *subaddr,
 	myfree(listdelim);
 
 	txt = open_text(listdir,
-			"deny", "unsub", "unsubbed", NULL,
+			"deny", "unsub", "unsubbed", subtype_strs[typesub],
 			"unsub-notsubscribed");
 	MY_ASSERT(txt);
 	register_unformatted(txt, "subaddr", subaddr);
@@ -351,135 +352,20 @@ void generate_notsubscribed(const char *listdir, const char *subaddr,
 	exit(EXIT_FAILURE);
 }
 
-
-int main(int argc, char **argv)
-{
-	int subread, subwrite, rlock, wlock, opt, unsubres, status, nomail = 0;
-	int confirmunsub = 0, unsubconfirm = 0, notifysub = 0, digest = 0;
-	int changeuid = 1, groupwritable = 0, sublock, sublockfd;
-	int nogennotsubscribed = 0, i = 0;
-	char *listaddr, *listdelim, *listdir = NULL, *address = NULL;
-	char *subreadname = NULL, *subwritename, *mlmmjsend, *bindir, *subdir;
-	char *subddirname, *sublockname, *lowcaseaddr;
-	off_t suboff;
+static void unsubscribe_type(char *listdir, char *listaddr, char *listdelim,
+		char *address, char *mlmmjsend, int confirmunsub,
+		enum subtype typesub, enum subreason reasonsub) {
+	char *subdir, *subddirname, *sublockname;
+	char *subreadname = NULL, *subwritename;
+	int subread, subwrite, rlock, wlock;
+	int sublock, sublockfd;
+	int groupwritable = 0;
+	int unsubres, status;
+	struct stat st;
 	DIR *subddir;
 	struct dirent *dp;
+	off_t suboff;
 	pid_t pid, childpid;
-	enum subtype typesub = SUB_NORMAL;
-	enum subreason reasonsub = SUB_ADMIN;
-	uid_t uid;
-	struct stat st;
-
-	CHECKFULLPATH(argv[0]);
-	
-	log_set_name(argv[0]);
-
-	bindir = mydirname(argv[0]);
-	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
-	myfree(bindir);
-
-	while ((opt = getopt(argc, argv, "hcCdnVUL:a:sbrR")) != -1) {
-		switch(opt) {
-		case 'L':
-			listdir = optarg;
-			break;
-		case 'n':
-			nomail = 1;
-			break;
-		case 'a':
-			address = optarg;
-			break;
-		case 'b':
-			reasonsub = SUB_BOUNCING;
-			break;
-		case 'c':
-			confirmunsub = 1;
-			break;
-		case 'C':
-			unsubconfirm = 1;
-			break;
-		case 'd':
-			digest = 1;
-			break;
-		case 'h':
-			print_help(argv[0]);
-			break;
-		case 'r':
-			reasonsub = SUB_REQUEST;
-			break;
-		case 'R':
-			reasonsub = SUB_CONFIRM;
-			break;
-		case 's':
-			nogennotsubscribed = 1;
-			break;
-		case 'U':
-			changeuid = 0;
-			break;
-		case 'V':
-			print_version(argv[0]);
-			exit(0);
-		}
-	}
-	if(listdir == 0 || address == 0) {
-		fprintf(stderr, "You have to specify -L and -a\n");
-		fprintf(stderr, "%s -h for help\n", argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
-	if(digest && nomail) {
-		fprintf(stderr, "Specify either -d or -n, not both\n");
-		fprintf(stderr, "%s -h for help\n", argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
-	if(digest)
-		typesub = SUB_DIGEST;
-	if(nomail)
-		typesub = SUB_NOMAIL;
-
-	if(confirmunsub && unsubconfirm) {
-		fprintf(stderr, "Cannot specify both -C and -c\n");
-		fprintf(stderr, "%s -h for help\n", argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
-	if(reasonsub == SUB_CONFIRM && unsubconfirm) {
-		fprintf(stderr, "Cannot specify both -C and -R\n");
-		fprintf(stderr, "%s -h for help\n", argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
-	if(reasonsub == SUB_BOUNCING && unsubconfirm) {
-		fprintf(stderr, "Cannot specify both -C and -b\n");
-		fprintf(stderr, "%s -h for help\n", argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
-	/* Make the address lowercase */
-	lowcaseaddr = mystrdup(address);
-	i = 0;
-	while(lowcaseaddr[i]) {
-		lowcaseaddr[i] = tolower(lowcaseaddr[i]);
-		i++;
-	}
-	address = lowcaseaddr;
-
-	/* get the list address */
-	listaddr = getlistaddr(listdir);
-
-	if(changeuid) {
-		uid = getuid();
-		if(!uid && stat(listdir, &st) == 0) {
-			printf("Changing to uid %d, owner of %s.\n",
-					(int)st.st_uid, listdir);
-			if(setuid(st.st_uid) < 0) {
-				perror("setuid");
-				fprintf(stderr, "Continuing as uid %d\n",
-						(int)uid);
-			}
-		}
-	}
 
 	switch(typesub) {
 		default:
@@ -493,7 +379,7 @@ int main(int argc, char **argv)
 			subdir = "/nomailsubs.d/";
 			break;
 	}
-		
+
 	subddirname = concatstr(2, listdir, subdir);
 	if (stat(subddirname, &st) == 0) {
 		if(st.st_mode & S_IWGRP) {
@@ -502,29 +388,10 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if(is_subbed_in(subddirname, address)) {
-		/* Address is not subscribed */
-		myfree(subddirname);
-		myfree(listaddr);
-
-		if(!nogennotsubscribed) {
-			generate_notsubscribed(listdir, address, mlmmjsend);
-		}
-
-		exit(EXIT_SUCCESS);
-	}
-
-	listdelim = getlistdelim(listdir);
-	if(unsubconfirm)
-		generate_unsubconfirm(listdir, listaddr, listdelim, address,
-				mlmmjsend, typesub, reasonsub);
-
 	if((subddir = opendir(subddirname)) == NULL) {
 		log_error(LOG_ARGS, "Could not opendir(%s)",
 				    subddirname);
 		myfree(subddirname);
-		myfree(listaddr);
-		myfree(listdelim);
 		exit(EXIT_FAILURE);
 	}
 
@@ -672,8 +539,194 @@ int main(int argc, char **argv)
         }
 
 	closedir(subddir);
+}
 
-        notifysub = statctrl(listdir, "notifysub");
+
+int main(int argc, char **argv)
+{
+	int opt;
+	int normal = 0, digest = 0, nomail = 0, subbed;
+	int confirmunsub = 0, unsubconfirm = 0, notifysub = 0;
+	int changeuid = 1, quiet = 0;
+	int nogennotsubscribed = 0, i = 0;
+	char *listaddr, *listdelim, *listdir = NULL, *address = NULL;
+	char *mlmmjsend, *bindir, *subdir, *subddirname;
+	char *lowcaseaddr;
+	enum subtype typesub = SUB_ALL;
+	enum subreason reasonsub = SUB_ADMIN;
+	uid_t uid;
+	struct stat st;
+
+	CHECKFULLPATH(argv[0]);
+	
+	log_set_name(argv[0]);
+
+	bindir = mydirname(argv[0]);
+	mlmmjsend = concatstr(2, bindir, "/mlmmj-send");
+	myfree(bindir);
+
+	while ((opt = getopt(argc, argv, "hcCdenNVUL:a:sbqrR")) != -1) {
+		switch(opt) {
+		case 'L':
+			listdir = optarg;
+			break;
+		case 'a':
+			address = optarg;
+			break;
+		case 'b':
+			reasonsub = SUB_BOUNCING;
+			break;
+		case 'c':
+			confirmunsub = 1;
+			break;
+		case 'C':
+			unsubconfirm = 1;
+			break;
+		case 'd':
+			digest = 1;
+			break;
+		case 'h':
+			print_help(argv[0]);
+			break;
+		case 'n':
+			nomail = 1;
+			break;
+		case 'N':
+			normal = 1;
+			break;
+		case 'q':
+			quiet = 1;
+			break;
+		case 'r':
+			reasonsub = SUB_REQUEST;
+			break;
+		case 'R':
+			reasonsub = SUB_CONFIRM;
+			break;
+		case 's':
+			nogennotsubscribed = 1;
+			break;
+		case 'U':
+			changeuid = 0;
+			break;
+		case 'V':
+			print_version(argv[0]);
+			exit(0);
+		}
+	}
+	if(listdir == 0 || address == 0) {
+		fprintf(stderr, "You have to specify -L and -a\n");
+		fprintf(stderr, "%s -h for help\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	if(digest + nomail + normal > 1) {
+		fprintf(stderr, "Specify at most one of -d, -n and -N\n");
+		fprintf(stderr, "%s -h for help\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	if(digest)
+		typesub = SUB_DIGEST;
+	if(nomail)
+		typesub = SUB_NOMAIL;
+	if(normal)
+		typesub = SUB_NORMAL;
+
+	if(confirmunsub && unsubconfirm) {
+		fprintf(stderr, "Cannot specify both -C and -c\n");
+		fprintf(stderr, "%s -h for help\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	if(reasonsub == SUB_CONFIRM && unsubconfirm) {
+		fprintf(stderr, "Cannot specify both -C and -R\n");
+		fprintf(stderr, "%s -h for help\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	if(reasonsub == SUB_BOUNCING && unsubconfirm) {
+		fprintf(stderr, "Cannot specify both -C and -b\n");
+		fprintf(stderr, "%s -h for help\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	/* Make the address lowercase */
+	lowcaseaddr = mystrdup(address);
+	i = 0;
+	while(lowcaseaddr[i]) {
+		lowcaseaddr[i] = tolower(lowcaseaddr[i]);
+		i++;
+	}
+	address = lowcaseaddr;
+
+	/* get the list address */
+	listaddr = getlistaddr(listdir);
+	listdelim = getlistdelim(listdir);
+
+	if(changeuid) {
+		uid = getuid();
+		if(!uid && stat(listdir, &st) == 0) {
+			printf("Changing to uid %d, owner of %s.\n",
+					(int)st.st_uid, listdir);
+			if(setuid(st.st_uid) < 0) {
+				perror("setuid");
+				fprintf(stderr, "Continuing as uid %d\n",
+						(int)uid);
+			}
+		}
+	}
+
+	if (typesub == SUB_ALL) {
+		subbed = is_subbed(listdir, address) != SUB_NONE;
+	} else {
+		switch(typesub) {
+			default:
+			case SUB_NORMAL:
+				subdir = "/subscribers.d/";
+				break;
+			case SUB_DIGEST:
+				subdir = "/digesters.d/";
+				break;
+			case SUB_NOMAIL:
+				subdir = "/nomailsubs.d/";
+				break;
+		}
+		subddirname = concatstr(2, listdir, subdir);
+		subbed = is_subbed_in(subddirname, address);
+		myfree(subddirname);
+	}
+
+	if(!subbed) {
+		/* Address is not subscribed */
+		myfree(listaddr);
+		myfree(listdelim);
+
+		if(!nogennotsubscribed) {
+			generate_notsubscribed(listdir, address, mlmmjsend,
+					typesub);
+		}
+
+		exit(EXIT_SUCCESS);
+	}
+
+	if(unsubconfirm)
+		generate_unsubconfirm(listdir, listaddr, listdelim, address,
+				mlmmjsend, typesub, reasonsub);
+
+	if (typesub == SUB_ALL) {
+		unsubscribe_type(listdir, listaddr, listdelim, address,
+				mlmmjsend, confirmunsub, SUB_NORMAL, reasonsub);
+		unsubscribe_type(listdir, listaddr, listdelim, address,
+				mlmmjsend, confirmunsub, SUB_DIGEST, reasonsub);
+		unsubscribe_type(listdir, listaddr, listdelim, address,
+				mlmmjsend, confirmunsub, SUB_NOMAIL, reasonsub);
+	} else {
+		unsubscribe_type(listdir, listaddr, listdelim, address,
+				mlmmjsend, confirmunsub, typesub, reasonsub);
+	}
+
+        notifysub = !quiet && statctrl(listdir, "notifysub");
 
         /* Notify list owner about subscription */
         if (notifysub)
