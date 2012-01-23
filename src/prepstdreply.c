@@ -1049,12 +1049,17 @@ char *get_processed_text_line(text *txt, int headers,
 			pos = line;
 		}
 
-		incision = txt->skip != NULL ? pos - line : -1;
+		if (txt->skip != NULL) {
+			incision = pos - line;
+			len = incision;
+		} else {
+			incision = -1;
+		}
 		spc = NULL;
 		directive = 0;
 		while (*pos != '\0') {
 			if (txt->wrapwidth != 0 && len > txt->wrapwidth &&
-					txt->skip == NULL && !peeking) break;
+					!peeking) break;
 			if (*pos == '\r') {
 				*pos = '\0';
 				pos++;
@@ -1089,7 +1094,6 @@ char *get_processed_text_line(text *txt, int headers,
 				directive = 1;
 				swallow = handle_directive(txt, &line, &pos,
 						peeking, listdir);
-				len = pos - line;
 				spc = NULL;
 				if (swallow == 1) peeking = 0;
 				if (swallow == -1) break;
@@ -1099,6 +1103,7 @@ char *get_processed_text_line(text *txt, int headers,
 						 * later */
 						incision = pos - line;
 					}
+					len = incision;
 				} else {
 					if (incision != -1) {
 					    /* Time to cut */
@@ -1111,6 +1116,7 @@ char *get_processed_text_line(text *txt, int headers,
 					    }
 					    incision = -1;
 					}
+					len = pos - line;
 				}
 				/* handle_directive() sets up for the next
 				 * character to process, so continue straight
@@ -1119,7 +1125,7 @@ char *get_processed_text_line(text *txt, int headers,
 			} else if (peeking && txt->skip == NULL) {
 				break;
 			}
-			len++;
+			if (txt->skip == NULL) len++;
 			pos++;
 		}
 
