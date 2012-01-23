@@ -1,3 +1,4 @@
+ o Escape dashes in man pages.
  o Remove 'bashisms' from mlmmj-make-ml script (patch from Dan forwarded by
    Thomas Goirand).
  o Automatically skip blank lines followed by unsatisfied conditionals with no

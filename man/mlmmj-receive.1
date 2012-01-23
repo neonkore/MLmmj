@@ -3,7 +3,7 @@
 mlmmj-receive \- receive mails for an mlmmj managed mailinglist
 .SH SYNOPSIS
 .B mlmmj-receive
-\fI-L /path/to/listdir \fR[\fI-h\fR] [\fI-V\fR] [\fI-P\fR] [\fI-F\fR]
+\fI\-L /path/to/listdir \fR[\fI\-h\fR] [\fI\-V\fR] [\fI\-P\fR] [\fI\-F\fR]
 .HP
 \fB\-h\fR: This help
 .HP
@@ -21,7 +21,7 @@ and invokes mlmmj-process unless the \fB\-P\fR option is specified. On systems
 using mailservers supporting the \fB/etc/aliases\fR file, a line to activate
 an mlmmj managed mailinglist would look like this:
 .LP
-list: "|/usr/bin/mlmmj-receive -L /var/spool/mlmmj/list/"
+list: "|/usr/bin/mlmmj-receive \-L /var/spool/mlmmj/list/"
 
 It's very important to specify the full path to the binary, or the mailinglist
 will not function.

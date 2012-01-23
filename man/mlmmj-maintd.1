@@ -3,7 +3,7 @@
 mlmmj-maintd \- maintenance for mlmmj maintained lists
 .SH SYNOPSIS
 .B mlmmj-maintd
-[\fI-F\fR] \fI[-d\fR | \fI-L\fR] /path/to/dir
+[\fI\-F\fR] \fI[\-d\fR | \fI\-L\fR] /path/to/dir
 .HP
 \fB\-d\fR: Full path to directory with lists
 .HP
@@ -30,7 +30,7 @@ cron is used, mlmmj-maintd should be run every 2 hours or so. An example
 crontab entry:
 
 .LP
-0 */2 * * * /usr/bin/mlmmj-maintd -F -L /path/to/list
+0 */2 * * * /usr/bin/mlmmj-maintd \-F \-L /path/to/list
 .SH AUTHORS
 This manual page was written by the following persons:
 .HP
