@@ -96,7 +96,7 @@ static void newmoderated(const char *listdir, const char *mailfilename,
 	text *txt;
 	memory_lines_state *mls;
 	char *queuefilename = NULL, *moderatorsfilename, *efromismod = NULL;
-	char *mailbasename = mybasename(mailfilename), *tmp, *to;
+	char *mailbasename = mybasename(mailfilename), *tmp, *to, *reject;
 	int moderatorsfd, foundaddr = 0, notifymod = 0, status;
 	pid_t childpid, pid;
 #if 0
@@ -138,7 +138,9 @@ static void newmoderated(const char *listdir, const char *mailfilename,
 	myfree(moderators);
 
 	listdelim = getlistdelim(listdir);
-	replyto = concatstr(6, listname, listdelim, "moderate-", mailbasename,
+	replyto = concatstr(6, listname, listdelim, "release-", mailbasename,
+			    "@", listfqdn);
+	reject = concatstr(6, listname, listdelim, "reject-", mailbasename,
 			    "@", listfqdn);
 
 	from = concatstr(4, listname, listdelim, "owner@", listfqdn);
@@ -155,6 +157,7 @@ static void newmoderated(const char *listdir, const char *mailfilename,
 	register_unformatted(txt, "posteraddr", posteraddr);
 	register_unformatted(txt, "moderateaddr", replyto); /* DEPRECATED */
 	register_unformatted(txt, "releaseaddr", replyto);
+	register_unformatted(txt, "rejectaddr", reject);
 	register_unformatted(txt, "moderators", "%moderators%"); /* DEPRECATED */
 	register_formatted(txt, "moderators",
 			rewind_memory_lines, get_memory_line, mls);

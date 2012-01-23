@@ -74,8 +74,8 @@ void moderate_sub(const char *listdir, const char *listaddr,
 	text *txt;
 	memory_lines_state *mls;
 	char *a = NULL, *queuefilename, *from, *listname, *listfqdn, *str;
-	char *modfilename, *randomstr, *mods, *to, *replyto, *moderators = NULL;
-	char *modfilebase;
+	char *modfilename, *mods, *to, *replyto, *moderators = NULL;
+	char *cookie, *obstruct;
 	struct strlist *submods;
 	pid_t childpid, pid;
 
@@ -93,25 +93,24 @@ void moderate_sub(const char *listdir, const char *listaddr,
 			break;
 	}
 	
-	randomstr = random_str();
-	modfilename = concatstr(3, listdir, "/moderation/subscribe",
-			randomstr);
-	myfree(randomstr);
-
-	fd = open(modfilename, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
-	while(fd < 0 && errno == EEXIST) {
-		myfree(modfilename);
-		randomstr = random_str();
+	for (;;) {
+		cookie = random_str();
 		modfilename = concatstr(3, listdir, "/moderation/subscribe",
-				randomstr);
-		myfree(randomstr);
+				cookie);
 		fd = open(modfilename, O_RDWR|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
+		if (fd < 0) {
+			if (errno == EEXIST) {
+				myfree(cookie);
+				myfree(modfilename);
+				continue;
+			}
+			log_error(LOG_ARGS, "could not create %s"
+					"ignoring request: %s", str);
+			exit(EXIT_FAILURE);
+		}
+		break;
 	}
-	if(fd < 0) {
-		log_error(LOG_ARGS, "could not create %s"
-				"ignoring request: %s", str);
-		exit(EXIT_FAILURE);
-	}
+
 	if(writen(fd, str, strlen(str)) < 0) {
 		log_error(LOG_ARGS, "could not write to %s"
 				"ignoring request: %s", str);
@@ -144,13 +143,14 @@ void moderate_sub(const char *listdir, const char *listaddr,
 	listdelim = getlistdelim(listdir);
 	listfqdn = genlistfqdn(listaddr);
 	listname = genlistname(listaddr);
-	modfilebase = mybasename(modfilename);
 
 	from = concatstr(4, listname, listdelim, "owner@", listfqdn);
 	to = concatstr(3, listname, "-moderators@", listfqdn);
-	replyto = concatstr(6, listname, listdelim, "moderate-", modfilebase,
+	replyto = concatstr(6, listname, listdelim, "permit-", cookie,
 			"@", listfqdn);
-	myfree(modfilebase);
+	obstruct = concatstr(6, listname, listdelim, "obstruct-", cookie,
+			"@", listfqdn);
+	myfree(cookie);
 	for(i = 0; i < submods->count; i++) {
 		printf("%s", submods->strs[i]);
 		str = moderators;
@@ -166,7 +166,8 @@ void moderate_sub(const char *listdir, const char *listaddr,
 	register_unformatted(txt, "subaddr", subaddr);
 	register_unformatted(txt, "moderateaddr", replyto); /* DEPRECATED */
 	register_unformatted(txt, "permitaddr", replyto);
-	register_unformatted(txt, "moderators", "%gatekeepers"); /* DEPRECATED */
+	register_unformatted(txt, "obstructaddr", obstruct);
+	register_unformatted(txt, "moderators", "%gatekeepers%"); /* DEPRECATED */
 	register_formatted(txt, "gatekeepers",
 			rewind_memory_lines, get_memory_line, mls);
 	queuefilename = prepstdreply(txt, listdir, "$listowner$", to, replyto);
@@ -241,8 +242,11 @@ void getaddrandtype(const char *listdir, const char *modstr,
 {
 	int fd;
 	char *readaddr, *readtype, *modfilename;
-		
-	modfilename = concatstr(3, listdir, "/moderation/", modstr);
+
+	if (strncmp(modstr, "subscribe", 9) == 0)
+			modstr += 9;
+
+	modfilename = concatstr(3, listdir, "/moderation/subscribe", modstr);
 
 	fd = open(modfilename, O_RDONLY);
 	if(fd < 0) {

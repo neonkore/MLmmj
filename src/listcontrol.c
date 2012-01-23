@@ -62,6 +62,10 @@ enum ctrl_e {
 	CTRL_CONFUNSUB_NOMAIL,
 	CTRL_CONFUNSUB,
 	CTRL_BOUNCES,
+	CTRL_RELEASE,
+	CTRL_REJECT,
+	CTRL_PERMIT,
+	CTRL_OBSTRUCT,
 	CTRL_MODERATE,
 	CTRL_HELP,
 	CTRL_FAQ,
@@ -92,6 +96,10 @@ static struct ctrl_command ctrl_commands[] = {
 	{ "confunsub-nomail",   1 },
 	{ "confunsub",          1 },
 	{ "bounces",            1 },
+	{ "release",            1 },
+	{ "reject",             1 },
+	{ "permit",             1 },
+	{ "obstruct",           1 },
 	{ "moderate",           1 },
 	{ "help",               0 },
 	{ "faq",                0 },
@@ -106,7 +114,8 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		const char *mlmmjbounce, const char *mailname)
 {
 	char *bouncenr, *tmpstr;
-	char *param = NULL, *conffilename, *moderatefilename, *omitfilename;
+	char *param = NULL, *conffilename, *moderatefilename, *gatekeepfilename;
+	char *omitfilename;
 	char *omit = NULL;
 	char *c, *archivefilename, *sendfilename;
 	const char *subswitch;
@@ -612,31 +621,31 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		exit(EXIT_FAILURE);
 		break;
 
-	/* listname+moderate-COOKIE@domain.tld */
+	/* listname+release-COOKIE@domain.tld */
+	case CTRL_RELEASE:
+	/* DEPRECATED: listname+moderate-COOKIE@domain.tld */
+	/* DEPRECATED: listname+moderate-subscribeCOOKIE@domain.tld */
 	case CTRL_MODERATE:
-		/* TODO Add accept/reject parameter to moderate */
-		moderatefilename = concatstr(3, listdir, "/moderation/", param);
-
-		/* Subscriber moderation */
+		/* Subscriber moderation; DEPRECATED */
 		if(strncmp(param, "subscribe", 9) == 0) {
-			log_oper(listdir, OPLOGFNAME, "%s moderated %s",
-				fromemails->emaillist[0], moderatefilename);
-			execlp(mlmmjsub, mlmmjsub,
-					"-L", listdir,
-					"-m", param,
-					"-c", (char *)NULL);
+			tmpstr = mystrdup(param + 9);
+			myfree(param);
+			param = tmpstr;
+			goto permit;
 		}
 
-		sendfilename = concatstr(2, moderatefilename, ".sending");
+		moderatefilename = concatstr(3, listdir, "/moderation/", param);
 		if(stat(moderatefilename, &stbuf) < 0) {
 			myfree(moderatefilename);
 			/* no mail to moderate */
 			errno = 0;
-			log_error(LOG_ARGS, "A moderate request was"
+			log_error(LOG_ARGS, "A release request was"
 				" sent with a mismatching cookie."
 				" Ignoring mail");
 			return -1;
 		}
+
+		sendfilename = concatstr(2, moderatefilename, ".sending");
 		/* Rename it to avoid mail being sent twice */
 		if(rename(moderatefilename, sendfilename) < 0) {
 			log_error(LOG_ARGS, "Could not rename to .sending");
@@ -658,9 +667,11 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 			myfree(omitfilename);
 		}
 
-		log_oper(listdir, OPLOGFNAME, "%s moderated %s",
-				fromemails->emaillist[0], moderatefilename);
 		myfree(moderatefilename);
+
+		log_oper(listdir, OPLOGFNAME, "%s released %s",
+				fromemails->emaillist[0], param);
+
 		if (omit != NULL)
 			execlp(mlmmjsend, mlmmjsend,
 					"-L", listdir,
@@ -673,6 +684,80 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 					mlmmjsend);
 		exit(EXIT_FAILURE);
+		break;
+
+	/* listname+reject-COOKIE@domain.tld */
+	case CTRL_REJECT:
+		moderatefilename = concatstr(3, listdir, "/moderation/", param);
+		if(stat(moderatefilename, &stbuf) < 0) {
+			myfree(moderatefilename);
+			/* no mail to moderate */
+			errno = 0;
+			log_error(LOG_ARGS, "A reject request was"
+				" sent with a mismatching cookie."
+				" Ignoring mail");
+			return -1;
+		}
+		log_oper(listdir, OPLOGFNAME, "%s rejected %s",
+			fromemails->emaillist[0], param);
+		myfree(param);
+		if (unlink(moderatefilename) != 0) {
+			log_error(LOG_ARGS, "Could not unlink %s",
+					moderatefilename);
+			myfree(moderatefilename);
+			exit(EXIT_FAILURE);
+		}
+		myfree(moderatefilename);
+		break;
+
+	/* listname+permit-COOKIE@domain.tld */
+	case CTRL_PERMIT:
+permit:
+		gatekeepfilename = concatstr(3, listdir,
+				"/moderation/subscribe", param);
+		if(stat(gatekeepfilename, &stbuf) < 0) {
+			myfree(gatekeepfilename);
+			/* no mail to moderate */
+			errno = 0;
+			log_error(LOG_ARGS, "A permit request was"
+				" sent with a mismatching cookie."
+				" Ignoring mail");
+			return -1;
+		}
+		log_oper(listdir, OPLOGFNAME, "%s permitted %s",
+			fromemails->emaillist[0], param);
+		execlp(mlmmjsub, mlmmjsub,
+				"-L", listdir,
+				"-m", param,
+				"-c", (char *)NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+					mlmmjsub);
+		exit(EXIT_FAILURE);
+		break;
+
+	/* listname+obstruct-COOKIE@domain.tld */
+	case CTRL_OBSTRUCT:
+		gatekeepfilename = concatstr(3, listdir,
+				"/moderation/subscribe", param);
+		if(stat(gatekeepfilename, &stbuf) < 0) {
+			myfree(gatekeepfilename);
+			/* no mail to moderate */
+			errno = 0;
+			log_error(LOG_ARGS, "An obstruct request was"
+				" sent with a mismatching cookie."
+				" Ignoring mail");
+			return -1;
+		}
+		log_oper(listdir, OPLOGFNAME, "%s obstructed %s",
+			fromemails->emaillist[0], param);
+		myfree(param);
+		if (unlink(gatekeepfilename) != 0) {
+			log_error(LOG_ARGS, "Could not unlink %s",
+					gatekeepfilename);
+			myfree(gatekeepfilename);
+			exit(EXIT_FAILURE);
+		}
+		myfree(gatekeepfilename);
 		break;
 
 	/* listname+help@domain.tld */
