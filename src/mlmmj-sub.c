@@ -66,9 +66,9 @@ char * subreason_strs[] = {
 	"bouncing"
 };
 
-void moderate_sub(const char *listdir, const char *listaddr,
+static void moderate_sub(const char *listdir, const char *listaddr,
 		const char *listdelim, const char *subaddr,
-		const char *mlmmjsend, enum subtype typesub)
+		const char *mlmmjsend, enum subtype typesub, enum subreason reasonsub)
 {
 	int i, fd, status, nosubmodmails = 0;
 	text *txt;
@@ -161,7 +161,9 @@ void moderate_sub(const char *listdir, const char *listaddr,
 	myfree(moderators);
 
 	txt = open_text(listdir,
-			"gatekeep", "sub", NULL, NULL, "submod-moderator");
+			"gatekeep", "sub",
+			subreason_strs[reasonsub], subtype_strs[typesub],
+			"submod-moderator");
 	MY_ASSERT(txt);
 	register_unformatted(txt, "subaddr", subaddr);
 	register_unformatted(txt, "moderateaddr", replyto); /* DEPRECATED */
@@ -213,7 +215,9 @@ void moderate_sub(const char *listdir, const char *listaddr,
 	from = concatstr(4, listname, listdelim, "bounces-help@", listfqdn);
 
 	txt = open_text(listdir,
-			"wait", "sub", NULL, NULL, "submod-requester");
+			"wait", "sub",
+			subreason_strs[reasonsub], subtype_strs[typesub],
+			"submod-requester");
 	MY_ASSERT(txt);
 	register_unformatted(txt, "subaddr", subaddr);
 	register_unformatted(txt, "moderators", "%gatekeepers"); /* DEPRECATED */
@@ -776,7 +780,7 @@ int main(int argc, char **argv)
 				unlink(sublockname);
 				myfree(sublockname);
 				moderate_sub(listdir, listaddr, listdelim,
-					address, mlmmjsend, typesub);
+					address, mlmmjsend, typesub, reasonsub);
 			}
 			lseek(subfilefd, 0L, SEEK_END);
 			len = strlen(address);
