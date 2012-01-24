@@ -659,7 +659,8 @@ static void begin_new_formatted_source(text *txt, char **line_p, char **pos_p,
 
 
 static int handle_conditional(text *txt, char **line_p, char **pos_p,
-		char *token, int neg, enum conditional_target tgt, int multi,
+		int *skipwhite_p, char *token,
+		int neg, enum conditional_target tgt, int multi,
 		const char *listdir)
 {
 	char *line = *line_p;
@@ -737,7 +738,11 @@ static int handle_conditional(text *txt, char **line_p, char **pos_p,
 		pos++;
 		while (*pos != '\0') pos++;
 	}
-	line = concatstr(2, line, pos + 1);
+	pos++;
+	if (*skipwhite_p) {
+		while (*pos == ' ' || *pos == '\t') pos++;
+	}
+	line = concatstr(2, line, pos);
 	*pos_p = line + (*pos_p - *line_p);
 	myfree(*line_p);
 	*line_p = line;
@@ -747,7 +752,7 @@ static int handle_conditional(text *txt, char **line_p, char **pos_p,
 
 
 static int handle_directive(text *txt, char **line_p, char **pos_p,
-		int conditionalsonly, const char *listdir) {
+		int *skipwhite_p, int conditionalsonly, const char *listdir) {
 	/* This function returns 1 to swallow a preceding blank line, i.e. if
 	 * we just finished processing a failed conditional without an else
 	 * part, -1 if we did nothing due to only processing conditionals, and
@@ -774,42 +779,47 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 
 	if(strncmp(token, "ifaction ", 9) == 0) {
 		token += 9;
-		if (handle_conditional(txt, line_p, pos_p, token,
+		if (handle_conditional(txt, line_p, pos_p, skipwhite_p, token,
 				0, ACTION, 1, listdir) == 0) return 0;
 	} else if(strncmp(token, "ifreason ", 9) == 0) {
 		token += 9;
-		if (handle_conditional(txt, line_p, pos_p, token,
+		if (handle_conditional(txt, line_p, pos_p, skipwhite_p, token,
 				0, REASON, 1, listdir) == 0) return 0;
 	} else if(strncmp(token, "iftype ", 7) == 0) {
 		token += 7;
-		if (handle_conditional(txt, line_p, pos_p, token,
+		if (handle_conditional(txt, line_p, pos_p, skipwhite_p, token,
 				0, TYPE, 1, listdir) == 0) return 0;
 	} else if(strncmp(token, "ifcontrol ", 10) == 0) {
 		token += 10;
-		if (handle_conditional(txt, line_p, pos_p, token,
+		if (handle_conditional(txt, line_p, pos_p, skipwhite_p, token,
 				0, CONTROL, 1, listdir) == 0) return 0;
 	} else if(strncmp(token, "ifnaction ", 10) == 0) {
 		token += 10;
-		if (handle_conditional(txt, line_p, pos_p, token,
+		if (handle_conditional(txt, line_p, pos_p, skipwhite_p, token,
 				1, ACTION, 0, listdir) == 0) return 0;
 	} else if(strncmp(token, "ifnreason ", 10) == 0) {
 		token += 10;
-		if (handle_conditional(txt, line_p, pos_p, token,
+		if (handle_conditional(txt, line_p, pos_p, skipwhite_p, token,
 				1, REASON, 0, listdir) == 0) return 0;
 	} else if(strncmp(token, "ifntype ", 8) == 0) {
 		token += 8;
-		if (handle_conditional(txt, line_p, pos_p, token,
+		if (handle_conditional(txt, line_p, pos_p, skipwhite_p, token,
 				1, TYPE, 0, listdir) == 0) return 0;
 	} else if(strncmp(token, "ifncontrol ", 11) == 0) {
 		token += 11;
-		if (handle_conditional(txt, line_p, pos_p, token,
+		if (handle_conditional(txt, line_p, pos_p, skipwhite_p, token,
 				1, CONTROL, 1, listdir) == 0) return 0;
 	} else if(strcmp(token, "else") == 0) {
 		if (txt->cond != NULL) {
 			if (txt->skip == txt->cond) txt->skip = NULL;
 			else if (txt->skip == NULL) txt->skip = txt->cond;
 			txt->cond->elsepart = 1;
-			line = concatstr(2, line, endpos + 1);
+			endpos++;
+			if (*skipwhite_p) {
+				while (*endpos == ' ' || *endpos == '\t')
+						endpos++;
+			}
+			line = concatstr(2, line, endpos);
 			*pos_p = line + (*pos_p - *line_p);
 			myfree(*line_p);
 			*line_p = line;
@@ -822,7 +832,12 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 			swallow = (!cond->satisfied && !cond->elsepart)?1:0;
 			txt->cond = cond->outer;
 			myfree(cond);
-			line = concatstr(2, line, endpos + 1);
+			endpos++;
+			if (*skipwhite_p) {
+				while (*endpos == ' ' || *endpos == '\t')
+						endpos++;
+			}
+			line = concatstr(2, line, endpos);
 			*pos_p = line + (*pos_p - *line_p);
 			myfree(*line_p);
 			*line_p = line;
@@ -844,6 +859,8 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 		(*pos_p)++;
 		return 0;
 	}
+
+	*skipwhite_p = 0;
 
 	if(strcmp(token, "") == 0) {
 		line = concatstr(3, line, "%", endpos + 1);
@@ -968,6 +985,7 @@ char *get_processed_text_line(text *txt, int headers,
 	int len, i;
 	int directive;
 	int peeking = 0; /* for a failed conditional without an else */
+	int skipwhite; /* skip whitespace after a conditional directive */
 	int swallow;
 
 	for (;;) {
@@ -1030,6 +1048,7 @@ char *get_processed_text_line(text *txt, int headers,
 				txt->src->upcoming = line;
 				line = prev;
 				pos = line + len;
+				skipwhite = 0;
 			} else {
 				pos = line;
 				while (*pos == ' ' || *pos == '\t') pos++;
@@ -1047,11 +1066,13 @@ char *get_processed_text_line(text *txt, int headers,
 				line = tmp;
 				myfree(prev);
 				pos = line + len;
+				skipwhite = 1;
 			}
 			prev = NULL;
 		} else {
 			len = 0;
 			pos = line;
+			skipwhite = 0;
 		}
 
 		if (txt->skip != NULL) {
@@ -1121,13 +1142,14 @@ char *get_processed_text_line(text *txt, int headers,
 				substitute_one(&line, &pos, listaddr,
 						listdelim, listdir, txt);
 				len = pos - line;
+				skipwhite = 0;
 				/* The function sets up for the next character
 				 * to process, so continue straight away. */
 				continue;
 			} else if (*pos == '%') {
 				directive = 1;
 				swallow = handle_directive(txt, &line, &pos,
-						peeking, listdir);
+						&skipwhite, peeking, listdir);
 				if (swallow == 1) peeking = 0;
 				if (swallow == -1) break;
 				if (txt->skip != NULL) {
@@ -1163,6 +1185,7 @@ char *get_processed_text_line(text *txt, int headers,
 				len++;
 			}
 			pos++;
+			skipwhite = 0;
 		}
 
 		if (incision == 0) {
