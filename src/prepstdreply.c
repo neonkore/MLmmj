@@ -669,10 +669,10 @@ static int handle_conditional(text *txt, char **line_p, char **pos_p,
 	conditional *cond;
 
 	if (txt->skip == NULL) {
+		pos = token;
 		for (;;) {
 			if (*token == '\0') break;
-			for (pos = token;
-					*pos != '\0' && (!multi || *pos != ' ');
+			for (; *pos != '\0' && (!multi || *pos != ' ');
 					pos++) {
 				if(*pos >= '0' && *pos <= '9') continue;
 				if(*pos >= 'A' && *pos <= 'Z') continue;
