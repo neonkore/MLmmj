@@ -40,6 +40,24 @@
 #include "strgen.h"
 #include "memory.h"
 
+char *subtype_strs[] = {
+	"normal",
+	"digest",
+	"nomail",
+	"file",
+	"all",
+	"none"
+};
+
+char * subreason_strs[] = {
+	"request",
+	"confirm",
+	"permit",
+	"admin",
+	"bouncing",
+	"switch"
+};
+
 off_t find_subscriber(int fd, const char *address)
 {
 	char *start, *cur, *next;

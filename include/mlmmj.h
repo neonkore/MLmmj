@@ -80,7 +80,7 @@ enum subtype {
 	SUB_NONE /* For when an address is not subscribed at all */
 };
 
-char *subtype_strs[6]; /* count matches enum above; defined in mlmmj-sub.c */
+char *subtype_strs[6]; /* count matches enum above; defined in subscriberfuncs.c */
 
 enum subreason {
 	SUB_REQUEST,
@@ -91,7 +91,7 @@ enum subreason {
 	SUB_SWITCH
 };
 
-char * subreason_strs[6]; /* count matches enum above; defined in mlmmj-sub.c */
+char * subreason_strs[6]; /* count matches enum above; defined in subscriberfuncs.c */
 
 void print_version(const char *prg);
 

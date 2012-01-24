@@ -58,7 +58,7 @@ mlmmj_maintd_SOURCES = mlmmj-maintd.c print-version.c log_error.c mygetline.c \
  		       prepstdreply.c statctrl.c gethdrline.c unistr.c
 
 mlmmj_list_SOURCES = mlmmj-list.c strgen.c writen.c print-version.c memory.c \
-		     log_error.c random-int.c readn.c
+		     log_error.c random-int.c readn.c subscriberfuncs.c
 
 install-exec-hook:
 	ln -f -s mlmmj-receive $(DESTDIR)$(bindir)/mlmmj-recieve

@@ -50,24 +50,6 @@
 #include "ctrlvalues.h"
 #include "chomp.h"
 
-char *subtype_strs[] = {
-	"normal",
-	"digest",
-	"nomail",
-	"file",
-	"all",
-	"none"
-};
-
-char * subreason_strs[] = {
-	"request",
-	"confirm",
-	"permit",
-	"admin",
-	"bouncing",
-	"switch"
-};
-
 static void moderate_sub(const char *listdir, const char *listaddr,
 		const char *listdelim, const char *subaddr,
 		const char *mlmmjsend, enum subtype typesub, enum subreason reasonsub)
