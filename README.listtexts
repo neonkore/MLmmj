@@ -79,9 +79,9 @@ is given in brackets. Those with asterisks (*) are not yet used.
   sent to a person requesting subscription when they need to wait for
   gatekeeping for permission to join
 
-- deny-sub-disabled-digest (sub-deny-digest)
+- deny-sub-disabled-{digest|both} (sub-deny-digest)
 - deny-sub-disabled-nomail (sub-deny-nomail)
-- deny-sub-subbed-{normal|digest|nomail} (sub-subscribed)
+- deny-sub-subbed-{normal|digest|nomail|both} (sub-subscribed)
 - deny-sub-closed *
 - deny-sub-expired *
 - deny-sub-obstruct *

@@ -353,19 +353,18 @@ static void generate_notsubscribed(const char *listdir, const char *subaddr,
 }
 
 static void unsubscribe_type(char *listdir, char *listaddr, char *listdelim,
-		char *address, char *mlmmjsend, int confirmunsub,
+		char *address, char *mlmmjsend,
 		enum subtype typesub, enum subreason reasonsub) {
 	char *subdir, *subddirname, *sublockname;
 	char *subreadname = NULL, *subwritename;
 	int subread, subwrite, rlock, wlock;
 	int sublock, sublockfd;
 	int groupwritable = 0;
-	int unsubres, status;
+	int unsubres;
 	struct stat st;
 	DIR *subddir;
 	struct dirent *dp;
 	off_t suboff;
-	pid_t pid, childpid;
 
 	switch(typesub) {
 		default:
@@ -514,33 +513,10 @@ static void unsubscribe_type(char *listdir, char *listaddr, char *listdelim,
 		unlink(sublockname);
 		myfree(sublockname);
 
-		if(confirmunsub) {
-			childpid = fork();
-
-			if(childpid < 0) {
-				log_error(LOG_ARGS, "Could not fork");
-				confirm_unsub(listdir, listaddr, listdelim,
-						address, mlmmjsend,
-						typesub, reasonsub);
-			}
-
-			if(childpid > 0) {
-				do /* Parent waits for the child */
-					pid = waitpid(childpid, &status, 0);
-				while(pid == -1 && errno == EINTR);
-			}
-
-			/* child confirms subscription */
-			if(childpid == 0)
-				confirm_unsub(listdir, listaddr, listdelim,
-						address, mlmmjsend,
-						typesub, reasonsub);
-		}
         }
 
 	closedir(subddir);
 }
-
 
 int main(int argc, char **argv)
 {
@@ -549,6 +525,7 @@ int main(int argc, char **argv)
 	int confirmunsub = 0, unsubconfirm = 0, notifysub = 0;
 	int changeuid = 1, quiet = 0;
 	int nogennotsubscribed = 0, i = 0;
+	int status;
 	char *listaddr, *listdelim, *listdir = NULL, *address = NULL;
 	char *mlmmjsend, *bindir, *subdir, *subddirname;
 	char *lowcaseaddr;
@@ -556,6 +533,7 @@ int main(int argc, char **argv)
 	enum subreason reasonsub = SUB_ADMIN;
 	uid_t uid;
 	struct stat st;
+	pid_t pid, childpid;
 
 	CHECKFULLPATH(argv[0]);
 	
@@ -678,7 +656,7 @@ int main(int argc, char **argv)
 	}
 
 	if (typesub == SUB_ALL) {
-		subbed = is_subbed(listdir, address) != SUB_NONE;
+		subbed = is_subbed(listdir, address, 0) != SUB_NONE;
 	} else {
 		switch(typesub) {
 			default:
@@ -716,14 +694,37 @@ int main(int argc, char **argv)
 
 	if (typesub == SUB_ALL) {
 		unsubscribe_type(listdir, listaddr, listdelim, address,
-				mlmmjsend, confirmunsub, SUB_NORMAL, reasonsub);
+				mlmmjsend, SUB_NORMAL, reasonsub);
 		unsubscribe_type(listdir, listaddr, listdelim, address,
-				mlmmjsend, confirmunsub, SUB_DIGEST, reasonsub);
+				mlmmjsend, SUB_DIGEST, reasonsub);
 		unsubscribe_type(listdir, listaddr, listdelim, address,
-				mlmmjsend, confirmunsub, SUB_NOMAIL, reasonsub);
+				mlmmjsend, SUB_NOMAIL, reasonsub);
 	} else {
 		unsubscribe_type(listdir, listaddr, listdelim, address,
-				mlmmjsend, confirmunsub, typesub, reasonsub);
+				mlmmjsend, typesub, reasonsub);
+	}
+
+	if(confirmunsub) {
+		childpid = fork();
+
+		if(childpid < 0) {
+			log_error(LOG_ARGS, "Could not fork");
+			confirm_unsub(listdir, listaddr, listdelim,
+					address, mlmmjsend,
+					typesub, reasonsub);
+		}
+
+		if(childpid > 0) {
+			do /* Parent waits for the child */
+				pid = waitpid(childpid, &status, 0);
+			while(pid == -1 && errno == EINTR);
+		}
+
+		/* child confirms subscription */
+		if(childpid == 0)
+			confirm_unsub(listdir, listaddr, listdelim,
+					address, mlmmjsend,
+					typesub, reasonsub);
 	}
 
         notifysub = !quiet && statctrl(listdir, "notifysub");

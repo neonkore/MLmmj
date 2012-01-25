@@ -51,9 +51,11 @@
 enum ctrl_e {
 	CTRL_SUBSCRIBE_DIGEST,
 	CTRL_SUBSCRIBE_NOMAIL,
+	CTRL_SUBSCRIBE_BOTH,
 	CTRL_SUBSCRIBE,
 	CTRL_CONFSUB_DIGEST,
 	CTRL_CONFSUB_NOMAIL,
+	CTRL_CONFSUB_BOTH,
 	CTRL_CONFSUB,
 	CTRL_UNSUBSCRIBE_DIGEST,
 	CTRL_UNSUBSCRIBE_NOMAIL,
@@ -85,9 +87,11 @@ struct ctrl_command {
 static struct ctrl_command ctrl_commands[] = {
 	{ "subscribe-digest",   0 },
 	{ "subscribe-nomail",   0 },
+	{ "subscribe-both",     0 },
 	{ "subscribe",          0 },
 	{ "confsub-digest",     1 },
 	{ "confsub-nomail",     1 },
+	{ "confsub-both",       1 },
 	{ "confsub",            1 },
 	{ "unsubscribe-digest", 0 },
 	{ "unsubscribe-nomail", 0 },
@@ -296,6 +300,55 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 		exit(EXIT_FAILURE);
 		break;
 
+	/* listname+subscribe-both@domain.tld */
+	case CTRL_SUBSCRIBE_BOTH:
+		if (closedlist || closedlistsub) {
+			errno = 0;
+			log_error(LOG_ARGS, "A subscribe-both request was"
+				" sent to a closed list. Ignoring mail");
+			return -1;
+		}
+		if (!strchr(fromemails->emaillist[0], '@')) {
+			/* Not a valid From: address */
+			errno = 0;
+			log_error(LOG_ARGS, "A subscribe-both request was"
+				" sent with an invalid From: header."
+				" Ignoring mail");
+			return -1;
+		}
+		if (statctrl(listdir, "nodigestsub")) {
+			errno = 0;
+			log_error(LOG_ARGS, "A subscribe-both request was"
+				" denied");
+			txt = open_text(listdir, "deny", "sub", "disabled",
+					"both", "sub-deny-digest");
+			MY_ASSERT(txt);
+			register_unformatted(txt, "subaddr",
+					fromemails->emaillist[0]);
+			queuefilename = prepstdreply(txt, listdir,
+					"$listowner$",
+					fromemails->emaillist[0], NULL);
+			MY_ASSERT(queuefilename);
+			close_text(txt);
+			send_help(listdir, queuefilename,
+					fromemails->emaillist[0], mlmmjsend);
+			return -1;
+		}
+		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: request for both"
+					" subscription from %s",
+					fromemails->emaillist[0]);
+		execlp(mlmmjsub, mlmmjsub,
+				"-L", listdir,
+				"-a", fromemails->emaillist[0],
+				"-b",
+				"-r", "-c",
+				(nosubconfirm ? (char *)NULL : "-C"),
+				(char *)NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+					mlmmjsub);
+		exit(EXIT_FAILURE);
+		break;
+
 	/* listname+subscribe@domain.tld */
 	case CTRL_SUBSCRIBE:
 		if (closedlist || closedlistsub) {
@@ -376,6 +429,34 @@ int listcontrol(struct email_container *fromemails, const char *listdir,
 				"-L", listdir,
 				"-a", tmpstr,
 				"-n",
+				"-R", "-c", (char *)NULL);
+		log_error(LOG_ARGS, "execlp() of '%s' failed",
+				mlmmjsub);
+		exit(EXIT_FAILURE);
+		break;
+
+	/* listname+subconf-both-COOKIE@domain.tld */
+	case CTRL_CONFSUB_BOTH:
+		conffilename = concatstr(3, listdir, "/subconf/", param);
+		myfree(param);
+		if((tmpfd = open(conffilename, O_RDONLY)) < 0) {
+			/* invalid COOKIE */
+			errno = 0;
+			log_error(LOG_ARGS, "A subconf-both request was"
+				" sent with a mismatching cookie."
+				" Ignoring mail");
+			return -1;
+		}
+		tmpstr = mygetline(tmpfd);
+		chomp(tmpstr);
+		close(tmpfd);
+		unlink(conffilename);
+		log_oper(listdir, OPLOGFNAME, "mlmmj-sub: %s confirmed"
+					" subscription to both", tmpstr);
+		execlp(mlmmjsub, mlmmjsub,
+				"-L", listdir,
+				"-a", tmpstr,
+				"-b",
 				"-R", "-c", (char *)NULL);
 		log_error(LOG_ARGS, "execlp() of '%s' failed",
 				mlmmjsub);
@@ -763,7 +844,7 @@ permit:
 		}
 		subonlyget = statctrl(listdir, "subonlyget");
 		if(subonlyget) {
-			if(is_subbed(listdir, fromemails->emaillist[0]) ==
+			if(is_subbed(listdir, fromemails->emaillist[0], 0) ==
 					SUB_NONE) {
 				errno = 0;
 				log_error(LOG_ARGS, "A get request was sent"

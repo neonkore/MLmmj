@@ -342,7 +342,7 @@ int main(int argc, char **argv)
 	*a = '@';
 
 	/* make sure it's a subscribed address */
-	if(is_subbed(listdir, address) == SUB_NONE) {
+	if(is_subbed(listdir, address, 0) == SUB_NONE) {
 		log_error(LOG_ARGS, "%s is bouncing but not subscribed?",
 				address);
 		if(mailname)

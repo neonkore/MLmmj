@@ -77,10 +77,11 @@ enum subtype {
 	SUB_NOMAIL,
 	SUB_FILE, /* For single files (moderator, owner etc.) */
 	SUB_ALL, /* For listing or unsubscribing all kinds of subscribers */
+	SUB_BOTH, /* For normal+digest subscription */
 	SUB_NONE /* For when an address is not subscribed at all */
 };
 
-char *subtype_strs[6]; /* count matches enum above; defined in subscriberfuncs.c */
+char *subtype_strs[7]; /* count matches enum above; defined in subscriberfuncs.c */
 
 enum subreason {
 	SUB_REQUEST,

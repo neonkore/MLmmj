@@ -75,6 +75,9 @@ static void moderate_sub(const char *listdir, const char *listaddr,
 		case SUB_NOMAIL:
 			str = concatstr(4, subaddr, "\n", "SUB_NOMAIL", "\n");
 			break;
+		case SUB_BOTH:
+			str = concatstr(4, subaddr, "\n", "SUB_BOTH", "\n");
+			break;
 	}
 	
 	for (;;) {
@@ -270,6 +273,11 @@ void getaddrandtype(const char *listdir, const char *modstr,
 		goto freedone;
 	}
 
+	if(strncmp(readtype, "SUB_BOTH", 8) == 0) {
+		*subtypeptr = SUB_BOTH;
+		goto freedone;
+	}
+
 	log_error(LOG_ARGS, "Type %s not valid in %s", readtype,
 			modfilename);
 
@@ -304,6 +312,10 @@ void confirm_sub(const char *listdir, const char *listaddr,
 			break;
 		case SUB_NOMAIL:
 			listtext = mystrdup("sub-ok-nomail");
+			break;
+		case SUB_BOTH:
+			/* No legacy list text as feature didn't exist. */
+			listtext = mystrdup("sub-ok");
 			break;
 	}
 
@@ -355,6 +367,10 @@ void notify_sub(const char *listdir, const char *listaddr,
 			break;
 		case SUB_NOMAIL:
 			listtext = mystrdup("notifysub-nomail");
+			break;
+		case SUB_BOTH:
+			/* No legacy list text as feature didn't exist. */
+			listtext = mystrdup("notifysub");
 			break;
 	}
 
@@ -440,6 +456,11 @@ void generate_subconfirm(const char *listdir, const char *listaddr,
 		case SUB_NOMAIL:
 			listtext = mystrdup("sub-confirm-nomail");
 			tmpstr = mystrdup("confsub-nomail-");
+			break;
+		case SUB_BOTH:
+			/* No legacy list text as feature didn't exist. */
+			listtext = mystrdup("sub-confirm");
+			tmpstr = mystrdup("confsub-both-");
 			break;
 	}
 
@@ -537,19 +558,100 @@ void generate_subscribed(const char *listdir, const char *subaddr,
 	exit(EXIT_FAILURE);
 }
 
+static void subscribe_type(char *listdir, char *listaddr, char *listdelim,
+		char *address, char *mlmmjsend,
+		enum subtype typesub, enum subreason reasonsub) {
+	char *subfilename = NULL;
+	char chstr[2], *subdir;
+	char *subddirname = NULL, *sublockname;
+	int groupwritable = 0, sublock, sublockfd, lock, subfilefd;
+	struct stat st;
+	size_t len;
+
+	switch(typesub) {
+		default:
+		case SUB_NORMAL:
+			subdir = "/subscribers.d/";
+			break;
+		case SUB_DIGEST:
+			subdir = "/digesters.d/";
+			break;
+		case SUB_NOMAIL:
+			subdir = "/nomailsubs.d/";
+			break;
+	}
+
+	subddirname = concatstr(2, listdir, subdir);
+	if (stat(subddirname, &st) == 0) {
+		if(st.st_mode & S_IWGRP) {
+			groupwritable = S_IRGRP|S_IWGRP;
+			umask(S_IWOTH);
+			setgid(st.st_gid);
+		}
+	}
+
+	chstr[0] = address[0];
+	chstr[1] = '\0';
+	
+	subfilename = concatstr(3, listdir, subdir, chstr);
+
+	sublockname = concatstr(5, listdir, subdir, ".", chstr, ".lock");
+	sublockfd = open(sublockname, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+	if(sublockfd < 0) {
+		log_error(LOG_ARGS, "Error opening lock file %s",
+				sublockname);
+		myfree(sublockname);
+		exit(EXIT_FAILURE);
+	}
+
+	sublock = myexcllock(sublockfd);
+	if(sublock < 0) {
+		log_error(LOG_ARGS, "Error locking '%s' file",
+				sublockname);
+		myfree(sublockname);
+		close(sublockfd);
+		exit(EXIT_FAILURE);
+	}
+
+	subfilefd = open(subfilename, O_RDWR|O_CREAT,
+				S_IRUSR|S_IWUSR|groupwritable);
+	if(subfilefd == -1) {
+		log_error(LOG_ARGS, "Could not open '%s'", subfilename);
+		myfree(sublockname);
+		exit(EXIT_FAILURE);
+	}
+
+	lock = myexcllock(subfilefd);
+	if(lock) {
+		log_error(LOG_ARGS, "Error locking subscriber file");
+		close(subfilefd);
+		close(sublockfd);
+		myfree(sublockname);
+		exit(EXIT_FAILURE);
+	}
+
+	lseek(subfilefd, 0L, SEEK_END);
+	len = strlen(address);
+	address[len] = '\n';
+	writen(subfilefd, address, len + 1);
+	address[len] = 0;
+	close(subfilefd);
+	close(sublockfd);
+	unlink(sublockname);
+	myfree(sublockname);
+}
+
 int main(int argc, char **argv)
 {
-	char *listaddr, *listdelim, *listdir = NULL, *address = NULL;
-	char *subfilename = NULL, *mlmmjsend, *mlmmjunsub, *bindir;
-	char chstr[2], *subdir;
-	char *subddirname = NULL, *sublockname, *lowcaseaddr;
-	char *modstr = NULL;
-	int subconfirm = 0, confirmsub = 0, opt, subfilefd, lock, notifysub;
-	int changeuid = 1, status, digest = 0, nomail = 0, i = 0, submod = 0;
-	int groupwritable = 0, sublock, sublockfd, nogensubscribed = 0;
-	int force = 0, quiet = 0;
+	char *listaddr, *listdelim, *listdir = NULL;
+	char *mlmmjsend, *mlmmjunsub, *bindir;
+	char *address = NULL, *lowcaseaddr, *modstr = NULL;
+	const char *flag = NULL;
+	int opt, subconfirm = 0, confirmsub = 0, notifysub;
+	int changeuid = 1, status, digest = 0, nomail = 0, both = 0;
+	int nogensubscribed = 0;
+	int force = 0, quiet = 0, i = 0;
 	enum subtype subbed;
-	size_t len;
 	struct stat st;
 	pid_t pid, childpid = 0;
 	uid_t uid;
@@ -565,10 +667,13 @@ int main(int argc, char **argv)
 	mlmmjunsub = concatstr(2, bindir, "/mlmmj-unsub");
 	myfree(bindir);
 
-	while ((opt = getopt(argc, argv, "hcCdfm:nsVUL:a:qrR")) != -1) {
+	while ((opt = getopt(argc, argv, "hbcCdfm:nsVUL:a:qrR")) != -1) {
 		switch(opt) {
 		case 'a':
 			address = optarg;
+			break;
+		case 'b':
+			both = 1;
 			break;
 		case 'c':
 			confirmsub = 1;
@@ -627,6 +732,25 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	if(both + digest + nomail > 1) {
+		fprintf(stderr, "Specify at most one of -b, -d and -n\n");
+		fprintf(stderr, "%s -h for help\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	if(digest)
+		typesub = SUB_DIGEST;
+	if(nomail)
+		typesub = SUB_NOMAIL;
+	if(both)
+		typesub = SUB_BOTH;
+
+	if(reasonsub == SUB_CONFIRM && subconfirm) {
+		fprintf(stderr, "Cannot specify both -C and -R\n");
+		fprintf(stderr, "%s -h for help\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
 	if(modstr) {
 		getaddrandtype(listdir, modstr, &address, &typesub);
 		reasonsub = SUB_PERMIT;
@@ -636,23 +760,6 @@ int main(int argc, char **argv)
 		log_error(LOG_ARGS, "No '@' sign in '%s', not subscribing",
 				address);
 		exit(EXIT_SUCCESS);
-	}
-
-	if(digest && nomail) {
-		fprintf(stderr, "Specify at most one of -d and -n\n");
-		fprintf(stderr, "%s -h for help\n", argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
-	if(digest)
-		typesub = SUB_DIGEST;
-	if(nomail)
-		typesub = SUB_NOMAIL;
-
-	if(reasonsub == SUB_CONFIRM && subconfirm) {
-		fprintf(stderr, "Cannot specify both -C and -R\n");
-		fprintf(stderr, "%s -h for help\n", argv[0]);
-		exit(EXIT_FAILURE);
 	}
 
 	/* Make the address lowercase */
@@ -671,28 +778,6 @@ int main(int argc, char **argv)
 		exit(EXIT_SUCCESS);  /* XXX is this success? */
 	}
 
-	switch(typesub) {
-		default:
-		case SUB_NORMAL:
-			subdir = "/subscribers.d/";
-			break;
-		case SUB_DIGEST:
-			subdir = "/digesters.d/";
-			break;
-		case SUB_NOMAIL:
-			subdir = "/nomailsubs.d/";
-			break;
-	}
-
-	subddirname = concatstr(2, listdir, subdir);
-	if (stat(subddirname, &st) == 0) {
-		if(st.st_mode & S_IWGRP) {
-			groupwritable = S_IRGRP|S_IWGRP;
-			umask(S_IWOTH);
-			setgid(st.st_gid);
-		}
-	}
-
 	if(changeuid) {
 		uid = getuid();
 		if(!uid && stat(listdir, &st) == 0) {
@@ -706,74 +791,37 @@ int main(int argc, char **argv)
 		}
 	}
 
-	chstr[0] = address[0];
-	chstr[1] = '\0';
-	
-	subfilename = concatstr(3, listdir, subdir, chstr);
+	subbed = is_subbed(listdir, address, 1);
 
-	sublockname = concatstr(5, listdir, subdir, ".", chstr, ".lock");
-	sublockfd = open(sublockname, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-	if(sublockfd < 0) {
-		log_error(LOG_ARGS, "Error opening lock file %s",
-				sublockname);
-		myfree(sublockname);
-		exit(EXIT_FAILURE);
-	}
-
-	sublock = myexcllock(sublockfd);
-	if(sublock < 0) {
-		log_error(LOG_ARGS, "Error locking '%s' file",
-				sublockname);
-		myfree(sublockname);
-		close(sublockfd);
-		exit(EXIT_FAILURE);
-	}
-
-	subfilefd = open(subfilename, O_RDWR|O_CREAT,
-				S_IRUSR|S_IWUSR|groupwritable);
-	if(subfilefd == -1) {
-		log_error(LOG_ARGS, "Could not open '%s'", subfilename);
-		myfree(sublockname);
-		exit(EXIT_FAILURE);
-	}
-
-	lock = myexcllock(subfilefd);
-	if(lock) {
-		log_error(LOG_ARGS, "Error locking subscriber file");
-		close(subfilefd);
-		close(sublockfd);
-		myfree(sublockname);
-		exit(EXIT_FAILURE);
-	}
-	subbed = is_subbed(listdir, address);
-	listdelim = getlistdelim(listdir);
-	
 	if(subbed == typesub) {
-		close(subfilefd);
-		myfree(subfilename);
-		close(sublockfd);
-		unlink(sublockname);
-		myfree(sublockname);
-
 		if(!nogensubscribed)
 			generate_subscribed(listdir, address, mlmmjsend,
 					typesub);
-		
 		return EXIT_SUCCESS;
 	} else if(subbed != SUB_NONE) {
 		reasonsub = SUB_SWITCH;
-		childpid = fork();
-		if(childpid < 0)
+		/* If we want to subscribe to both, we can just subscribe the
+		 * missing version, so don't unsub. */
+		if (!(typesub == SUB_BOTH &&
+				subbed != SUB_NOMAIL)) {
+			childpid = fork();
+			if(childpid < 0) {
 				log_error(LOG_ARGS, "Could not fork; "
 				"not unsubscribed from current version");
-		if (childpid == 0) {
-			execlp(mlmmjunsub, mlmmjunsub,
-					"-L", listdir, "-q",
-					"-a", address,
-					(char *)NULL);
-			log_error(LOG_ARGS, "execlp() of '%s' failed",
-					mlmmjunsub);
-			exit(EXIT_FAILURE);
+			}
+			if (childpid == 0) {
+				if (subbed == SUB_BOTH) {
+					if (typesub == SUB_NORMAL) flag = "-d";
+					if (typesub == SUB_DIGEST) flag = "-N";
+				}
+				execlp(mlmmjunsub, mlmmjunsub,
+						"-L", listdir, "-q",
+						"-a", address, flag,
+						(char *)NULL);
+				log_error(LOG_ARGS, "execlp() of '%s' failed",
+						mlmmjunsub);
+				exit(EXIT_FAILURE);
+			}
 		}
 	}
 
@@ -783,38 +831,31 @@ int main(int argc, char **argv)
 		while(pid == -1 && errno == EINTR);
 	}
 
-	if(subbed == SUB_NONE && subconfirm) {
-		close(subfilefd);
-		close(sublockfd);
-		unlink(sublockname);
-		myfree(sublockname);
-		generate_subconfirm(listdir, listaddr, listdelim,
-				    address, mlmmjsend, typesub, reasonsub);
-	} else {
-		if(modstr == NULL)
-				submod = subbed == SUB_NONE && !force &&
-				statctrl(listdir, "submod");
-		if(submod) {
-			close(subfilefd);
-			close(sublockfd);
-			unlink(sublockname);
-			myfree(sublockname);
-			moderate_sub(listdir, listaddr, listdelim,
+	listdelim = getlistdelim(listdir);
+
+	if(subbed == SUB_NONE && subconfirm)
+			generate_subconfirm(listdir, listaddr, listdelim,
+			address, mlmmjsend, typesub, reasonsub);
+
+	if(modstr == NULL && subbed == SUB_NONE && !force &&
+			statctrl(listdir, "submod")) {
+		moderate_sub(listdir, listaddr, listdelim,
 				address, mlmmjsend, typesub, reasonsub);
-		}
-		lseek(subfilefd, 0L, SEEK_END);
-		len = strlen(address);
-		address[len] = '\n';
-		writen(subfilefd, address, len + 1);
-		address[len] = 0;
-		close(subfilefd);
-		close(sublockfd);
-		unlink(sublockname);
 	}
 
-	close(sublockfd);
-	unlink(sublockname);
-	myfree(sublockname);
+	if (typesub == SUB_BOTH) {
+		if (subbed != SUB_NORMAL) {
+			subscribe_type(listdir, listaddr, listdelim, address,
+					mlmmjsend, SUB_NORMAL, reasonsub);
+		}
+		if (subbed != SUB_DIGEST) {
+			subscribe_type(listdir, listaddr, listdelim, address,
+					mlmmjsend, SUB_DIGEST, reasonsub);
+		}
+	} else if (!(subbed == SUB_BOTH && typesub != SUB_NOMAIL)) {
+		subscribe_type(listdir, listaddr, listdelim, address,
+				mlmmjsend, typesub, reasonsub);
+	}
 
 	if(confirmsub) {
 		childpid = fork();
