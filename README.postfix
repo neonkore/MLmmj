@@ -1,146 +1,158 @@
-README.postfix                                                   Dec 16th 2009
+README.postfix                                                   Jan 28th 2012
 
-POSTFIX ISSUES
+The main challenge to setting up Mlmmj with Postfix is that Mlmmj must be
+executed by root or the owner of the list directory, but by default Postfix
+will execute Mlmmj as 'nobody'[1].
 
-    The main issue with Postfix and Mlmmj is the Mlmmj requirement that
-    the Mlmmj executables must be executed by root or the owner of the
-    list directory.
+There are a number of possible ways around this:
 
-    This is at odds with Postfix.  The standard local delivery mechanism
-    for Postfix is local(8) that ships with Postfix.  According to
-    local(8) delivery to external programs is done on behalf of the
-    receiving user.  But when delivering to a program without using a
-    .forward file there is no user context.  And using an alias file
-    does not provide user context.
+- Using .forward files (impractical) [2]
+- Using :include: files (possibly insecure) [3]
+- Making 'nobody' own your lists (insecure) [4]
+- Changing the Postfix default (possibly insecure or impractical) [5]
+- Using a Postfix transport (recommended)
 
-    The man page also explains that in the absence of user context the
-    local(8) daemon will use the owner of the :include: file from the
-    aliases file.  But this is a problem too.  By default :include:
-    files are disabled as a security precaution in aliases files for
-    delivering to external programs.
+As you can see, the last option is recommended. Here is how to set it up using
+Postfix virtual domains (so you can host multiple domains on the same server).
+(It can also be done with regular non-virtual aliases[6].)
 
-    So Postfix then falls back to executing with the user specified by
-    the configuration option 'default_privs'.  The default setting for
-    this option is the user 'nobody'.  You can make Mlmmj work by having
-    your lists owned by 'nobody', but this is not recommended.  Other
-    programs and daemons may use 'nobody' as a user who should not have
-    access to anything; most notably, some NFS implementations use this
-    user when somebody connects but fails to authenticate.  Such users
-    should not be able to access your mailing lists.  Changing
-    'default_privs' to an 'mlmmj' user may open other security holes,
-    and may not be appropriate if Postfix is used for other external
-    programs besides Mlmmj.
+ 1) Add an 'mlmmj' user to your system (e.g. using 'useradd'). It usually
+    makes sense to make this a 'system' user, with no password and no shell
+    (/usr/false for the shell), and for its home directory to be
+    /var/spool/mlmmj (or wherever you want to put your Mlmmj spool directory).
 
-    This leaves us with a conundrum on how to execute the Mlmmj
-    executables as an 'mlmmj' user.  One answer is to use a Postfix
-    transport.
+ 2) Create your Mlmmj spool directory (we'll assume it's /var/spool/mlmmj)
+    and change its owner to the 'mlmmj' user.
 
-    First we'll get the 'mlmmj' user setup and then move onto the
-    Postfix configuration:
+ 3) Add an 'mlmmj' transport which uses the pipe(8) delivery agent to execute
+    mlmmj-receive as the mlmmj user by adding something like the following to
+    master.cf (often in /etc/postfix)[7]:
 
-MLMMJ SETUP
+        # mlmmj mailing lists
+        mlmmj   unix  -       n       n       -       -       pipe
+            flags=ORhu user=mlmmj argv=/usr/local/bin/mlmmj-receive -F -L /var/spool/mlmmj/$nexthop
 
-    Create a 'mlmmj' user that will own all the lists.  Use whatever
-    user creation app/script is provided by your system.  Generally
-    'useradd'.
+    Note that $nexthop is used to specify the list directory. We will return
+    to that later.
 
-    Create the spool directory that is owned by the 'mlmmj' user.
-    This is typically /var/spool/mlmmj but can be any directory so long
-    as it is owned by 'mlmmj'.  It can even be the home directory of the
-    'mlmmj' user.  If the spool directory is not /var/spool/mlmmj then
-    everywhere in this file replace /var/spool/mlmmj with your spool
-    directory.
+ 4) Integrate some necessary options in main.cf (also often in /etc/postfix):
 
-    Create a mailing list using mlmmj-make-ml.  Make sure to use the
-    -s flag to set the spool directory if it isn't /var/spool/mlmmj
+        # Only deliver one message to Mlmmj at a time
+        mlmmj_destination_recipient_limit = 1
 
-POSTFIX SETUP
+        # Consider the part after '+' but before '@' to be an address extension
+        # i.e. addresses have the form user+extension@domain.tld
+        recipient_delimiter = +
 
-    First thing is to make sure that the postfix server accepts mail for
-    the mailing lists.  For a server that handles mail for multiple
-    domains, this is done with a 'virtual_alias_map'.  This is how I'll
-    demonstrate.
+        # A map to forward mail to a dummy domain
+        virtual_alias_maps = hash:/var/spool/mlmmj/virtual
 
-    Add a virtual_alias_map file to main.cf configuration.  We'll use a
-    regular expression map since we need to be able to match all the
-    various Mlmmj delimiter addresses (list-subscribe, list-unsubscribe,
-    confsub-0123456789abcdef, etc.).
+	# Allow virtual alias maps to specify only the user part of the address
+	# and have the +extension part preserved when forwarding, so that
+	# list-name+subscribe, list-name+confsub012345678, etc. will all work
+        propagate_unmatched_extensions = virtual
 
-        main.cf:
-            virtual_alias_maps = hash:/etc/postfix/virtual,
-                                 regexp:/var/spool/mlmmj/virtual.regexp
+        # A map to forward mail for the dummy domain to the Mlmmj transport
+        transport_maps = hash:/var/spool/mlmmj/transport
 
-        /var/spool/mlmmj/virtual.regexp:
-            /^(mlmmj-test.*)@example\.com$/          ${1}
-            /^(another-list.*)@sample\.com$/         ${1}
+    Of course, you may need to merge these options with existing ones (e.g.
+    you probably have existing virtual_alias_maps if you run a multi-domain
+    server).
 
-    One line needs to be in the virtual map for each list the 'mlmmj' id
-    is to handle.  The regex formula is:
+    It is probably unnecessary to change propagate_unmatched_extensions because
+    it defaults to something including 'virtual'. You can check this with
+    something like 'postconf | grep propagate'.
 
-        /^(list-name.*)@(domain\.com)$/              ${1}
+ 5) (For each list) Create a mailing list (e.g. by using mlmmj-make-ml). The
+    list directory should be like /var/spool/mlmmj/list-dir for a flat
+    structure, or /var/spool/mlmmj/domain.tld/list-name for a hierarchical
+    structure (the -s option to mlmmj-make-ml may be useful to get the list
+    created where you want it). Ensure the list directory and everything in it
+    is owned by the mlmmj user (except you may want control files to be owned
+    by your www server user in order to use web configuration interfaces; they
+    must be readable by the mlmmj user though).
 
-    If you want to host multiple domains in a hierarchical structure,
-    you can alternatively use:
+ 6) (For each list) Add entries to the Postfix tables to accept mail for the
+    list and forward it to the Mlmmj transport:
 
-        /^(list-name.*)@(domain\.com)$/        domain--${1}
+    /var/spool/mlmmj/virtual:
+        list-name@domain.tld    domain.tld--list-name@localhost.mlmmj
 
-    Next we make sure that Postfix can invoke the mlmmj executables as
-    the 'mlmmj' user.  This is where the transport map comes in.  So we
-    add a transport map and a configuration option that instructs the
-    transport to only deliver one file at a time.  See transport(5) for
-    more information on transports.
+    /var/spool/mlmmj/transport:
+        # for a flat structure
+        domain.tld--list-name@localhost.mlmmj   mlmmj:list-dir
+        # for a hierarchical structure
+        domain.tld--list-name@localhost.mlmmj   mlmmj:domain.tld/list-name
 
-        main.cf:
-            transport_maps = regexp:/var/spool/mlmmj/transport
-            mlmmj_destination_recipient_limit = 1
+    Note that we have used a dummy domain 'localhost.mlmmj' to connect the
+    virtual alias with the Mlmmj transport. This could be anything as long as
+    it isn't a real domain. The user part of the address could also be
+    anything; as long as the address matches in both tables it should work.
 
-        /var/spool/mlmmj/transport:
-            /^(list-test).*$/                        mlmmj:list-test
-            /^(another-list).*$/                     mlmmj:another-list
+    Also note that the text after 'mlmmj:' becomes $nexthop which was mentioned
+    earlier, so it is used to specify the list directory when executing
+    mlmmj-receive.
 
-    What this transport file says, is that any message destined for an
-    email address that matches the regexp on the left, deliver it using
-    the transport 'mlmmj' and setting 'nexthop' to the value in $1.
-    Which in this case is the mailing list name.  'nexthop' is special
-    variable for transports.
+ 7) Refresh your postfix tables and reload your configuration so it takes
+    effect.
 
-    For the hierarchical multi-domain solution, use this variant:
+        postmap /var/spool/mlmmj/virtual
+        postmap /var/spool/mlmmj/transport
+        postfix reload
 
-        /^(domain--list-name).*$/              mlmmj:domain/list-name
+    Enjoy your new lists!
 
-    Now we setup the 'mlmmj' transport.  The 'mlmmj' in mlmmj:$1 above
-    indicates a transport listed in the Postfix master.cf file.  We are
-    just going to create a transport called 'mlmmj' but it is nothing
-    more than a pipe(8) to the mlmmj-receive program that is invoked as
-    the 'mlmmj' user.
 
-        master.cf:
-            # mlmmj mailing lists
-            mlmmj   unix  -       n       n       -       -       pipe
-                flags=DORhu user=mlmmj argv=/usr/local/bin/mlmmj-receive -F -L /var/spool/mlmmj/$nexthop/
 
-    This takes the pipe(8) Postfix delivery agent and tells it to invoke
-    '/usr/local/bin/mlmmj-receive' as the 'mlmmj' user and pipe the
-    email to it on stdin.  This mode of transportation is given the name
-    'mlmmj'.
+[1] Actually, the standard local(8) delivery agent will execute external
+    programs (such as Mlmmj) as the 'receiving user'. However, unless you
+    direct your mail to Mlmmj using a .forward file (see local(8)) or an
+    :include: file (see aliases(5)), there is no 'receiving user'. Without a
+    'receiving user', Postfix uses the user from the configuration option
+    'default_privs', which defaults to 'nobody'.
 
-    The 'flags' parameter to pipe(8) is pretty critical here. In
-    particular if the 'R' option is not used mlmmj-receive fails to
-    receive the mail correctly. The options mean:
+[2] Using .forward files is not practical, as it requires a user to be created
+    for every mailing list.
 
-        D - Prepend a 'Delivered-To: recipient' header
+[3] Using :include: files would require delivery to commands to be enabled in
+    :include: files, which is not recommended for security reasons.
+
+[4] Other programs and daemons rely on 'nobody' not owning any files or having
+    access to anything; they use 'nobody' as a way of denying access and
+    keeping all your files and system secure. Most notably, some NFS
+    implementations use 'nobody' when somebody connects but fails to
+    authenticate. Your mailing lists should not be accessible in such
+    situations, but they may be if they are owned by 'nobody'.
+
+[5] Changing 'default_privs' to an 'mlmmj' user may open other security holes,
+    and may not be appropriate if Postfix is used for other external programs
+    besides Mlmmj.
+
+[6] To do this, at step 4, you'll need to incorporate:
+ 
+        alias_maps = hash:/var/spool/mlmmj/aliases
+        propagate_unmatched_extensions = alias
+
+    You probably will need to adjust propagate_unmatched_extensions in this
+    case, probably by adding 'alias' to the existing value rather than using
+    'alias' alone.
+
+    At step 6, entries in /var/spool/mlmmj/aliases should look something like:
+
+        list-name:    list-name@localhost.mlmmj
+
+    And of course you can omit the virtual stuff if you're not using it.
+
+    Note that this has not been tested, but we believe it should work.
+
+[7] The flags are pretty critical here. In particular if the 'R' option is not
+    used mlmmj-receive fails to receive the mail correctly. The options mean:
+
+        D - Prepend a 'Delivered-To: recipient' header (not used)
         O - Prepend an 'X-Original-To: recipient' header
         R - Prepend a 'Return-Path:'. header
         h - fold $nexthop to lowercase
         u - fold $recipient to lowercase
 
-    $nexthop gets set to what was on the right had side of the ':' in
-    the transport file.  The way we have that configured is that
-    $nexthop will get set to the name of the mailing list (or domain
-    and name).  Your list directories, then, should be at
-    /var/spool/mlmmj/list-name as usual, or for the hierarchical
-    multi-domain version, in /var/spool/mlmmj/domain/list-name.
-
-    Restart Postfix and enjoy your new lists.
 
 
