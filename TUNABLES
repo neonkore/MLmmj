@@ -146,13 +146,22 @@ entire content is used as value, it's marked "text".
 
  · verp				(normal)
 
-   Enable VERP support. Anything added in this variable will be appended the
-   MAIL FROM: line. If "postfix" is put in the file, it'll make postfix use
-   VERP by adding XVERP=-= to the MAIL FROM: line.
+   Control how Mlmmj does VERP (variable envelope return path). If this tunable
+   does not exist, Mlmmj will send a message to the SMTP server for each
+   recipient, with an appropriate envelope return path, i.e. it will handle
+   VERP itself. If the tunable does exist, Mlmmj will instead divide the
+   recipients into groups (the maximum number of recipients in a group can be
+   controlled by the maxverprecips tunable) and send one message to the SMTP
+   server per group. The content of this tunable allows VERP to be handled by
+   the SMTP server. If the tunable contains "postfix", Mlmmj will make Postfix
+   use VERP by adding XVERP=-= to the MAIL FROM: line. If it contains something
+   else, that text will be appended to the MAIL FROM: line. If it contains
+   nothing, VERP will effectively be disabled, as neither Mlmmj nor the SMTP
+   server will do it.
 
  · maxverprecips		(normal)
 
-   How many recipients pr. mail delivered to the smtp server. Defaults to 100.
+   How many recipients per mail delivered to the SMTP server. Defaults to 100.
 
  · notoccdenymails		(boolean)
  · noaccessdenymails		(boolean)
