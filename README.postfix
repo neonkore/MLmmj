@@ -10,11 +10,12 @@ There are a number of possible ways around this:
 - Using :include: files (possibly insecure) [3]
 - Making 'nobody' own your lists (insecure) [4]
 - Changing the Postfix default (possibly insecure or impractical) [5]
+- Using an alias table owned by an 'mlmmj' user (suboptimal) [6]
 - Using a Postfix transport (recommended)
 
 As you can see, the last option is recommended. Here is how to set it up using
 Postfix virtual domains (so you can host multiple domains on the same server).
-(It can also be done with regular non-virtual aliases[6].)
+(It can also be done with regular non-virtual aliases[7].)
 
  1) Add an 'mlmmj' user to your system (e.g. using 'useradd'). It usually
     makes sense to make this a 'system' user, with no password and no shell
@@ -26,7 +27,7 @@ Postfix virtual domains (so you can host multiple domains on the same server).
 
  3) Add an 'mlmmj' transport which uses the pipe(8) delivery agent to execute
     mlmmj-receive as the mlmmj user by adding something like the following to
-    master.cf (often in /etc/postfix)[7]:
+    master.cf (often in /etc/postfix)[8]:
 
         # mlmmj mailing lists
         mlmmj   unix  -       n       n       -       -       pipe
@@ -107,15 +108,17 @@ Postfix virtual domains (so you can host multiple domains on the same server).
 [1] Actually, the standard local(8) delivery agent will execute external
     programs (such as Mlmmj) as the 'receiving user'. However, unless you
     direct your mail to Mlmmj using a .forward file (see local(8)) or an
-    :include: file (see aliases(5)), there is no 'receiving user'. Without a
-    'receiving user', Postfix uses the user from the configuration option
-    'default_privs', which defaults to 'nobody'.
+    :include: file (see aliases(5)), or your aliases file is not owned by root,
+    there is no 'receiving user'. Without a 'receiving user', Postfix uses the
+    user from the configuration option 'default_privs', which defaults to
+    'nobody'.
 
 [2] Using .forward files is not practical, as it requires a user to be created
     for every mailing list.
 
 [3] Using :include: files would require delivery to commands to be enabled in
-    :include: files, which is not recommended for security reasons.
+    :include: files, which is not recommended for security reasons. It also
+    suffers from the same difficulties regarding virtual domains as earlier.
 
 [4] Other programs and daemons rely on 'nobody' not owning any files or having
     access to anything; they use 'nobody' as a way of denying access and
@@ -128,7 +131,15 @@ Postfix virtual domains (so you can host multiple domains on the same server).
     and may not be appropriate if Postfix is used for other external programs
     besides Mlmmj.
 
-[6] To do this, at step 4, you'll need to incorporate:
+[6] This works, and doesn't pose any great security risk, but it is messy for
+    virtual domains as you need to forward mail from the virtual domain to your
+    non-virtual domain and then to Mlmmj. This results in each list having an
+    additional address, which is not desirable. That extra intermediate address
+    is also included in mail headers, which is not desirable (though it could
+    be filtered out by Mlmmj). Setting up an Mlmmj transport is about the same
+    amount of work and doesn't have these drawbacks.
+
+[7] To do this, at step 4, you'll need to incorporate:
  
         alias_maps = hash:/var/spool/mlmmj/aliases
         propagate_unmatched_extensions = alias
@@ -137,15 +148,28 @@ Postfix virtual domains (so you can host multiple domains on the same server).
     case, probably by adding 'alias' to the existing value rather than using
     'alias' alone.
 
+    If you want to use 'newaliases' to update the alias table, you should also
+    incorporate:
+
+        alias_database = hash:/var/spool/mlmmj/aliases
+
     At step 6, entries in /var/spool/mlmmj/aliases should look something like:
 
         list-name:    list-name@localhost.mlmmj
+
+    At step 7, you'll need:
+
+        postalias /var/spool/mlmmj/aliases
+
+    or (if you included alias_database above)
+
+        newaliases
 
     And of course you can omit the virtual stuff if you're not using it.
 
     Note that this has not been tested, but we believe it should work.
 
-[7] The flags are pretty critical here. In particular if the 'R' option is not
+[8] The flags are pretty critical here. In particular if the 'R' option is not
     used mlmmj-receive fails to receive the mail correctly. The options mean:
 
         D - Prepend a 'Delivered-To: recipient' header (not used)
