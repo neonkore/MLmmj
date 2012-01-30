@@ -6,12 +6,14 @@ will execute Mlmmj as 'nobody'[1].
 
 There are a number of possible ways around this:
 
-- Using .forward files (impractical) [2]
-- Using :include: files (possibly insecure) [3]
-- Making 'nobody' own your lists (insecure) [4]
-- Changing the Postfix default (possibly insecure or impractical) [5]
-- Using an alias table owned by an 'mlmmj' user (suboptimal) [6]
-- Using a Postfix transport (recommended)
+- Making 'nobody' own your lists (insecure) [2]
+- Changing the Postfix default to an 'mlmmj' user (possibly insecure or
+  impractical) [3]
+- .forward files (impractical) [4]
+- Using an :include: file owned by an 'mlmmj' user (possibly insecure and
+  suboptimal) [5]
+- Adding an alias table owned by an 'mlmmj' user (suboptimal) [6]
+- Using a Postfix transport to run Mlmmj as an 'mlmmj' user (recommended)
 
 As you can see, the last option is recommended. Here is how to set it up using
 Postfix virtual domains (so you can host multiple domains on the same server).
@@ -113,33 +115,37 @@ Postfix virtual domains (so you can host multiple domains on the same server).
     user from the configuration option 'default_privs', which defaults to
     'nobody'.
 
-[2] Using .forward files is not practical, as it requires a user to be created
-    for every mailing list.
+[2] Making 'nobody' own your lists is insecure because other programs and
+    daemons rely on 'nobody' not owning any files or having access to anything;
+    they use 'nobody' as a way of denying access and keeping all your files and
+    system secure. Most notably, some NFS implementations use 'nobody' when
+    somebody connects but fails to authenticate. Your mailing lists should not
+    be accessible in such situations, but they may be if they are owned by
+    'nobody'.
 
-[3] Using :include: files would require delivery to commands to be enabled in
-    :include: files, which is not recommended for security reasons. It also
-    suffers from the same difficulties regarding virtual domains as earlier.
-
-[4] Other programs and daemons rely on 'nobody' not owning any files or having
-    access to anything; they use 'nobody' as a way of denying access and
-    keeping all your files and system secure. Most notably, some NFS
-    implementations use 'nobody' when somebody connects but fails to
-    authenticate. Your mailing lists should not be accessible in such
-    situations, but they may be if they are owned by 'nobody'.
-
-[5] Changing 'default_privs' to an 'mlmmj' user may open other security holes,
+[3] Changing 'default_privs' to an 'mlmmj' user may open other security holes,
     and may not be appropriate if Postfix is used for other external programs
     besides Mlmmj.
 
-[6] This works, and doesn't pose any great security risk, but it is messy for
-    virtual domains as you need to forward mail from the virtual domain to your
-    non-virtual domain and then to Mlmmj. This results in each list having an
-    additional address, which is not desirable. That extra intermediate address
-    is also included in mail headers, which is not desirable (though it could
-    be filtered out by Mlmmj). Setting up an Mlmmj transport is about the same
-    amount of work and doesn't have these drawbacks.
+[4] Using .forward files is not practical, as it requires a user to be created
+    for every mailing list.
 
-[7] To do this, at step 4, you'll need to incorporate:
+[5] Using :include: files would require delivery to commands to be enabled in
+    :include: files, which is not recommended for security reasons. It is also
+    messy for virtual domains in the same way as an alias table owned by an
+    'mlmmj' user is[6].
+
+[6] Adding an alias table owned by an 'mlmmj' user works, and doesn't pose any
+    great security risk. However, it is messy for virtual domains as you need
+    to forward mail from the virtual domain to your non-virtual domain and then
+    to Mlmmj. This results in each list having an additional address, which is
+    not desirable. That extra intermediate address is also included in mail
+    headers, which is not desirable (though it could be filtered out by Mlmmj).
+    Setting up an Mlmmj transport is about the same amount of work and doesn't
+    have these drawbacks. However, If you are not using virtual domains, this
+    is a good and simple option; but it will not be explained in detail here.
+
+[7] To use non-virtual alises, at step 4, you'll need to incorporate:
  
         alias_maps = hash:/var/spool/mlmmj/aliases
         propagate_unmatched_extensions = alias
@@ -169,8 +175,9 @@ Postfix virtual domains (so you can host multiple domains on the same server).
 
     Note that this has not been tested, but we believe it should work.
 
-[8] The flags are pretty critical here. In particular if the 'R' option is not
-    used mlmmj-receive fails to receive the mail correctly. The options mean:
+[8] The flags for the transport are pretty critical. In particular if the 'R'
+    option is not used mlmmj-receive fails to receive the mail correctly. The
+    options mean:
 
         D - Prepend a 'Delivered-To: recipient' header (not used)
         O - Prepend an 'X-Original-To: recipient' header
