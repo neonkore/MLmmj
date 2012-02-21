@@ -3,22 +3,24 @@
 mlmmj-make-ml \- create a mailing list for mlmmj
 .SH SYNOPSIS
 .B mlmmj-make-ml
-\fI[OPTIONS]
+[\fI\-h\fR] [\fI\-L listname\fR] [\fI\-s spooldir\fR] [\fI\-a\fR] [\fI\-c user\fR] [\fI\-z\fR]
 .HP
 \fB\-h\fR: Display help
 .HP
 \fB\-L\fR: The name of the mailing list
 .HP
-\fB\-s\fR: The spool directory, if different from /var/spool/mlmmj
+\fB\-s\fR: Your spool directory (default /var/spool/mlmmj)
 .HP
-\fB\-a\fR: Create the needed entries in /etc/aliases
+\fB\-a\fR: Create the needed entries in your /etc/aliases file
 .HP
-\fB\-z\fR: Do nothing for now.
+\fB\-c\fR: User to chown the spool directory to (default not to chown at all)
+.HP
+\fB\-z\fR: Do nothing for now
 .SH DESCRIPTION
 This is an interactive script which creates the mailing list directory and thus
 the list itself for being run by mlmmj.
 .SH BUGS
-It's not possible to create a mailinglist entirely on the command line.
+It's not possible to create a list entirely on the command line.
 .SH AUTHORS
 This manual page was written by the following persons:
 .HP

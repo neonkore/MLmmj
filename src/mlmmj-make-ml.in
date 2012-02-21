@@ -7,15 +7,16 @@ VERSION="0.1"
 DEFAULTDIR="/var/spool/mlmmj"
 ALIASFILE=/etc/aliases
 
-USAGE="mlmmj-make-ml "$VERSION"
-"$0" [OPTIONS]
-
--h	display this help text
--L	the name of the mailinglist
--s	your spool directory if not "$DEFAULTDIR"
--a	create the needed entrys in your $ALIASFILE file
--z	nuffn for now
--c	chown the spool dir"
+USAGE="mlmmj-make-ml $VERSION
+$0
+             [-h] [-L listname] [-s spooldir] [-a] [-c user] [-z]
+ -h: display this help text
+ -L: the name of the mailing list
+ -s: your spool directory (default $DEFAULTDIR)
+ -a: create the needed entries in your $ALIASFILE file
+ -c: user to chown the spool directory to (default not to chown at all)
+ -z: do nothing for now
+"
 
 while getopts ":hL:s:azc:" Option
 do
