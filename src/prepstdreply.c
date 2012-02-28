@@ -307,6 +307,9 @@ static char *numeric_token(char *token) {
 static void substitute_one(char **line_p, char **pos_p, const char *listaddr,
 			const char *listdelim, const char *listdir, text *txt)
 {
+	/* It is important for this function to leave the length of the
+	 * processed portion unchanged, or increase it by just one ASCII
+	 * character (for $$). */
 	char *line = *line_p;
 	char *pos = *pos_p;
 	char *token = pos + 1;
@@ -983,12 +986,12 @@ char *get_processed_text_line(text *txt, int headers,
 {
 	char *line;
 	const char *item;
-	char *pos, *subpos;
+	char *pos;
 	char *tmp;
 	char *prev = NULL;
-	int incision, spc, spcnext;
 	int len, i;
 	int directive;
+	int incision, spc;
 	int peeking = 0; /* for a failed conditional without an else */
 	int skipwhite; /* skip whitespace after a conditional directive */
 	int swallow;
@@ -1077,40 +1080,25 @@ char *get_processed_text_line(text *txt, int headers,
 				pos = line + len;
 				skipwhite = 1;
 			}
+			/* We can always line-break where the input had one */
+			spc = len - 1;
 			prev = NULL;
 		} else {
 			len = 0;
 			pos = line;
+			spc = -1;
 			skipwhite = 0;
 		}
 
 		if (txt->skip != NULL) {
-			incision = pos - line;
-			len = incision;
+			incision = len;
 		} else {
 			incision = -1;
 		}
-		spc = -1;
-		spcnext = 0;
 		directive = 0;
 		while (*pos != '\0') {
 			if (txt->wrapwidth != 0 && len >= txt->wrapwidth &&
-					!peeking) {
-				if (spcnext < txt->wrapwidth || spc == -1) {
-					subpos = line + spcnext;
-					while (subpos < pos) {
-						if (*subpos == ' ') {
-							spc = subpos - line;
-						}
-						spcnext++;
-						if (spcnext >= txt->wrapwidth &&
-								spc != -1)
-								break;
-						subpos++;
-					}
-				}
-				if (spc != -1) break;
-			}
+					!peeking && spc != -1) break;
 			if (*pos == '\r') {
 				*pos = '\0';
 				pos++;
@@ -1127,7 +1115,6 @@ char *get_processed_text_line(text *txt, int headers,
 			} else if (*pos == ' ') {
 				if (txt->skip == NULL) {
 					spc = pos - line;
-					spcnext = spc + 1;
 				}
 			} else if (*pos == '\t') {
 				/* Avoid breaking due to peeking */
@@ -1155,7 +1142,9 @@ char *get_processed_text_line(text *txt, int headers,
 				if (peeking) break;
 				substitute_one(&line, &pos, listaddr,
 						listdelim, listdir, txt);
-				len = pos - line;
+				if (len != pos - line) {
+					len = pos - line;
+				}
 				skipwhite = 0;
 				/* The function sets up for the next character
 				 * to process, so continue straight away. */
@@ -1172,11 +1161,10 @@ char *get_processed_text_line(text *txt, int headers,
 						 * later */
 						incision = pos - line;
 					}
-					len = incision;
 				} else {
 					if (incision != -1) {
 					    /* Time to cut */
-					    if (pos-line != incision) {
+					    if (pos - line != incision) {
 						line[incision] = '\0';
 						tmp = concatstr(2, line, pos);
 						pos = tmp + incision;
@@ -1185,6 +1173,8 @@ char *get_processed_text_line(text *txt, int headers,
 					    }
 					    incision = -1;
 					}
+				}
+				if (len != pos - line) {
 					len = pos - line;
 				}
 				/* handle_directive() sets up for the next
@@ -1195,7 +1185,6 @@ char *get_processed_text_line(text *txt, int headers,
 				break;
 			}
 			if (txt->skip == NULL) {
-				if (spcnext == len) spcnext++;
 				len++;
 			}
 			pos++;
