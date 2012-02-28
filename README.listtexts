@@ -294,6 +294,13 @@ directives control them:
   as ASCII characters) when reckoning the width for wrapping (good for Chinese,
   Japanese, Korean)
 
+- %zero ABC%
+  (ABC represents a sequence of non-ASCII characters)
+  treat the listed characters as having zero-width when reckoning the width for
+  wrapping (useful for ignoring combining characters such as accents so they
+  don't affect the width calculation); usefully, the listed characters can be
+  represented as unicode escapes (\uNNNN)
+
 If a line with any of the directives in this section, after processing,
 contains only whitespace, the line does not appear at all in the output (the
 newline and any whitespace is omitted).

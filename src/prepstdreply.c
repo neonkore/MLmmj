@@ -127,6 +127,7 @@ struct text {
 	int wrapwidth;
 	enum wrap_mode wrapmode;
 	enum width_reckoning widthreckoning;
+	char *zerowidth;
 	conditional *cond;
 	conditional *skip;
 };
@@ -492,6 +493,7 @@ text *open_text_file(const char *listdir, const char *filename)
 	txt->wrapwidth = 0;
 	txt->wrapmode = WRAP_WORD;
 	txt->widthreckoning = WIDTH_THIN;
+	txt->zerowidth = NULL;
 	txt->cond = NULL;
 	txt->skip = NULL;
 
@@ -995,6 +997,15 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 		myfree(*line_p);
 		*line_p = line;
 		return 0;
+	} else if(strncmp(token, "zero ", 5) == 0) {
+		token += 5;
+		if (txt->zerowidth != NULL) myfree(txt->zerowidth);
+		txt->zerowidth = mystrdup(token);
+		line = concatstr(2, line, endpos + 1);
+		*pos_p = line + (*pos_p - *line_p);
+		myfree(*line_p);
+		*line_p = line;
+		return 0;
 	} else if(strncmp(token, "control ", 8) == 0) {
 		token = filename_token(token + 8);
 		if (token != NULL) {
@@ -1080,6 +1091,7 @@ char *get_processed_text_line(text *txt, int headers,
 	int peeking = 0; /* for a failed conditional without an else */
 	int skipwhite; /* skip whitespace after a conditional directive */
 	int swallow;
+	char utf8char[5] = {0, 0, 0, 0, 0};
 
 	for (;;) {
 		line = NULL;
@@ -1390,10 +1402,29 @@ char *get_processed_text_line(text *txt, int headers,
 					width++;
 				} else if ((unsigned char)*pos > 0xbf) {
 					/* Not a UTF-8 continuation byte. */
+					if (txt->zerowidth != NULL) {
+					    tmp = pos;
+					    utf8char[0] = *tmp++;
+					    for (i = 1; i < 4; i++, tmp++) {
+						if ((unsigned char)*tmp<0x80 ||
+						      (unsigned char)*tmp>0xbf)
+						      break;
+						utf8char[i] = *tmp;
+					    }
+					    utf8char[i] = '\0';
+					    if (strstr(txt->zerowidth, utf8char)
+						    == NULL) {
+						width++;
+						if (txt->widthreckoning ==
+						      WIDTH_WIDE)
+						      width++;
+					    }
+					} else {
 					    width++;
 					    if (txt->widthreckoning ==
 						    WIDTH_WIDE)
 						    width++;
+					}
 				}
 			}
 			pos++;

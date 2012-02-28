@@ -1,3 +1,5 @@
+ o Add ability to except characters from width reckoning (and be zero-width)
+   to facilitate wrapping even more languages well
  o Add different width-reckoning modes to facilitate wrapping many languages
  o Add different wrapping modes to facilitate wrapping many languages
  o Fix backslash escaping mechanism so double backslash can't effectively
