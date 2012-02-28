@@ -562,10 +562,10 @@ void register_formatted(text *txt, const char *token,
 
 
 static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
-		const char *filename) {
+		const char *filename, int transparent) {
 	char *line = *line_p;
 	char *pos = *pos_p;
-	char *tmp;
+	char *tmp, *esc;
 	source *src;
 	int fd;
 	size_t len;
@@ -593,7 +593,7 @@ static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
 	src->suffix = NULL;
 	src->fd = fd;
 	src->fmt = NULL;
-	src->transparent = 0;
+	src->transparent = transparent;
 	src->limit = -1;
 	txt->src = src;
 	tmp = mygetline(fd);
@@ -601,6 +601,11 @@ static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
 		close_source(txt);
 		**pos_p = '\0';
 		return;
+	}
+	if (!transparent) {
+		esc = unistr_escaped_to_utf8(tmp);
+		myfree(tmp);
+		tmp = esc;
 	}
 	line = concatstr(2, line, tmp);
 	*pos_p = line + (*pos_p - *line_p);
@@ -611,7 +616,7 @@ static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
 
 
 static void begin_new_formatted_source(text *txt, char **line_p, char **pos_p,
-		char *suffix, formatted *fmt) {
+		char *suffix, formatted *fmt, int transparent) {
 	char *line = *line_p;
 	char *pos = *pos_p;
 	const char *str;
@@ -640,7 +645,7 @@ static void begin_new_formatted_source(text *txt, char **line_p, char **pos_p,
 	}
 	src->fd = -1;
 	src->fmt = fmt;
-	src->transparent = 0;
+	src->transparent = transparent;
 	src->limit = -1;
 	txt->src = src;
 	str = (*fmt->get)(fmt->state);
@@ -650,6 +655,7 @@ static void begin_new_formatted_source(text *txt, char **line_p, char **pos_p,
 		*pos_p = *line_p;
 		return;
 	}
+	if (!transparent) str = unistr_escaped_to_utf8(str);
 	line = concatstr(2, line, str);
 	/* The suffix will be added back in get_processed_text_line() */
 	*pos_p = line + strlen(line);
@@ -911,7 +917,7 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 		token = filename_token(token + 8);
 		if (token != NULL) {
 			filename = concatstr(3, listdir, "/control/", token);
-			begin_new_source_file(txt, line_p, pos_p, filename);
+			begin_new_source_file(txt, line_p, pos_p, filename, 0);
 			myfree(filename);
 			return 0;
 		}
@@ -919,7 +925,7 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 		token = filename_token(token + 5);
 		if (token != NULL) {
 			filename = concatstr(3, listdir, "/text/", token);
-			begin_new_source_file(txt, line_p, pos_p, filename);
+			begin_new_source_file(txt, line_p, pos_p, filename, 0);
 			myfree(filename);
 			return 0;
 		}
@@ -938,8 +944,7 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 		}
 		if (limit != 0) {
 			begin_new_source_file(txt, line_p, pos_p,
-					txt->mailname);
-			txt->src->transparent = 1;
+					txt->mailname, 1);
 			if (limit == -1) txt->src->limit = -1;
 			else txt->src->limit = limit - 1;
 			return 0;
@@ -958,7 +963,7 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 	while (fmt != NULL) {
 		if (strcmp(token, fmt->token) == 0) {
 			begin_new_formatted_source(txt, line_p, pos_p,
-					endpos + 1, fmt);
+					endpos + 1, fmt, 0);
 			return 0;
 		}
 		fmt = fmt->next;
@@ -1004,17 +1009,25 @@ char *get_processed_text_line(text *txt, int headers,
 			}
 			if (txt->src->limit != 0) {
 				if (txt->src->fd != -1) {
-					txt->src->upcoming =
-							mygetline(txt->src->fd);
+					tmp = mygetline(txt->src->fd);
 				} else if (txt->src->fmt != NULL) {
 					item = (*txt->src->fmt->get)(
-							txt->src->fmt->state);
-					if (item==NULL) txt->src->upcoming=NULL;
-					else txt->src->upcoming=mystrdup(item);
+						txt->src->fmt->state);
+					if (item==NULL) tmp = NULL;
+					else tmp = mystrdup(item);
 				} else {
-					txt->src->upcoming = NULL;
+					tmp = NULL;
 				}
 				if (txt->src->limit > 0) txt->src->limit--;
+				if (tmp == NULL) {
+					txt->src->upcoming = NULL;
+				} else if (txt->src->transparent) {
+					txt->src->upcoming = tmp;
+				} else {
+					txt->src->upcoming =
+						unistr_escaped_to_utf8(tmp);
+					myfree(tmp);
+				}
 			} else {
 				txt->src->upcoming = NULL;
 			}
@@ -1026,10 +1039,6 @@ char *get_processed_text_line(text *txt, int headers,
 			if (prev != NULL) return prev;
 			return NULL;
 		}
-
-		tmp = unistr_escaped_to_utf8(line);
-		myfree(line);
-		line = tmp;
 
 		if (prev != NULL) {
 			/* Wrapping */
@@ -1120,23 +1129,28 @@ char *get_processed_text_line(text *txt, int headers,
 					spc = pos - line;
 					spcnext = spc + 1;
 				}
-			} else if (*pos == '\\' && *(pos + 1) == ' ') {
-				if (txt->skip == NULL) {
-					spc = pos - line - 1;
-					spcnext = spc + 1;
-				}
-				*pos = '\0';
-				tmp = concatstr(2, line, pos + 2);
-				pos = tmp + (pos - line);
-				myfree(line);
-				line = tmp;
-				continue;
 			} else if (*pos == '\t') {
 				/* Avoid breaking due to peeking */
 			} else if (txt->src->transparent) {
 				/* Do nothing if the file is to be included
 			 	 * transparently */
 				if (peeking && txt->skip == NULL) break;
+			} else if (*pos == '\\' && txt->skip == NULL) {
+				if (peeking) break;
+				if (*(pos + 1) == ' ') {
+					spc = len - 1;
+					tmp = pos + 2;
+				} else {
+					/* Includes backslash */
+					tmp = pos + 1;
+				}
+				*pos = '\0';
+				tmp = concatstr(2, line, tmp);
+				pos = tmp + len;
+				myfree(line);
+				line = tmp;
+				skipwhite = 0;
+				continue;
 			} else if (*pos == '$' && txt->skip == NULL) {
 				if (peeking) break;
 				substitute_one(&line, &pos, listaddr,

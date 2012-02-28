@@ -1,3 +1,6 @@
+ o Fix backslash escaping mechanism so double backslash can't effectively
+   recurse and form part of another escape sequence, other non-unicode escapes
+   aren't ignored, and first lines of included files don't 'escape' escaping.
  o Add ability to subscribe to both (normal and digest).
  o Fix access logic so subonlypost doesn't override a send access rule.
  o Make +unsubscribe remove the requester from all versions of the list.

@@ -34,16 +34,16 @@ typedef struct _unistr {
 
 unistr *unistr_new(void);
 void unistr_free(unistr *str);
-int unistr_cmp(unistr *str1, unistr *str2);
-unistr *unistr_dup(unistr *str);
+int unistr_cmp(const unistr *str1, const unistr *str2);
+unistr *unistr_dup(const unistr *str);
 void unistr_append_char(unistr *str, unistr_char uc);
-void unistr_append_usascii(unistr *str, char *binary, size_t bin_len);
-void unistr_append_utf8(unistr *str, char *binary, size_t bin_len);
-void unistr_append_iso88591(unistr *str, char *binary, size_t bin_len);
-void unistr_dump(unistr *str);
-char *unistr_to_utf8(unistr *str);
-char *unistr_header_to_utf8(char *str);
-char *unistr_utf8_to_header(char *str);
-char *unistr_escaped_to_utf8(char *str);
+void unistr_append_usascii(unistr *str, const char *binary, size_t bin_len);
+void unistr_append_utf8(unistr *str, const char *binary, size_t bin_len);
+void unistr_append_iso88591(unistr *str, const char *binary, size_t bin_len);
+void unistr_dump(const unistr *str);
+char *unistr_to_utf8(const unistr *str);
+char *unistr_header_to_utf8(const char *str);
+char *unistr_utf8_to_header(const char *str);
+char *unistr_escaped_to_utf8(const char *str);
 
 #endif

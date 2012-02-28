@@ -59,7 +59,7 @@ void unistr_free(unistr *str)
 }
 
 
-int unistr_cmp(unistr *str1, unistr *str2)
+int unistr_cmp(const unistr *str1, const unistr *str2)
 {
 	unsigned int i;
 
@@ -77,7 +77,7 @@ int unistr_cmp(unistr *str1, unistr *str2)
 }
 
 
-unistr *unistr_dup(unistr *str)
+unistr *unistr_dup(const unistr *str)
 {
 	unistr *ret;
 	unsigned int i;
@@ -101,7 +101,7 @@ void unistr_append_char(unistr *str, unistr_char uc)
 }
 
 
-void unistr_append_usascii(unistr *str, char *binary, size_t bin_len)
+void unistr_append_usascii(unistr *str, const char *binary, size_t bin_len)
 {
 	unsigned int i;
 
@@ -115,7 +115,7 @@ void unistr_append_usascii(unistr *str, char *binary, size_t bin_len)
 }
 
 
-void unistr_append_utf8(unistr *str, char *binary, size_t bin_len)
+void unistr_append_utf8(unistr *str, const char *binary, size_t bin_len)
 {
 	unsigned int i, j;
 	unistr_char ch;
@@ -166,7 +166,7 @@ void unistr_append_utf8(unistr *str, char *binary, size_t bin_len)
 }
 
 
-void unistr_append_iso88591(unistr *str, char *binary, size_t bin_len)
+void unistr_append_iso88591(unistr *str, const char *binary, size_t bin_len)
 {
 	unsigned int i;
 
@@ -180,7 +180,7 @@ void unistr_append_iso88591(unistr *str, char *binary, size_t bin_len)
 }
 
 
-void unistr_dump(unistr *str)
+void unistr_dump(const unistr *str)
 {
 	unsigned int i;
 
@@ -199,7 +199,7 @@ void unistr_dump(unistr *str)
 }
 
 
-char *unistr_to_utf8(unistr *str)
+char *unistr_to_utf8(const unistr *str)
 {
 	unsigned int i;
 	size_t len = 0;
@@ -433,7 +433,7 @@ static void header_decode_word(char *word, unistr *ret)
 /* IN: "=?iso-8859-1?Q?hyggem=F8de?= torsdag"
  * OUT: "hyggem\xC3\xB8de torsdag"
  */
-char *unistr_header_to_utf8(char *str)
+char *unistr_header_to_utf8(const char *str)
 {
 	char *my_str;
 	char *word;
@@ -479,11 +479,11 @@ static int is_ok_in_header(char ch)
 /* IN: "hyggem\xC3\xB8de torsdag"
  * OUT: "=?utf-8?Q?hyggem=C3=B8de_torsdag?="
  */
-char *unistr_utf8_to_header(char *str)
+char *unistr_utf8_to_header(const char *str)
 {
 	unistr *us;
 	char *ret;
-	char *p;
+	const char *p;
 	int clean;
 	char buf[4];
 
@@ -524,24 +524,21 @@ char *unistr_utf8_to_header(char *str)
 /* IN: "hyggem\\u00F8de torsdag"
  * OUT: "hyggem\xC3\xB8de torsdag"
  */
-char *unistr_escaped_to_utf8(char *str)
+char *unistr_escaped_to_utf8(const char *str)
 {
 	unistr_char ch;
 	unistr *us;
 	char *ret;
 	char u[5];
 	int len;
+	int skip = 0;
 
 	us = unistr_new();
 
 	while (*str) {
 		if (*str == '\\') {
 			str++;
-			if (*str == '\\') {
-				str++;
-				unistr_append_char(us, '\\');
-				continue;
-			} else if (*str == 'u') {
+			if (*str == 'u' && !skip) {
 				str++;
 				if (!isxdigit(str[0]) ||
 						!isxdigit(str[1]) ||
@@ -559,7 +556,11 @@ char *unistr_escaped_to_utf8(char *str)
 				unistr_append_char(us, ch);
 				continue;
 			} else {
-				unistr_append_char(us, '?');
+				unistr_append_char(us, '\\');
+				/* Avoid processing the second backslash of a
+				 * double-backslash; but if this was a such a
+				 * one, go back to normal */
+				skip = !skip;
 				continue;
 			}
 		} else {
