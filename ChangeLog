@@ -1,3 +1,4 @@
+ o Add different wrapping modes to facilitate wrapping many languages
  o Fix backslash escaping mechanism so double backslash can't effectively
    recurse and form part of another escape sequence, other non-unicode escapes
    aren't ignored, and first lines of included files don't 'escape' escaping.
@@ -9,10 +10,9 @@
  o Make mlmmj-sub and +subscribe[-digest|-nomail] switch existing
    subscriptions.
  o Add a switch to bypass notifying the owner on subscribe/unsubscribe.
- o Introduce \<space> to indicate line-break positions to enable sensible
-   wrapping of Chinese and similar text.
- o Allow lines to be longer than the wrapping width if there are no spaces,
-   as generated email addresses (e.g. for moderation) won't work if split.
+ o Introduce \<space> to indicate non-breakable space, \= to mark other
+   locations where breaks should not occur, and \/ to mark locations where
+   breaks can occur
  o Add rejection of posts and obstruction of subscriptions.
  o Avoid bogus error messages when logging that the list address has been
    found in To: or CC: headers.

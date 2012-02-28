@@ -15,8 +15,11 @@ This file documents the following aspects of list texts:
 - Supported list texts
 - Format
 - Conditionals
-- Formatting and formatted substitutions
+- Wrapping
+- Formatting and comments
+- Formatted substitutions
 - Unformatted substitutions
+- Escapes
 
 Naming scheme
 -------------
@@ -240,21 +243,75 @@ need to worry about it.
 Note that when multiple parameters can be given for the directives, these have
 'or' behaviour; to get 'and' behaviour, nest conditionals.
 
-Formatting and formatted substitutions
---------------------------------------
+Wrapping
+--------
 
-These formatting-related directives work with multiple lines, so are generally
-not appropriate for use in headers. They are:
+There are various directives available to assist with wrapping and formatting.
+Wrapping needs to be enabled for each paragraph with:
 
 - %wrap%
 - %wrap W%
-  lines until the next blank line are concatenated and are then rewrapped to a
-  width of W (or 76 if W is omitted); lines have whitespace trimmed before
-  being joined with a single space; lines are broken at spaces or at points
-  marked for breaking with \<space>; the width is reckoned including any text
+  concatenate and rewrap lines until the next blank line to a width of W (or 76
+  if W is omitted); second and later lines are preceded with as many spaces as
+  the width preceding the directive; the width is reckoned including any text
   preceding the directive and any indentation preserved from a file which
-  included the current one, so it is an absolute maximum width; it is measured
-  in bytes
+  included the current one, so it is an absolute maximum width
+
+To cater for various languages, there are a number of different wrapping modes
+that can be set. These can be set either before or after wrapping is specified,
+and can even be changed part way through a paragraph if desired. The following
+directives control them:
+
+- %wordwrap%
+- %ww%
+  use word-wrapping (this is the default; good for English, French, Greek and
+  other languages that use an alphabet and spaces between words); lines have
+  whitespace trimmed from both ends and are joined with a single space; lines
+  are broken at spaces or at points marked for breaking with \/, but not at
+  spaces escaped with a backslash
+
+- %charwrap%
+- %cw%
+  use character-wrapping (good for Chinese, Japanese and Korean which use
+  characters without spaces between words); lines have only leading whitespace
+  trimmed and are joined without inserting anything at the joint; lines are
+  broken at space or any non-ASCII character except where disallowed with \=
+
+- %userwrap%
+- %uw%
+  use user-wrapping (for more complex languages or wherever complete manual
+  control is desired); lines have only leading whitespace trimmed and are
+  joined without inserting anything at the joint; lines are broken only where
+  marked for breaking with \/
+
+If a line with any of the directives in this section, after processing,
+contains only whitespace, the line does not appear at all in the output (the
+newline and any whitespace is omitted).
+
+Formatting and comments
+-----------------------
+
+The following directives are available to assist with formatting and
+readability:
+
+- %^%
+  start the line here; anything preceding this directive is ignored (useful for
+  using indentation for readability without ruining the formatting of the text
+  when it is processed)
+
+- %comment%
+- %$%
+  end the line here; anything following this directive is ignored
+
+If a line with any of these directives, after processing, contains only
+whitespace, the line does not appear at all in the output (the newline and any
+whitespace is omitted).
+
+Formatted substitutions
+-----------------------
+
+These formatted substitutions work with multiple lines, so are generally not
+appropriate for use in headers. They are:
 
 - %text T%
   text from the file named T in the listdir/text directory; the name may only
@@ -303,27 +360,12 @@ not appropriate for use in headers. They are:
   the list of indexes of messages which may not have been received as they
   bounced
 
-- %^%
-  start the line here; anything preceding this directive is ignored (useful for
-  using indentation for readability without ruining the formatting of the text
-  when it is processed)
-
-- %comment%
-- %$%
-  end the line here; anything following this directive is ignored
-
-- %%
-  a single %
-
 Directives which include a list of items have the behaviour that each item is
 preceded and followed by the same text as preceded and followed the directive
-on its line. Only one such directive is supported per line.
-
-The %wrap% and %wrap W% directives, as well as those which include a block of
-text, have the behaviour that second and later lines are preceded with as many
-spaces as there were characters preceding the directive. Apart from the
-%wrap% and %wrap W% directives, any text following the directive on the same
-line is omitted.
+on its line; only one such directive is supported per line. Those which include
+a block of text have the behaviour that second and later lines are preceded
+with as many spaces as there were bytes preceding the directive; any text
+following such directives on the same line is omitted.
 
 If a line with any of these directives, after processing, contains only
 whitespace, the line does not appear at all in the output (the newline and any
@@ -331,6 +373,8 @@ whitespace is omitted).
 
 Unformatted substitutions
 -------------------------
+
+Unformatted substitutions that are available are:
 
 - $bouncenumbers$
   (available only in probe)
@@ -494,18 +538,35 @@ Unformatted substitutions
   newline stripped; the name may only include letters, digits, underscore, dot
   and hyphen; note that there is a formatted version of this directive
 
+Escapes
+-------
+
+These allow you to avoid special meanings of characters used for other purposes
+in list texts, as well as control the construction of the texts at a fairly low
+level.
+
 - $$
   a single $
 
+- %%
+  a single %
+
+- \\
+  a single \
+
 - \uNNNN
-  (NNNN are hex digits)
+  (NNNN represents four hex digits)
   a Unicode character
   (this is not really appropriate for use in a header, except perhaps the
   Subject: header as Mlmmj does automatic quoting for that header as described
   above)
 
 - \<space>
+  a space, but don't allow the line to be broken here when wrapping
+
+- \/
   nothing, but allow the line to be broken here when wrapping
 
-- \\
-  a single \
+- \=
+  nothing, but don't allow the line to be broken here when wrapping
+

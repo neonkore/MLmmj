@@ -98,6 +98,13 @@ enum conditional_target {
 };
 
 
+enum wrap_mode {
+	WRAP_WORD,
+	WRAP_CHAR,
+	WRAP_USER
+};
+
+
 struct text {
 	char *action;
 	char *reason;
@@ -108,6 +115,7 @@ struct text {
 	formatted *fmts;
 	int wrapindent;
 	int wrapwidth;
+	enum wrap_mode wrapmode;
 	conditional *cond;
 	conditional *skip;
 };
@@ -458,6 +466,7 @@ text *open_text_file(const char *listdir, const char *filename)
 	txt->fmts = NULL;
 	txt->wrapindent = 0;
 	txt->wrapwidth = 0;
+	txt->wrapmode = WRAP_WORD;
 	txt->cond = NULL;
 	txt->skip = NULL;
 
@@ -916,6 +925,20 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 			*line_p = line;
 			return 0;
 		}
+	} else if(strcmp(token, "ww") == 0 ||
+			strcmp(token, "wordwrap") == 0 ||
+			strcmp(token, "cw") == 0 ||
+			strcmp(token, "charwrap") == 0 ||
+			strcmp(token, "uw") == 0 ||
+			strcmp(token, "userwrap") == 0) {
+		if (*token == 'w') txt->wrapmode = WRAP_WORD;
+		if (*token == 'c') txt->wrapmode = WRAP_CHAR;
+		if (*token == 'u') txt->wrapmode = WRAP_USER;
+		line = concatstr(2, line, endpos + 1);
+		*pos_p = line + (*pos_p - *line_p);
+		myfree(*line_p);
+		*line_p = line;
+		return 0;
 	} else if(strncmp(token, "control ", 8) == 0) {
 		token = filename_token(token + 8);
 		if (token != NULL) {
@@ -990,8 +1013,8 @@ char *get_processed_text_line(text *txt, int headers,
 	char *tmp;
 	char *prev = NULL;
 	int len, i;
-	int directive;
 	int incision, spc;
+	int directive, inhibitbreak;
 	int peeking = 0; /* for a failed conditional without an else */
 	int skipwhite; /* skip whitespace after a conditional directive */
 	int swallow;
@@ -1047,8 +1070,11 @@ char *get_processed_text_line(text *txt, int headers,
 			/* Wrapping */
 			len = strlen(prev);
 			pos = prev + len - 1;
-			while (pos > prev && (*pos == ' ' || *pos == '\t'))
-					pos--;
+			if (txt->wrapmode == WRAP_WORD) {
+				while (pos > prev &&
+						(*pos == ' ' || *pos == '\t'))
+						pos--;
+			}
 			pos++;
 			*pos = '\0';
 			len = pos - prev;
@@ -1071,8 +1097,12 @@ char *get_processed_text_line(text *txt, int headers,
 				if (*prev == '\0') {
 					tmp = mystrdup(pos);
 				} else {
-					tmp = concatstr(3, prev, " ", pos);
-					len++;
+					if (txt->wrapmode == WRAP_WORD) {
+					    tmp = concatstr(3, prev, " ", pos);
+					    len++;
+					} else {
+					    tmp = concatstr(2, prev, pos);
+					}
 				}
 				myfree(line);
 				line = tmp;
@@ -1096,9 +1126,13 @@ char *get_processed_text_line(text *txt, int headers,
 			incision = -1;
 		}
 		directive = 0;
+		inhibitbreak = 0;
 		while (*pos != '\0') {
 			if (txt->wrapwidth != 0 && len >= txt->wrapwidth &&
 					!peeking && spc != -1) break;
+			if ((unsigned char)*pos > 0xbf && txt->skip == NULL &&
+					txt->wrapmode == WRAP_CHAR &&
+					!inhibitbreak) spc = len - 1;
 			if (*pos == '\r') {
 				*pos = '\0';
 				pos++;
@@ -1113,23 +1147,35 @@ char *get_processed_text_line(text *txt, int headers,
 				txt->src->upcoming = mystrdup(pos);
 				break;
 			} else if (*pos == ' ') {
-				if (txt->skip == NULL) {
-					spc = pos - line;
-				}
+				if (txt->skip == NULL &&
+						txt->wrapmode != WRAP_USER &&
+						!inhibitbreak) spc = len;
+				inhibitbreak = 0;
 			} else if (*pos == '\t') {
 				/* Avoid breaking due to peeking */
+				inhibitbreak = 0;
 			} else if (txt->src->transparent) {
 				/* Do nothing if the file is to be included
 			 	 * transparently */
 				if (peeking && txt->skip == NULL) break;
+				inhibitbreak = 0;
 			} else if (*pos == '\\' && txt->skip == NULL) {
 				if (peeking) break;
-				if (*(pos + 1) == ' ') {
+				if (*(pos + 1) == '/') {
 					spc = len - 1;
 					tmp = pos + 2;
+					inhibitbreak = 0;
+				} else if (*(pos + 1) == '=') {
+					tmp = pos + 2;
+					/* Ensure we don't wrap the next
+					 * character */
+					inhibitbreak = 1;
 				} else {
-					/* Includes backslash */
+					/* Includes space and backslash */
 					tmp = pos + 1;
+					/* Ensure we don't wrap a space */
+					if (*(pos+1) == ' ') inhibitbreak = 1;
+					else inhibitbreak = 0;
 				}
 				*pos = '\0';
 				tmp = concatstr(2, line, tmp);
@@ -1143,6 +1189,10 @@ char *get_processed_text_line(text *txt, int headers,
 				substitute_one(&line, &pos, listaddr,
 						listdelim, listdir, txt);
 				if (len != pos - line) {
+					/* Cancel any break inhibition if the
+					 * length changed (which will be
+					 * because of $$) */
+					inhibitbreak = 0;
 					len = pos - line;
 				}
 				skipwhite = 0;
@@ -1175,6 +1225,11 @@ char *get_processed_text_line(text *txt, int headers,
 					}
 				}
 				if (len != pos - line) {
+					/* Cancel any break inhibition if the
+					 * length changed (which will be
+					 * because of %% or %^% or an empty
+					 * list) */
+					inhibitbreak = 0;
 					len = pos - line;
 				}
 				/* handle_directive() sets up for the next
@@ -1217,7 +1272,8 @@ char *get_processed_text_line(text *txt, int headers,
 				continue;
 			}
 			if (spc != -1) {
-				if (line[spc] == ' ') line[spc] = '\0';
+				if (txt->wrapmode == WRAP_WORD &&
+					line[spc] == ' ') line[spc] = '\0';
 				spc++;
 				if (line[spc] == '\0') spc = -1;
 			}
