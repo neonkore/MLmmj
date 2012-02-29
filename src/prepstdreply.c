@@ -1224,7 +1224,8 @@ char *get_processed_text_line(text *txt, int headers,
 				if (*prev == '\0') {
 					tmp = mystrdup(pos);
 				} else {
-					if (txt->wrapmode == WRAP_WORD) {
+					if (txt->wrapmode == WRAP_WORD &&
+							len > wrapindentlen) {
 					    tmp = concatstr(3, prev, " ", pos);
 					    len++;
 					    width++;
