@@ -284,6 +284,16 @@ directives control them:
   joined without inserting anything at the joint; lines are broken only where
   marked for breaking with \/
 
+- %thin%
+  assume non-ASCII characters are thin (equivalent to one unit, the same as
+  ASCII characters) when reckoning the width for wrapping (this is the default;
+  good for languages like Greek which use a non-Latin alphabet)
+
+- %wide%
+  assume non-ASCII characters are wide (equivalent to two units, twice as wide
+  as ASCII characters) when reckoning the width for wrapping (good for Chinese,
+  Japanese, Korean)
+
 If a line with any of the directives in this section, after processing,
 contains only whitespace, the line does not appear at all in the output (the
 newline and any whitespace is omitted).

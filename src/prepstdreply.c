@@ -73,7 +73,10 @@ struct source {
 	source *prev;
 	char *upcoming;
 	int processedlen;
+	int processedwidth;
 	char *prefix;
+	int prefixlen;
+	int prefixwidth;
 	char *suffix;
 	int fd;
 	formatted *fmt;
@@ -106,6 +109,12 @@ enum wrap_mode {
 };
 
 
+enum width_reckoning {
+	WIDTH_THIN,
+	WIDTH_WIDE
+};
+
+
 struct text {
 	char *action;
 	char *reason;
@@ -117,6 +126,7 @@ struct text {
 	int wrapindent;
 	int wrapwidth;
 	enum wrap_mode wrapmode;
+	enum width_reckoning widthreckoning;
 	conditional *cond;
 	conditional *skip;
 };
@@ -313,8 +323,9 @@ static char *numeric_token(char *token) {
 }
 
 
-static void substitute_one(char **line_p, char **pos_p, const char *listaddr,
-			const char *listdelim, const char *listdir, text *txt)
+static void substitute_one(char **line_p, char **pos_p, int *width_p,
+			const char *listaddr, const char *listdelim,
+			const char *listdir, text *txt)
 {
 	/* It is important for this function to leave the length of the
 	 * processed portion unchanged, or increase it by just one ASCII
@@ -330,6 +341,7 @@ static void substitute_one(char **line_p, char **pos_p, const char *listaddr,
 	endpos = strchr(token, '$');
 	if (endpos == NULL) {
 		(*pos_p)++;
+		(*width_p)++;
 		return;
 	}
 
@@ -407,7 +419,10 @@ static void substitute_one(char **line_p, char **pos_p, const char *listaddr,
 	if (value != NULL) {
 		line = concatstr(3, line, value, endpos + 1);
 		*pos_p = line + (*pos_p - *line_p);
-		if (strcmp(value, "$") == 0) (*pos_p)++;
+		if (strcmp(value, "$") == 0) {
+			(*pos_p)++;
+			(*width_p)++;
+		}
 		myfree(*line_p);
 		*line_p = line;
 		myfree(value);
@@ -415,6 +430,7 @@ static void substitute_one(char **line_p, char **pos_p, const char *listaddr,
 		*pos = '$';
 		*endpos = '$';
 		(*pos_p)++;
+		(*width_p)++;
 	}
 	myfree(fqdn);
 	myfree(listname);
@@ -426,13 +442,14 @@ char *substitute(const char *line, const char *listaddr, const char *listdelim,
 {
 	char *new;
 	char *pos;
+	int width = 0; /* Just a dummy here */
 
 	new = mystrdup(line);
 	pos = new;
 
 	while (*pos != '\0') {
 		if (*pos == '$') {
-			substitute_one(&new, &pos,
+			substitute_one(&new, &pos, &width,
 					listaddr, listdelim, listdir, txt);
 			/* The function sets up for the next character
 			 * to process, so continue straight away. */
@@ -455,7 +472,10 @@ text *open_text_file(const char *listdir, const char *filename)
 	txt->src->prev = NULL;
 	txt->src->upcoming = NULL;
 	txt->src->processedlen = 0;
+	txt->src->processedwidth = 0;
 	txt->src->prefix = NULL;
+	txt->src->prefixlen = 0;
+	txt->src->prefixwidth = 0;
 	txt->src->suffix = NULL;
 	txt->src->transparent = 0;
 	txt->src->limit = -1;
@@ -469,6 +489,7 @@ text *open_text_file(const char *listdir, const char *filename)
 	txt->wrapindent = 0;
 	txt->wrapwidth = 0;
 	txt->wrapmode = WRAP_WORD;
+	txt->widthreckoning = WIDTH_THIN;
 	txt->cond = NULL;
 	txt->skip = NULL;
 
@@ -576,13 +597,13 @@ void register_formatted(text *txt, const char *token,
 
 
 static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
-		const char *filename, int transparent) {
+		int *width_p, const char *filename, int transparent) {
 	char *line = *line_p;
 	char *pos = *pos_p;
 	char *tmp, *esc;
 	source *src;
 	int fd;
-	size_t len;
+	int i;
 
 	/* Save any later lines for use after finishing the source */
 	while (*pos != '\0' && *pos != '\r' && *pos != '\n') pos++;
@@ -591,6 +612,7 @@ static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
 	if (*pos != '\0') {
 		txt->src->upcoming = mystrdup(pos);
 		txt->src->processedlen = 0;
+		txt->src->processedwidth = 0;
 	}
 
 	fd = open(filename, O_RDONLY);
@@ -603,9 +625,10 @@ static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
 	src = mymalloc(sizeof(source));
 	src->prev = txt->src;
 	src->upcoming = NULL;
-	len = strlen(line);
-	src->prefix = mymalloc((len + 1) * sizeof(char));
-	for (tmp = src->prefix; len > 0; ++tmp, --len) *tmp = ' ';
+	src->prefixlen = strlen(line);
+	src->prefixwidth = *width_p;
+	src->prefix = mymalloc((*width_p + 1) * sizeof(char));
+	for (tmp = src->prefix, i = 0; i < *width_p; tmp++, i++) *tmp = ' ';
 	*tmp = '\0';
 	src->suffix = NULL;
 	src->fd = fd;
@@ -633,7 +656,7 @@ static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
 
 
 static void begin_new_formatted_source(text *txt, char **line_p, char **pos_p,
-		char *suffix, formatted *fmt, int transparent) {
+		int *width_p, char *suffix, formatted *fmt, int transparent) {
 	char *line = *line_p;
 	char *pos = *pos_p;
 	const char *str;
@@ -646,6 +669,7 @@ static void begin_new_formatted_source(text *txt, char **line_p, char **pos_p,
 	if (*pos != '\0') {
 		txt->src->upcoming = mystrdup(pos);
 		txt->src->processedlen = 0;
+		txt->src->processedwidth = 0;
 	}
 
 	(*fmt->rew)(fmt->state);
@@ -658,6 +682,8 @@ static void begin_new_formatted_source(text *txt, char **line_p, char **pos_p,
 	} else {
 		src->prefix = mystrdup(line);
 	}
+	src->prefixlen = strlen(line);
+	src->prefixwidth = *width_p;
 	if (*suffix == '\0' || *suffix == '\r' || *suffix == '\n') {
 		src->suffix = NULL;
 	} else {
@@ -673,12 +699,13 @@ static void begin_new_formatted_source(text *txt, char **line_p, char **pos_p,
 		close_source(txt);
 		**line_p = '\0';
 		*pos_p = *line_p;
+		*width_p = 0;
 		return;
 	}
 	if (!transparent) str = unistr_escaped_to_utf8(str);
 	line = concatstr(2, line, str);
 	/* The suffix will be added back in get_processed_text_line() */
-	*pos_p = line + strlen(line);
+	*pos_p = line + strlen(*line_p);
 	myfree(*line_p);
 	*line_p = line;
 }
@@ -778,7 +805,9 @@ static int handle_conditional(text *txt, char **line_p, char **pos_p,
 
 
 static int handle_directive(text *txt, char **line_p, char **pos_p,
-		int *skipwhite_p, int conditionalsonly, const char *listdir) {
+		int *width_p, int *skipwhite_p,
+		int conditionalsonly, const char *listdir)
+{
 	/* This function returns 1 to swallow a preceding blank line, i.e. if
 	 * we just finished processing a failed conditional without an else
 	 * part, -1 if we did nothing due to only processing conditionals, and
@@ -883,6 +912,7 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 		*pos = '%';
 		*endpos = '%';
 		(*pos_p)++;
+		(*width_p)++;
 		return 0;
 	}
 
@@ -891,15 +921,18 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 	if(strcmp(token, "") == 0) {
 		line = concatstr(3, line, "%", endpos + 1);
 		*pos_p = line + (*pos_p - *line_p) + 1;
+		(*width_p)++;
 		myfree(*line_p);
 		*line_p = line;
 		return 0;
 	} else if(strcmp(token, "^") == 0) {
-		if (txt->src->prefix != NULL) {
-			line[strlen(txt->src->prefix)] = '\0';
+		if (txt->src->prefixlen != 0) {
+			line[txt->src->prefixlen] = '\0';
 			line = concatstr(2, line, endpos + 1);
+			*width_p = txt->src->prefixwidth;
 		} else {
 			line = mystrdup(endpos + 1);
+			*width_p = 0;
 		}
 		*pos_p = line;
 		myfree(*line_p);
@@ -923,9 +956,7 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 			if (token != NULL) limit = atol(token);
 		}
 		if (limit != 0) {
-			txt->wrapindent = strlen(line);
-			if (txt->src->prefix != NULL)
-					txt->wrapindent -= strlen(txt->src->prefix);
+			txt->wrapindent = *width_p;
 			txt->wrapwidth = limit;
 			line = concatstr(2, line, endpos + 1);
 			*pos_p = line + (*pos_p - *line_p);
@@ -947,11 +978,26 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 		myfree(*line_p);
 		*line_p = line;
 		return 0;
+	} else if(strcmp(token, "thin") == 0) {
+		txt->widthreckoning = WIDTH_THIN;
+		line = concatstr(2, line, endpos + 1);
+		*pos_p = line + (*pos_p - *line_p);
+		myfree(*line_p);
+		*line_p = line;
+		return 0;
+	} else if(strcmp(token, "wide") == 0) {
+		txt->widthreckoning = WIDTH_WIDE;
+		line = concatstr(2, line, endpos + 1);
+		*pos_p = line + (*pos_p - *line_p);
+		myfree(*line_p);
+		*line_p = line;
+		return 0;
 	} else if(strncmp(token, "control ", 8) == 0) {
 		token = filename_token(token + 8);
 		if (token != NULL) {
 			filename = concatstr(3, listdir, "/control/", token);
-			begin_new_source_file(txt, line_p, pos_p, filename, 0);
+			begin_new_source_file(txt,
+					line_p, pos_p, width_p, filename, 0);
 			myfree(filename);
 			return 0;
 		}
@@ -959,7 +1005,8 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 		token = filename_token(token + 5);
 		if (token != NULL) {
 			filename = concatstr(3, listdir, "/text/", token);
-			begin_new_source_file(txt, line_p, pos_p, filename, 0);
+			begin_new_source_file(txt,
+					line_p, pos_p, width_p, filename, 0);
 			myfree(filename);
 			return 0;
 		}
@@ -977,7 +1024,7 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 			if (token != NULL) limit = atol(token);
 		}
 		if (limit != 0) {
-			begin_new_source_file(txt, line_p, pos_p,
+			begin_new_source_file(txt, line_p, pos_p, width_p,
 					txt->mailname, 1);
 			if (limit == -1) txt->src->limit = -1;
 			else txt->src->limit = limit - 1;
@@ -990,13 +1037,14 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 		*pos = '%';
 		*endpos = '%';
 		(*pos_p)++;
+		(*width_p)++;
 		return 0;
 	}
 
 	fmt = txt->fmts;
 	while (fmt != NULL) {
 		if (strcmp(token, fmt->token) == 0) {
-			begin_new_formatted_source(txt, line_p, pos_p,
+			begin_new_formatted_source(txt, line_p, pos_p, width_p,
 					endpos + 1, fmt, 0);
 			return 0;
 		}
@@ -1007,6 +1055,7 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 	*pos = '%';
 	*endpos = '%';
 	(*pos_p)++;
+	(*width_p)++;
 	return 0;
 }
 
@@ -1020,9 +1069,10 @@ char *get_processed_text_line(text *txt, int headers,
 	char *pos;
 	char *tmp;
 	char *prev = NULL;
-	int len, i;
-	int processedlen;
-	int incision, linebreak;
+	int len, width, i;
+	int processedlen, processedwidth;
+	int wrapindentlen = -1;
+	int incision, linebreak, linebreakwidth;
 	int directive, inhibitbreak;
 	int peeking = 0; /* for a failed conditional without an else */
 	int skipwhite; /* skip whitespace after a conditional directive */
@@ -1032,16 +1082,61 @@ char *get_processed_text_line(text *txt, int headers,
 		line = NULL;
 		while (txt->src != NULL) {
 			if (txt->src->upcoming != NULL) {
-				if (txt->src->prefix != NULL) {
-					line = concatstr(2, txt->src->prefix,
-							txt->src->upcoming);
-					myfree(txt->src->upcoming);
-				} else {
+				if (prev != NULL) {
+					/* If wrapping, we are going to swallow
+					 * leading whitespace anyway, which is
+					 * what the prefix will always be, so
+					 * we needn't include it, nor the
+					 * wrapindent; wrapindentlen is also
+					 * already set from the previous
+					 * iteration. */
 					line = txt->src->upcoming;
+					txt->src->upcoming = NULL;
+					break;
 				}
+				/* Join the prefix, wrapindent and upcoming
+				 * line. */
+				len = strlen(txt->src->upcoming);
+				processedlen = txt->src->processedlen;
+				processedwidth = txt->src->processedwidth;
+				if (txt->src->prefixwidth != 0) {
+					/* prefixlen may be true for an existing
+					 * prefix, not the one in txt->src, so
+					 * set it afresh. */
+					txt->src->prefixlen =
+						strlen(txt->src->prefix);
+					len += txt->src->prefixlen;
+					processedlen += txt->src->prefixlen;
+					processedwidth += txt->src->prefixwidth;
+				}
+				if (txt->wrapwidth != 0) {
+					/* wrapindent is a width, but includes
+					 * the prefix; the excess we make up
+					 * with just spaces though, so one byte
+					 * per character. */
+					len += txt->wrapindent -
+						txt->src->prefixwidth;
+					processedlen += txt->wrapindent -
+						txt->src->prefixwidth;
+					processedwidth += txt->wrapindent -
+						txt->src->prefixwidth;
+				}
+				line = mymalloc((len + 1) * sizeof(char));
+				if (txt->src->prefixwidth != 0) {
+					strcpy(line, txt->src->prefix);
+					pos = line + txt->src->prefixlen;
+				} else {
+					pos = line;
+				}
+				if (txt->wrapwidth != 0) {
+					i = txt->wrapindent -
+						txt->src->prefixwidth;
+					for (; i > 0; i--) *pos++ = ' ';
+					wrapindentlen = pos - line;
+				}
+				strcpy(pos, txt->src->upcoming);
+				myfree(txt->src->upcoming);
 				txt->src->upcoming = NULL;
-				processedlen = strlen(txt->src->prefix) +
-					    txt->src->processedlen;
 				break;
 			}
 			if (txt->src->limit != 0) {
@@ -1061,10 +1156,12 @@ char *get_processed_text_line(text *txt, int headers,
 				} else if (txt->src->transparent) {
 					txt->src->upcoming = tmp;
 					txt->src->processedlen = 0;
+					txt->src->processedwidth = 0;
 				} else {
 					txt->src->upcoming =
 						unistr_escaped_to_utf8(tmp);
 					txt->src->processedlen = 0;
+					txt->src->processedwidth = 0;
 					myfree(tmp);
 				}
 			} else {
@@ -1084,14 +1181,17 @@ char *get_processed_text_line(text *txt, int headers,
 			 * which is always unprocessed. */
 			len = strlen(prev);
 			pos = prev + len - 1;
+			/* The width remains set from the previous iteration. */
 			if (txt->wrapmode == WRAP_WORD) {
-				while (pos > prev &&
-						(*pos == ' ' || *pos == '\t'))
-						pos--;
+				while (pos >= prev + wrapindentlen &&
+						(*pos == ' ' || *pos == '\t')) {
+					pos--;
+					len--;
+					width--;
+				}
 			}
 			pos++;
 			*pos = '\0';
-			len = pos - prev;
 			if (*line == '\r' || *line == '\n' || *line == '\0') {
 				/* Blank line; stop wrapping, finish
 				   the last line and save the blank
@@ -1099,6 +1199,7 @@ char *get_processed_text_line(text *txt, int headers,
 				txt->wrapwidth = 0;
 				txt->src->upcoming = line;
 				txt->src->processedlen = 0;
+				txt->src->processedwidth = 0;
 				line = prev;
 				pos = line + len;
 				skipwhite = 0;
@@ -1115,6 +1216,7 @@ char *get_processed_text_line(text *txt, int headers,
 					if (txt->wrapmode == WRAP_WORD) {
 					    tmp = concatstr(3, prev, " ", pos);
 					    len++;
+					    width++;
 					} else {
 					    tmp = concatstr(2, prev, pos);
 					}
@@ -1127,6 +1229,7 @@ char *get_processed_text_line(text *txt, int headers,
 			}
 			/* We can always line-break where the input had one */
 			linebreak = len;
+			linebreakwidth = width;
 			prev = NULL;
 		} else {
 			/* Not wrapping; start processing where we left off;
@@ -1135,7 +1238,9 @@ char *get_processed_text_line(text *txt, int headers,
 			 * must have been inhibited so aren't really. */
 			pos = line + processedlen;
 			len = processedlen;
+			width = processedwidth;
 			linebreak = 0;
+			linebreakwidth = 0;
 			skipwhite = 0;
 		}
 
@@ -1147,12 +1252,14 @@ char *get_processed_text_line(text *txt, int headers,
 		directive = 0;
 		inhibitbreak = 0;
 		while (*pos != '\0') {
-			if (txt->wrapwidth != 0 && len >= txt->wrapwidth &&
-					!peeking && linebreak != 0) break;
+			if (txt->wrapwidth != 0 && width >= txt->wrapwidth &&
+					!peeking && linebreak > wrapindentlen)
+					break;
 			if ((unsigned char)*pos > 0xbf && txt->skip == NULL &&
 					txt->wrapmode == WRAP_CHAR &&
 					!inhibitbreak) {
 				linebreak = len;
+				linebreakwidth = width;
 			}
 			if (*pos == '\r') {
 				*pos = '\0';
@@ -1161,6 +1268,7 @@ char *get_processed_text_line(text *txt, int headers,
 				if (*pos == '\0') break;
 				txt->src->upcoming = mystrdup(pos);
 				txt->src->processedlen = 0;
+				txt->src->processedwidth = 0;
 				break;
 			} else if (*pos == '\n') {
 				*pos = '\0';
@@ -1168,12 +1276,14 @@ char *get_processed_text_line(text *txt, int headers,
 				if (*pos == '\0') break;
 				txt->src->upcoming = mystrdup(pos);
 				txt->src->processedlen = 0;
+				txt->src->processedwidth = 0;
 				break;
 			} else if (*pos == ' ') {
 				if (txt->skip == NULL &&
 						txt->wrapmode != WRAP_USER &&
 						!inhibitbreak) {
 					linebreak = len + 1;
+					linebreakwidth = width + 1;
 				}
 				inhibitbreak = 0;
 			} else if (*pos == '\t') {
@@ -1188,6 +1298,7 @@ char *get_processed_text_line(text *txt, int headers,
 				if (peeking) break;
 				if (*(pos + 1) == '/') {
 					linebreak = len;
+					linebreakwidth = width;
 					tmp = pos + 2;
 					inhibitbreak = 0;
 				} else if (*(pos + 1) == '=') {
@@ -1211,7 +1322,7 @@ char *get_processed_text_line(text *txt, int headers,
 				continue;
 			} else if (*pos == '$' && txt->skip == NULL) {
 				if (peeking) break;
-				substitute_one(&line, &pos, listaddr,
+				substitute_one(&line, &pos, &width, listaddr,
 						listdelim, listdir, txt);
 				if (len != pos - line) {
 					/* Cancel any break inhibition if the
@@ -1227,7 +1338,8 @@ char *get_processed_text_line(text *txt, int headers,
 			} else if (*pos == '%') {
 				directive = 1;
 				swallow = handle_directive(txt, &line, &pos,
-						&skipwhite, peeking, listdir);
+						&width, &skipwhite,
+						peeking, listdir);
 				if (swallow == 1) peeking = 0;
 				if (swallow == -1) break;
 				if (txt->skip != NULL) {
@@ -1257,6 +1369,11 @@ char *get_processed_text_line(text *txt, int headers,
 					inhibitbreak = 0;
 					len = pos - line;
 				}
+				if (txt->wrapwidth != 0 &&
+					    wrapindentlen == -1) {
+					/* Started wrapping. */
+					wrapindentlen = len;
+				}
 				/* handle_directive() sets up for the next
 				 * character to process, so continue straight
 				 * away. */
@@ -1266,6 +1383,15 @@ char *get_processed_text_line(text *txt, int headers,
 			}
 			if (txt->skip == NULL) {
 				len++;
+				if ((unsigned char)*pos < 0x80) {
+					width++;
+				} else if ((unsigned char)*pos > 0xbf) {
+					/* Not a UTF-8 continuation byte. */
+					    width++;
+					    if (txt->widthreckoning ==
+						    WIDTH_WIDE)
+						    width++;
+				}
 			}
 			pos++;
 			skipwhite = 0;
@@ -1292,7 +1418,8 @@ char *get_processed_text_line(text *txt, int headers,
 		}
 
 		if (txt->wrapwidth != 0 && !peeking) {
-			if (len < txt->wrapwidth) {
+			if (width < txt->wrapwidth ||
+					linebreak <= wrapindentlen) {
 				prev = line;
 				continue;
 			}
@@ -1303,26 +1430,23 @@ char *get_processed_text_line(text *txt, int headers,
 				if (line[linebreak] == '\0') linebreak = 0;
 			}
 			if (linebreak != 0) {
-				txt->src->processedlen = len - linebreak;
-				len = strlen(line + linebreak);
 				if (txt->src->upcoming == NULL) {
-				    tmp = mymalloc((len + txt->wrapindent + 1) *
-					    sizeof(char));
+				    tmp = mystrdup(line + linebreak);
 				} else {
-				    tmp = mymalloc((len + txt->wrapindent + 1 +
-					    strlen(txt->src->upcoming)) *
-					    sizeof(char));
-				}
-				txt->src->processedlen += txt->wrapindent;
-				pos = tmp;
-				for (i = txt->wrapindent; i > 0; i--)
-					*pos++ = ' ';
-				strcpy(pos, line + linebreak);
-				if (txt->src->upcoming != NULL) {
-				    strcpy(pos + len, txt->src->upcoming);
-				    myfree(txt->src->upcoming);
+				    /* If something's coming up, it's because
+				     * it was a new line. */
+				    if (*(line + linebreak) != '\0') {
+					tmp = concatstr(3, line + linebreak,
+						"\n", txt->src->upcoming);
+					myfree(txt->src->upcoming);
+				    } else {
+				    	tmp = txt->src->upcoming;
+				    }
 				}
 				txt->src->upcoming = tmp;
+				txt->src->processedlen = len - linebreak;
+				txt->src->processedwidth =
+						width - linebreakwidth;
 			}
 			line[linebreak] = '\0';
 			tmp = mystrdup(line);
@@ -1353,12 +1477,14 @@ char *get_processed_text_line(text *txt, int headers,
 				if (txt->src->upcoming == NULL) {
 					txt->src->upcoming = line;
 					txt->src->processedlen = len;
+					txt->src->processedwidth = width;
 				} else {
 					tmp = txt->src->upcoming;
 					txt->src->upcoming = concatstr(3,
 							line, "\n",
 							txt->src->upcoming);
 					txt->src->processedlen = len;
+					txt->src->processedwidth = width;
 					myfree(line);
 					myfree(tmp);
 				}
