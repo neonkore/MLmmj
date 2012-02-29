@@ -72,6 +72,7 @@ typedef struct source source;
 struct source {
 	source *prev;
 	char *upcoming;
+	int processedlen;
 	char *prefix;
 	char *suffix;
 	int fd;
@@ -453,6 +454,7 @@ text *open_text_file(const char *listdir, const char *filename)
 	txt->src = mymalloc(sizeof(source));
 	txt->src->prev = NULL;
 	txt->src->upcoming = NULL;
+	txt->src->processedlen = 0;
 	txt->src->prefix = NULL;
 	txt->src->suffix = NULL;
 	txt->src->transparent = 0;
@@ -586,7 +588,10 @@ static void begin_new_source_file(text *txt, char **line_p, char **pos_p,
 	while (*pos != '\0' && *pos != '\r' && *pos != '\n') pos++;
 	if (*pos == '\r') pos++;
 	if (*pos == '\n') pos++;
-	if (*pos != '\0') txt->src->upcoming = mystrdup(pos);
+	if (*pos != '\0') {
+		txt->src->upcoming = mystrdup(pos);
+		txt->src->processedlen = 0;
+	}
 
 	fd = open(filename, O_RDONLY);
 	if (fd < 0) {
@@ -638,7 +643,10 @@ static void begin_new_formatted_source(text *txt, char **line_p, char **pos_p,
 	while (*pos != '\0' && *pos != '\r' && *pos != '\n') pos++;
 	if (*pos == '\r') pos++;
 	if (*pos == '\n') pos++;
-	if (*pos != '\0') txt->src->upcoming = mystrdup(pos);
+	if (*pos != '\0') {
+		txt->src->upcoming = mystrdup(pos);
+		txt->src->processedlen = 0;
+	}
 
 	(*fmt->rew)(fmt->state);
 
@@ -1013,6 +1021,7 @@ char *get_processed_text_line(text *txt, int headers,
 	char *tmp;
 	char *prev = NULL;
 	int len, i;
+	int processedlen;
 	int incision, linebreak;
 	int directive, inhibitbreak;
 	int peeking = 0; /* for a failed conditional without an else */
@@ -1031,6 +1040,8 @@ char *get_processed_text_line(text *txt, int headers,
 					line = txt->src->upcoming;
 				}
 				txt->src->upcoming = NULL;
+				processedlen = strlen(txt->src->prefix) +
+					    txt->src->processedlen;
 				break;
 			}
 			if (txt->src->limit != 0) {
@@ -1049,9 +1060,11 @@ char *get_processed_text_line(text *txt, int headers,
 					txt->src->upcoming = NULL;
 				} else if (txt->src->transparent) {
 					txt->src->upcoming = tmp;
+					txt->src->processedlen = 0;
 				} else {
 					txt->src->upcoming =
 						unistr_escaped_to_utf8(tmp);
+					txt->src->processedlen = 0;
 					myfree(tmp);
 				}
 			} else {
@@ -1067,7 +1080,8 @@ char *get_processed_text_line(text *txt, int headers,
 		}
 
 		if (prev != NULL) {
-			/* Wrapping */
+			/* Wrapping; join and start processing at the new bit,
+			 * which is always unprocessed. */
 			len = strlen(prev);
 			pos = prev + len - 1;
 			if (txt->wrapmode == WRAP_WORD) {
@@ -1084,6 +1098,7 @@ char *get_processed_text_line(text *txt, int headers,
 				   line for later. */
 				txt->wrapwidth = 0;
 				txt->src->upcoming = line;
+				txt->src->processedlen = 0;
 				line = prev;
 				pos = line + len;
 				skipwhite = 0;
@@ -1114,8 +1129,12 @@ char *get_processed_text_line(text *txt, int headers,
 			linebreak = len;
 			prev = NULL;
 		} else {
-			len = 0;
-			pos = line;
+			/* Not wrapping; start processing where we left off;
+			 * there can't be any break opportunities in the
+			 * processed part, and if it looks like there are, they
+			 * must have been inhibited so aren't really. */
+			pos = line + processedlen;
+			len = processedlen;
 			linebreak = 0;
 			skipwhite = 0;
 		}
@@ -1141,12 +1160,14 @@ char *get_processed_text_line(text *txt, int headers,
 				if (*pos == '\n') pos++;
 				if (*pos == '\0') break;
 				txt->src->upcoming = mystrdup(pos);
+				txt->src->processedlen = 0;
 				break;
 			} else if (*pos == '\n') {
 				*pos = '\0';
 				pos++;
 				if (*pos == '\0') break;
 				txt->src->upcoming = mystrdup(pos);
+				txt->src->processedlen = 0;
 				break;
 			} else if (*pos == ' ') {
 				if (txt->skip == NULL &&
@@ -1282,6 +1303,7 @@ char *get_processed_text_line(text *txt, int headers,
 				if (line[linebreak] == '\0') linebreak = 0;
 			}
 			if (linebreak != 0) {
+				txt->src->processedlen = len - linebreak;
 				len = strlen(line + linebreak);
 				if (txt->src->upcoming == NULL) {
 				    tmp = mymalloc((len + txt->wrapindent + 1) *
@@ -1291,6 +1313,7 @@ char *get_processed_text_line(text *txt, int headers,
 					    strlen(txt->src->upcoming)) *
 					    sizeof(char));
 				}
+				txt->src->processedlen += txt->wrapindent;
 				pos = tmp;
 				for (i = txt->wrapindent; i > 0; i--)
 					*pos++ = ' ';
@@ -1329,11 +1352,13 @@ char *get_processed_text_line(text *txt, int headers,
 				 * line */
 				if (txt->src->upcoming == NULL) {
 					txt->src->upcoming = line;
+					txt->src->processedlen = len;
 				} else {
 					tmp = txt->src->upcoming;
 					txt->src->upcoming = concatstr(3,
 							line, "\n",
 							txt->src->upcoming);
+					txt->src->processedlen = len;
 					myfree(line);
 					myfree(tmp);
 				}
