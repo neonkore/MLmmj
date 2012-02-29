@@ -294,7 +294,8 @@ void finish_file_lines(file_lines_state *s)
 }
 
 
-static char *filename_token(char *token) {
+static char *filename_token(char *token)
+{
 	char *pos;
 	if (*token == '\0') return NULL;
 	for(pos = token; *pos != '\0'; pos++) {
@@ -311,7 +312,8 @@ static char *filename_token(char *token) {
 }
 
 
-static char *numeric_token(char *token) {
+static char *numeric_token(char *token)
+{
 	char *pos;
 	if (*token == '\0') return NULL;
 	for(pos = token; *pos != '\0'; pos++) {
@@ -556,7 +558,8 @@ text *open_text(const char *listdir, const char *purpose, const char *action,
 }
 
 
-void close_source(text *txt) {
+void close_source(text *txt)
+{
 	source *tmp;
 	if (txt->src->fd != -1) close(txt->src->fd);
 	if (txt->src->prefix != NULL) myfree(txt->src->prefix);
@@ -1503,7 +1506,8 @@ char *get_processed_text_line(text *txt, int headers,
 }
 
 
-void close_text(text *txt) {
+void close_text(text *txt)
+{
 	substitution *subst;
 	formatted *fmt;
 	conditional *cond;
