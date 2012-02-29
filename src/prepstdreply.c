@@ -1013,7 +1013,7 @@ char *get_processed_text_line(text *txt, int headers,
 	char *tmp;
 	char *prev = NULL;
 	int len, i;
-	int incision, spc;
+	int incision, linebreak;
 	int directive, inhibitbreak;
 	int peeking = 0; /* for a failed conditional without an else */
 	int skipwhite; /* skip whitespace after a conditional directive */
@@ -1111,12 +1111,12 @@ char *get_processed_text_line(text *txt, int headers,
 				skipwhite = 1;
 			}
 			/* We can always line-break where the input had one */
-			spc = len - 1;
+			linebreak = len;
 			prev = NULL;
 		} else {
 			len = 0;
 			pos = line;
-			spc = -1;
+			linebreak = 0;
 			skipwhite = 0;
 		}
 
@@ -1129,10 +1129,12 @@ char *get_processed_text_line(text *txt, int headers,
 		inhibitbreak = 0;
 		while (*pos != '\0') {
 			if (txt->wrapwidth != 0 && len >= txt->wrapwidth &&
-					!peeking && spc != -1) break;
+					!peeking && linebreak != 0) break;
 			if ((unsigned char)*pos > 0xbf && txt->skip == NULL &&
 					txt->wrapmode == WRAP_CHAR &&
-					!inhibitbreak) spc = len - 1;
+					!inhibitbreak) {
+				linebreak = len;
+			}
 			if (*pos == '\r') {
 				*pos = '\0';
 				pos++;
@@ -1149,7 +1151,9 @@ char *get_processed_text_line(text *txt, int headers,
 			} else if (*pos == ' ') {
 				if (txt->skip == NULL &&
 						txt->wrapmode != WRAP_USER &&
-						!inhibitbreak) spc = len;
+						!inhibitbreak) {
+					linebreak = len + 1;
+				}
 				inhibitbreak = 0;
 			} else if (*pos == '\t') {
 				/* Avoid breaking due to peeking */
@@ -1162,7 +1166,7 @@ char *get_processed_text_line(text *txt, int headers,
 			} else if (*pos == '\\' && txt->skip == NULL) {
 				if (peeking) break;
 				if (*(pos + 1) == '/') {
-					spc = len - 1;
+					linebreak = len;
 					tmp = pos + 2;
 					inhibitbreak = 0;
 				} else if (*(pos + 1) == '=') {
@@ -1271,14 +1275,14 @@ char *get_processed_text_line(text *txt, int headers,
 				prev = line;
 				continue;
 			}
-			if (spc != -1) {
+			if (linebreak != 0) {
 				if (txt->wrapmode == WRAP_WORD &&
-					line[spc] == ' ') line[spc] = '\0';
-				spc++;
-				if (line[spc] == '\0') spc = -1;
+					line[linebreak-1] == ' ')
+					line[linebreak-1] = '\0';
+				if (line[linebreak] == '\0') linebreak = 0;
 			}
-			if (spc != -1) {
-				len = strlen(line + spc);
+			if (linebreak != 0) {
+				len = strlen(line + linebreak);
 				if (txt->src->upcoming == NULL) {
 				    tmp = mymalloc((len + txt->wrapindent + 1) *
 					    sizeof(char));
@@ -1290,14 +1294,14 @@ char *get_processed_text_line(text *txt, int headers,
 				pos = tmp;
 				for (i = txt->wrapindent; i > 0; i--)
 					*pos++ = ' ';
-				strcpy(pos, line + spc);
+				strcpy(pos, line + linebreak);
 				if (txt->src->upcoming != NULL) {
 				    strcpy(pos + len, txt->src->upcoming);
 				    myfree(txt->src->upcoming);
 				}
 				txt->src->upcoming = tmp;
 			}
-			line[spc] = '\0';
+			line[linebreak] = '\0';
 			tmp = mystrdup(line);
 			myfree(line);
 			line = tmp;
