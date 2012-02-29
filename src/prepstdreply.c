@@ -1207,9 +1207,11 @@ char *get_processed_text_line(text *txt, int headers,
 			}
 			pos++;
 			*pos = '\0';
-			if (*line == '\r' || *line == '\n' || *line == '\0') {
-				/* Blank line; stop wrapping, finish
-				   the last line and save the blank
+			pos = line;
+			while (*pos == ' ' || *pos == '\t') pos++;
+			if (*pos == '\r' || *pos == '\n' || *pos == '\0') {
+				/* Empty/white line; stop wrapping, finish
+				   the last line and save the empty/white
 				   line for later. */
 				txt->wrapwidth = 0;
 				txt->src->upcoming = line;
@@ -1219,12 +1221,6 @@ char *get_processed_text_line(text *txt, int headers,
 				pos = line + len;
 				skipwhite = 0;
 			} else {
-				pos = line;
-				while (*pos == ' ' || *pos == '\t') pos++;
-				if (*pos == '\0') {
-					myfree(line);
-					continue;
-				}
 				if (*prev == '\0') {
 					tmp = mystrdup(pos);
 				} else {

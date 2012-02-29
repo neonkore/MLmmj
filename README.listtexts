@@ -251,11 +251,12 @@ Wrapping needs to be enabled for each paragraph with:
 
 - %wrap%
 - %wrap W%
-  concatenate and rewrap lines until the next blank line to a width of W (or 76
-  if W is omitted); second and later lines are preceded with as many spaces as
-  the width preceding the directive; the width is reckoned including any text
-  preceding the directive and any indentation preserved from a file which
-  included the current one, so it is an absolute maximum width
+  concatenate and rewrap lines until the next empty or whitespace-only line to
+  a width of W (or 76 if W is omitted); second and later lines are preceded
+  with as many spaces as the width preceding the directive; the width is
+  reckoned including any text preceding the directive and any indentation
+  preserved from a file which included the current one, so it is an absolute
+  maximum width
 
 To cater for various languages, there are a number of different wrapping modes
 that can be set. These can be set either before or after wrapping is specified,
