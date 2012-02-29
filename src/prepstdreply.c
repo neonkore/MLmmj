@@ -1209,7 +1209,8 @@ char *get_processed_text_line(text *txt, int headers,
 			*pos = '\0';
 			pos = line;
 			while (*pos == ' ' || *pos == '\t') pos++;
-			if (*pos == '\r' || *pos == '\n' || *pos == '\0') {
+			if ((*pos == '\r' || *pos == '\n' || *pos == '\0') &&
+					txt->skip == NULL) {
 				/* Empty/white line; stop wrapping, finish
 				   the last line and save the empty/white
 				   line for later. */
