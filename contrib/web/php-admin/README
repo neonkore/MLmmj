@@ -22,8 +22,19 @@ To use this web-interface you have to:
    you need to create a group (eg. mlmmj) and add both users to it. The
    subscribers.d directory then needs to be writable by that group:
 
+     # addgroup mlmmj
+     # adduser wwwrun mlmmj
+     # adduser mailuser mlmmj
      # chgrp -R mlmmj /var/spool/mlmmj/mlmmj-test/subscribers.d/
      # chmod -R g+w /var/spool/mlmmj/mlmmj-test/subscribers.d/
+     # chmod g+s /var/spool/mlmmj/mlmmj-test/subscribers.d/
+
+   setgid flag is needed when the webserver calls mlmmj-sub and creates a file
+   under subscribers.d, to keep the mlmmj group.
+
+   If using the Exim mailserver, you should add initgroups = true in your
+   mlmmj_transport, otherwise it won't be able to write files having write
+   permission to mlmmj group.
 
 5) To enable access control on Apache you have to rename dot.htaccess to
    .htaccess and edit the path inside the file to point to a htpasswd file

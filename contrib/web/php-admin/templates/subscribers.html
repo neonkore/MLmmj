@@ -1,0 +1,38 @@
+<html>
+<head>
+<title>mlmmj - {LIST} subscribers</title>
+<style type="text/css">
+#subscribers {
+	float: left;
+}
+
+#addsubscribers {
+        float: left;
+	margin-left: 2em;
+}
+#index {
+	clear: both;
+}
+</style>
+</head>
+<body>
+<h1>{LIST} subscribers</h1>
+
+{MESSAGE}
+
+<table id="subscribers">
+{SUBS}
+</table>
+
+<form method="post" action="subscribers.php?list={LIST}" id="addsubscribers">
+Add subscribers:<br/>
+<textarea name="tosubscribe" rows="5" cols="30">
+</textarea><br/>
+<input type="submit" name="submit" value="Add" />
+</form>
+
+<p id="index">
+<a href="index.php">Index</a>
+</p>
+</body>
+</html>

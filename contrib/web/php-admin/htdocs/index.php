@@ -35,15 +35,15 @@ $tpl->define(array("main" => "index.html"));
 
 $lists = "";
 
-$dir = opendir($topdir);
-while ($file = readdir($dir)) {
+# use scandir to have alphabetical order
+foreach (scandir($topdir) as $file) {
     if (!ereg("^\.",$file))
     {
-	$lists .= "<a href=\"edit.php?list=".urlencode($file)."\">".
-	    htmlentities($file)."</a><br />\n";
+	$lists .= "<p>".htmlentities($file)."<br/>\n";
+	$lists .= "<a href=\"edit.php?list=".urlencode($file)."\">Config</a> - <a href=\"subscribers.php?list=".urlencode($file)."\">Subscribers</a>\n";
+	$lists .= "</p>\n";
     }
 }
-closedir($dir); 
 
 $tpl->assign(array("LISTS" => $lists));
 
