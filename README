@@ -1,4 +1,4 @@
-README mlmmj-1.2.17                                               Jan 23rd 2010
+README mlmmj-1.2.18a1                                              Mar 13, 2012
 
 This is an attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
@@ -20,6 +20,7 @@ The functionality:
  · No mail delivery subscription
  · VERP support
  · Delivery Status Notification (RFC1891) support
+ · Rich, customisable texts for automated operations
 
 To use mlmmj, do the following:
 
@@ -140,7 +141,7 @@ That's it! You probably want to go through the next steps too.
 10) Have a look at the file TUNABLES for runtime configurable things.
 
 Tunables in include/mlmmj.h:
- · There's some time intervals for how mlmmj-maintd operates. I've choosen
+ · There's some time intervals for how mlmmj-maintd operates. I've chosen
    non-strict defaults, so depending on your BOFH rate you might want to tweak.
    The defaults should be good for most people though.
 
@@ -148,3 +149,4 @@ Have fun!
 
 	Mads Martin Joergensen <mmj at mmj dot dk>
 	Morten K. Poulsen <morten at afdelingp dot dk>
+	Ben Schmidt <mail_ben_schmidt at yahoo dot com dot au>
