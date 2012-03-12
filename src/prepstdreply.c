@@ -969,6 +969,13 @@ static int handle_directive(text *txt, char **line_p, char **pos_p,
 			*line_p = line;
 			return 0;
 		}
+	} else if(strcmp(token, "nowrap") == 0) {
+		txt->wrapwidth = 0;
+		line = concatstr(2, line, endpos + 1);
+		*pos_p = line + (*pos_p - *line_p);
+		myfree(*line_p);
+		*line_p = line;
+		return 0;
 	} else if(strcmp(token, "ww") == 0 ||
 			strcmp(token, "wordwrap") == 0 ||
 			strcmp(token, "cw") == 0 ||

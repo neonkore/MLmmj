@@ -1,3 +1,4 @@
+ o Add %nowrap% to facilitate more complex formatting
  o Add subscription ability to php-admin
  o Add ability to except characters from width reckoning (and be zero-width)
    to facilitate wrapping even more languages well
