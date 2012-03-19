@@ -1273,7 +1273,8 @@ char *get_processed_text_line(text *txt, int headers,
 		inhibitbreak = 0;
 		while (*pos != '\0') {
 			if (txt->wrapwidth != 0 && width >= txt->wrapwidth &&
-					!peeking && linebreak > wrapindentlen)
+					!peeking && linebreak > wrapindentlen &&
+					linebreak < len)
 					break;
 			if ((unsigned char)*pos > 0xbf && txt->skip == NULL &&
 					txt->wrapmode == WRAP_CHAR &&
@@ -1458,7 +1459,8 @@ char *get_processed_text_line(text *txt, int headers,
 
 		if (txt->wrapwidth != 0 && !peeking) {
 			if (width < txt->wrapwidth ||
-					linebreak <= wrapindentlen) {
+					linebreak <= wrapindentlen ||
+					linebreak >= len) {
 				prev = line;
 				continue;
 			}
