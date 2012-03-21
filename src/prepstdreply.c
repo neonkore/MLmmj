@@ -299,14 +299,14 @@ static char *filename_token(char *token)
 {
 	char *pos;
 	if (*token == '\0') return NULL;
-	for(pos = token; *pos != '\0'; pos++) {
-		if(*pos >= '0' && *pos <= '9') continue;
-		if(*pos >= 'A' && *pos <= 'Z') continue;
-		if(*pos >= 'a' && *pos <= 'z') continue;
-		if(*pos == '_') continue;
-		if(*pos == '-') continue;
-		if(*pos == '.') continue;
-		break;
+	pos = token;
+	while (
+		(*pos >= '0' && *pos <= '9') ||
+		(*pos >= 'A' && *pos <= 'Z') ||
+		(*pos >= 'a' && *pos <= 'z') ||
+		(*pos == '_') || (*pos == '-') || (*pos == '.')
+	) {
+		pos++;
 	}
 	if (*pos != '\0') return NULL;
 	return token;
