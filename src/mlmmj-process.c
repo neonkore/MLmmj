@@ -536,13 +536,13 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-    /* hdrfd is checked in do_all_the_voodoo_here(), because the
-     * customheaders file might not exist */
+	/* hdrfd is checked in do_all_the_voodoo_here(), because the
+	 * customheaders file might not exist */
 	headerfilename = concatstr(2, listdir, "/control/customheaders");
 	hdrfd = open(headerfilename, O_RDONLY);
 	myfree(headerfilename);
 
-    /* footfd is checked in do_all_the_voodoo_here(), see above */
+	/* footfd is checked in do_all_the_voodoo_here(), see above */
 	footerfilename = concatstr(2, listdir, "/control/footer");
 	footfd = open(footerfilename, O_RDONLY);
 	myfree(footerfilename);
@@ -581,34 +581,6 @@ int main(int argc, char **argv)
 	if(footfd >= 0)
 		close(footfd);
 
-	/* From: addresses */
-	for(i = 0; i < readhdrs[0].valuecount; i++) {
-		find_email_adr(readhdrs[0].values[i], &fromemails);
-	}
-	/* discard malformed mail with invalid From: unless it's a bounce */
-	if(fromemails.emailcount != 1 &&
-			(recipextra == NULL ||
-			strncmp(recipextra, "bounces", 7) != 0)) {
-		for(i = 0; i < fromemails.emailcount; i++)
-			printf("fromemails.emaillist[%d] = %s\n",
-					i, fromemails.emaillist[i]);
-		discardname = concatstr(3, listdir,
-				"/queue/discarded/", randomstr);
-		log_error(LOG_ARGS, "Discarding %s due to invalid From:",
-				mailfile);
-		for(i = 0; i < fromemails.emailcount; i++)
-			log_error(LOG_ARGS, "fromemails.emaillist[%d] = %s\n",
-					i, fromemails.emaillist[i]);
-		rename(mailfile, discardname);
-		unlink(donemailname);
-		myfree(donemailname);
-		myfree(discardname);
-		myfree(randomstr);
-		/* TODO: free emailstructs */
-		exit(EXIT_SUCCESS);
-	}
-	posteraddr = fromemails.emaillist[0];
-
 	/* To: addresses */
 	for(i = 0; i < readhdrs[1].valuecount; i++) {
 		find_email_adr(readhdrs[1].values[i], &toemails);
@@ -619,30 +591,9 @@ int main(int argc, char **argv)
 		find_email_adr(readhdrs[2].values[i], &ccemails);
 	}
 
-	/* Return-Path: addresses */
-	for(i = 0; i < readhdrs[3].valuecount; i++) {
-		find_email_adr(readhdrs[3].values[i], &rpemails);
-	}
-
 	/* Delivered-To: addresses */
 	for(i = 0; i < readhdrs[4].valuecount; i++) {
 		find_email_adr(readhdrs[4].values[i], &dtemails);
-	}
-
-	/* Subject: */
-	if (readhdrs[5].valuecount)
-			subject = unistr_header_to_utf8(readhdrs[5].values[0]);
-	if (!subject) subject = mystrdup("");
-
-	/* envelope from */
-	if((envstr = getenv("SENDER")) != NULL) {
-		/* qmail, postfix, exim */
-		efrom = mystrdup(envstr);
-	} else if(rpemails.emailcount >= 1) {
-		/* the (first) Return-Path: header */
-		efrom = mystrdup(rpemails.emaillist[0]);
-	} else {
-		efrom = mystrdup("");
 	}
 
 	/* address extension (the "foo" part of "user+foo@domain.tld") */
@@ -670,16 +621,69 @@ int main(int argc, char **argv)
 	} else {
 		recipextra = NULL;
 	}
-
 	if(recipextra && (strlen(recipextra) == 0)) {
 		myfree(recipextra);
 		recipextra = NULL;
 	}
 
-	/* Why is this here, and not in listcontrol() ?  -- mortenp 20060409 */
+	/* From: addresses */
+	for(i = 0; i < readhdrs[0].valuecount; i++) {
+		find_email_adr(readhdrs[0].values[i], &fromemails);
+	}
+	/* discard malformed mail with invalid From: unless it's a bounce */
+	if(fromemails.emailcount != 1 &&
+			(recipextra == NULL ||
+			strncmp(recipextra, "bounces", 7) != 0)) {
+		for(i = 0; i < fromemails.emailcount; i++)
+			printf("fromemails.emaillist[%d] = %s\n",
+					i, fromemails.emaillist[i]);
+		discardname = concatstr(3, listdir,
+				"/queue/discarded/", randomstr);
+		log_error(LOG_ARGS, "Discarding %s due to invalid From:",
+				mailfile);
+		for(i = 0; i < fromemails.emailcount; i++)
+			log_error(LOG_ARGS, "fromemails.emaillist[%d] = %s\n",
+					i, fromemails.emaillist[i]);
+		rename(mailfile, discardname);
+		unlink(donemailname);
+		myfree(donemailname);
+		myfree(discardname);
+		myfree(randomstr);
+		/* TODO: free emailstructs */
+		exit(EXIT_SUCCESS);
+	}
+	if (fromemails.emailcount > 0)
+			posteraddr = fromemails.emaillist[0];
+	/* The only time posteraddr will remain unset is when the mail is a
+	 * bounce, so the mail will be processed by listcontrol() and the
+	 * program will terminate before posteraddr is used. */
+
+	/* Return-Path: addresses */
+	for(i = 0; i < readhdrs[3].valuecount; i++) {
+		find_email_adr(readhdrs[3].values[i], &rpemails);
+	}
+
+	/* envelope from */
+	if((envstr = getenv("SENDER")) != NULL) {
+		/* qmail, postfix, exim */
+		efrom = mystrdup(envstr);
+	} else if(rpemails.emailcount >= 1) {
+		/* the (first) Return-Path: header */
+		efrom = mystrdup(rpemails.emaillist[0]);
+	} else {
+		efrom = mystrdup("");
+	}
+
+	/* Subject: */
+	if (readhdrs[5].valuecount)
+			subject = unistr_header_to_utf8(readhdrs[5].values[0]);
+	if (!subject) subject = mystrdup("");
+
 	if(recipextra) {
 		owner = concatstr(2, listdir, "/control/owner");
 		if(owner && strcmp(recipextra, "owner") == 0) {
+			/* Why is this here, and not in listcontrol() ?
+			 * -- mortenp 20060409 */
 			/* strip envelope from before resending */
 			delheaders->count = 0;
 			delheaders->strs = NULL;
