@@ -327,7 +327,7 @@ readability:
 
 - %comment%
 - %$%
-  end the line here; anything following this directive is ignored
+  end the line here; anything following this directive is ignored/a comment
 
 If a line with any of these directives, after processing, contains only
 whitespace, the line does not appear at all in the output (the newline and any
