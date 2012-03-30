@@ -652,11 +652,11 @@ int main(int argc, char **argv)
 		/* TODO: free emailstructs */
 		exit(EXIT_SUCCESS);
 	}
-	if (fromemails.emailcount > 0)
-			posteraddr = fromemails.emaillist[0];
 	/* The only time posteraddr will remain unset is when the mail is a
 	 * bounce, so the mail will be processed by listcontrol() and the
 	 * program will terminate before posteraddr is used. */
+	if (fromemails.emailcount > 0)
+			posteraddr = fromemails.emaillist[0];
 
 	/* Return-Path: addresses */
 	for(i = 0; i < readhdrs[3].valuecount; i++) {
