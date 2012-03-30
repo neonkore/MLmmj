@@ -149,23 +149,21 @@ struct file_lines_state {
 
 memory_lines_state *init_memory_lines(const char *lines)
 {
-	/* We use a static variable rather than dynamic allocation as
-	 * there will never be two lists in use simultaneously */
-	static memory_lines_state s;
+	memory_lines_state *s = mymalloc(sizeof(memory_lines_state));
 	size_t len;
 
 	/* Ensure there *is* a trailing newline */
-	s.pos = NULL;
+	s->pos = NULL;
 	len = strlen(lines);
 	if (lines[len-1] == '\n') {
-		s.lines = mystrdup(lines);
-		return &s;
+		s->lines = mystrdup(lines);
+		return s;
 	}
-	s.lines = mymalloc((len + 2) * sizeof(char));
-	strcpy(s.lines, lines);
-	s.lines[len] = '\n';
-	s.lines[len+1] = '\0';
-	return &s;
+	s->lines = mymalloc((len + 2) * sizeof(char));
+	strcpy(s->lines, lines);
+	s->lines[len] = '\n';
+	s->lines[len+1] = '\0';
+	return s;
 }
 
 
@@ -207,27 +205,29 @@ void finish_memory_lines(memory_lines_state *s)
 {
 	if (s == NULL) return;
 	myfree(s->lines);
+	myfree(s);
 }
 
 
 file_lines_state *init_file_lines(const char *filename, int open_now)
 {
-	/* We use a static variable rather than dynamic allocation as
-	 * there will never be two lists in use simultaneously */
-	static file_lines_state s;
+	file_lines_state *s = mymalloc(sizeof(file_lines_state));
 
 	if (open_now) {
-		s.fd = open(filename, O_RDONLY);
-		s.filename = NULL;
-		if (s.fd < 0) return NULL;
+		s->fd = open(filename, O_RDONLY);
+		s->filename = NULL;
+		if (s->fd < 0) {
+			myfree(s);
+			return NULL;
+		}
 	} else {
-		s.filename = mystrdup(filename);
-		s.fd = -1;
+		s->filename = mystrdup(filename);
+		s->fd = -1;
 	}
 
-	s.truncate = '\0';
-	s.line = NULL;
-	return &s;
+	s->truncate = '\0';
+	s->line = NULL;
+	return s;
 }
 
 
@@ -292,6 +292,7 @@ void finish_file_lines(file_lines_state *s)
 	if (s->line != NULL) myfree(s->line);
 	if (s->fd >= 0) close(s->fd);
 	if (s->filename != NULL) myfree(s->filename);
+	myfree(s);
 }
 
 
