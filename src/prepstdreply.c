@@ -722,6 +722,13 @@ static int handle_conditional(text *txt, char **line_p, char **pos_p,
 		int neg, enum conditional_target tgt, int multi,
 		const char *listdir)
 {
+	/* This function handles a conditional directive and returns a boolean
+	 * (0 or 1) representing whether it was successfully handled or not.
+	 * The conditional should already have been identified, and the type of
+	 * conditional, whether it is negative, whether multiple parameters are
+	 * acceptable, and the position of the first parameter should be passed
+	 * in.
+	*/
 	char *line = *line_p;
 	char *pos;
 	int satisfied = 0;
