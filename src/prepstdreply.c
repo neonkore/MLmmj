@@ -298,14 +298,14 @@ void finish_file_lines(file_lines_state *s)
 
 static char *filename_token(char *token)
 {
-	char *pos;
-	if (*token == '\0') return NULL;
-	pos = token;
+	char *pos = token;
+	if (*pos == '\0') return NULL;
 	while (
 		(*pos >= '0' && *pos <= '9') ||
 		(*pos >= 'A' && *pos <= 'Z') ||
 		(*pos >= 'a' && *pos <= 'z') ||
-		(*pos == '_') || (*pos == '-') || (*pos == '.')
+		(*pos == '_') || (*pos == '-') ||
+		(*pos == '.' && pos != token)
 	) {
 		pos++;
 	}
@@ -736,18 +736,17 @@ static int handle_conditional(text *txt, char **line_p, char **pos_p,
 	conditional *cond;
 
 	if (txt->skip == NULL) {
-		pos = token;
 		for (;;) {
-			if (*token == '\0') break;
-			for (; *pos != '\0' && (!multi || *pos != ' ');
-					pos++) {
-				if(*pos >= '0' && *pos <= '9') continue;
-				if(*pos >= 'A' && *pos <= 'Z') continue;
-				if(*pos >= 'a' && *pos <= 'z') continue;
-				if(*pos == '_') continue;
-				if(*pos == '-') continue;
-				if(*pos == '.') continue;
-				break;
+			pos = token;
+			if (*pos == '\0') break;
+			while (
+				(*pos >= '0' && *pos <= '9') ||
+				(*pos >= 'A' && *pos <= 'Z') ||
+				(*pos >= 'a' && *pos <= 'z') ||
+				(*pos == '_') || (*pos == '-') ||
+				(*pos == '.' && pos != token)
+			) {
+				pos++;
 			}
 			if (*pos == ' ') {
 				*pos = '\0';
@@ -780,7 +779,7 @@ static int handle_conditional(text *txt, char **line_p, char **pos_p,
 
 			if (!multi) break;
 			*pos = ' ';
-			pos++;
+			token = pos + 1;
 		}
 	} else {
 		/* We consider nested conditionals as successful while skipping
