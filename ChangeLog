@@ -1,3 +1,7 @@
+1.2.18rc1
+ o New list texts (Ben Schmidt, Xuacu Saturio, Nino Novak, Sophie Gautier,
+   Epaminondas Diamantopoulos, Valter Mura, Sérgio Marques, Milos Sramek, Dean
+   Lee)
  o Add %nowrap% to facilitate more complex formatting
  o Add subscription ability to php-admin
  o Add ability to except characters from width reckoning (and be zero-width)
@@ -36,11 +40,9 @@
  o Add $permitaddr$ and $releaseaddr$ substitutions
  o Make $subject$, $posteraddr$ and $subaddr$ more widely available
  o Fix potential crash when mail to the owner arrives with no From: header
- o Add %originalmail% directive and restore backward compatibility of
-   $originalmail$
+ o Add %originalmail% and %originalmail N% directives
  o Allow more characters in control and text filenames for substitutions
  o Add %%, %^%, %comment%, %control C% and %text T% formatting directives
- o Allow a space in $originalmail N$ substitution
  o Improve algorithm for list text substitutions
  o Add $text T$ substitution
  o Add $$ substitution
@@ -67,17 +69,16 @@
  o Remove .sh from mlmmj-make-ml.sh; symlink original name
  o Correct spelling of 'receive' and 'voodoo' throughout the code and
    documentation, making mlmmj-recieve a symlink to mlmmj-receive (Chris Webb)
- o Richer MIME list texts with inline messages (English only so far)
+ o Richer MIME list texts with inline messages
  o Add $random0$ through $random5$ substitutions
  o Add a $subject$ substitution for list texts
- o Changes to how $originalmail$ works
  o Allow arbitrary headers in list texts
  o Ensure digest listtext is always closed
  o Fix Content-Transfer-Encoding: header for digests and list texts
  o Fixed a bug that could cause a crash if $posteraddr$ appeared in the
    maxmailsize listtext
  o Documented listtexts
- o Makes the random strings produced always the same length rather the
+ o Makes the random strings produced always the same length rather than
    smaller random numbers producing shorter strings which could be
    problematic
  o Make random number generation more efficient by only seeding the
@@ -89,14 +90,12 @@
  o Check return status in mlmmj-perl-admin when adding subscribers (Florian
    Streibelt, Bitmand)
  o Better validation of input in php-admin (Thomas Goirand)
- o Added Turkish translation (Samed Beyribey)
  o Fixed security bug in mlmmj-php-admin (Florian Streibelt, Morten Shearman
    Kirkegaard)
  o Added README.postfix to distribution tarball
  o Added "send" keyword to control/access handling (Ben Schmidt)
  o Added contrib/amime-receive (Gerd v. Egidy)
  o Fixed memory leak in substitute_one() (Ben Schmidt)
- o Updated German listtexts (Christoph Wilke)
  o Updated TUNABLES file (Ben Schmidt)
 1.2.17
  o Added ifmodsendonlymodmoderate tunable
