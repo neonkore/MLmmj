@@ -8,16 +8,16 @@ The functionality:
 
  · Archive
  · Custom headers / footer
- · Fully automated bouncehandling (similar to ezmlm)
+ · Fully automated bounce handling (similar to ezmlm)
  · Complete requeueing functionality
  · Moderation functionality
  · Subject prefix
  · Subscribers only posting
  · Regular expression access control
  · Functionality to retrieve old posts
- · Web-interface
+ · Web interface
  · Digests
- · No mail delivery subscription
+ · No-mail subscription
  · VERP support
  · Delivery Status Notification (RFC1891) support
  · Rich, customisable texts for automated operations
