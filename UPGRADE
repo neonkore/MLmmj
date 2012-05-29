@@ -1,3 +1,30 @@
+
+This applies to everyone using Mlmmj < 1.2.18.0:
+------------------------------------------------
+
+ Updating the list texts is optional but highly recommended, as they have been
+ vastly improved for this version.
+
+ Users of the php-admin interface need to modify configuration files to define
+ $confdir.
+
+ Be aware of the following new features you may wish to turn on or use:
+
+- Richer list texts (including a new naming scheme, conditionals, automatic
+  wrapping and true UTF-8 support). See README.listtexts for more details.
+- Notifying posters when their posts are being moderated (notifymod tunable).
+- Not-me-too feature to avoid having the poster receiving their own messages
+  (notmetoo tunable).
+- Ability to explicitly reject posts (exposed in new list texts).
+- Ability to explicitly obstruct subscriptions (exposed in new list texts).
+- Unsubscribe from all versions of a list at once (changed behaviour of
+  +unsubscribe[-{digest|nomail}]; they now all remove the subscriber from all
+  versions of the list).
+- Ability to switch between different versions of a list by using
+  +subscribe[-{digest|nomail|both}] ('both' means normal and digest, and is a
+  'hidden feature' not mentioned in the supplied list texts).
+- Subscription ability in php-admin.
+
 This applies to everyone using mlmmj < 1.1.0:
 ---------------------------------------------
 

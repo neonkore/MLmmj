@@ -1,8 +1,8 @@
-README mlmmj-1.2.18rc1                                              May 3, 2012
+README mlmmj-1.2.18.0                                              May 29, 2012
 
 This is an attempt at implementing a mailing list manager with the same
 functionality as the brilliant ezmlm, but with a decent license and mail server
-independency.
+independence.
 
 The functionality:
 

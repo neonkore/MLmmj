@@ -106,7 +106,7 @@ entire content is used as value, it's marked "text".
  · notifymod			(boolean)
 
    If this file is present, the poster (based on the envelope from) will
-   get a mail when their post is being moderation.
+   get a mail when their post is being moderated.
 
  · digestinterval		(normal)
 
