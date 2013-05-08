@@ -180,5 +180,5 @@ enum subtype is_subbed(const char *listdir, const char *address, int both)
 	myfree(subddirname);
 	if (retval) return SUB_NOMAIL;
 
-	return SUB_NONE;
+	return typesub;
 }
