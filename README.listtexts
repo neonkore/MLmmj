@@ -368,6 +368,11 @@ appropriate for use in headers. They are:
 - %listsubs%
   (available only in list---*)
   the list of normal subscribers
+  DEPRECATED: use %normalsubs%
+
+- %normalsubs%
+  (available only in list---*)
+  the list of normal subscribers
 
 - %digestsubs%
   (available only in list---*)

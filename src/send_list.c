@@ -56,14 +56,13 @@ struct subs_list_state {
 
 static subs_list_state *init_subs_list(const char *dirname)
 {
-	/* We use a static variable rather than dynamic allocation as
-	 * there will never be two lists in use simultaneously */
-	static subs_list_state s;
-	s.dirname = mystrdup(dirname);
-	s.dirp = NULL;
-	s.fd = -1;
-	s.used = 0;
-	return &s;
+	subs_list_state *s = mymalloc(sizeof(subs_list_state));
+	s->dirname = mystrdup(dirname);
+	s->dirp = NULL;
+	s->fd = -1;
+	s->line = NULL;
+	s->used = 0;
+	return s;
 }
 
 
@@ -135,6 +134,7 @@ static void finish_subs_list(subs_list_state *s)
 	if (s->fd != -1) close(s->fd);
 	if (s->dirp != NULL) closedir(s->dirp);
 	myfree(s->dirname);
+	myfree(s);
 }
 
 
@@ -155,7 +155,7 @@ void send_list(const char *listdir, const char *emailaddr,
 	       const char *mlmmjsend)
 {
 	text *txt;
-	subs_list_state *subsls, *digestsls, *nomailsls;
+	subs_list_state *normalsls, *digestsls, *nomailsls;
 	char *queuefilename, *listaddr, *listdelim, *listname, *listfqdn;
 	char *fromaddr, *subdir, *nomaildir, *digestdir;
 	int fd;
@@ -171,7 +171,7 @@ void send_list(const char *listdir, const char *emailaddr,
 	subdir = concatstr(2, listdir, "/subscribers.d/");
 	digestdir = concatstr(2, listdir, "/digesters.d/");
 	nomaildir = concatstr(2, listdir, "/nomailsubs.d/");
-	subsls = init_subs_list(subdir);
+	normalsls = init_subs_list(subdir);
 	digestsls = init_subs_list(digestdir);
 	nomailsls = init_subs_list(nomaildir);
 	myfree(subdir);
@@ -181,8 +181,10 @@ void send_list(const char *listdir, const char *emailaddr,
 	txt = open_text(listdir, "list", NULL, NULL, subtype_strs[SUB_ALL],
 			"listsubs");
 	MY_ASSERT(txt);
-	register_formatted(txt, "subs",
-			rewind_subs_list, get_sub, subsls);
+	register_formatted(txt, "listsubs",
+			rewind_subs_list, get_sub, normalsls);
+	register_formatted(txt, "normalsubs",
+			rewind_subs_list, get_sub, normalsls);
 	register_formatted(txt, "digestsubs",
 			rewind_subs_list, get_sub, digestsls);
 	register_formatted(txt, "nomailsubs",
@@ -193,7 +195,7 @@ void send_list(const char *listdir, const char *emailaddr,
 
 	/* DEPRECATED */
 	/* Add lists manually if they weren't encountered in the list text */
-	if (!subsls->used && !digestsls->used && !nomailsls->used) {
+	if (!normalsls->used && !digestsls->used && !nomailsls->used) {
 		fd = open(queuefilename, O_WRONLY);
 		if(fd < 0) {
 			log_error(LOG_ARGS, "Could not open sub list mail");
@@ -203,7 +205,7 @@ void send_list(const char *listdir, const char *emailaddr,
 			log_error(LOG_ARGS, "Could not seek to end of file");
 			exit(EXIT_FAILURE);
 		}
-		print_subs(fd, subsls);
+		print_subs(fd, normalsls);
 		writen(fd, "\n-- \n", 5);
 		print_subs(fd, nomailsls);
 		writen(fd, "\n-- \n", 5);
@@ -212,7 +214,7 @@ void send_list(const char *listdir, const char *emailaddr,
 		close(fd);
 	}
 
-	finish_subs_list(subsls);
+	finish_subs_list(normalsls);
 	finish_subs_list(digestsls);
 	finish_subs_list(nomailsls);
 	myfree(listaddr);
