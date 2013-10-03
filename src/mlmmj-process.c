@@ -872,7 +872,7 @@ int main(int argc, char **argv)
 		fromaddr = concatstr(4, listname, listdelim, "bounces-help@",
 				     listfqdn);
 		txt = open_text(listdir, "deny", "post",
-				"notintocc", NULL, "notintocc");
+				"tocc", NULL, "notintocc");
 		MY_ASSERT(txt);
 		register_unformatted(txt, "subject", subject);
 		register_unformatted(txt, "posteraddr", posteraddr);
