@@ -1025,6 +1025,7 @@ int main(int argc, char **argv)
 				unlink(donemailname);
 				myfree(donemailname);
 				execlp(mlmmjsend, mlmmjsend,
+					"-L", listdir,
 					"-l", "1",
 					"-T", posteraddr,
 					"-F", fromaddr,
