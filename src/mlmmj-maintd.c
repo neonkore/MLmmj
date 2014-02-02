@@ -247,6 +247,7 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 			ch = strrchr(mailname, '.');
 			MY_ASSERT(ch);
 			*ch = '\0';
+			/* delete orphaned sidecar files */
 			if(stat(mailname, &st) < 0) {
 				if(errno == ENOENT) {
 					*ch = '.';
@@ -267,11 +268,19 @@ int resend_queue(const char *listdir, const char *mlmmjsend)
 		tofd = open(toname, O_RDONLY);
 
 		if((fromfd < 0 && err == ENOENT) ||
-		   (tofd < 0 && errno == ENOENT)) {
-			unlink(mailname);
-			unlink(fromname);
-			unlink(toname);
-			unlink(reptoname);
+				(tofd < 0 && errno == ENOENT)) {
+			/* only delete old files to avoid deleting
+			   mail currently being sent */
+			t = time(NULL);
+			if(stat(mailname, &st) == 0) {
+				if(t - st.st_mtime > (time_t)36000) {
+					unlink(mailname);
+					/* avoid leaving orphans */
+					unlink(fromname);
+					unlink(toname);
+					unlink(reptoname);
+				}
+			}
 			myfree(mailname);
 			myfree(fromname);
 			myfree(toname);
