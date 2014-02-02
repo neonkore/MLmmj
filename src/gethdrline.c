@@ -31,52 +31,80 @@
 #include "memory.h"
 #include "wrappers.h"
 #include "log_error.h"
+#include "chomp.h"
 
 
-char *gethdrline(int fd)
+char *gethdrline(int fd, char **unfolded)
 {
-	char *line = NULL, *retstr = NULL, *oldretstr = NULL;
+	char *line = NULL, *retstr = NULL, *oldretstr = NULL, *oldunfolded = NULL;
 	char ch;
 	ssize_t n;
-	
+
 	retstr = mygetline(fd);
 	if (!retstr) {
+		if (unfolded != NULL)
+			*unfolded = NULL;
 		return NULL;
 	}
 
-	/* do not attempt to unfold the end-of-headers marker */
-	if (retstr[0] == '\n')
-		return retstr;
-	
+	if (unfolded != NULL)
+		*unfolded = mystrdup(retstr);
+
+	chomp(retstr);
+
+	/* end-of-headers */
+	if (*retstr == '\0') {
+		if (unfolded != NULL) {
+			myfree(*unfolded);
+			*unfolded = NULL;
+		}
+		myfree(retstr);
+		return NULL;
+	}
+
 	for(;;) {
-		/* look-ahead one char to determine if we need to unfold */
+		/* look ahead one char to determine if we need to fold */
 		n = readn(fd, &ch, 1);
 		if (n == 0) {  /* end of file, and therefore also headers */
 			return retstr;
 		} else if (n == -1) {  /* error */
 			log_error(LOG_ARGS, "readn() failed in gethdrline()");
+			if (unfolded != NULL) {
+				myfree(*unfolded);
+				*unfolded = NULL;
+			}
 			myfree(retstr);
 			return NULL;
 		}
 
 		if (lseek(fd, -1, SEEK_CUR) == (off_t)-1) {
 			log_error(LOG_ARGS, "lseek() failed in gethdrline()");
+			if (unfolded != NULL) {
+				myfree(*unfolded);
+				*unfolded = NULL;
+			}
 			myfree(retstr);
 			return NULL;
 		}
 
-		if ((ch != '\t') && (ch != ' '))  /* no more unfolding */
+		if ((ch != '\t') && (ch != ' '))  /* no more folding */
 			return retstr;
 
-		oldretstr = retstr;
 		line = mygetline(fd);
-		if (!line) {
+		if (!line)
 			return retstr;
+
+		if (unfolded != NULL) {
+			oldunfolded = *unfolded;
+			*unfolded = concatstr(2, oldunfolded, line);
+			myfree(oldunfolded);
 		}
 
+		chomp(line);
+		oldretstr = retstr;
 		retstr = concatstr(2, oldretstr, line);
-		
 		myfree(oldretstr);
+
 		myfree(line);
 	}
 }

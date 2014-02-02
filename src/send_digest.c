@@ -44,7 +44,6 @@
 #include "gethdrline.h"
 #include "statctrl.h"
 #include "unistr.h"
-#include "chomp.h"
 
 
 struct mail {
@@ -119,18 +118,14 @@ static void rewind_thread_list(void * state)
 		subj = NULL;
 		from = NULL;
 
-		while ((line = gethdrline(archivefd))) {
-			if (strcmp(line, "\n") == 0) {
-				myfree(line);
-				break;
-			}
-			if (strncasecmp(line, "Subject: ", 9) == 0) {
+		while ((line = gethdrline(archivefd, NULL))) {
+			if (strncasecmp(line, "Subject:", 8) == 0) {
 				myfree(subj);
-				subj = unistr_header_to_utf8(line + 9);
+				subj = unistr_header_to_utf8(line + 8);
 			}
-			if (strncasecmp(line, "From: ", 6) == 0) {
+			if (strncasecmp(line, "From:", 5) == 0) {
 				myfree(from);
-				from = unistr_header_to_utf8(line + 6);
+				from = unistr_header_to_utf8(line + 5);
 			}
 			myfree(line);
 		}
@@ -174,12 +169,22 @@ static void rewind_thread_list(void * state)
 			thread_idx = num_threads-1;
 		}
 
+		tmp = from;
+		for (;;) {
+			if (isspace(*tmp)) {
+				tmp++;
+				continue;
+			}
+			break;
+		}
+		/* tmp is now left-trimmed from */
+
 		threads[thread_idx].num_mails++;
 		threads[thread_idx].mails = myrealloc(threads[thread_idx].mails,
 				threads[thread_idx].num_mails*sizeof(struct mail));
 		threads[thread_idx].mails[threads[thread_idx].num_mails-1].idx = i;
 		threads[thread_idx].mails[threads[thread_idx].num_mails-1].from =
-				concatstr(5, "      ", buf, " - ", from, "\n");
+				concatstr(5, "      ", buf, " - ", tmp, "\n");
 
 		myfree(subj);
 		myfree(from);

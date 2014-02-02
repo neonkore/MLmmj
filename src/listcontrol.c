@@ -33,7 +33,6 @@
 
 #include "mlmmj.h"
 #include "listcontrol.h"
-#include "find_email_adr.h"
 #include "getlistdelim.h"
 #include "strgen.h"
 #include "prepstdreply.h"

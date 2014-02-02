@@ -29,23 +29,21 @@
 #include "mygetline.h"
 #include "gethdrline.h"
 #include "strgen.h"
-#include "chomp.h"
 #include "ctrlvalue.h"
 #include "do_all_the_voodoo_here.h"
 #include "log_error.h"
 #include "wrappers.h"
 #include "memory.h"
 
-int findit(const char *line, const char **headers)
+int findit(const char *line, const struct strlist *headers)
 {
-	int i = 0;
+	int i;
 	size_t len;
 
-	while(headers[i]) {
-		len = strlen(headers[i]);
-		if(strncasecmp(line, headers[i], len) == 0)
+	for (i=0;i<headers->count;i++) {
+		len = strlen(headers->strs[i]);
+		if(strncasecmp(line, headers->strs[i], len) == 0)
 			return 1;
-		i++;
 	}
 
 	return 0;
@@ -54,80 +52,79 @@ int findit(const char *line, const char **headers)
 void getinfo(const char *line, struct mailhdr *readhdrs)
 {
 	int i = 0;
-	size_t tokenlen, linelen, valuelen;
+	size_t tokenlen, valuelen;
 
 	while(readhdrs[i].token) {
 		tokenlen = strlen(readhdrs[i].token);
-		linelen = strlen(line);
 		if(strncasecmp(line, readhdrs[i].token, tokenlen) == 0) {
 			readhdrs[i].valuecount++;
-			valuelen = linelen - tokenlen + 1;
+			valuelen = strlen(line) - tokenlen;
 			readhdrs[i].values =
 				(char **)myrealloc(readhdrs[i].values,
 				  readhdrs[i].valuecount * sizeof(char *));
 			readhdrs[i].values[readhdrs[i].valuecount - 1] =
 					(char *)mymalloc(valuelen + 1);
-			strncpy(readhdrs[i].values[readhdrs[i].valuecount - 1],
-						line+tokenlen, valuelen);
-			chomp(readhdrs[i].values[readhdrs[i].valuecount - 1]);
+			strcpy(readhdrs[i].values[readhdrs[i].valuecount - 1],
+						line+tokenlen);
 		}
 		i++;
 	}
 }
 
 int do_all_the_voodoo_here(int infd, int outfd, int hdrfd, int footfd,
-		 const char **delhdrs, struct mailhdr *readhdrs,
+		 const struct strlist *delhdrs, struct mailhdr *readhdrs,
 		 struct strlist *allhdrs, const char *prefix)
 {
-	char *hdrline, *subject, *unqp;
+	char *hdrline, *unfolded, *subject, *unqp;
 	int hdrsadded = 0;
 	int subject_present = 0;
 
 	allhdrs->count = 0;
 	allhdrs->strs = NULL;
 
-	while((hdrline = gethdrline(infd))) {
-		/* Done with headers? Then add extra if wanted*/
-		if((strncasecmp(hdrline, "mime", 4) == 0) ||
-			((strlen(hdrline) == 1) && (hdrline[0] == '\n'))){
+	for(;;) {
+		hdrline = gethdrline(infd, &unfolded);
 
-			/* add extra headers */
-			if(!hdrsadded && hdrfd >= 0) {
+		/* add extra headers before MIME* headers,
+		   or after all headers */
+		if(!hdrsadded &&
+				(hdrline == NULL ||
+				 strncasecmp(hdrline, "mime", 4) == 0)) {
+			if(hdrfd >= 0) {
 				if(dumpfd2fd(hdrfd, outfd) < 0) {
 					log_error(LOG_ARGS, "Could not "
 						"add extra headers");
 					myfree(hdrline);
-					return -1;
-				} else
-					hdrsadded = 1;
-			}
-			
-			fsync(outfd);
-
-			/* end of headers, write single LF */ 
-			if(hdrline[0] == '\n') {
-				/* but first add Subject if none is present
-				 * and a prefix is defined */
-				if (prefix && !subject_present)
-				{
-					subject = concatstr(3, "Subject: ", 
-								prefix, "\n");
-					writen(outfd, subject, strlen(subject));
-					myfree(subject);
-					subject_present = 1;
-				}
-
-				if(writen(outfd, hdrline, strlen(hdrline))
-						< 0) {
-					myfree(hdrline);
-					log_error(LOG_ARGS,
-							"Error writing hdrs.");
+					myfree(unfolded);
 					return -1;
 				}
-				myfree(hdrline);
-				break;
+				fsync(outfd);
 			}
+			hdrsadded = 1;
 		}
+
+		/* end of headers */ 
+		if(hdrline == NULL) {
+			/* add Subject if none is present
+			   and a prefix is defined */
+			if (prefix && !subject_present) {
+				subject = concatstr(3,"Subject: ",prefix,"\n");
+				writen(outfd, subject, strlen(subject));
+				myfree(subject);
+				subject_present = 1;
+			}
+			/* write LF */
+			if(writen(outfd, "\n", 1) < 0) {
+				myfree(hdrline);
+				myfree(unfolded);
+				log_error(LOG_ARGS, "Error writing hdrs.");
+				return -1;
+			}
+			myfree(hdrline);
+			myfree(unfolded);
+			break;
+		}
+
 		/* Do we want info from hdrs? Get it before it's gone */
 		if(readhdrs)
 			getinfo(hdrline, readhdrs);
@@ -135,9 +132,8 @@ int do_all_the_voodoo_here(int infd, int outfd, int hdrfd, int footfd,
 		/* Snatch a copy of the header */
 		allhdrs->count++;
 		allhdrs->strs = myrealloc(allhdrs->strs,
-					sizeof(char *) * (allhdrs->count + 1));
+					sizeof(char *) * (allhdrs->count));
 		allhdrs->strs[allhdrs->count-1] = mystrdup(hdrline);
-		allhdrs->strs[allhdrs->count] = NULL;  /* XXX why, why, why? */
 
 		/* Add Subject: prefix if wanted */
 		if(prefix) {
@@ -146,9 +142,9 @@ int do_all_the_voodoo_here(int infd, int outfd, int hdrfd, int footfd,
 				unqp = cleanquotedp(hdrline + 8);
 				if(strstr(hdrline + 8, prefix) == NULL &&
 				   strstr(unqp, prefix) == NULL) {
-					subject = concatstr(3,
+					subject = concatstr(4,
 							"Subject: ", prefix,
-							hdrline + 8);
+							hdrline + 8, "\n");
 					writen(outfd, subject,
 							strlen(subject));
 					myfree(subject);
@@ -159,16 +155,13 @@ int do_all_the_voodoo_here(int infd, int outfd, int hdrfd, int footfd,
 				myfree(unqp);
 			}
 		}
-		
-		/* Should it be stripped? */
-		if(delhdrs) {
-			if(!findit(hdrline, delhdrs))
-				writen(outfd, hdrline, strlen(hdrline));
-		} else
-			writen(outfd, hdrline, strlen(hdrline));
 
+		/* Should it be stripped? */
+		if(!delhdrs || !findit(hdrline, delhdrs))
+			writen(outfd, unfolded, strlen(unfolded));
 
 		myfree(hdrline);
+		myfree(unfolded);
 	}
 
 	/* Just print the rest of the mail */
@@ -177,7 +170,7 @@ int do_all_the_voodoo_here(int infd, int outfd, int hdrfd, int footfd,
 		return -1;
 	}
 
-	/* No more, lets add the footer if one */
+	/* No more, let's add the footer if one */
 	if(footfd >= 0)
 		if(dumpfd2fd(footfd, outfd) < 0) {
 			log_error(LOG_ARGS, "Error when adding footer");

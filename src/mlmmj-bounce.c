@@ -43,7 +43,6 @@
 #include "log_error.h"
 #include "subscriberfuncs.h"
 #include "mygetline.h"
-#include "chomp.h"
 #include "prepstdreply.h"
 #include "memory.h"
 #include "find_email_adr.h"
@@ -136,34 +135,38 @@ char *dsnparseaddr(const char *mailname)
 		return NULL;
 	}
 
-	while((line = gethdrline(fd))) {
+	while((line = gethdrline(fd, NULL))) {
 		linedup = mystrdup(line);
 		for(i = 0; line[i]; i++)
 			linedup[i] = tolower(line[i]);
 		search = strstr(linedup, "message/delivery-status");
 		myfree(linedup);
-		if(search)
+		if(search) {
 			indsn = 1;
+			myfree(line);
+			continue;
+		}
 		if(indsn) {
-			i = strncasecmp(line, "Final-Recipient:", 16);
-			if(i == 0) {
-				find_email_adr(line, &emails);
-				if(emails.emailcount > 0) {
-					addr = mystrdup(emails.emaillist[0]);
-					for(i = 0; i < emails.emailcount; i++)
-						myfree(emails.emaillist[i]);
-					myfree(emails.emaillist);
-				} else {
-					addr = NULL;
+			/* TODO: this parsing could be greatly improved */
+			if(strncasecmp(line, "Final-Recipient:", 16)) {
+				search = strstr(line, ";");
+				if (search) {
+					find_email_adr(search+1, &emails);
+					if(emails.emailcount > 0) {
+						addr = mystrdup(emails.emaillist[0]);
+						for(i = 0; i < emails.emailcount; i++)
+							myfree(emails.emaillist[i]);
+						myfree(emails.emaillist);
+					}
 				}
 				myfree(line);
-				return addr;
+				break;
 			}
 		}
 		myfree(line);
 	}
 
-	return NULL;
+	return addr;
 }
 
 static void print_help(const char *prg)

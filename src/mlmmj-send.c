@@ -844,7 +844,6 @@ int main(int argc, char **argv)
 	}
 
 	verp = ctrlvalue(listdir, "verp");
-	chomp(verp);
 	if(verp == NULL)
 		if(statctrl(listdir, "verp") == 1)
 			verp = mystrdup("");
@@ -993,7 +992,6 @@ int main(int argc, char **argv)
 
 	if(!relayhost) {
 		relayhost = ctrlvalue(listdir, "relayhost");
-		chomp(relayhost);
 	}
 	if(!relayhost)
 		strncpy(relay, RELAYHOST, sizeof(relay));

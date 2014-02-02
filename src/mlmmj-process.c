@@ -51,7 +51,6 @@
 #include "subscriberfuncs.h"
 #include "memory.h"
 #include "log_oper.h"
-#include "chomp.h"
 #include "unistr.h"
 
 enum action {
@@ -345,7 +344,6 @@ static enum action do_access(struct strlist *rule_strs, struct strlist *hdrs,
 		if (match != not) {
 			if (match) {
 				hdr = mystrdup(hdrs->strs[j]);
-				chomp(hdr);
 				log_oper(listdir, OPLOGFNAME, "mlmmj-process: access -"
 						" A mail from \"%s\" with header \"%s\" was %s by"
 						" rule #%d \"%s\"", from, hdr, action_strs[act],
@@ -555,15 +553,14 @@ int main(int argc, char **argv)
 	}
 
 	delheaders->strs = myrealloc(delheaders->strs,
-			(delheaders->count+3) * sizeof(char *));
+			(delheaders->count+2) * sizeof(char *));
 	delheaders->strs[delheaders->count++] = mystrdup("From ");
 	delheaders->strs[delheaders->count++] = mystrdup("Return-Path:");
-	delheaders->strs[delheaders->count] = NULL;
 
 	subjectprefix = ctrlvalue(listdir, "prefix");
 
 	if(do_all_the_voodoo_here(rawmailfd, donemailfd, hdrfd, footfd,
-				(const char**)delheaders->strs, readhdrs,
+				delheaders, readhdrs,
 				&allheaders, subjectprefix) < 0) {
 		log_error(LOG_ARGS, "Error in do_all_the_voodoo_here");
 		exit(EXIT_FAILURE);
@@ -688,12 +685,11 @@ int main(int argc, char **argv)
 			delheaders->count = 0;
 			delheaders->strs = NULL;
 			delheaders->strs = myrealloc(delheaders->strs,
-				(delheaders->count+3) * sizeof(char *));
+					2 * sizeof(char *));
 			delheaders->strs[delheaders->count++] =
 				mystrdup("From ");
 			delheaders->strs[delheaders->count++] =
 				mystrdup("Return-Path:");
-			delheaders->strs[delheaders->count] = NULL;
 			if((rawmailfd = open(mailfile, O_RDONLY)) < 0) {
 				log_error(LOG_ARGS, "could not open() "
 						    "input mail file");
@@ -706,11 +702,14 @@ int main(int argc, char **argv)
 				exit(EXIT_FAILURE);
 			}
 			if(do_all_the_voodoo_here(rawmailfd, donemailfd, -1,
-					-1, (const char**)delheaders->strs,
+					-1, delheaders,
 					NULL, &allheaders, NULL) < 0) {
 				log_error(LOG_ARGS, "do_all_the_voodoo_here");
 				exit(EXIT_FAILURE);
 			}
+			for(i = 0; i < delheaders->count; i++)
+				myfree(delheaders->strs[i]);
+			myfree(delheaders->strs);
 			close(rawmailfd);
 			close(donemailfd);
 			unlink(mailfile);
@@ -828,7 +827,6 @@ int main(int argc, char **argv)
 			log_error(LOG_ARGS, "Found To: %s",
 				toemails.emaillist[i]);
 			for(j = 0; j < alternates->count; j++) {
-				chomp(alternates->strs[j]);
 				if(strcasecmp(alternates->strs[j],
 					toemails.emaillist[i]) == 0)
 					intocc = 1;
@@ -839,7 +837,6 @@ int main(int argc, char **argv)
 			log_error(LOG_ARGS, "Found Cc: %s",
 				ccemails.emaillist[i]);
 			for(j = 0; j < alternates->count; j++) {
-				chomp(alternates->strs[j]);
 				if(strcasecmp(alternates->strs[j],
 					ccemails.emaillist[i]) == 0)
 					intocc = 1;

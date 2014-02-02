@@ -24,6 +24,6 @@
 #ifndef GETHDRLINE_H
 #define GETHDRLINE_H
 
-char *gethdrline(int fd);
+char *gethdrline(int fd,char **unfolded);
 
 #endif /* GETHDRLINE_H */
