@@ -137,8 +137,20 @@ int delolder(const char *dirname, time_t than)
 
 int clean_moderation(const char *listdir)
 {
+
+	time_t modreqlife = 0;
+	char *modreqlifestr;
+
+	modreqlifestr = ctrlvalue(listdir, "modreqlife");
+	if(modreqlifestr) {
+		modreqlife = atol(modreqlifestr);
+		myfree(modreqlifestr);
+	}
+	if(modreqlife == 0)
+		modreqlife = MODREQLIFE;
+
 	char *moddirname = concatstr(2, listdir, "/moderation");
-	int ret = delolder(moddirname, MODREQLIFE);	
+	int ret = delolder(moddirname, modreqlife);
 		
 	myfree(moddirname);
 

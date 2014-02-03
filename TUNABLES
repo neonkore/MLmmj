@@ -50,6 +50,11 @@ entire content is used as value, it's marked "text".
    When this file is present, all postings from people who are not subscribed
    to the list will be moderated.
 
+ · modreqlife			(normal)
+
+   This specifies how long in seconds a mail awaits moderation before it's
+   discarded. Defaults to 604800 seconds, which is 7 days.
+
  · prefix			(normal)
 
    The prefix for the Subject: line of mails to the list. This will alter the
@@ -121,8 +126,8 @@ entire content is used as value, it's marked "text".
 
  · bouncelife			(normal)
 
-   Here is specified for how long time in seconds an address can bounce before
-   it's unsubscribed. Defaults to 432000 seconds, which is 5 days.
+   This specifies how long in seconds an address can bounce before it's
+   unsubscribed. Defaults to 432000 seconds, which is 5 days.
 
  · noarchive			(boolean)
 
@@ -132,12 +137,12 @@ entire content is used as value, it's marked "text".
  · nosubconfirm			(boolean)
 
    If this file exists, no mail confirmation is needed to subscribe to the
-   list. This should in principle never ever be used, but there is times
+   list. This should in principle never ever be used, but there are times
    on local lists etc. where this is useful. HANDLE WITH CARE!
 
  · noget			(boolean)
 
-   If this file exists, then retrieving old posts with +get-N is disabled
+   If this file exists, then retrieving old posts with +get-N is disabled.
 
  · subonlyget			(boolean)
 
