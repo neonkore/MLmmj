@@ -1,3 +1,7 @@
+1.2.18.1
+ o Stop mlmmj-maintd deleting list posts while they are being sent
+ o Fix +list from crashing Mlmmj
+ o Fix bug that made double subscription possible
 1.2.18.0
  o New list texts (Ben Schmidt, Xuacu Saturio, Nino Novak, Sophie Gautier,
    Epaminondas Diamantopoulos, Valter Mura, Sérgio Marques, Milos Sramek, Dean
