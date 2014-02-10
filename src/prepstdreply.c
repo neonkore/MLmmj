@@ -1098,7 +1098,7 @@ char *get_processed_text_line(text *txt, int headers,
 	char *tmp;
 	char *prev = NULL;
 	int len, width, i;
-	int processedlen, processedwidth;
+	int processedlen = 0, processedwidth = 0;
 	int wrapindentlen = -1;
 	int incision, linebreak, linebreakwidth;
 	int directive, inhibitbreak;
