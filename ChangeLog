@@ -1,3 +1,4 @@
+ o Use iconv to convert unknown character sets
  o Handle unfolded header lines better
  o Add a tunable for moderation request lifetime (Timo Boettcher)
  o Ensure mlmmj-send always honours tunables (e.g. relayhost)

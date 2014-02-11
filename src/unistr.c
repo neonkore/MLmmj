@@ -30,11 +30,15 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <ctype.h>
+#include <iconv.h>
 
 #include "mlmmj.h"
 #include "unistr.h"
 #include "log_error.h"
 #include "memory.h"
+
+/* This is allocated on the stack, so it can't be too big. */
+#define ICONV_BUFFER_SIZE 160
 
 
 unistr *unistr_new(void)
@@ -177,6 +181,48 @@ void unistr_append_iso88591(unistr *str, const char *binary, size_t bin_len)
 			unistr_append_char(str, (unsigned char)binary[i]);
 		}
 	}
+}
+
+
+void unistr_append_iconv(unistr *str, char *binary, size_t bin_len,
+		const char * charset)
+{
+	char bytes[ICONV_BUFFER_SIZE];
+	char * buffer;
+	size_t bufferleft;
+	iconv_t cd;
+
+	cd = iconv_open("UTF-8", charset);
+	if (cd == (iconv_t)-1) {
+		unistr_append_usascii(str, "???", 3);
+		return;
+	}
+
+	while (bin_len > 0) {
+		buffer = bytes;
+		bufferleft = ICONV_BUFFER_SIZE;
+		if (iconv(cd, &binary, &bin_len, &buffer, &bufferleft) == (size_t)-1) {
+			if (errno == EILSEQ) {
+				/* illegal sequence; try to recover */
+				unistr_append_utf8(str, bytes, ICONV_BUFFER_SIZE - bufferleft);
+				unistr_append_usascii(str, "?", 1);
+				bin_len--;
+				binary++;
+				continue;
+			} else if (errno == EINVAL) {
+				/* incomplete sequence; we're done */
+				unistr_append_usascii(str, "?", 1);
+				break;
+			} else if (errno != E2BIG) {
+				/* some other error; abort */
+				unistr_append_usascii(str, "???", 1);
+				break;
+			}
+		}
+		/* success or buffer full */
+		unistr_append_utf8(str, bytes, ICONV_BUFFER_SIZE - bufferleft);
+	}
+	iconv_close(cd);
 }
 
 
@@ -421,8 +467,7 @@ static void header_decode_word(char *word, unistr *ret)
 	} else if (strcasecmp(charset, "iso-8859-1") == 0) {
 		unistr_append_iso88591(ret, binary, bin_len);
 	} else {
-		/* unknown charset */
-		unistr_append_usascii(ret, "???", 3);
+		unistr_append_iconv(ret, binary, bin_len, charset);
 	}
 
 	myfree(my_word);

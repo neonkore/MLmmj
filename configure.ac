@@ -14,11 +14,13 @@ AC_PROG_CC
 # Checks for libraries.
 AC_CHECK_LIB(socket,socket)
 AC_CHECK_LIB(nsl,gethostbyname)
+AC_CHECK_LIB(iconv,iconv_open)
 
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netinet/in.h stddef.h stdlib.h string.h])
 AC_CHECK_HEADERS([sys/socket.h syslog.h unistd.h time.h])
+AC_CHECK_HEADER([iconv.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
