@@ -402,17 +402,21 @@ static void decode_base64(char *str, char **binary, size_t *bin_len)
 }
 
 
-static void header_decode_word(char *word, unistr *ret)
+/* wsp, if not NULL, is an earlier offset into the same string as word,
+ * to whitespace that should only be included if word is not encoded. */
+static int header_decode_word(char *wsp, char *word, unistr *ret)
 {
 	char *my_word;
 	char *charset, *encoding, *string, *end;
 	char *binary;
 	size_t bin_len;
 
+	if (wsp == NULL)
+		wsp = word;
 
 	if ((word[0] != '=') || (word[1] != '?')) {
-		unistr_append_usascii(ret, word, strlen(word));
-		return;
+		unistr_append_usascii(ret, wsp, strlen(wsp));
+		return 0;
 	}
 
 	my_word = mystrdup(word);
@@ -421,32 +425,36 @@ static void header_decode_word(char *word, unistr *ret)
 
 	if ((encoding = strchr(charset, '?')) == NULL) {
 		/* missing encoding */
+		unistr_append_usascii(ret, wsp, word-wsp);
 		unistr_append_usascii(ret, "???", 3);
 		myfree(my_word);
-		return;
+		return 0;
 	}
 	*(encoding++) = '\0';
 
 	if ((string = strchr(encoding, '?')) == NULL) {
 		/* missing string */
+		unistr_append_usascii(ret, wsp, word-wsp);
 		unistr_append_usascii(ret, "???", 3);
 		myfree(my_word);
-		return;
+		return 0;
 	}
 	*(string++) = '\0';
 
 	if ((end = strchr(string, '?')) == NULL) {
 		/* missing end */
+		unistr_append_usascii(ret, wsp, word-wsp);
 		unistr_append_usascii(ret, "???", 3);
 		myfree(my_word);
-		return;
+		return 0;
 	}
 	*(end++) = '\0';
 	if ((end[0] != '=') || (end[1] != '\0')) {
 		/* broken end */
+		unistr_append_usascii(ret, wsp, word-wsp);
 		unistr_append_usascii(ret, "???", 3);
 		myfree(my_word);
-		return;
+		return 0;
 	}
 
 	if (tolower(encoding[0]) == 'q') {
@@ -455,9 +463,10 @@ static void header_decode_word(char *word, unistr *ret)
 		decode_base64(string, &binary, &bin_len);
 	} else {
 		/* unknown encoding */
+		unistr_append_usascii(ret, wsp, word-wsp);
 		unistr_append_usascii(ret, "???", 3);
 		myfree(my_word);
-		return;
+		return 0;
 	}
 
 	if (strcasecmp(charset, "us-ascii") == 0) {
@@ -472,6 +481,8 @@ static void header_decode_word(char *word, unistr *ret)
 
 	myfree(my_word);
 	myfree(binary);
+
+	return 1;
 }
 
 
@@ -483,19 +494,32 @@ char *unistr_header_to_utf8(const char *str)
 	char *my_str;
 	char *word;
 	char *p;
+	char c;
+	char *wsp = NULL;
+	int decoded;
 	unistr *us;
 	char *ret;
 
 	my_str = mystrdup(str);
 	us = unistr_new();
 
-	word = strtok_r(my_str, " \t\n", &p);
-	while (word) {
-		header_decode_word(word, us);
-		word = strtok_r(NULL, " \t\n", &p);
-		if (word)
-			unistr_append_char(us, ' ');
+	p = my_str;
+	while (*p) {
+		word = p;
+		p += strcspn(p, " \t\n");
+		c = *p;
+		*p = '\0';
+		decoded = header_decode_word(wsp, word, us);
+		*p = c;
+		wsp = p;
+		p += strspn(p, " \t\n");
+		if (!decoded) {
+			unistr_append_usascii(us, wsp, p-wsp);
+			wsp = NULL;
+		}
 	}
+	if (wsp != NULL)
+		unistr_append_usascii(us, wsp, p-wsp);
 
 	myfree(my_str);
 
