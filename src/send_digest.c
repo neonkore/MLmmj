@@ -334,7 +334,7 @@ int send_digest(const char *listdir, int firstindex, int lastindex,
 	len++;
 	if (strncasecmp(line, "Subject:", len) == 0) {
 		tmp = unistr_utf8_to_header(tmp);
-		subject = concatstr(2, "Subject:", tmp);
+		subject = concatstr(2, "Subject: ", tmp);
 		myfree(tmp);
 		myfree(line);
 

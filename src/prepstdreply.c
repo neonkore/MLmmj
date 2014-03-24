@@ -1700,7 +1700,7 @@ char *prepstdreply(text *txt, const char *listdir,
 			if (strncasecmp(line, "Subject:", len) == 0) {
 				tmp = unistr_utf8_to_header(tmp);
 				myfree(line);
-				line = concatstr(2, "Subject:", tmp);
+				line = concatstr(2, "Subject: ", tmp);
 				myfree(tmp);
 			}
 			len = strlen(line);

@@ -486,7 +486,7 @@ static int header_decode_word(char *wsp, char *word, unistr *ret)
 }
 
 
-/* IN: "=?iso-8859-1?Q?hyggem=F8de?= torsdag"
+/* IN: "   =?iso-8859-1?Q?hyggem=F8de?= torsdag   "
  * OUT: "hyggem\xC3\xB8de torsdag"
  */
 char *unistr_header_to_utf8(const char *str)
@@ -496,15 +496,20 @@ char *unistr_header_to_utf8(const char *str)
 	char *p;
 	char c;
 	char *wsp = NULL;
-	int decoded;
+	int decoded = 0;
 	unistr *us;
 	char *ret;
 
 	my_str = mystrdup(str);
 	us = unistr_new();
 
-	p = my_str;
+	p = my_str + strspn(my_str, " \t\n");
+	wsp = p;
 	while (*p) {
+		if (!decoded) {
+			unistr_append_usascii(us, wsp, p-wsp);
+			wsp = NULL;
+		}
 		word = p;
 		p += strcspn(p, " \t\n");
 		c = *p;
@@ -513,13 +518,7 @@ char *unistr_header_to_utf8(const char *str)
 		*p = c;
 		wsp = p;
 		p += strspn(p, " \t\n");
-		if (!decoded) {
-			unistr_append_usascii(us, wsp, p-wsp);
-			wsp = NULL;
-		}
 	}
-	if (wsp != NULL)
-		unistr_append_usascii(us, wsp, p-wsp);
 
 	myfree(my_str);
 
@@ -545,33 +544,49 @@ static int is_ok_in_header(char ch)
 }
 
 
-/* IN: "hyggem\xC3\xB8de torsdag"
+/* IN: "   hyggem\xC3\xB8de torsdag   "
  * OUT: "=?utf-8?Q?hyggem=C3=B8de_torsdag?="
  */
 char *unistr_utf8_to_header(const char *str)
 {
 	unistr *us;
+	char *my_str;
 	char *ret;
+	char *wsp = NULL;
 	const char *p;
 	int clean;
 	char buf[4];
 
-	/* clean header? */
+	my_str = mystrdup(str);
+
+	/* trim whitespace and see if the header is clean */
+
+	ret = my_str + strspn(my_str, " \t\n");
+
 	clean = 1;
-	for (p=str; *p; p++) {
-		if (!is_ok_in_header(*p)) {
-			clean = 0;
-			break;
+	for (p=ret; *p; p++) {
+		if (*p == ' ' || *p == '\t' || *p == '\n') {
+			if (wsp == NULL)
+				wsp = p;
+		} else {
+			wsp = NULL;
 		}
+		if (clean && !is_ok_in_header(*p))
+			clean = 0;
 	}
+	if (wsp != NULL)
+		*wsp = '\0';
+
 	if (clean) {
-		return mystrdup(str);
+		ret = mystrdup(ret);
+		myfree(my_str);
+		return ret;
 	}
 
 	us = unistr_new();
 
 	unistr_append_usascii(us, "=?utf-8?q?", 10);
-	for (p=str; *p; p++) {
+	for (p=ret; *p; p++) {
 		if (*p == 0x20) {
 			unistr_append_char(us, '_');
 		} else if (is_ok_in_header(*p)) {
@@ -585,6 +600,7 @@ char *unistr_utf8_to_header(const char *str)
 
 	ret = unistr_to_utf8(us);
 	unistr_free(us);
+	myfree(my_str);
 
 	return ret;
 }
