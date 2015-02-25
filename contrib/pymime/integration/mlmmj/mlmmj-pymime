@@ -1,0 +1,49 @@
+#!/bin/bash
+MLMMJRECIEVE=/usr/bin/mlmmj-recieve
+PYMIME=/var/spool/mlmmj/pymime.py
+
+# check executables
+if ! [ -x $MLMMJRECIEVE ]; then
+    echo "can't find $MLMMJRECIEVE executable, aborting"
+    exit 1
+fi
+
+if ! [ -x $PYMIME ]; then
+    echo "can't find $PYMIME executable, aborting"
+    exit 1
+fi
+
+# read parameters
+I=1
+PARAM_L=0
+while [ $I -le $# ] && [ $PARAM_L == 0 ]; do
+    if [ "${!I}" == "-L" ]; then
+        PARAM_L=1
+    fi
+    I=$[$I+1]
+done
+
+if [ $PARAM_L == 1 ] && [ $I -le $# ]; then
+    MLPATH="${!I}"
+else
+    echo "parameter -L /path/to/listdir missing, aborting"
+    exit 1
+fi
+
+if ! [ -d "${MLPATH}" ]; then
+    echo "${MLPATH} is not existing or no directory, aborting"
+    exit 1
+fi
+
+CONTROLD="${MLPATH}/control"
+
+if ! [ -d "${CONTROLD}" ]; then
+    echo "${CONTROLD} is not existing or no directory, aborting"
+    exit 1
+fi
+
+# go to the mailinglist directory
+cd $MLPATH
+
+# pipe the calls
+$PYMIME | $MLMMJRECIEVE "$@"

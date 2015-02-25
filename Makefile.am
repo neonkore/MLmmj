@@ -4,7 +4,7 @@ AUTOMAKE_OPTIONS = foreign dist-bzip2
 EXTRA_DIST = include VERSION LICENSE UPGRADE FAQ \
 	     TUNABLES README.access README.archives README.listtexts man \
 	     README.exim4 README.sendmail README.security README.qmail \
-	     README.postfix
+	     README.postfix README.footers
 CLEANFILES = *~ mlmmj-*.tar.*
 
 man1_MANS = man/mlmmj-bounce.1 man/mlmmj-make-ml.1 man/mlmmj-receive.1 \
