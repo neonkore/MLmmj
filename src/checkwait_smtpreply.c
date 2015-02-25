@@ -33,9 +33,18 @@
 
 char *checkwait_smtpreply(int sockfd, int replytype)
 {
-	char *smtpreply;
+	char *smtpreply = NULL;
 
-	smtpreply = mygetline(sockfd);
+	if(replytype == MLMMJ_EHLO) {
+		/* Consume all 8BITMIME 250- reply */
+		do {
+			myfree(smtpreply);
+			smtpreply = mygetline(sockfd);
+		} while (strncmp(smtpreply, "250-", 4) == 0);
+	} else {
+		smtpreply = mygetline(sockfd);
+	}
+
 	if(smtpreply == NULL) {
 		/* This will never be a valid SMTP response so will always be returned,
 		 * but is more descriptive than an empty string. */
@@ -53,6 +62,10 @@ char *checkwait_smtpreply(int sockfd, int replytype)
 	switch(replytype) {
 		case MLMMJ_CONNECT:
 			if(smtpreply[0] != '2' || smtpreply[1] != '2')
+				return smtpreply;
+			break;
+		case MLMMJ_EHLO:
+			if(smtpreply[0] != '2' || smtpreply[1] != '5')
 				return smtpreply;
 			break;
 		case MLMMJ_HELO:

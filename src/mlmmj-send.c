@@ -379,30 +379,122 @@ int send_mail(int sockfd, const char *from, const char *to,
 int initsmtp(int *sockfd, const char *relayhost, unsigned short port)
 {
 	int retval = 0;
+	int try_ehlo = 1;
 	char *reply = NULL;
 	char *myhostname = hostnamestr();
 
-	init_sockfd(sockfd, relayhost, port);
+	do {
+		init_sockfd(sockfd, relayhost, port);
 
-	if(*sockfd == -1)
-		return EBADF;
+		if(*sockfd == -1) {
+			retval = EBADF;
+			break;
+		}
 
-	if((reply = checkwait_smtpreply(*sockfd, MLMMJ_CONNECT)) != NULL) {
-		log_error(LOG_ARGS, "No proper greeting to our connect"
-			  "Reply: [%s]", reply);
+		if((reply = checkwait_smtpreply(*sockfd, MLMMJ_CONNECT)) != NULL) {
+			log_error(LOG_ARGS, "No proper greeting to our connect"
+					"Reply: [%s]", reply);
+			myfree(reply);
+			retval = MLMMJ_CONNECT;
+			/* FIXME: Queue etc. */
+			break;
+		}
+
+		if (try_ehlo) {
+			write_ehlo(*sockfd, myhostname);
+			if((reply = checkwait_smtpreply(*sockfd, MLMMJ_EHLO))
+					== NULL) {
+				/* EHLO successful don't try more */
+				break;
+			}
+
+			/* RFC 1869 - 4.5. - In the case of any error response,
+			 * the client SMTP should issue either the HELO or QUIT
+			 * command.
+			 * RFC 1869 - 4.5. - If the server SMTP recognizes the
+			 * EHLO command, but the command argument is
+			 * unacceptable, it will return code 501.
+			 */
+			if (strncmp(reply, "501", 3) == 0) {
+				myfree(reply);
+				/* Commmand unacceptable; we choose to QUIT but
+				 * ignore any QUIT errors; return that EHLO was
+				 * the error.
+				 */
+				endsmtp(sockfd);
+				retval = MLMMJ_EHLO;
+				break;
+			}
+
+			/* RFC 1869 - 4.6. - A server SMTP that conforms to RFC
+			 * 821 but does not support the extensions specified
+			 * here will not recognize the EHLO command and will
+			 * consequently return code 500, as specified in RFC
+			 * 821.  The server SMTP should stay in the same state
+			 * after returning this code (see section 4.1.1 of RFC
+			 * 821).  The client SMTP may then issue either a HELO
+			 * or a QUIT command.
+			 */
+
+			if (reply[0] != '5') {
+				myfree(reply);
+				/* Server doesn't understand EHLO, but gives a
+				 * broken response. Try with new connection.
+				 */
+				endsmtp(sockfd);
+				try_ehlo = 0;
+				continue;
+			}
+
+			myfree(reply);
+
+			/* RFC 1869 - 4.7. - Other improperly-implemented
+			 * servers will not accept a HELO command after EHLO has
+			 * been sent and rejected.  In some cases, this problem
+			 * can be worked around by sending a RSET after the
+			 * failure response to EHLO, then sending the HELO.
+			 */
+			write_rset(*sockfd);
+			reply = checkwait_smtpreply(*sockfd, MLMMJ_RSET);
+
+			/* RFC 1869 - 4.7. - Clients that do this should be
+			 * aware that many implementations will return a failure
+			 * code (e.g., 503 Bad sequence of commands) in response
+			 * to the RSET. This code can be safely ignored.
+			 */
+			myfree(reply);
+
+			/* Try HELO on the same connection
+			 */
+		}
+
+		write_helo(*sockfd, myhostname);
+		if((reply = checkwait_smtpreply(*sockfd, MLMMJ_HELO))
+				== NULL) {
+			/* EHLO successful don't try more */
+			break;
+		}
+		if (try_ehlo) {
+			myfree(reply);
+			/* We reused a connection we tried EHLO on. Maybe
+			 * that's why it failed. Try with new connection.
+			 */
+			endsmtp(sockfd);
+			try_ehlo = 0;
+			continue;
+		}
+
+		log_error(LOG_ARGS, "Error with HELO. Reply: "
+				"[%s]", reply);
 		myfree(reply);
-		retval = MLMMJ_CONNECT;
-		/* FIXME: Queue etc. */
-	}	
-	write_helo(*sockfd, myhostname);
-	myfree(myhostname);
-	if((reply = checkwait_smtpreply(*sockfd, MLMMJ_HELO)) != NULL) {
-		log_error(LOG_ARGS, "Error with HELO. Reply: [%s]", reply);
-		/* FIXME: quit and tell admin to configure correctly */
-		myfree(reply);
+		/* FIXME: quit and tell admin to configure
+		 * correctly */
 		retval = MLMMJ_HELO;
-	}
+		break;
 
+	} while (1);
+
+	myfree(myhostname);
 	return retval;
 }
 

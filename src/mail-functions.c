@@ -37,11 +37,35 @@
 #include "log_error.h"
 #include "memory.h"
 
-/* "HELO \r\n " has length 7 */
-#define EXTRA_HELO_LEN 8
+/* "EHLO \r\n" has length 7 */
+#define EXTRA_EHLO_LEN 7
+int write_ehlo(int sockfd, const char *hostname)
+{
+	size_t len = (size_t)(strlen(hostname) + EXTRA_EHLO_LEN + 1);
+	char *ehlo;
+	size_t bytes_written;
+	
+	if((ehlo = mymalloc(len)) == 0)
+		return errno;
+	snprintf(ehlo, len, "EHLO %s\r\n", hostname);
+	len = strlen(ehlo);
+#if 0
+	fprintf(stderr, "\nwrite_ehlo, ehlo = [%s]\n", ehlo);
+#endif
+	bytes_written = writen(sockfd, ehlo, len);
+	if(bytes_written < 0) {
+		log_error(LOG_ARGS, "Could not write EHLO");
+		myfree(ehlo);
+		return errno;
+	}
+	myfree(ehlo);
+	return 0;
+}
+/* "HELO \r\n" has length 7 */
+#define EXTRA_HELO_LEN 7
 int write_helo(int sockfd, const char *hostname)
 {
-	size_t len = (size_t)(strlen(hostname) + EXTRA_HELO_LEN);
+	size_t len = (size_t)(strlen(hostname) + EXTRA_HELO_LEN + 1);
 	char *helo;
 	size_t bytes_written;
 	
@@ -66,7 +90,7 @@ int write_helo(int sockfd, const char *hostname)
 int write_mail_from(int sockfd, const char *from_addr, const char *extra)
 {
 	size_t len = (size_t)(strlen(from_addr) + EXTRA_FROM_LEN +
-			strlen(extra) + 2);
+			strlen(extra) + 1);
 	char *mail_from;
 	size_t bytes_written;
 
@@ -95,11 +119,10 @@ int write_mail_from(int sockfd, const char *from_addr, const char *extra)
 }
 
 /* "RCPT TO: <>\r\n" has length 13 */
-#define EXTRA_RCPT_LEN 14
-
+#define EXTRA_RCPT_LEN 13
 int write_rcpt_to(int sockfd, const char *rcpt_addr)
 {
-	size_t len = (size_t)(strlen(rcpt_addr) + EXTRA_RCPT_LEN);
+	size_t len = (size_t)(strlen(rcpt_addr) + EXTRA_RCPT_LEN + 1);
 	char *rcpt_to;
 	size_t bytes_written;
 	
@@ -241,9 +264,6 @@ char *get_prepped_mailbody_from_map(char *mapstart, size_t size, size_t *blen)
 	return retstr;
 }
 
-/* "\r\n" has length 2 */
-#define EXTRA_CUSTOM_LEN 3
-
 int write_dot(int sockfd)
 {
 	size_t bytes_written;
@@ -255,9 +275,11 @@ int write_dot(int sockfd)
 	return 0;
 }
 
+/* "\r\n" has length 2 */
+#define EXTRA_CUSTOM_LEN 2
 int write_custom_line(int sockfd, const char *line)
 {
-	size_t len = strlen(line) + EXTRA_CUSTOM_LEN;
+	size_t len = strlen(line) + EXTRA_CUSTOM_LEN + 1;
 	size_t bytes_written;
 	char *customline;
 	
@@ -281,11 +303,10 @@ int write_custom_line(int sockfd, const char *line)
 }
 
 /* "Reply-To: \r\n" has length 12 */
-#define EXTRA_REPLYTO_LEN 13
-
+#define EXTRA_REPLYTO_LEN 12
 int write_replyto(int sockfd, const char *replyaddr)
 {
-	size_t len = (size_t)(strlen(replyaddr) + EXTRA_REPLYTO_LEN);
+	size_t len = (size_t)(strlen(replyaddr) + EXTRA_REPLYTO_LEN + 1);
 	char *replyto;
 	size_t bytes_written;
 	

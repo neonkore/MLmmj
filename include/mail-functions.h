@@ -29,6 +29,7 @@
 #include <stdio.h>
 
 int write_helo(int sockfd, const char *hostname);
+int write_ehlo(int sockfd, const char *hostname);
 int write_mail_from(int sockfd, const char *from_addr, const char *extra);
 int write_rcpt_to(int sockfd, const char *rcpt_addr);
 int write_custom_line(int sockfd, const char *line);

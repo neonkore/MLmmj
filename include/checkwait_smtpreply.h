@@ -25,13 +25,14 @@
 #define CHECK_REPLY_H
 
 #define MLMMJ_CONNECT 1
-#define MLMMJ_HELO 2
+#define MLMMJ_EHLO 2
+#define MLMMJ_HELO 3
 #define MLMMJ_FROM 4
-#define MLMMJ_RCPTTO 8
-#define MLMMJ_DATA 16
-#define MLMMJ_DOT 32
-#define MLMMJ_QUIT 64
-#define MLMMJ_RSET 128
+#define MLMMJ_RCPTTO 5
+#define MLMMJ_DATA 6
+#define MLMMJ_DOT 7
+#define MLMMJ_QUIT 8
+#define MLMMJ_RSET 9
 
 #include "mlmmj.h"
 
