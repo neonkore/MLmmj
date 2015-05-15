@@ -553,7 +553,7 @@ char *unistr_utf8_to_header(const char *str)
 	char *my_str;
 	char *ret;
 	char *wsp = NULL;
-	const char *p;
+	char *p;
 	int clean;
 	char buf[4];
 
