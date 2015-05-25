@@ -1,3 +1,4 @@
+1.2.19.0
  o Add README.footers and footer-related resources
  o Support ESMTP so OpenSMTPD uses 8 bits (Paul Fariello)
  o Use iconv to convert unknown character sets
