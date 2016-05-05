@@ -172,11 +172,12 @@ char *dsnparseaddr(const char *mailname)
 static void print_help(const char *prg)
 {
 	printf("Usage: %s -L /path/to/list\n"
-	       "       -a john=doe.org [-n num | -p]\n"
+	       "       [-a john=doe.org | -d] [-n num | -p]\n"
 	       " -a: Address string that bounces\n"
 	       " -h: This help\n"
 	       " -L: Full path to list directory\n"
 	       " -n: Message number in the archive\n"
+	       " -d: Attempt to parse DSN to determine address\n"
 	       " -p: Send out a probe\n"
 	       " -V: Print version\n", prg);
 
