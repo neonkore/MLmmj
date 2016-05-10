@@ -376,12 +376,11 @@ int send_mail(int sockfd, const char *from, const char *to,
 	return 0;
 }
 
-int initsmtp(int *sockfd, const char *relayhost, unsigned short port)
+int initsmtp(int *sockfd, const char *relayhost, unsigned short port, const char *heloname)
 {
 	int retval = 0;
 	int try_ehlo = 1;
 	char *reply = NULL;
-	char *myhostname = hostnamestr();
 
 	do {
 		init_sockfd(sockfd, relayhost, port);
@@ -401,7 +400,7 @@ int initsmtp(int *sockfd, const char *relayhost, unsigned short port)
 		}
 
 		if (try_ehlo) {
-			write_ehlo(*sockfd, myhostname);
+			write_ehlo(*sockfd, heloname);
 			if((reply = checkwait_smtpreply(*sockfd, MLMMJ_EHLO))
 					== NULL) {
 				/* EHLO successful don't try more */
@@ -468,7 +467,7 @@ int initsmtp(int *sockfd, const char *relayhost, unsigned short port)
 			 */
 		}
 
-		write_helo(*sockfd, myhostname);
+		write_helo(*sockfd, heloname);
 		if((reply = checkwait_smtpreply(*sockfd, MLMMJ_HELO))
 				== NULL) {
 			/* EHLO successful don't try more */
@@ -494,7 +493,6 @@ int initsmtp(int *sockfd, const char *relayhost, unsigned short port)
 
 	} while (1);
 
-	myfree(myhostname);
 	return retval;
 }
 
@@ -820,7 +818,7 @@ int main(int argc, char **argv)
 	char *mlmmjbounce = NULL, *bindir, *mailmap, *probefile, *a;
 	char *body = NULL, *hdrs = NULL, *memmailsizestr = NULL, *verp = NULL;
 	char relay[16], *listname, *listfqdn, *verpfrom, *maxverprecipsstr;
-	char strindex[32], *reply, *strport, *requeuefilename;
+	char strindex[32], *reply, *strport, *smtphelo, *requeuefilename;
 	ssize_t memmailsize = 0;
 	DIR *subddir;
 	struct dirent *dp;
@@ -1102,10 +1100,14 @@ int main(int argc, char **argv)
 	if(strport)
 		smtpport = (unsigned short)atol(strport);
 
+	if ((smtphelo = ctrlvalue(listdir, "smtphelo")) == NULL) {
+		smtphelo = hostnamestr();
+	}
+
 	switch(listctrl[0]) {
 	case '1': /* A single mail is to be sent */
 	case '6':
-		initsmtp(&sockfd, relay, smtpport);
+		initsmtp(&sockfd, relay, smtpport, smtphelo);
 		if(send_mail(sockfd, bounceaddr, to_addr, replyto,
 				mailmap, st.st_size, listdir, NULL,
 				hdrs, hdrslen, body, bodylen)) {
@@ -1163,7 +1165,7 @@ int main(int argc, char **argv)
 		}
 		break;
 	case '2': /* Moderators */
-		initsmtp(&sockfd, relay, smtpport);
+		initsmtp(&sockfd, relay, smtpport, smtphelo);
 		if(send_mail_many_fd(sockfd, bounceaddr, NULL, mailmap,
 				     st.st_size, subfd, NULL, NULL, NULL,
 				     listdir, NULL, hdrs, hdrslen,
@@ -1175,7 +1177,7 @@ int main(int argc, char **argv)
 		}
 		break;
 	case '3': /* resending earlier failed mails */
-		initsmtp(&sockfd, relay, smtpport);
+		initsmtp(&sockfd, relay, smtpport, smtphelo);
 		if(send_mail_many_fd(sockfd, NULL, NULL, mailmap, st.st_size,
 				subfd, listaddr, listdelim, mailfilename,
 				listdir, mlmmjbounce, hdrs, hdrslen,
@@ -1188,7 +1190,7 @@ int main(int argc, char **argv)
 		unlink(subfilename);
 		break;
 	case '4': /* send mails to owner */
-		initsmtp(&sockfd, relay, smtpport);
+		initsmtp(&sockfd, relay, smtpport, smtphelo);
 		if(send_mail_many_fd(sockfd, bounceaddr, NULL, mailmap,
 				st.st_size, subfd, listaddr, listdelim,
 				mailfilename, listdir, mlmmjbounce,
@@ -1200,7 +1202,7 @@ int main(int argc, char **argv)
 		}
 		break;
 	case '5': /* bounceprobe - handle relayhost local users bouncing*/
-		initsmtp(&sockfd, relay, smtpport);
+		initsmtp(&sockfd, relay, smtpport, smtphelo);
 		if(send_mail(sockfd, bounceaddr, to_addr, replyto,
 				mailmap, st.st_size, listdir, NULL,
 				hdrs, hdrslen, body, bodylen)) {
@@ -1265,7 +1267,7 @@ int main(int argc, char **argv)
 		}
 		
 		if(verp) {
-			initsmtp(&sockfd, relay, smtpport);
+			initsmtp(&sockfd, relay, smtpport, smtphelo);
 			if(sockfd > -1) {
 			    if(write_mail_from(sockfd, verpfrom, verp)) {
 				log_error(LOG_ARGS,
@@ -1329,7 +1331,7 @@ int main(int argc, char **argv)
 					}
 				}
 				if(stl.count == maxverprecips) {
-					initsmtp(&sockfd, relay, smtpport);
+					initsmtp(&sockfd, relay, smtpport, smtphelo);
 					if(verp) {
 						sendres = send_mail_verp(
 								sockfd, &stl,
@@ -1373,7 +1375,7 @@ int main(int argc, char **argv)
 
 		}
 		if(stl.count) {
-			initsmtp(&sockfd, relay, smtpport);
+			initsmtp(&sockfd, relay, smtpport, smtphelo);
 			if(verp) {
 				sendres = send_mail_verp(sockfd, &stl, mailmap,
 						st.st_size, verpfrom, listdir,
@@ -1414,6 +1416,7 @@ int main(int argc, char **argv)
 	munmap(mailmap, st.st_size);
 	close(mailfd);
 	myfree(verp);
+	myfree(smtphelo);
 
 	if(archive) {
 		if(!ctrlarchive) {

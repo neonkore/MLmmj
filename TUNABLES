@@ -254,3 +254,7 @@ entire content is used as value, it's marked "text".
    from the distribution list for that post so people don't receive copies
    of their own posts.
 
+ · smtphelo			(normal)
+
+   When this file is present, it contains the hostname to send in the SMTP
+   EHLO or HELO command. Otherwise the machine hostname is used.

@@ -45,7 +45,7 @@ int send_mail_verp(int sockfd, struct strlist *addrs, char *mailmap,
 		   size_t mailsize, const char *from, const char *listdir,
 		   const char *hdrs, size_t hdrslen, const char *body,
 		   size_t bodylen, const char *extra);
-int initsmtp(int *sockfd, const char *relayhost, unsigned short port);
+int initsmtp(int *sockfd, const char *relayhost, unsigned short port, const char *heloname);
 int endsmtp(int *sockfd);
 
 #endif /* MMJML_SEND_H */

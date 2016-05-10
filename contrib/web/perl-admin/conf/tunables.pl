@@ -237,3 +237,7 @@ mlmmj_boolean("notmetoo",
 			  "from the distribution list for that post so people don't receive copies ".
 			  "of their own posts.");
 
+mlmmj_string("smtphelo",
+			  "SMTP Helo Name",
+			  "When this file is present, it contains the hostname to send in the SMTP ".
+			  "EHLO or HELO command. Otherwise the machine hostname is used.");
