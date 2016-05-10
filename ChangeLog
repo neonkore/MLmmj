@@ -1,3 +1,4 @@
+ o Fix some RFC 5321 compliance issues (Martijn Grendelman)
  o Add smtphelo tunable (Andreas Schulze)
  o Implement modonlypost
 1.2.19.0

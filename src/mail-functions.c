@@ -85,8 +85,8 @@ int write_helo(int sockfd, const char *hostname)
 	myfree(helo);
 	return 0;
 }
-/* "MAIL FROM: <> \r\n" has length 16 */
-#define EXTRA_FROM_LEN 16
+/* "MAIL FROM:<> \r\n" has length 15 */
+#define EXTRA_FROM_LEN 15
 int write_mail_from(int sockfd, const char *from_addr, const char *extra)
 {
 	size_t len = (size_t)(strlen(from_addr) + EXTRA_FROM_LEN +
@@ -98,10 +98,10 @@ int write_mail_from(int sockfd, const char *from_addr, const char *extra)
 
 	if(extra && extra[0] != '\0') {
 		if(extra[0] == ' ') extra++;
-		snprintf(mail_from, len, "MAIL FROM: <%s> %s\r\n", from_addr,
+		snprintf(mail_from, len, "MAIL FROM:<%s> %s\r\n", from_addr,
 				extra);
 	} else
-		snprintf(mail_from, len, "MAIL FROM: <%s>\r\n", from_addr);
+		snprintf(mail_from, len, "MAIL FROM:<%s>\r\n", from_addr);
 
 	len = strlen(mail_from);
 
@@ -118,8 +118,8 @@ int write_mail_from(int sockfd, const char *from_addr, const char *extra)
 	return 0;
 }
 
-/* "RCPT TO: <>\r\n" has length 13 */
-#define EXTRA_RCPT_LEN 13
+/* "RCPT TO:<>\r\n" has length 12 */
+#define EXTRA_RCPT_LEN 12
 int write_rcpt_to(int sockfd, const char *rcpt_addr)
 {
 	size_t len = (size_t)(strlen(rcpt_addr) + EXTRA_RCPT_LEN + 1);
@@ -129,7 +129,7 @@ int write_rcpt_to(int sockfd, const char *rcpt_addr)
 	if((rcpt_to = mymalloc(len)) == 0)
 		return errno;
 
-	snprintf(rcpt_to, len, "RCPT TO: <%s>\r\n", rcpt_addr);
+	snprintf(rcpt_to, len, "RCPT TO:<%s>\r\n", rcpt_addr);
 	len = strlen(rcpt_to);
 #if 0
 	log_error(LOG_ARGS, "%s", rcpt_to);
