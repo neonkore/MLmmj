@@ -388,35 +388,51 @@ static enum action do_access(struct strlist *rule_strs, struct strlist *hdrs,
 }
 
 
-static char *recipient_extra(const char *listdir, const char *addr)
+static int addrmatch(const char *listaddr, const char *addr,
+		const char *listdelim, char **recipextra)
 {
-	char *listdelim;
-	char *delim, *atsign, *ret;
+	char *delim, *atsign;
 	size_t len;
 
 	if (!addr)
-		return NULL;
+		return 0;
 
-	listdelim = getlistdelim(listdir);
+	if(strcasecmp(listaddr, addr) == 0) {
+		if (recipextra)
+			*recipextra = NULL;
+		return 1;
+	}
+
+	if (!listdelim)
+		return 0;
 
 	delim = strstr(addr, listdelim);
-	if (!delim) {
-		myfree(listdelim);
-		return NULL;
-	}
+	if (!delim)
+		return 0;
+
+	len = delim - addr;
+	if(strncasecmp(listaddr, addr, len) != 0)
+		return 0;
+	if(*(listaddr + len) != '@')
+		return 0;
+
 	delim += strlen(listdelim);
-	myfree(listdelim);
 
 	atsign = strrchr(delim, '@');
 	if (!atsign)
-		return NULL;
+		return 0;
 
-	len = atsign - delim;
-	ret = (char *)mymalloc(len + 1);
-	strncpy(ret, delim, len);
-	ret[len] = '\0';
+	if(strcasecmp(listaddr + len + 1, atsign + 1) != 0)
+		return 0;
 
-	return ret;
+	if (recipextra) {
+		len = atsign - delim;
+		*recipextra = (char *)mymalloc(len + 1);
+		strncpy(*recipextra, delim, len);
+		(*recipextra)[len] = '\0';
+	}
+
+	return 1;
 }
 
 
@@ -438,7 +454,7 @@ int main(int argc, char **argv)
 	int i, j, opt, noprocess = 0, moderated = 0, send = 0;
 	enum modreason modreason;
 	int hdrfd, footfd, rawmailfd, donemailfd, omitfd;
-	int addrtocc = 1, intocc = 0;
+	int addrtocc, intocc = 0, findaddress = 0;
 	int maxmailsize = 0;
 	int notmetoo = 0;
 	int subonlypost = 0, modonlypost = 0, modnonsubposts = 0, foundaddr = 0;
@@ -446,7 +462,7 @@ int main(int argc, char **argv)
 	char *footerfilename = NULL, *donemailname = NULL;
 	char *randomstr = NULL, *mqueuename, *omitfilename;
 	char *mlmmjsend, *mlmmjsub, *mlmmjunsub, *mlmmjbounce;
-	char *bindir, *subjectprefix, *discardname, *listaddr, *listdelim;
+	char *bindir, *subjectprefix, *discardname, *listaddr, *listdelim = NULL;
 	char *listfqdn, *listname, *fromaddr;
 	text *txt;
 	char *queuefilename, *recipextra = NULL, *owner = NULL;
@@ -463,7 +479,7 @@ int main(int argc, char **argv)
 	struct strlist *access_rules = NULL;
 	struct strlist *delheaders = NULL;
 	struct strlist allheaders;
-	struct strlist *alternates = NULL;
+	struct strlist *listaddrs = NULL;
 	struct mailhdr readhdrs[] = {
 		{ "From:", 0, NULL },
 		{ "To:", 0, NULL },
@@ -631,15 +647,57 @@ int main(int argc, char **argv)
 			recipextra = mystrdup(envstr);
 		}
 		myfree(listdelim);
-	} else if(dtemails.emailcount >= 1) {
-		/* parse the (first) Delivered-To: header */
-		recipextra = recipient_extra(listdir, dtemails.emaillist[0]);
-	} else if(toemails.emailcount >= 1) {
-		/* parse the (first) To: header */
-		recipextra = recipient_extra(listdir, toemails.emaillist[0]);
+		listdelim = NULL;
 	} else {
-		recipextra = NULL;
+		findaddress = 1;
 	}
+
+	addrtocc = !(statctrl(listdir, "tocc"));
+
+	if (findaddress) {
+		listdelim = getlistdelim(listdir);
+	}
+	if(addrtocc || findaddress) {
+		listaddrs = ctrlvalues(listdir, "listaddress");
+		for(i = 0; i < dtemails.emailcount; i++) {
+			for(j = 0; j < listaddrs->count; j++) {
+				if(addrmatch(listaddrs->strs[j], dtemails.emaillist[i],
+						listdelim, &recipextra)) {
+					findaddress = 0;
+					myfree(listdelim);
+					listdelim = NULL;
+					break;
+				}
+			}
+		}
+	}
+	if(addrtocc || findaddress) {
+		for(i = 0; i < toemails.emailcount; i++) {
+			for(j = 0; j < listaddrs->count; j++) {
+				if(addrmatch(listaddrs->strs[j], toemails.emaillist[i],
+						listdelim, &recipextra)) {
+					intocc = 1;
+					break;
+				}
+			}
+		}
+		if (!intocc) for(i = 0; i < ccemails.emailcount; i++) {
+			for(j = 0; j < listaddrs->count; j++) {
+				if(addrmatch(listaddrs->strs[j], ccemails.emaillist[i],
+						listdelim, &recipextra)) {
+					intocc = 1;
+					break;
+				}
+			}
+		}
+	}
+	if (listdelim) {
+		myfree(listdelim);
+		listdelim = NULL;
+	}
+	if (listaddrs) for(i = 0; i < listaddrs->count; i++)
+		myfree(listaddrs->strs[i]);
+
 	if(recipextra && (strlen(recipextra) == 0)) {
 		myfree(recipextra);
 		recipextra = NULL;
@@ -750,7 +808,7 @@ int main(int argc, char **argv)
 			exit(EXIT_FAILURE);
 		}
 #if 0
-		log_error(LOG_ARGS, "listcontrol(from, %s, %s, %s, %s, %s, %s)\n", listdir, toemails.emaillist[0], mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce);
+		log_error(LOG_ARGS, "listcontrol(from, %s, %s, %s, %s, %s, %s, %s)\n", listdir, toemails.emaillist[0], mlmmjsub, mlmmjunsub, mlmmjsend, mlmmjbounce, donemailname);
 #endif
 		unlink(mailfile);
 		listcontrol(&fromemails, listdir, recipextra,
@@ -761,7 +819,6 @@ int main(int argc, char **argv)
 	}
 
 	listaddr = getlistaddr(listdir);
-	alternates = ctrlvalues(listdir, "listaddress");
 
 	/* checking incoming mail's size */
 	maxmailsizestr = ctrlvalue(listdir, "maxmailsize");
@@ -841,33 +898,6 @@ int main(int argc, char **argv)
 	}
 
 	unlink(mailfile);
-
-	addrtocc = !(statctrl(listdir, "tocc"));
-	if(addrtocc) {
-		for(i = 0; i < toemails.emailcount; i++) {
-			errno = 0;
-			log_error(LOG_ARGS, "Found To: %s",
-				toemails.emaillist[i]);
-			for(j = 0; j < alternates->count; j++) {
-				if(strcasecmp(alternates->strs[j],
-					toemails.emaillist[i]) == 0)
-					intocc = 1;
-			}
-		}
-		for(i = 0; i < ccemails.emailcount; i++) {
-			errno = 0;
-			log_error(LOG_ARGS, "Found Cc: %s",
-				ccemails.emaillist[i]);
-			for(j = 0; j < alternates->count; j++) {
-				if(strcasecmp(alternates->strs[j],
-					ccemails.emaillist[i]) == 0)
-					intocc = 1;
-			}
-		}
-	}
-
-	for(i = 0; i < alternates->count; i++)
-		myfree(alternates->strs[i]);
 
 	if(addrtocc && !intocc) {
 		/* Don't send a mail about denial to the list, but silently

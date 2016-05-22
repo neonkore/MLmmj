@@ -1,3 +1,4 @@
+ o Don't use address extensions from non-list addresses
  o Fix some RFC 5321 compliance issues (Martijn Grendelman)
  o Add smtphelo tunable (Andreas Schulze)
  o Implement modonlypost
