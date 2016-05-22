@@ -43,10 +43,20 @@ mlmmj_boolean("subonlypost",
 			  "If this option is set, only people who are subscribed to the list, are allowed to post to it. ".
 			  "The check is made against the \"From:\" header.");
 
+mlmmj_boolean("modonlypost",
+			  "Moderators only post",
+			  "When this file is present, only people listed in listdir/control/moderators ".
+			  "are allowed to post to it. The check is made against the "From:" header.");
+
 mlmmj_boolean("modnonsubposts",
-			  "Moderate non-subscriber posts",
-			  "If this option is set and subonlypost is enabled, all postings from ".
-			  "people who are not subscribed to the list will be moderated.");
+			  "Moderate non-allowed posts",
+			  "If this option is set, postings from people who are not allowed to post ".
+			  "to the list will be moderated instead of denied.");
+
+mlmmj_string("modreqlife",
+			 "Moderation request lifetime",
+			 "This specifies how long in seconds a mail awaits moderation before it's ".
+			 "discarded. Defaults to 604800 seconds, which is 7 days.");
 
 mlmmj_string("prefix",
 			 "Prefix",
@@ -120,8 +130,8 @@ mlmmj_string("digestmaxmails",
 
 mlmmj_string("bouncelife",
 			 "Bouncing lifetime",
-			 "Here is specified for how long time in seconds an address can bounce before it's unsubscribed. Defaults ".
-			 "to 432000 seconds, which is 5 days.");
+			 "This specifies how long in seconds an address can bounce before it's ".
+			 "unsubscribed. Defaults to 432000 seconds, which is 5 days.");
 
 mlmmj_boolean("noarchive",
 			  "No archive",
@@ -160,6 +170,11 @@ mlmmj_boolean("nosubonlydenymails",
 			  "No subscribers only deny mails",
 			  "This switch turns off whether mlmmj sends out notification about postings ".
 			  "being rejected due to a subscribers only posting list (see 'subonlypost').");
+
+mlmmj_boolean("nomodonlydenymails",
+			  "No moderators only deny mails",
+			  "This switch turns off whether mlmmj sends out notification about postings ".
+			  "being rejected due to a moderators only posting list (see 'modonlypost').");
 
 mlmmj_boolean("nosubmodmails",
 			  "No subscription moderated mails",

@@ -90,6 +90,7 @@ is given in brackets. Those with asterisks (*) are not yet used.
 - deny-sub-obstruct *
 - deny-unsub-unsubbed-{normal|digest|nomail|all} (unsub-notsubscribed)
 - deny-post-subonlypost (subonlypost)
+- deny-post-modonlypost
 - deny-post-access (access)
 - deny-post-maxmailsize (maxmailsize)
 - deny-post-tocc (notintocc)
@@ -352,7 +353,7 @@ appropriate for use in headers. They are:
 - %originalmail%
 - %originalmail N%
   (available only in moderate-post-*, wait-post-* and
-  deny-post-{access|maxmailsize|tocc|subonlypost})
+  deny-post-{access|maxmailsize|tocc|subonlypost|modonlypost})
   the email message being processed (usually a mail being moderated); N
   represents a number, which is how many lines of the message (including
   headers) to include: if omitted, the whole message will be included
@@ -537,8 +538,8 @@ Unformatted substitutions that are available are:
   the address to which to send mail to permit the subscription in question
 
 - $posteraddr$
-  (available only in deny-post-{access|tocc|subonlypost|maxmailsize},
-  moderate-post-* and wait-post-*)
+  (available only in deny-post-{access|tocc|subonlypost|modonlypost|
+  maxmailsize}, moderate-post-* and wait-post-*)
   the from address of the message that was received as determined by Mlmmj
 
 - $random0$
@@ -561,8 +562,8 @@ Unformatted substitutions that are available are:
   the address requested to be (un-)subscribed
 
 - $subject$
-  (available only in deny-post-{access|tocc|subonlypost|maxmailsize},
-  moderate-post-* and wait-post-*)
+  (available only in deny-post-{access|tocc|subonlypost|modonlypost|
+  maxmailsize}, moderate-post-* and wait-post-*)
   the subject line of the message in question
 
 - $text T$

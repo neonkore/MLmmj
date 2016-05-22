@@ -45,10 +45,15 @@ entire content is used as value, it's marked "text".
    When this file is present, only people who are subscribed to the list,
    are allowed to post to it. The check is made against the "From:" header.
 
+ · modonlypost			(boolean)
+
+   When this file is present, only people listed in listdir/control/moderators
+   are allowed to post to it. The check is made against the "From:" header.
+
  · modnonsubposts		(boolean)
 
-   When this file is present, all postings from people who are not subscribed
-   to the list will be moderated.
+   When this file is present, all postings from people who are not allowed
+   to post to the list will be moderated instead of denied.
 
  · modreqlife			(normal)
 
@@ -171,11 +176,12 @@ entire content is used as value, it's marked "text".
  · notoccdenymails		(boolean)
  · noaccessdenymails		(boolean)
  · nosubonlydenymails		(boolean)
+ · nomodonlydenymails		(boolean)
 
    These switches turns off whether mlmmj sends out notification about postings
    being denied due to the listaddress not being in To: or Cc: (see 'tocc'),
    when it was rejected due to an access rule (see 'access') or whether it's a
-   subscribers only posting list (see 'subonlypost').
+   subscribers/moderators only posting list (see 'subonlypost/modonlypost').
 
  · nosubmodmails		(boolean)
 

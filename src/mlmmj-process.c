@@ -53,6 +53,7 @@
 #include "memory.h"
 #include "log_oper.h"
 #include "unistr.h"
+#include "chomp.h"
 
 enum action {
 	ALLOW,
@@ -74,6 +75,7 @@ static char *action_strs[] = {
 
 enum modreason {
 	MODNONSUBPOSTS,
+	MODNONMODPOSTS,
 	ACCESS,
 	MODERATED
 };
@@ -81,30 +83,16 @@ enum modreason {
 
 static char *modreason_strs[] = {
 	"modnonsubposts",
+	"modnonmodposts",
 	"access",
 	"moderated"
 };
 
 
-static void newmoderated(const char *listdir, const char *mailfilename,
-		  const char *mlmmjsend, const char *efromsender,
-		  const char *subject, const char *posteraddr,
-		  enum modreason modreason)
-{
-	char *from, *listfqdn, *listname, *moderators = NULL;
-	char *buf, *replyto, *listaddr = getlistaddr(listdir), *listdelim;
-	text *txt;
-	memory_lines_state *mls;
-	char *queuefilename = NULL, *moderatorsfilename, *efromismod = NULL;
-	char *mailbasename = mybasename(mailfilename), *tmp, *to, *reject;
-	int moderatorsfd, foundaddr = 0, notifymod = 0, status;
-	pid_t childpid, pid;
-#if 0
-	printf("mailfilename = [%s], mailbasename = [%s]\n", mailfilename,
-			                                     mailbasename);
-#endif
-	listfqdn = genlistfqdn(listaddr);
-	listname = genlistname(listaddr);
+static int is_moderator(const char *listdir, const char *address,
+		char **moderators) {
+	char *buf, *tmp, *moderatorsfilename;
+	int moderatorsfd, foundaddr = 0;
 
 	moderatorsfilename = concatstr(2, listdir, "/control/moderators");
 	if((moderatorsfd = open(moderatorsfilename, O_RDONLY)) < 0) {
@@ -114,27 +102,59 @@ static void newmoderated(const char *listdir, const char *mailfilename,
 	}
 	myfree(moderatorsfilename);
 
-	if(statctrl(listdir, "ifmodsendonlymodmoderate"))
-		efromismod = concatstr(2, efromsender, "\n");
-
 	while((buf = mygetline(moderatorsfd))) {
-		if(efromismod && strcmp(buf, efromismod) == 0)
+		chomp(buf);
+		if(address && strcasecmp(buf, address) == 0) {
 			foundaddr = 1;
-		tmp = moderators;
-		moderators = concatstr(2, moderators, buf);
+			if (!moderators) {
+				close(moderatorsfd);
+				myfree(buf);
+				return foundaddr;
+			}
+		}
+		if (moderators) {
+			tmp = *moderators;
+			*moderators = concatstr(3, *moderators, buf, "\n");
+			myfree(tmp);
+		}
 		myfree(buf);
-		myfree(tmp);
 	}
 
-	if(!foundaddr) {
-		myfree(efromismod);
+	close(moderatorsfd);
+	return foundaddr;
+}
+
+
+static void newmoderated(const char *listdir, const char *mailfilename,
+		  const char *mlmmjsend, const char *efromsender,
+		  const char *subject, const char *posteraddr,
+		  enum modreason modreason)
+{
+	char *from, *listfqdn, *listname, *moderators = NULL;
+	char *replyto, *listaddr = getlistaddr(listdir), *listdelim;
+	text *txt;
+	memory_lines_state *mls;
+	char *queuefilename = NULL;
+	const char *efromismod = NULL;
+	char *mailbasename = mybasename(mailfilename), *to, *reject;
+	int notifymod = 0, status;
+	pid_t childpid, pid;
+#if 0
+	printf("mailfilename = [%s], mailbasename = [%s]\n", mailfilename,
+			                                     mailbasename);
+#endif
+	listfqdn = genlistfqdn(listaddr);
+	listname = genlistname(listaddr);
+
+	if(statctrl(listdir, "ifmodsendonlymodmoderate"))
+		efromismod = efromsender;
+
+	if(!is_moderator(listdir, efromismod, &moderators))
 		efromismod = NULL;
-	}
 
 	if(efromismod) mls = init_memory_lines(efromismod);
 	else mls = init_memory_lines(moderators);
 
-	close(moderatorsfd);
 	myfree(moderators);
 
 	listdelim = getlistdelim(listdir);
@@ -421,6 +441,7 @@ int main(int argc, char **argv)
 	int addrtocc = 1, intocc = 0;
 	int maxmailsize = 0;
 	int notmetoo = 0;
+	int subonlypost = 0, modonlypost = 0, modnonsubposts = 0, foundaddr = 0;
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
 	char *randomstr = NULL, *mqueuename, *omitfilename;
@@ -972,65 +993,86 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if(!send && (statctrl(listdir, "subonlypost") ||
-			statctrl(listdir, "modnonsubposts"))) {
+	subonlypost = statctrl(listdir, "subonlypost");
+	modonlypost = statctrl(listdir, "modonlypost");
+	modnonsubposts = statctrl(listdir, "modnonsubposts");
+	/* modnonsubposts implies subonlypost if modonlypost is not set */
+	if (modnonsubposts && !modonlypost) subonlypost = 1;
+
+	if(!send && (subonlypost || modonlypost || modnonsubposts)) {
 		/* Don't send a mail about denial to the list, but silently
 		 * discard and exit. */
 		if (strcasecmp(listaddr, posteraddr) == 0) {
 			log_error(LOG_ARGS, "Discarding %s because"
-					" subonlypost was set and From: was"
-					" the list address",
+					" there are sender restrictions but"
+					" From: was the list address",
 					mailfile);
 			myfree(listaddr);
 			unlink(donemailname);
 			myfree(donemailname);
 			exit(EXIT_SUCCESS);
 		}
-		if(is_subbed(listdir, posteraddr, 0) == SUB_NONE) {
-			if(statctrl(listdir, "modnonsubposts")) {
-				moderated = 1;
+		if(subonlypost) {
+			foundaddr = (is_subbed(listdir, posteraddr, 0) !=
+					SUB_NONE);
+		} else if (modonlypost) {
+			foundaddr = is_moderator(listdir, posteraddr, NULL);
+		}
+		if(!foundaddr) {
+			if(modnonsubposts) {
+			    moderated = 1;
+			    if (subonlypost)
 				modreason = MODNONSUBPOSTS;
+			    else if (modonlypost)
+				modreason = MODNONMODPOSTS;
 			} else {
-				if(statctrl(listdir, "nosubonlydenymails")) {
-				    log_error(LOG_ARGS, "Discarding %s because"
-					    " subonlypost and"
-					    " nosubonlydenymails was set",
-					    mailfile);
-				    myfree(listaddr);
-				    unlink(donemailname);
-				    myfree(donemailname);
-				    exit(EXIT_SUCCESS);
-				}
-				listdelim = getlistdelim(listdir);
-				listname = genlistname(listaddr);
-				listfqdn = genlistfqdn(listaddr);
-				fromaddr = concatstr(4, listname, listdelim,
-					"bounces-help@", listfqdn);
-				txt = open_text(listdir, "deny", "post",
-					"subonlypost", NULL, "subonlypost");
-				MY_ASSERT(txt);
-				register_unformatted(txt, "subject", subject);
-				register_unformatted(txt, "posteraddr", posteraddr);
-				register_originalmail(txt, donemailname);
-				queuefilename = prepstdreply(txt, listdir,
-					"$listowner$", posteraddr, NULL);
-				MY_ASSERT(queuefilename)
-				close_text(txt);
+			    if((subonlypost &&
+				    statctrl(listdir, "nosubonlydenymails")) ||
+				    (modonlypost &&
+				    statctrl(listdir, "nomodonlydenymails"))) {
+				log_error(LOG_ARGS, "Discarding %s because"
+					" no{sub|mod}onlydenymails was set",
+					mailfile);
 				myfree(listaddr);
-				myfree(listdelim);
-				myfree(listname);
-				myfree(listfqdn);
 				unlink(donemailname);
 				myfree(donemailname);
-				execlp(mlmmjsend, mlmmjsend,
-					"-L", listdir,
-					"-l", "1",
-					"-T", posteraddr,
-					"-F", fromaddr,
-					"-m", queuefilename, (char *)NULL);
+				exit(EXIT_SUCCESS);
+			    }
+			    listdelim = getlistdelim(listdir);
+			    listname = genlistname(listaddr);
+			    listfqdn = genlistfqdn(listaddr);
+			    fromaddr = concatstr(4, listname, listdelim,
+				    "bounces-help@", listfqdn);
+			    if (subonlypost) {
+				txt = open_text(listdir, "deny", "post",
+					"subonlypost", NULL, "subonlypost");
+			    } else if (modonlypost) {
+				txt = open_text(listdir, "deny", "post",
+					"modonlypost", NULL, NULL);
+			    }
+			    MY_ASSERT(txt);
+			    register_unformatted(txt, "subject", subject);
+			    register_unformatted(txt, "posteraddr", posteraddr);
+			    register_originalmail(txt, donemailname);
+			    queuefilename = prepstdreply(txt, listdir,
+				    "$listowner$", posteraddr, NULL);
+			    MY_ASSERT(queuefilename)
+			    close_text(txt);
+			    myfree(listaddr);
+			    myfree(listdelim);
+			    myfree(listname);
+			    myfree(listfqdn);
+			    unlink(donemailname);
+			    myfree(donemailname);
+			    execlp(mlmmjsend, mlmmjsend,
+				    "-L", listdir,
+				    "-l", "1",
+				    "-T", posteraddr,
+				    "-F", fromaddr,
+				    "-m", queuefilename, (char *)NULL);
 
-				log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
-				exit(EXIT_FAILURE);
+			    log_error(LOG_ARGS, "execlp() of '%s' failed", mlmmjsend);
+			    exit(EXIT_FAILURE);
 			}
 		}
 	}
