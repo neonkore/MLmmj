@@ -128,7 +128,7 @@ That's it! You probably want to go through the next steps too.
     To unsubscribe send a mail to coollist+unsubscribe@lists.domain.net
 
     Just add what you want to a file named "footer" in the same dir as
-    "customheader" (listdir/control/).
+    "customheaders" (listdir/control/).
 
  8) If you want a prefix on the subject, to make it look like this:
     Subject: [mlmmj-test] how are we doing?
