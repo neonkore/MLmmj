@@ -3,11 +3,11 @@ README.listtexts
 List texts in Mlmmj
 ===================
 
-List texts are stored in listdir/text. They specify the content of various
-automatic emails that Mlmmj sends. They are provided in a number of different
-languages. The language to use for a list is chosen when you run the
-mlmmj-make-ml script and the appropriate files are copied into your
-listdir/text directory.
+List texts are stored in listdir/text and subdirectories of
+prefix/share/mlmmj/text.skel. They specify the content of various automatic
+emails that Mlmmj sends. They are provided in a number of different languages.
+The language to use for a list is chosen when you run the mlmmj-make-ml script
+and the appropriate files are copied into your listdir/text directory.
 
 This file documents the following aspects of list texts:
 
@@ -45,6 +45,22 @@ So, the complete search order is:
 When using shortened names, the %ifaction%, %ifreason%, %iftype% and related
 conditionals can be used to customise the list text according to the values of
 the missing parts.
+
+Mlmmj checks these three paths for each candidate filename, and then moves on
+to the next candidate filename:
+
+- listdir/text
+- prefix/share/mlmmj/text.skel/default
+- prefix/share/mlmmj/text.skel/en
+
+The second path does not exist by default, but can be created by copying or
+symlinking the language of your choice to that path.
+
+Note that this search order means that if there is a more specific list text in
+a system directory, it will override a less-specific or compatibility list text
+in the listdir. This may be surprising, and may change in a future version, so
+should not be relied upon. Best practice is to ensure each list has its own
+copy of all textx present in system directories, or none of them.
 
 Supported list texts
 --------------------
