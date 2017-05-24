@@ -1,4 +1,5 @@
 1.3.0
+ o Czech translation (Jiří Šolc)
  o Don't use address extensions from non-list addresses
  o Fix some RFC 5321 compliance issues (Martijn Grendelman)
  o Add smtphelo tunable (Andreas Schulze)
@@ -17,7 +18,7 @@
  o Fix bug that made double subscription possible
 1.2.18.0
  o New list texts (Ben Schmidt, Xuacu Saturio, Nino Novak, Sophie Gautier,
-   Epaminondas Diamantopoulos, Valter Mura, S�rgio Marques, Milos Sramek, Dean
+   Epaminondas Diamantopoulos, Valter Mura, Sérgio Marques, Milos Sramek, Dean
    Lee)
  o Add %nowrap% to facilitate more complex formatting
  o Add subscription ability to php-admin
@@ -222,7 +223,7 @@
 1.2.9
  o Make find_email_adr() more robust (BSD, Neale Pickett)
  o Make the email address check case-insensitive. (Neale Pickett)
- o Add spanish listtext translations (Enrique Mat�as S�nchez)
+ o Add spanish listtext translations (Enrique Matías Sánchez)
  o Make recipient delimiter configurable per list. SIC! (Joel Aelwyn)
  o Added italian list texts translation. A thanks to Andrea Barisani, he has
    checked italian texts. (Filippo F. Fadda)
