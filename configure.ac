@@ -1,10 +1,10 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(mlmmj, esyscmd([tr -d '\n' < VERSION]), mmj@mmj.dk)
+AC_INIT(mlmmj, esyscmd([tr -d '\n' < VERSION]), maintainer@mlmmj.org)
 
 VERSION=$PACKAGE_VERSION
 AC_SUBST(VERSION)
 
-AM_INIT_AUTOMAKE(mlmmj, $VERSION)
+AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_SRCDIR([src/mlmmj-receive.c])
 AM_CONFIG_HEADER([config.h])
 
