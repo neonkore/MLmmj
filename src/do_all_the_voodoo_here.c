@@ -174,12 +174,26 @@ int do_all_the_voodoo_here(int infd, int outfd, int hdrfd, int footfd,
 			continue;
 		    }
 		    if(strncasecmp(hdrline, "From:", 5) == 0) {
+			char *lt, *gt;
+
 			replyto = concatstr(3,
 					"Reply-To: ",
 					hdrline + 5, "\n");
-			from = concatstr(3,
+			while ( (lt = strchr(hdrline + 5, '<')) != NULL)
+			{
+			    *lt = '[';
+			}
+			while ( (gt = strchr(hdrline + 5, '>')) != NULL)
+			{
+			    *gt = ']';
+			}
+			from = concatstr(5,
 					"From: ",
-					listaddr, "\n");
+					 hdrline + 5,
+					 "<",
+					 listaddr,
+					 ">\n");
+
 			writen(outfd, from, strlen(from));
 			myfree(from);
 			myfree(hdrline);
