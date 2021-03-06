@@ -457,7 +457,7 @@ int main(int argc, char **argv)
 	int addrtocc, intocc = 0, findaddress = 0;
 	int maxmailsize = 0;
 	int notmetoo = 0;
-	int subonlypost = 0, modonlypost = 0, modnonsubposts = 0, foundaddr = 0;
+	int subonlypost = 0, modonlypost = 0, modnonsubposts = 0, foundaddr = 0, mungefrom = 0;
 	char *listdir = NULL, *mailfile = NULL, *headerfilename = NULL;
 	char *footerfilename = NULL, *donemailname = NULL;
 	char *randomstr = NULL, *mqueuename, *omitfilename;
@@ -487,6 +487,7 @@ int main(int argc, char **argv)
 		{ "Return-Path:", 0, NULL },
 		{ "Delivered-To:", 0, NULL },
 		{ "Subject:", 0, NULL },
+		{ "Reply-To:", 0, NULL },
 		{ NULL, 0, NULL }
 	};
 
@@ -597,9 +598,12 @@ int main(int argc, char **argv)
 
 	subjectprefix = ctrlvalue(listdir, "prefix");
 
+	mungefrom = statctrl(listdir, "mungefrom");
+	listaddr = getlistaddr(listdir);
+
 	if(do_all_the_voodoo_here(rawmailfd, donemailfd, hdrfd, footfd,
 				delheaders, readhdrs,
-				&allheaders, subjectprefix) < 0) {
+				&allheaders, subjectprefix, mungefrom ? listaddr :NULL) < 0) {
 		log_error(LOG_ARGS, "Error in do_all_the_voodoo_here");
 		exit(EXIT_FAILURE);
 	}
@@ -783,7 +787,7 @@ int main(int argc, char **argv)
 			}
 			if(do_all_the_voodoo_here(rawmailfd, donemailfd, -1,
 					-1, delheaders,
-					NULL, &allheaders, NULL) < 0) {
+					NULL, &allheaders, NULL, mungefrom ? listaddr :NULL) < 0) {
 				log_error(LOG_ARGS, "do_all_the_voodoo_here");
 				exit(EXIT_FAILURE);
 			}
@@ -817,8 +821,6 @@ int main(int argc, char **argv)
 
 		return EXIT_SUCCESS;
 	}
-
-	listaddr = getlistaddr(listdir);
 
 	/* checking incoming mail's size */
 	maxmailsizestr = ctrlvalue(listdir, "maxmailsize");
@@ -1026,6 +1028,7 @@ int main(int argc, char **argv)
 	subonlypost = statctrl(listdir, "subonlypost");
 	modonlypost = statctrl(listdir, "modonlypost");
 	modnonsubposts = statctrl(listdir, "modnonsubposts");
+	mungefrom = statctrl(listdir, "mungefrom");
 	/* modnonsubposts implies subonlypost if modonlypost is not set */
 	if (modnonsubposts && !modonlypost) subonlypost = 1;
 

@@ -73,11 +73,12 @@ void getinfo(const char *line, struct mailhdr *readhdrs)
 
 int do_all_the_voodoo_here(int infd, int outfd, int hdrfd, int footfd,
 		 const struct strlist *delhdrs, struct mailhdr *readhdrs,
-		 struct strlist *allhdrs, const char *prefix)
+		 struct strlist *allhdrs, const char *prefix, const char *listaddr)
 {
-	char *hdrline, *unfolded, *subject, *unqp;
+	char *hdrline, *unfolded, *subject, *unqp, *from, *replyto = NULL;
 	int hdrsadded = 0;
 	int subject_present = 0;
+	int replyto_present = 0;
 
 	allhdrs->count = 0;
 	allhdrs->strs = NULL;
@@ -112,6 +113,13 @@ int do_all_the_voodoo_here(int infd, int outfd, int hdrfd, int footfd,
 				writen(outfd, subject, strlen(subject));
 				myfree(subject);
 				subject_present = 1;
+			}
+			/* always have a Reply-to: if munging From: */
+			if ( replyto != NULL ) {
+			    if ( (listaddr != NULL) && (replyto_present == 0) ) {
+				writen(outfd, replyto, strlen(replyto));
+			    }
+			    myfree(replyto);
 			}
 			/* write LF */
 			if(writen(outfd, "\n", 1) < 0) {
@@ -154,6 +162,29 @@ int do_all_the_voodoo_here(int infd, int outfd, int hdrfd, int footfd,
 				}
 				myfree(unqp);
 			}
+		}
+
+		/* munge the From: and Reply-To: headers if so configured */
+		if(listaddr != NULL) {
+		    if(strncasecmp(hdrline, "Reply-To:", 9) == 0) {
+			replyto_present = 1;
+			writen(outfd, unfolded, strlen(unfolded));
+			myfree(replyto);
+			myfree(hdrline);
+			continue;
+		    }
+		    if(strncasecmp(hdrline, "From:", 5) == 0) {
+			replyto = concatstr(3,
+					"Reply-To: ",
+					hdrline + 5, "\n");
+			from = concatstr(3,
+					"From: ",
+					listaddr, "\n");
+			writen(outfd, from, strlen(from));
+			myfree(from);
+			myfree(hdrline);
+			continue;
+		    }
 		}
 
 		/* Should it be stripped? */

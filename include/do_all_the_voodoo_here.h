@@ -30,6 +30,6 @@ int findit(const char *line, const struct strlist *headers);
 void getinfo(const char *line, struct mailhdr *readhdrs);
 int do_all_the_voodoo_here(int infd, int outfd, int hdrfd, int footfd,
 	      const struct strlist *delhdrs, struct mailhdr *readhdrs,
-	      struct strlist *allhdrs, const char *subjectprefix);
+	      struct strlist *allhdrs, const char *subjectprefix, const char *listaddr);
 
 #endif /* DO_ALL_THE_VOODOO_HERE_H */
