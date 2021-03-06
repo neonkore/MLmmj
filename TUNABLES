@@ -258,3 +258,9 @@ entire content is used as value, it's marked "text".
 
    When this file is present, it contains the hostname to send in the SMTP
    EHLO or HELO command. Otherwise the machine hostname is used.
+
+· mungefrom			(boolean)
+
+   If this file is present, mlmmj will modify the email headers such that the
+   From: address is changed to the list address, and if there is no Reply-To:
+   header present, a Reply-To: is added with the original From: address.
